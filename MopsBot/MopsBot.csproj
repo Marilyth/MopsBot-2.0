@@ -158,6 +158,7 @@
     <Compile Include="CommandHandler.cs" />
     <Compile Include="Module\Data\Individual\Field.cs" />
     <Compile Include="Module\Data\Individual\User.cs" />
+    <Compile Include="Module\Data\Session\Poll.cs" />
     <Compile Include="Module\Data\Statistics.cs" />
     <Compile Include="Module\Data\TextInformation.cs" />
     <Compile Include="Module\Data\UserScore.cs" />
@@ -165,13 +166,12 @@
     <Compile Include="Module\Moderation.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="StaticBase.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Module\Data\Session\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

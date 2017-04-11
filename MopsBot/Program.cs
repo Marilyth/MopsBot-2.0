@@ -39,6 +39,8 @@ namespace MopsBot
             handler = new CommandHandler();
             await handler.Install(map);
 
+            new StaticBase();
+
             await Task.Delay(-1);
         }
 

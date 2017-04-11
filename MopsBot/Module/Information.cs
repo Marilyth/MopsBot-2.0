@@ -12,18 +12,6 @@ namespace MopsBot.Module
 {
     public class Information : ModuleBase
     {
-        private Data.TextInformation info;
-        private Data.Statistics stats;
-        private Data.UserScore people;
-
-        public Information()
-        {
-            info = new Data.TextInformation();
-            stats = new Data.Statistics();
-            people = new Data.UserScore();
-
-            Program.client.MessageReceived += Client_MessageReceived;
-        }
 
         [Command("howLong")]
         [Summary("Returns the date you joined the Guild")]
@@ -69,18 +57,7 @@ namespace MopsBot.Module
         [Summary("Returns the total characters send for the past limit days")]
         public async Task dayDiagram(int limit)
         {
-            await ReplyAsync(stats.drawDiagram(limit));
-        }
-
-        private Task Client_MessageReceived(SocketMessage arg)
-        {
-            if (!arg.Content.StartsWith("!") && !arg.Author.IsBot)
-            {
-                stats.addValue(arg.Content.Length);
-                people.addExperience(arg.Author.Id, arg.Content.Length);
-            }
-
-            return Task.CompletedTask;
+            await ReplyAsync(StaticBase.stats.drawDiagram(limit));
         }
 
         public static dynamic getRandomWord()
