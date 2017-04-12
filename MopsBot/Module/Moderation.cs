@@ -38,12 +38,12 @@ namespace MopsBot.Module
         }
 
         [Command("poll"), Summary("Creates a poll\nExample: !poll Am I sexy?;Yes:No;@Panda @Demon @Snail")]
-        public async Task Poll([Remainder] string pPoll)
+        public async Task Poll([Remainder] string Poll)
         {
             if (!Context.Guild.GetUserAsync(Context.User.Id).Result.GuildPermissions.Administrator)
                 return;
 
-            string[] pollSegments = pPoll.Split(';');
+            string[] pollSegments = Poll.Split(';');
             List<IGuildUser> participants = StaticBase.getMentionedUsers(Context);
 
             StaticBase.poll = new Data.Session.Poll(pollSegments[0], pollSegments[1].Split(':'), participants.ToArray());
