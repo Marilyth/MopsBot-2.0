@@ -38,7 +38,7 @@ namespace MopsBot.Module
         }
 
         [Command("poll"), Summary("Creates a poll\nExample: !poll Am I sexy?;Yes:No;@Panda @Demon @Snail")]
-        public async Task Poll([Remainder, Summary("Poll")] string pPoll)
+        public async Task Poll([Remainder] string pPoll)
         {
             if (!Context.Guild.GetUserAsync(Context.User.Id).Result.GuildPermissions.Administrator)
                 return;

@@ -59,9 +59,28 @@ namespace MopsBot.Module.Data
             #endif
         }
 
-        public void addExperience(ulong id, int value)
+        public void addStat(ulong id, int value, string stat)
         {
-            users.Find(x => x.ID.Equals(id)).Experience += value;
+            switch (stat.ToLower())
+            {
+                case "experience":
+                    users.Find(x => x.ID.Equals(id)).Experience += value;
+                    break;
+                case "score":
+                    users.Find(x => x.ID.Equals(id)).Score += value;
+                    break;
+                case "hug":
+                    users.Find(x => x.ID.Equals(id)).hugged += value;
+                    break;
+                case "kiss":
+                    users.Find(x => x.ID.Equals(id)).kissed += value;
+                    break;
+                case "punch":
+                    users.Find(x => x.ID.Equals(id)).punched += value;
+                    break;
+                default:
+                    return;
+            }
             writeScore();
         }
 
