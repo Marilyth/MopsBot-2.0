@@ -37,7 +37,7 @@ namespace MopsBot
             // Mark where the prefix ends and the command begins
             int argPos = 0;
             // Determine if the message has a valid prefix, adjust argPos 
-            if (!(message.HasMentionPrefix(client.CurrentUser, ref argPos) || message.HasCharPrefix('&', ref argPos) || message.HasCharPrefix('?', ref argPos))) return;
+            if (!(message.HasMentionPrefix(client.CurrentUser, ref argPos) || message.HasCharPrefix('!', ref argPos) || message.HasCharPrefix('?', ref argPos))) return;
 
             if (message.Content.Contains("help") || message.HasCharPrefix('?', ref argPos))
             {
