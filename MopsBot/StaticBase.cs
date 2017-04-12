@@ -49,6 +49,7 @@ namespace MopsBot
             }
         }
         private async Task Client_UserJoined(SocketGuildUser User){
+            //PhunkRoyalServer Begruessung
             if(User.Guild.Id.Equals(205130885337448469))
                 await User.Guild.GetTextChannel(235733911257219072).SendMessageAsync($"Willkommen im **{User.Guild.Name}** Server, {User.Mention}!"+
                 $"\n\nBevor Du vollen Zugriff auf den Server hast, möchten wir Dich auf die Regeln des Servers hinweisen, die Du hier findest:"+
