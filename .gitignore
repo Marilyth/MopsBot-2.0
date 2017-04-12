@@ -252,4 +252,4 @@ paket-files/
 *.sln.iml
 
 # data
-MopsBot/data/
+data/
