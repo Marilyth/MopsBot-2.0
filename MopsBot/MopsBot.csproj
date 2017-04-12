@@ -156,6 +156,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CommandHandler.cs" />
+    <Compile Include="Module\DataBase.cs" />
     <Compile Include="Module\Data\Individual\Field.cs" />
     <Compile Include="Module\Data\Individual\User.cs" />
     <Compile Include="Module\Data\Session\Poll.cs" />

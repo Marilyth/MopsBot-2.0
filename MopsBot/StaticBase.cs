@@ -41,7 +41,7 @@ namespace MopsBot
             //Daily Statistics & User Experience
             if (!arg.Author.IsBot && !arg.Content.StartsWith("!"))
             {
-                people.addExperience(arg.Author.Id, arg.Content.Length);
+                people.addStat(arg.Author.Id, arg.Content.Length, "experience");
                 stats.addValue(arg.Content.Length);
             }
         }
