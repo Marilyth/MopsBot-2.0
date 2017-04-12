@@ -44,21 +44,7 @@ namespace MopsBot.Module
                 return;
 
             string[] pollSegments = pPoll.Split(';');
-            List<IGuildUser> participants = Context.Message.MentionedUserIds.Select(id => Context.Guild.GetUserAsync(id).Result).ToList();
-
-            foreach (var a in Context.Message.MentionedRoleIds.Select(id => Context.Guild.GetRole(id)))
-            {
-                participants.AddRange(Context.Guild.GetUsersAsync().Result.Where(u => u.RoleIds.Contains(a.Id)));
-            }
-
-            if (Context.Message.Tags.Select(t => t.Type).Contains(TagType.EveryoneMention))
-            {
-                participants.AddRange(Context.Guild.GetUsersAsync().Result);
-            }
-            if (Context.Message.Tags.Select(t => t.Type).Contains(TagType.HereMention))
-            {
-                participants.AddRange(Context.Guild.GetUsersAsync().Result.Where(u => u.Status.Equals(UserStatus.Online)));
-            }
+            List<IGuildUser> participants = StaticBase.getMentionedUsers(Context);
 
             StaticBase.poll = new Data.Session.Poll(pollSegments[0], pollSegments[1].Split(':'), participants.ToArray());
 

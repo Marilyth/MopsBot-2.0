@@ -15,7 +15,11 @@ namespace MopsBot.Module.Data
 
         public TextInformation()
         {
-            StreamReader read = new StreamReader("data//quotes.txt");
+            #if NET40
+                StreamReader read = new StreamReader("data//quotes.txt");
+            #else
+                StreamReader read = new StreamReader(new FileStream("data//quotes.txt",FileMode.Open));
+            #endif
             cookies = int.Parse(read.ReadLine());
 
             int count = int.Parse(read.ReadLine());
@@ -29,12 +33,20 @@ namespace MopsBot.Module.Data
                 quotes.Add(aquote.Trim('\r','\n'));
             }
 
-            read.Close();
+            #if NET40
+                read.Close();
+            #else
+                read.Dispose();
+            #endif
         }
 
         public void writeInformation()
         {
-            StreamWriter write = new StreamWriter("data//quotes.txt");
+            #if NET40
+                StreamWriter write = new StreamWriter("data//quotes.txt");
+            #else
+                StreamWriter write = new StreamWriter(new FileStream("data//quotes.txt",FileMode.OpenOrCreate));
+            #endif
 
             write.WriteLine(cookies);
             write.WriteLine(quotes.Count);
@@ -42,7 +54,11 @@ namespace MopsBot.Module.Data
                 string output = string.Join("\0", quotes.ToArray());
                 write.Write(output);
             
-            write.Close();
+            #if NET40
+                write.Close();
+            #else  
+                write.Dispose();
+            #endif
         }
     }
 }

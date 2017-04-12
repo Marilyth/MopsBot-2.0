@@ -22,7 +22,10 @@ namespace MopsBot
             client = new DiscordSocketClient(new DiscordSocketConfig()
             {
                 LogLevel = LogSeverity.Info,
-                WebSocketProvider = Discord.Net.Providers.WS4Net.WS4NetProvider.Instance
+                
+                #if NET40
+                    WebSocketProvider = Discord.Net.Providers.WS4Net.WS4NetProvider.Instance
+                #endif
             });
             
 

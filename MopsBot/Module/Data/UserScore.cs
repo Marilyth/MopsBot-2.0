@@ -14,7 +14,12 @@ namespace MopsBot.Module.Data
 
         public UserScore()
         {
-            StreamReader read = new StreamReader("data//scores.txt");
+            #if NET40
+                StreamReader read = new StreamReader("data//scores.txt");
+            #else
+                StreamReader read = new StreamReader(new FileStream("data//scores.txt",FileMode.Open));
+            #endif
+            
 
             string fs = "";
             while ((fs = read.ReadLine()) != null)
@@ -22,7 +27,13 @@ namespace MopsBot.Module.Data
                 string[] s = fs.Split(':');
                 users.Add(new Individual.User(ulong.Parse(s[0]),int.Parse(s[1]), int.Parse(s[2]), int.Parse(s[3]), int.Parse(s[4]), int.Parse(s[5])));
             }
-            read.Close();
+
+            #if NET40
+                read.Close();
+            #else
+                read.Dispose();
+            #endif
+
             users = users.OrderByDescending(u => u.Experience).ToList();
         }
 
@@ -30,14 +41,22 @@ namespace MopsBot.Module.Data
         {
             users = users.OrderByDescending(u => u.Experience).ToList();
 
-            StreamWriter write = new StreamWriter("data//scores.txt");
+            #if NET40
+                StreamWriter write = new StreamWriter("data//scores.txt");
+            #else
+                StreamWriter write = new StreamWriter(new FileStream("data//scores.txt",FileMode.OpenOrCreate));
+            #endif
 
             foreach (Individual.User that in users)
             {
                 write.WriteLine($"{that.ID}:{that.Score}:{that.Experience}:{that.punched}:{that.hugged}:{that.kissed}");
             }
 
-            write.Close();
+            #if NET40
+                write.Close();
+            #else  
+                write.Dispose();
+            #endif
         }
 
         public void addStat(ulong id, int value, string stat)

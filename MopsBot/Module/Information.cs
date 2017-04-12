@@ -1,12 +1,19 @@
 ﻿using System;
-using System.Web.Script.Serialization;
-using System.Linq;
+
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
+
+using System.Linq;
+
+#if NET40
+    using System.Web.Script.Serialization;
+#else
+    using Newtonsoft.Json;
+#endif
 
 namespace MopsBot.Module
 {
@@ -17,7 +24,11 @@ namespace MopsBot.Module
         [Summary("Returns the date you joined the Guild")]
         public async Task howLong()
         {
-            await ReplyAsync(((SocketGuildUser)Context.User).JoinedAt.Value.Date.ToShortDateString());
+            #if NET40
+                await ReplyAsync(((SocketGuildUser)Context.User).JoinedAt.Value.Date.ToShortDateString());
+            #else
+                await ReplyAsync(((SocketGuildUser)Context.User).JoinedAt.Value.Date.ToString("d"));
+            #endif
         }
 
         [Command("joinServer")]
@@ -33,9 +44,13 @@ namespace MopsBot.Module
         {
             string query = Task.Run(() => readURL($"http://api.wordnik.com:80/v4/word.json/{text}/definitions?limit=1&includeRelated=false&sourceDictionaries=all&useCanonical=true&includeTags=false&api_key=a2a73e7b926c924fad7001ca3111acd55af2ffabf50eb4ae5")).Result;
             
-            var jss = new JavaScriptSerializer();
+            #if NET40
+                var jss = new JavaScriptSerializer();
+                dynamic tempDict = jss.Deserialize<dynamic>(query);
+            #else
+                dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
+            #endif
 
-            dynamic tempDict = jss.Deserialize<dynamic>(query);
             tempDict = tempDict[0];
             await ReplyAsync($"__**{tempDict["word"]}**__\n\n``{tempDict["text"]}``");
         }
@@ -46,9 +61,13 @@ namespace MopsBot.Module
         {
             string query = Task.Run(() => readURL($"http://www.transltr.org/api/translate?text={text}&to={dstLanguage}&from={srcLanguage}")).Result;
 
-            var jss = new JavaScriptSerializer();
-
-            dynamic tempDict = jss.Deserialize<dynamic>(query);
+            #if NET40
+                var jss = new JavaScriptSerializer();
+                dynamic tempDict = jss.Deserialize<dynamic>(query);
+            #else
+                dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
+            #endif
+            
 
             await ReplyAsync(tempDict["translationText"]);
         }
@@ -64,9 +83,13 @@ namespace MopsBot.Module
         {
             string query = readURL("http://api.wordnik.com:80/v4/words.json/randomWord?hasDictionaryDef=true&excludePartOfSpeech=given-name&minCorpusCount=10000&maxCorpusCount=-1&minDictionaryCount=4&maxDictionaryCount=-1&minLength=3&maxLength=13&api_key=a2a73e7b926c924fad7001ca3111acd55af2ffabf50eb4ae5");
 
-            var jss = new JavaScriptSerializer();
-
-            dynamic tempDict = jss.Deserialize<dynamic>(query);
+            #if NET40
+                var jss = new JavaScriptSerializer();
+                dynamic tempDict = jss.Deserialize<dynamic>(query);
+            #else
+                dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
+            #endif
+            
 
             return tempDict["word"];
         }
@@ -77,7 +100,11 @@ namespace MopsBot.Module
             try
             {
                 var request = (System.Net.HttpWebRequest)System.Net.WebRequest.Create(URL);
-                using (var response = request.GetResponse())
+                #if NET40
+                    using (var response = request.GetResponse())
+                #else  
+                    using (var response =  request.GetResponseAsync().Result)
+                #endif
                 using (var content = response.GetResponseStream())
                 using (var reader = new System.IO.StreamReader(content))
                 {
