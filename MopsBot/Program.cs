@@ -29,7 +29,7 @@ namespace MopsBot
             });
             
 
-            var token = "MjEyOTc1NTYxNzU5MzkxNzQ0.C39SUg.Wv0w8yRhzyX - _4LFjbrQUjCL - 8o";
+            var token = "xx";
 
             await client.LoginAsync(TokenType.Bot, token);
             await client.StartAsync();
