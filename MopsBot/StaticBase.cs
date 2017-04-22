@@ -18,10 +18,12 @@ namespace MopsBot
 
         public StaticBase()
         {
+            
             stats = new Module.Data.Statistics();
             info = new Module.Data.TextInformation();
             people = new Module.Data.UserScore();
-
+            
+            Program.client.UserJoined += Client_UserJoined;
             Program.client.MessageReceived += Client_MessageReceived;
         }
 
@@ -46,6 +48,15 @@ namespace MopsBot
                 stats.addValue(arg.Content.Length);
             }
         }
+        private async Task Client_UserJoined(SocketGuildUser User){
+            //PhunkRoyalServer Begruessung
+            if(User.Guild.Id.Equals(205130885337448469))
+                await User.Guild.GetTextChannel(235733911257219072).SendMessageAsync($"Willkommen im **{User.Guild.Name}** Server, {User.Mention}!"+
+                $"\n\nBevor Du vollen Zugriff auf den Server hast, möchten wir Dich auf die Regeln des Servers hinweisen, die Du hier findest:"+
+                $" {User.Guild.GetTextChannel(205136618955341825).Mention}\nSobald Du fertig bist, kannst Du Dich an einen unserer Moderatoren zu Deiner"+
+                $" rechten wenden, die Dich alsbald zum Mitglied ernennen.\n\nHave a very mopsig day\nDein heimlicher Verehrer Mops");
+        }
+        
         public static List<IGuildUser> getMentionedUsers(CommandContext Context){
             List<IGuildUser> user = Context.Message.MentionedUserIds.Select(id => Context.Guild.GetUserAsync(id).Result).ToList();
 
@@ -63,6 +74,30 @@ namespace MopsBot
                 user.AddRange(Context.Guild.GetUsersAsync().Result.Where(u => u.Status.Equals(UserStatus.Online)));
             }
             return new List<IGuildUser>(user.Distinct());
+        }
+
+        public static async void twitchNotification(ulong GuildId, ulong ChannelID, string name, string stream_url, string avatar_url, string stream_title, string stream_preview, int viewer_count, string stream_game){
+            EmbedBuilder e = new EmbedBuilder();
+            e.Color=new Color(0x6441A4);
+            e.Title=stream_title;
+            e.Url=stream_url;
+
+            EmbedAuthorBuilder author = new EmbedAuthorBuilder();
+            author.Name=name;
+            author.Url=stream_url;
+            author.IconUrl=avatar_url;
+            e.Author=author;
+
+            e.ThumbnailUrl=avatar_url;
+            Random rnd = new Random();
+            e.ImageUrl=$"{stream_preview}?rand={rnd.Next(999999)}";
+
+            
+            
+            e.AddInlineField("Played Game", stream_game);
+            e.AddInlineField("Viewes", viewer_count);
+
+            await Program.client.GetGuild(GuildId).GetTextChannel(ChannelID).SendMessageAsync(Program.client.GetGuild(GuildId).EveryoneRole.Mention,false,e);
         }
     }
 }
