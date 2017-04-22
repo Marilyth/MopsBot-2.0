@@ -76,7 +76,7 @@ namespace MopsBot
             return new List<IGuildUser>(user.Distinct());
         }
 
-        public static async void twitchNotification(ulong GuildId, ulong ChannelID, string name, string stream_url, string avatar_url, string stream_title, string stream_preview, string platform_name, int viewer_count, string stream_game){
+        public static async void twitchNotification(ulong GuildId, ulong ChannelID, string name, string stream_url, string avatar_url, string stream_title, string stream_preview, int viewer_count, string stream_game){
             EmbedBuilder e = new EmbedBuilder();
             e.Color=new Color(0x6441A4);
             e.Title=stream_title;
@@ -92,9 +92,7 @@ namespace MopsBot
             Random rnd = new Random();
             e.ImageUrl=$"{stream_preview}?rand={rnd.Next(999999)}";
 
-            EmbedFooterBuilder footer = new EmbedFooterBuilder();
-            footer.Text = platform_name;
-            e.Footer=footer;
+            
             
             e.AddInlineField("Played Game", stream_game);
             e.AddInlineField("Viewes", viewer_count);
