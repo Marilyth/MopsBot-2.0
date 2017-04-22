@@ -69,7 +69,7 @@ namespace MopsBot.Module
             #endif
             
 
-            await ReplyAsync(tempDict["translationText"]);
+            await ReplyAsync(tempDict["translationText"].ToString());   
         }
 
         [Command("dayDiagram")]
