@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,6 +16,7 @@ namespace MopsBot
             new Program().Start().GetAwaiter().GetResult();
 
         public static DiscordSocketClient client;
+        public static string twitchId;
         private CommandHandler handler;
 
         public async Task Start()
@@ -24,9 +26,13 @@ namespace MopsBot
                 LogLevel = LogSeverity.Info,
                 WebSocketProvider = Discord.Net.Providers.WS4Net.WS4NetProvider.Instance
             });
-            
 
-            var token = "MjEyOTc1NTYxNzU5MzkxNzQ0.C39SUg.Wv0w8yRhzyX - _4LFjbrQUjCL - 8o";
+            StreamReader sr = new StreamReader(new FileStream("data//config.txt", FileMode.Open));
+
+            var token = sr.ReadLine();
+            twitchId = sr.ReadLine();
+
+            sr.Close();
 
             await client.LoginAsync(TokenType.Bot, token);
             await client.StartAsync();

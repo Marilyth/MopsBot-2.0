@@ -159,10 +159,13 @@
     <Compile Include="Module\DataBase.cs" />
     <Compile Include="Module\Data\Individual\Field.cs" />
     <Compile Include="Module\Data\Individual\User.cs" />
+    <Compile Include="Module\Data\Session\Blackjack.cs" />
     <Compile Include="Module\Data\Session\Poll.cs" />
+    <Compile Include="Module\Data\Session\TwitchTracker.cs" />
     <Compile Include="Module\Data\Statistics.cs" />
-    <Compile Include="Module\Data\TextInformation.cs" />
+    <Compile Include="Module\Data\StreamerList.cs" />
     <Compile Include="Module\Data\UserScore.cs" />
+    <Compile Include="Module\Game.cs" />
     <Compile Include="Module\Information.cs" />
     <Compile Include="Module\Moderation.cs" />
     <Compile Include="Program.cs" />

@@ -24,7 +24,7 @@ namespace MopsBot.Module
         [Summary("Provides link to make me join your Server")]
         public async Task joinServer()
         {
-            await ReplyAsync("https://discordapp.com/oauth2/authorize?client_id=212975561759391744&scope=bot&permissions=66186303");
+            await ReplyAsync($"https://discordapp.com/oauth2/authorize?client_id={Context.Client.CurrentUser.Id}&scope=bot");
         }
 
         [Command("define")]
