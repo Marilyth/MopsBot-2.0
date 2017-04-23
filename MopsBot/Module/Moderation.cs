@@ -44,11 +44,11 @@ namespace MopsBot.Module
                 return;
 
             string[] pollSegments = Poll.Split(';');
-            List<IGuildUser> participants = StaticBase.getMentionedUsers(Context);
+            List<IGuildUser> participants = StaticBase.getMentionedUsers((CommandContext)Context);
 
             StaticBase.poll = new Data.Session.Poll(pollSegments[0], pollSegments[1].Split(':'), participants.ToArray());
 
-            foreach (Discord.IGuildUser part in participants)
+            foreach (IGuildUser part in participants)
             {
                 string output = "";
                 for (int i = 0; i < StaticBase.poll.answers.Length; i++)
