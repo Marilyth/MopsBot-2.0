@@ -14,11 +14,9 @@ namespace MopsBot.Module.Data
 
         public Statistics()
         {
-            #if NET40
-                StreamReader read = new StreamReader("data//statistics.txt");
-            #else
-                StreamReader read = new StreamReader(new FileStream("data//statistics.txt", FileMode.Open));
-            #endif
+            
+            StreamReader read = new StreamReader(new FileStream("data//statistics.txt", FileMode.Open));
+            
             string s = "";
 
             while ((s = read.ReadLine()) != null)
@@ -26,11 +24,8 @@ namespace MopsBot.Module.Data
                 string[] data = s.Split(':');
                 days.Add(new Day(data[0], int.Parse(data[1])));
             }
-            #if NET40
-                read.Close();
-            #else
-                read.Dispose();
-            #endif
+            
+            read.Dispose();
         }
 
         public void addValue(int increase)
@@ -47,21 +42,15 @@ namespace MopsBot.Module.Data
 
         private void saveData()
         {
-            #if NET40
-                StreamWriter write = new StreamWriter("data//statistics.txt");
-            #else
-                StreamWriter write = new StreamWriter(new FileStream("data//statistics.txt", FileMode.OpenOrCreate));
-            #endif
+            StreamWriter write = new StreamWriter(new FileStream("data//statistics.txt", FileMode.OpenOrCreate));
+            
             foreach(Day cur in days)
             {
                 write.WriteLine($"{cur.date.ToString("dd/MM/yyyy")}:{cur.value}");
             }
 
-            #if NET40
-                write.Close();
-            #else
-                write.Dispose();
-            #endif
+            write.Dispose();
+            
         }
 
         public string drawDiagram(int count)
