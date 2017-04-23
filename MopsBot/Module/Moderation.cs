@@ -38,27 +38,13 @@ namespace MopsBot.Module
         }
 
         [Command("poll"), Summary("Creates a poll\nExample: !poll Am I sexy?;Yes:No;@Panda @Demon @Snail")]
-        public async Task Poll([Remainder] string pPoll)
+        public async Task Poll([Remainder] string Poll)
         {
             if (!Context.Guild.GetUserAsync(Context.User.Id).Result.GuildPermissions.Administrator)
                 return;
 
-            string[] pollSegments = pPoll.Split(';');
-            List<IGuildUser> participants = Context.Message.MentionedUserIds.Select(id => Context.Guild.GetUserAsync(id).Result).ToList();
-
-            foreach (var a in Context.Message.MentionedRoleIds.Select(id => Context.Guild.GetRole(id)))
-            {
-                participants.AddRange(Context.Guild.GetUsersAsync().Result.Where(u => u.RoleIds.Contains(a.Id)));
-            }
-
-            if (Context.Message.Tags.Select(t => t.Type).Contains(TagType.EveryoneMention))
-            {
-                participants.AddRange(Context.Guild.GetUsersAsync().Result);
-            }
-            if (Context.Message.Tags.Select(t => t.Type).Contains(TagType.HereMention))
-            {
-                participants.AddRange(Context.Guild.GetUsersAsync().Result.Where(u => u.Status.Equals(UserStatus.Online)));
-            }
+            string[] pollSegments = Poll.Split(';');
+            List<IGuildUser> participants = StaticBase.getMentionedUsers(Context);
 
             StaticBase.poll = new Data.Session.Poll(pollSegments[0], pollSegments[1].Split(':'), participants.ToArray());
 
