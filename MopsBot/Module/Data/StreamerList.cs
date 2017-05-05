@@ -29,7 +29,7 @@ namespace MopsBot.Module.Data
                     streamers.Find(x => x.name.ToLower().Equals(trackerInformation[0].ToLower())).ChannelIds.Add(ulong.Parse(trackerInformation[1]), trackerInformation[2]);
             }
 
-            read.Close();
+            read.Dispose();
         }
 
         public void writeList()
@@ -43,7 +43,7 @@ namespace MopsBot.Module.Data
                     write.WriteLine($"{tr.name}:{channel.Key}:{channel.Value}");
                 }
             }
-            write.Close();
+            write.Dispose();
         }
     }
 }
