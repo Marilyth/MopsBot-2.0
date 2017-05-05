@@ -4,6 +4,7 @@
     "debugType": "portable",
     "emitEntryPoint": true
   },
+  "exclude":["MopsBot/MopsBot.csproj","MopsBot.sln"],
   "dependencies": {
     "Discord.Net": "1.0.0-rc"
   },
@@ -18,4 +19,5 @@
       "imports": "dnxcore50"
     }
   }
+  
 }

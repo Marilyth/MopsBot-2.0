@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Web.Script.Serialization;
 using System.Collections.Generic;
 using System.Linq;
 using Discord;
@@ -7,12 +6,17 @@ using Discord.WebSocket;
 using Discord.Commands;
 using System.Text;
 using System.Threading.Tasks;
+#if NET40
+    using System.Web.Script.Serialization;
+#else
+    using Newtonsoft.Json;
+#endif
 
 namespace MopsBot.Module.Data.Session
 {
     public class TwitchTracker
     {
-        private System.Timers.Timer checkForChange;
+        private System.Threading.Timer checkForChange;
         private Boolean isOnline;
         internal string name;
         internal Dictionary<ulong, string> ChannelIds;
@@ -23,12 +27,10 @@ namespace MopsBot.Module.Data.Session
             ChannelIds.Add(pChannel, notificationText);
             name = streamerName;
             isOnline = false;
-            checkForChange = new System.Timers.Timer(6000);
-            checkForChange.Elapsed += CheckForChange_Elapsed;
-            checkForChange.Enabled = true;
+            checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false), 6000, 60000);
         }
 
-        private void CheckForChange_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void CheckForChange_Elapsed(object stateinfo)
         {
             dynamic information = streamerInformation();
             Boolean isStreaming = information["stream"] != null;
@@ -46,15 +48,18 @@ namespace MopsBot.Module.Data.Session
                 }
             }
 
-            checkForChange.Interval = 60000;
         }
 
         private dynamic streamerInformation()
         {
             string query = Task.Run(() => Information.readURL($"https://api.twitch.tv/kraken/streams/{name}?client_id={Program.twitchId}")).Result;
 
-            var jss = new JavaScriptSerializer();
-            dynamic tempDict = jss.Deserialize<dynamic>(query);
+            #if NET40
+                var jss = new JavaScriptSerializer();
+                dynamic tempDict = jss.Deserialize<dynamic>(query);
+            #else
+                dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
+            #endif
             return tempDict;
         }
 
