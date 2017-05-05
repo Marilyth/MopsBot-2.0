@@ -23,10 +23,10 @@ namespace MopsBot.Module.Data
                 var trackerInformation = s.Split(':');
                 if (!streamers.Exists(x => x.name.ToLower().Equals(trackerInformation[0].ToLower())))
                 {
-                    streamers.Add(new Session.TwitchTracker(trackerInformation[0], ulong.Parse(trackerInformation[1])));
+                    streamers.Add(new Session.TwitchTracker(trackerInformation[0], ulong.Parse(trackerInformation[1]), trackerInformation[2]));
                 }
                 else
-                    streamers.Find(x => x.name.ToLower().Equals(trackerInformation[0].ToLower())).ChannelIds.Add(ulong.Parse(trackerInformation[1]));
+                    streamers.Find(x => x.name.ToLower().Equals(trackerInformation[0].ToLower())).ChannelIds.Add(ulong.Parse(trackerInformation[1]), trackerInformation[2]);
             }
 
             read.Close();
@@ -38,9 +38,9 @@ namespace MopsBot.Module.Data
 
             foreach(Session.TwitchTracker tr in streamers)
             {
-                foreach(ulong id in tr.ChannelIds)
+                foreach(var channel in tr.ChannelIds)
                 {
-                    write.WriteLine($"{tr.name}:{id}");
+                    write.WriteLine($"{tr.name}:{channel.Key}:{channel.Value}");
                 }
             }
             write.Close();

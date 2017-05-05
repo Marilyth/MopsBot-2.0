@@ -85,14 +85,14 @@ namespace MopsBot.Module
         [Command("trackStreamer")]
         [Summary("Keeps track of the specified Streamer, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
         [RequireUserPermission(ChannelPermission.ManageChannel)]
-        public async Task trackStreamer(string streamerName)
+        public async Task trackStreamer(string streamerName, [Remainder]string notificationMessage)
         {
             if (!StaticBase.streamTracks.streamers.Exists(x => x.name.ToLower().Equals(streamerName.ToLower())))
             {
-                StaticBase.streamTracks.streamers.Add(new Data.Session.TwitchTracker(streamerName, Context.Channel.Id));
+                StaticBase.streamTracks.streamers.Add(new Data.Session.TwitchTracker(streamerName, Context.Channel.Id, notificationMessage));
             }
             else
-                StaticBase.streamTracks.streamers.Find(x => x.name.ToLower().Equals(streamerName.ToLower())).ChannelIds.Add(Context.Channel.Id);
+                StaticBase.streamTracks.streamers.Find(x => x.name.ToLower().Equals(streamerName.ToLower())).ChannelIds.Add(Context.Channel.Id, notificationMessage);
 
             StaticBase.streamTracks.writeList();
 

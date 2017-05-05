@@ -32,7 +32,7 @@ namespace MopsBot
             var token = sr.ReadLine();
             twitchId = sr.ReadLine();
 
-            sr.Close();
+            sr.Dispose();
 
             await client.LoginAsync(TokenType.Bot, token);
             await client.StartAsync();

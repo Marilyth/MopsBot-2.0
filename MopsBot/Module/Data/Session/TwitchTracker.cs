@@ -15,12 +15,12 @@ namespace MopsBot.Module.Data.Session
         private System.Timers.Timer checkForChange;
         private Boolean isOnline;
         internal string name;
-        internal List<ulong> ChannelIds;
+        internal Dictionary<ulong, string> ChannelIds;
 
-        public TwitchTracker(string streamerName, ulong pChannel)
+        public TwitchTracker(string streamerName, ulong pChannel, string notificationText)
         {
-            ChannelIds = new List<ulong>();
-            ChannelIds.Add(pChannel);
+            ChannelIds = new Dictionary<ulong, string>();
+            ChannelIds.Add(pChannel, notificationText);
             name = streamerName;
             isOnline = false;
             checkForChange = new System.Timers.Timer(6000);
@@ -38,11 +38,6 @@ namespace MopsBot.Module.Data.Session
                 if (isOnline)
                 {
                     isOnline = false;
-
-                    foreach (var channel in ChannelIds)
-                    {
-                        ((SocketTextChannel)Program.client.GetChannel(channel)).SendMessageAsync($"{name} hat aufgehört zu streamen.");
-                    }
                 }
                 else
                 {
@@ -77,14 +72,14 @@ namespace MopsBot.Module.Data.Session
             e.Author = author;
 
             e.ThumbnailUrl = streamInformation["stream"]["channel"]["logo"];
-            e.ImageUrl = streamInformation["stream"]["preview"]["medium"];
+            e.ImageUrl = $"{streamInformation["stream"]["preview"]["medium"]}?rand={StaticBase.ran.Next(0,99999999)}";
 
             e.AddInlineField("Spiel", streamInformation["stream"]["game"]);
             e.AddInlineField("Zuschauer", streamInformation["stream"]["viewers"]);
 
             foreach(var channel in ChannelIds)
             {
-                await ((SocketTextChannel)Program.client.GetChannel(channel)).SendMessageAsync($"{name} streamt gerade!", false, e);
+                await ((SocketTextChannel)Program.client.GetChannel(channel.Key)).SendMessageAsync(channel.Value, false, e);
             }
         }
     }
