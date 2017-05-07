@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace MopsBot
 {
@@ -18,14 +19,18 @@ namespace MopsBot
         public static Module.Data.StreamerList streamTracks;
         public static Random ran = new Random();
 
+        public static Module.Data.ClipTracker ClipTracker;
+
         public StaticBase()
         {
             stats = new Module.Data.Statistics();
             people = new Module.Data.UserScore();
             streamTracks = new Module.Data.StreamerList();
+            ClipTracker = new Module.Data.ClipTracker();
 
             Program.client.UserJoined += Client_UserJoined;
             Program.client.MessageReceived += Client_MessageReceived;
+            
         }
 
         

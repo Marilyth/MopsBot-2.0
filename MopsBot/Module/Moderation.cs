@@ -98,5 +98,16 @@ namespace MopsBot.Module
 
             await ReplyAsync("Keeping track of " + streamerName + "'s streams, from now on!");
         }
+
+        [Command("trackClips")]
+        [Summary("Keeps track of clips from streams of the specified Streamer, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
+        [RequireUserPermission(ChannelPermission.ManageChannel)]
+        public async Task trackClips(string streamerName)
+        {
+            StaticBase.ClipTracker.addTracker(streamerName, Context.Channel.Id);
+
+            await ReplyAsync("Keeping track of clips of " + streamerName + "'s streams, from now on!");
+        }
+
     }
 }
