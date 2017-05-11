@@ -89,8 +89,7 @@ namespace MopsBot.Module
         {
             if (!StaticBase.streamTracks.streamers.Exists(x => x.name.ToLower().Equals(streamerName.ToLower())))
             {
-                StaticBase.streamTracks.streamers.Add(new Data.Session.TwitchTracker(streamerName, Context.Channel.Id, notificationMessage,false));
-            }
+                StaticBase.streamTracks.streamers.Add(new Data.Session.TwitchTracker(streamerName, Context.Channel.Id, notificationMessage, false));            }
             else
                 StaticBase.streamTracks.streamers.Find(x => x.name.ToLower().Equals(streamerName.ToLower())).ChannelIds.Add(Context.Channel.Id, notificationMessage);
 

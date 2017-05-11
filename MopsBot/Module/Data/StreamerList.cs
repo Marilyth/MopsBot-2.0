@@ -23,7 +23,7 @@ namespace MopsBot.Module.Data
                 var trackerInformation = s.Split(':');
                 if (!streamers.Exists(x => x.name.ToLower().Equals(trackerInformation[0].ToLower())))
                 {
-                    streamers.Add(new Session.TwitchTracker(trackerInformation[0], ulong.Parse(trackerInformation[1]), trackerInformation[2]), Boolean.Parse(trackerInformation[3]));
+                    streamers.Add(new Session.TwitchTracker(trackerInformation[0], ulong.Parse(trackerInformation[1]), trackerInformation[2], Boolean.Parse(trackerInformation[3].ToLower())));
                 }
                 else
                     streamers.Find(x => x.name.ToLower().Equals(trackerInformation[0].ToLower())).ChannelIds.Add(ulong.Parse(trackerInformation[1]), trackerInformation[2]);
