@@ -33,7 +33,12 @@ namespace MopsBot.Module.Data.Session
 
         private void CheckForChange_Elapsed(object stateinfo)
         {
-            dynamic information = streamerInformation();
+            dynamic information;
+            try{
+                information = streamerInformation();
+            }catch{
+                return;
+            }
             Boolean isStreaming = information["stream"] != null;
 
             if(isOnline != isStreaming)
