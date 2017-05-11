@@ -17,17 +17,17 @@ namespace MopsBot.Module.Data.Session
     public class TwitchTracker
     {
         private System.Threading.Timer checkForChange;
-        private Boolean isOnline;
+        internal Boolean isOnline;
         internal string name;
         internal Dictionary<ulong, string> ChannelIds;
         
 
-        public TwitchTracker(string streamerName, ulong pChannel, string notificationText)
+        public TwitchTracker(string streamerName, ulong pChannel, string notificationText, Boolean pIsOnline)
         {
             ChannelIds = new Dictionary<ulong, string>();
             ChannelIds.Add(pChannel, notificationText);
             name = streamerName;
-            isOnline = false;
+            isOnline = pIsOnline;
             checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false), StaticBase.ran.Next(6,59)*1000, 60000);
         }
 
@@ -57,6 +57,7 @@ namespace MopsBot.Module.Data.Session
                         Console.Out.WriteLine(name);
                     }
                 }
+                StaticBase.streamTracks.writeList();
             }
 
         }

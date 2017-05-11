@@ -100,8 +100,7 @@ namespace MopsBot.Module.Data{
                     foreach(dynamic clip in ((IEnumerable<dynamic>)tempDict["clips"]).Where(p => DateTime.Parse(p.created_at.ToString(),null,System.Globalization.DateTimeStyles.RoundtripKind).CompareTo(lastcheck)>0)){
                         clips.Add(clip);
                     }
-                    if(tempDict["_cursor"].ToString()!=""){
-                        Console.WriteLine("a");
+                    if(!tempDict["_cursor"].ToString().Equals("")){
                         return NextPage(clips, channel, tempDict["_cursor"].ToString());
                     }else{
                         if(clips.Count>0)
