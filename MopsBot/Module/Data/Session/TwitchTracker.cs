@@ -18,16 +18,17 @@ namespace MopsBot.Module.Data.Session
     {
         private System.Threading.Timer checkForChange;
         internal Boolean isOnline;
-        internal string name;
+        internal string name, curGame;
         internal Dictionary<ulong, string> ChannelIds;
         
 
-        public TwitchTracker(string streamerName, ulong pChannel, string notificationText, Boolean pIsOnline)
+        public TwitchTracker(string streamerName, ulong pChannel, string notificationText, Boolean pIsOnline, string pGame)
         {
             ChannelIds = new Dictionary<ulong, string>();
             ChannelIds.Add(pChannel, notificationText);
             name = streamerName;
             isOnline = pIsOnline;
+            curGame = pGame;
             checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false), StaticBase.ran.Next(6,59)*1000, 60000);
         }
 
@@ -51,6 +52,7 @@ namespace MopsBot.Module.Data.Session
                 {
                     isOnline = true;
                     try{
+                        curGame = (information["stream"]["game"].ToString().Equals(""))?"Nothing":information["stream"]["game"].ToString();
                         sendTwitchNotification(information);
                     }catch(Exception e){
                         Console.Out.WriteLine(e.Message);
@@ -60,6 +62,15 @@ namespace MopsBot.Module.Data.Session
                 StaticBase.streamTracks.writeList();
             }
 
+            if(isOnline)
+                if(curGame.CompareTo(information["stream"]["game"].ToString()) != 0 && !information["stream"]["game"].ToString().Equals("")){
+                    curGame = information["stream"]["game"].ToString();
+
+                    foreach(var channel in ChannelIds)
+                        ((SocketTextChannel)Program.client.GetChannel(channel.Key)).SendMessageAsync($"{name} spielt jetzt **{curGame}**!");
+                    
+                    StaticBase.streamTracks.writeList();
+                }
         }
 
         private dynamic streamerInformation()
