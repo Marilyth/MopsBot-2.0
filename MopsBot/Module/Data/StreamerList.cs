@@ -20,13 +20,17 @@ namespace MopsBot.Module.Data
             string s = "";
             while((s = read.ReadLine()) != null)
             {
-                var trackerInformation = s.Split(':');
-                if (!streamers.Exists(x => x.name.ToLower().Equals(trackerInformation[0].ToLower())))
-                {
-                    streamers.Add(new Session.TwitchTracker(trackerInformation[0], ulong.Parse(trackerInformation[1]), trackerInformation[2], Boolean.Parse(trackerInformation[3].ToLower()), trackerInformation[4]));
+                try{
+                    var trackerInformation = s.Split(':');
+                    if (!streamers.Exists(x => x.name.ToLower().Equals(trackerInformation[0].ToLower())))
+                    {
+                        streamers.Add(new Session.TwitchTracker(trackerInformation[0], ulong.Parse(trackerInformation[1]), trackerInformation[2], Boolean.Parse(trackerInformation[3].ToLower()), trackerInformation[4]));
+                    }
+                    else
+                        streamers.Find(x => x.name.ToLower().Equals(trackerInformation[0].ToLower())).ChannelIds.Add(ulong.Parse(trackerInformation[1]), trackerInformation[2]);
+                }catch{
+                    Console.WriteLine(System.DateTime.Now.ToString());
                 }
-                else
-                    streamers.Find(x => x.name.ToLower().Equals(trackerInformation[0].ToLower())).ChannelIds.Add(ulong.Parse(trackerInformation[1]), trackerInformation[2]);
             }
 
             read.Dispose();
@@ -35,7 +39,7 @@ namespace MopsBot.Module.Data
         public void writeList()
         {
             StreamWriter write = new StreamWriter(new FileStream("data//streamers.txt", FileMode.Open));
-
+            write.AutoFlush=true;
             foreach(Session.TwitchTracker tr in streamers)
             {
                 foreach(var channel in tr.ChannelIds)

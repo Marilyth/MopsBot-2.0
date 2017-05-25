@@ -31,7 +31,7 @@ namespace MopsBot.Module.Data
             users = users.OrderByDescending(u => u.Experience).ToList();
 
             StreamWriter write = new StreamWriter(new FileStream("data//scores.txt",FileMode.Open));
-
+            write.AutoFlush=true;
             foreach (Individual.User that in users)
             {
                 write.WriteLine($"{that.ID}:{that.Score}:{that.Experience}:{that.punched}:{that.hugged}:{that.kissed}");
