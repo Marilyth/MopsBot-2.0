@@ -37,7 +37,7 @@ namespace MopsBot
             twitchId = sr.ReadLine();
 
             sr.Dispose();
-
+            
             await client.LoginAsync(TokenType.Bot, token);
             await client.StartAsync();
 
