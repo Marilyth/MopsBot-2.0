@@ -18,8 +18,8 @@ namespace MopsBot
         public static Module.Data.Session.Blackjack blackjack;
         public static Module.Data.StreamerList streamTracks;
         public static Random ran = new Random();
-
         public static Module.Data.ClipTracker ClipTracker;
+        public static List<ulong> BotManager;
 
         public StaticBase()
         {
@@ -27,6 +27,7 @@ namespace MopsBot
             people = new Module.Data.UserScore();
             streamTracks = new Module.Data.StreamerList();
             ClipTracker = new Module.Data.ClipTracker();
+            BotManager = new List<ulong>();
 
             Program.client.UserJoined += Client_UserJoined;
             Program.client.MessageReceived += Client_MessageReceived;
