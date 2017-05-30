@@ -46,10 +46,10 @@ namespace MopsBot
 
             new StaticBase();
 
-            var ids = sr.ReadLine();
-            foreach(var id in ids.Split(':')){
-                StaticBase.BotManager.Add(ulong.Parse(id));
-            }
+            //var ids = sr.ReadLine();
+            // foreach(var id in ids.Split(':')){
+                // StaticBase.BotManager.Add(ulong.Parse(id));
+            // }
 
             sr.Dispose();
 
