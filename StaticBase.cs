@@ -21,14 +21,14 @@ namespace MopsBot
         public static Random ran = new Random();
         public static Module.Data.ClipTracker ClipTracker;
         public static List<ulong> BotManager;
-
+        
         public StaticBase()
         {
             stats = new Module.Data.Statistics();
             people = new Module.Data.UserScore();
             streamTracks = new Module.Data.StreamerList();
             ClipTracker = new Module.Data.ClipTracker();
-
+            
             meetups = new Module.Data.MeetUps();
             BotManager = new List<ulong>();
 
