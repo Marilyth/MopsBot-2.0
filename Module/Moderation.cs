@@ -39,6 +39,46 @@ namespace MopsBot.Module
             }
         }
 
+        [Group("MeetUp")]
+        public class treffen : ModuleBase
+        {
+            [Command("create")]
+            [Summary("Creates a Meet-Up others can participate in.\n<Text> = 13.12.2017;Bowling;China")]
+            public async Task create([Remainder] string Text)
+            {
+                StaticBase.meetups.addMeetUp(Text, (SocketGuildUser)Context.User);
+                await ReplyAsync("Done ~");
+            }
+
+            [Command("blow")]
+            [Summary("Deletes a Meet-Up, if you are the creator.")]
+            public async Task blow(int id)
+            {
+                StaticBase.meetups.blowMeetUp(id, (SocketGuildUser)Context.User);
+            }
+
+            [Command("join")]
+            [Summary("Join the specified meet-up")]
+            public async Task join(int id)
+            {
+                StaticBase.meetups.upcoming[id-1].addParticipant(Context.User.Id);
+            }
+
+            [Command("leave")]
+            [Summary("Leave the specified meet-up")]
+            public async Task leave(int id)
+            {
+                StaticBase.meetups.upcoming[id-1].removeParticipant(Context.User.Id);
+            }
+
+            [Command("get")]
+            [Summary("Provides you with a list of all upcoming Meet-Ups, including their ID")]
+            public async Task get()
+            {
+                await ReplyAsync(StaticBase.meetups.meetupToString());
+            }
+        }
+
         [Command("poll"), Summary("Creates a poll\nExample: !poll Am I sexy?;Yes:No;@Panda @Demon @Snail")]
         public async Task Poll([Remainder] string Poll)
         {
