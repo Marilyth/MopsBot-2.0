@@ -69,7 +69,7 @@ namespace MopsBot
                 {
                     if (module.IsSubmodule)
                     {
-                        output += $"`{module.Name}*`";
+                        output += $"`{module.Name}*` ";
                     }
                     else
                     {

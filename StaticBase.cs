@@ -17,6 +17,7 @@ namespace MopsBot
         public static Module.Data.Session.Poll poll;
         public static Module.Data.Session.Blackjack blackjack;
         public static Module.Data.StreamerList streamTracks;
+        public static Module.Data.MeetUps meetups;
         public static Random ran = new Random();
 
         public static Module.Data.ClipTracker ClipTracker;
@@ -27,6 +28,7 @@ namespace MopsBot
             people = new Module.Data.UserScore();
             streamTracks = new Module.Data.StreamerList();
             ClipTracker = new Module.Data.ClipTracker();
+            meetups = new Module.Data.MeetUps();
 
             Program.client.UserJoined += Client_UserJoined;
             Program.client.MessageReceived += Client_MessageReceived;
