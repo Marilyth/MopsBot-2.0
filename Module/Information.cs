@@ -79,6 +79,20 @@ namespace MopsBot.Module
             await ReplyAsync(StaticBase.stats.drawDiagram(limit));
         }
 
+        [Command("getStats")]
+        [Summary("Returns your experience and all that stuff")]
+        public async Task getStats()
+        {
+            await ReplyAsync(StaticBase.people.users.Find(x => x.ID.Equals(Context.User.Id)).statsToString());
+        }
+
+        [Command("ranking")]
+        [Summary("Returns the top limit ranks of level")]
+        public async Task ranking(int limit)
+        {
+            await ReplyAsync(StaticBase.people.drawDiagram(limit, Data.UserScore.DiagramType.Level));
+        }
+
         public static dynamic getRandomWord()
         {
             string query = readURL("http://api.wordnik.com:80/v4/words.json/randomWord?hasDictionaryDef=true&excludePartOfSpeech=given-name&minCorpusCount=10000&maxCorpusCount=-1&minDictionaryCount=4&maxDictionaryCount=-1&minLength=3&maxLength=13&api_key=a2a73e7b926c924fad7001ca3111acd55af2ffabf50eb4ae5");

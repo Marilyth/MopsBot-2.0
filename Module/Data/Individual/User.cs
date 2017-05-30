@@ -64,5 +64,17 @@ namespace MopsBot.Module.Data.Individual
             }
             return output + TempOutput;
         }
+
+        internal string statsToString()
+        {
+            string output = $"${Score}\n" +
+                            $"Level: {Level} (Experience Bar: {calcNextLevel()})\n" +
+                            $"EXP: {Experience}\n\n" +
+                            $"Been kissed {kissed} times\n" +
+                            $"Been hugged {hugged} times\n" +
+                            $"Been punched {punched} times";
+
+            return output;
+        }
     }
 }

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace MopsBot.Module
 {
@@ -106,6 +107,15 @@ namespace MopsBot.Module
             StaticBase.ClipTracker.addTracker(streamerName, Context.Channel.Id);
 
             await ReplyAsync("Keeping track of clips of " + streamerName + "'s streams, from now on!");
+        }
+
+        [Command("kill")]
+        [Summary("Kills Mops to adapt to any new changes in code.")]
+        [RequireUserPermission(ChannelPermission.ManagePermissions)]
+        public async Task kill()
+        {
+            if(Context.User.Id.Equals(110429968252555264) || Context.User.Id.Equals(110431936635207680))
+                Process.GetCurrentProcess().Kill();
         }
 
     }

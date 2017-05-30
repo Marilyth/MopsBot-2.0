@@ -19,23 +19,19 @@ namespace MopsBot
         public static DiscordSocketClient client;
         public static string twitchId;
         private CommandHandler handler;
-
+        
         public async Task Start()
         {
             client = new DiscordSocketClient(new DiscordSocketConfig()
             {
                 LogLevel = LogSeverity.Info,
-
-                #if NET40
-                    WebSocketProvider = Discord.Net.Providers.WS4Net.WS4NetProvider.Instance
-                #endif
             });
-
+            
             StreamReader sr = new StreamReader(new FileStream("data//config.txt", FileMode.Open));
 
             var token = sr.ReadLine();
             twitchId = sr.ReadLine();
-
+            
             sr.Dispose();
             
             await client.LoginAsync(TokenType.Bot, token);

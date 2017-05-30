@@ -104,7 +104,7 @@ namespace MopsBot.Module.Data
                         {
                             lines[i] += "■";
                         }
-                        lines[i] += $"  ({users[i].Level} / {Program.client.GetUser(users[i].ID).Username})";
+                        lines[i] += $"  ({users[i].Level} / {(Program.client.GetUser(users[i].ID) == null ? "" + users[i].ID : Program.client.GetUser(users[i].ID).Username)})";
                     }
                     break;
 
