@@ -152,12 +152,11 @@ namespace MopsBot.Module
 
         [Command("kill")]
         [Summary("Kills Mops to adapt to any new changes in code.")]
-        [RequireUserPermission(ChannelPermission.ManagePermissions)]
+        [RequireBotManage()]
         [Hide()]
         public async Task kill()
         {
-            if(Context.User.Id.Equals(110429968252555264) || Context.User.Id.Equals(110431936635207680))
-                Process.GetCurrentProcess().Kill();
+            Process.GetCurrentProcess().Kill();   
         }
 
     }

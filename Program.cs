@@ -31,8 +31,7 @@ namespace MopsBot
 
             var token = sr.ReadLine();
             twitchId = sr.ReadLine();
-            
-            sr.Dispose();
+                        
             
             await client.LoginAsync(TokenType.Bot, token);
             await client.StartAsync();
@@ -46,6 +45,13 @@ namespace MopsBot
             await handler.Install(provider);
 
             new StaticBase();
+
+            var ids = sr.ReadLine();
+            foreach(var id in ids.Split(':')){
+                StaticBase.BotManager.Add(ulong.Parse(id));
+            }
+
+            sr.Dispose();
 
             await Task.Delay(-1);
         }

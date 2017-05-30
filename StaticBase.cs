@@ -19,8 +19,8 @@ namespace MopsBot
         public static Module.Data.StreamerList streamTracks;
         public static Module.Data.MeetUps meetups;
         public static Random ran = new Random();
-
         public static Module.Data.ClipTracker ClipTracker;
+        public static List<ulong> BotManager;
 
         public StaticBase()
         {
@@ -28,7 +28,11 @@ namespace MopsBot
             people = new Module.Data.UserScore();
             streamTracks = new Module.Data.StreamerList();
             ClipTracker = new Module.Data.ClipTracker();
+<<<<<<< HEAD
             meetups = new Module.Data.MeetUps();
+=======
+            BotManager = new List<ulong>();
+>>>>>>> 3ae5733e2403868c06099a1e9f298bdfcd3fbbcd
 
             Program.client.UserJoined += Client_UserJoined;
             Program.client.MessageReceived += Client_MessageReceived;
