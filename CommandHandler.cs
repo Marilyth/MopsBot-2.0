@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Discord.Commands;
 using Discord.WebSocket;
+using MopsBot.Module.Preconditions;
 
 namespace MopsBot
 {
@@ -74,7 +75,8 @@ namespace MopsBot
                     {
                         output += $"\n**{module.Name}**: ";
                         foreach (var command in module.Commands)
-                            output += $"`{command.Name}` ";
+                            if(!command.Preconditions.OfType<HideAttribute>().Any())
+                                output += $"`{command.Name}` ";
                     }
                 }
             }
