@@ -42,7 +42,7 @@ namespace MopsBot.Module.Data
 
         private void saveData()
         {
-            StreamWriter write = new StreamWriter(new FileStream("data//statistics.txt", FileMode.OpenOrCreate));
+            StreamWriter write = new StreamWriter(new FileStream("data//statistics.txt", FileMode.Create));
             write.AutoFlush=true;
             foreach(Day cur in days)
             {

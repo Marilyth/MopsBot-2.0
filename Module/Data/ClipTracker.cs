@@ -26,7 +26,7 @@ namespace MopsBot.Module.Data{
                 read.Dispose();
             }catch{
                 lastcheck = DateTime.MinValue;
-                StreamWriter write = new StreamWriter(new FileStream("data//lastcheck.txt", FileMode.OpenOrCreate));
+                StreamWriter write = new StreamWriter(new FileStream("data//lastcheck.txt", FileMode.Create));
                 write.AutoFlush=true;
                 write.WriteLine(lastcheck.ToString());
                 write.Dispose();
@@ -70,7 +70,7 @@ namespace MopsBot.Module.Data{
         }
 
         public void writeList(){
-            StreamWriter write = new StreamWriter(new FileStream("data//clips.txt", FileMode.OpenOrCreate));
+            StreamWriter write = new StreamWriter(new FileStream("data//clips.txt", FileMode.Create));
             foreach(var entry in tracklist){
                 write.WriteLine($"{entry.Key}:{String.Join(":",entry.Value)}");
             }
@@ -106,7 +106,7 @@ namespace MopsBot.Module.Data{
                     }else{
                         if(clips.Count>0)
                             lastcheck=DateTime.Now;
-                            StreamWriter write = new StreamWriter(new FileStream("data//lastcheck.txt", FileMode.OpenOrCreate));
+                            StreamWriter write = new StreamWriter(new FileStream("data//lastcheck.txt", FileMode.Create));
                             write.AutoFlush=true;
                             write.WriteLine(lastcheck.ToString());
                             write.Dispose();

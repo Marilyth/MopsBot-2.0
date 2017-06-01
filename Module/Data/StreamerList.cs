@@ -21,7 +21,7 @@ namespace MopsBot.Module.Data
             while((s = read.ReadLine()) != null)
             {
                 try{
-                    var trackerInformation = s.Split(':');
+                    var trackerInformation = s.Split('|');
                     if (!streamers.Exists(x => x.name.ToLower().Equals(trackerInformation[0].ToLower())))
                     {
                         streamers.Add(new Session.TwitchTracker(trackerInformation[0], ulong.Parse(trackerInformation[1]), trackerInformation[2], Boolean.Parse(trackerInformation[3].ToLower()), trackerInformation[4]));
@@ -38,13 +38,13 @@ namespace MopsBot.Module.Data
 
         public void writeList()
         {
-            StreamWriter write = new StreamWriter(new FileStream("data//streamers.txt", FileMode.Open));
+            StreamWriter write = new StreamWriter(new FileStream("data//streamers.txt", FileMode.Create));
             write.AutoFlush=true;
             foreach(Session.TwitchTracker tr in streamers)
             {
                 foreach(var channel in tr.ChannelIds)
                 {
-                    write.WriteLine($"{tr.name}:{channel.Key}:{channel.Value}:{tr.isOnline}:{tr.curGame}");
+                    write.WriteLine($"{tr.name}|{channel.Key}|{channel.Value}|{tr.isOnline}|{tr.curGame}");
                 }
             }
             write.Dispose();

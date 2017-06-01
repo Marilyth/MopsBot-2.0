@@ -30,7 +30,7 @@ namespace MopsBot.Module.Data
         {
             users = users.OrderByDescending(u => u.Experience).ToList();
 
-            StreamWriter write = new StreamWriter(new FileStream("data//scores.txt",FileMode.Open));
+            StreamWriter write = new StreamWriter(new FileStream("data//scores.txt",FileMode.Create));
             write.AutoFlush=true;
             foreach (Individual.User that in users)
             {

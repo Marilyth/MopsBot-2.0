@@ -77,7 +77,7 @@ namespace MopsBot.Module.Data{
 
         public void writeData()
         {
-            StreamWriter sw = new StreamWriter(new FileStream("data//meetups.txt", FileMode.OpenOrCreate));
+            StreamWriter sw = new StreamWriter(new FileStream("data//meetups.txt", FileMode.Create));
 
             foreach(MeetUp cur in upcoming)
             {
