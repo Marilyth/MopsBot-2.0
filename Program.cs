@@ -38,7 +38,7 @@ namespace MopsBot
 
             client.Log += Client_Log;
 
-            var map = new ServiceCollection().AddSingleton(client);
+            var map = new ServiceCollection().AddSingleton(client).AddSingleton(new AudioService());
             var provider = map.BuildServiceProvider();
 
             handler = new CommandHandler();

@@ -21,7 +21,7 @@ namespace MopsBot.Module.Data.Session
             players.Add(new Blackjack_User(pDealer, true));
             fillDeck();
             shuffleDeck();
-
+            
             drawCard(players[0].player, false);
             drawCard(players[0].player, false);
         }
