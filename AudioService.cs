@@ -77,6 +77,6 @@ public class AudioService
         
         string output = prc.StandardOutput.ReadToEndAsync().Result.Replace("\n", "");
         string[] outputArray = output.Split(':');
-        return "https:" + outputArray[outputArray.Length-1];
+        return outputArray[outputArray.Length-2].Contains("https") ? "https:" + outputArray[outputArray.Length-1] : "http:" + outputArray[outputArray.Length-1];
     }
 }
