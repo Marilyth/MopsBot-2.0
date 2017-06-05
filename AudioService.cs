@@ -1,14 +1,18 @@
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
+using System;
 using Discord;
 using Discord.Audio;
 
+namespace MopsBot
+{
 public class AudioService
 {
     private readonly ConcurrentDictionary<ulong, IAudioClient> ConnectedChannels = new ConcurrentDictionary<ulong, IAudioClient>();
-
+    private List<string> urlQueue = new List<string>();
     public async Task JoinAudio(IGuild guild, IVoiceChannel target)
     {
         IAudioClient client;
@@ -44,11 +48,17 @@ public class AudioService
         IAudioClient client;
         if (ConnectedChannels.TryGetValue(guild.Id, out client))
         {
-            //await Log(LogSeverity.Debug, $"Starting playback of {path} in {guild.Name}");
+            await channel.SendMessageAsync($"Now playing **{VideoTitle(url)}**");
+
             var output = CreateStream(url).StandardOutput.BaseStream;
             var stream = client.CreatePCMStream(AudioApplication.Music);
             await output.CopyToAsync(stream);
             await stream.FlushAsync().ConfigureAwait(false);
+
+            StaticBase.playlist.RemoveAt(0);
+
+            if(StaticBase.playlist.Count > 0)
+                await SendAudioAsync(guild, channel, StaticBase.playlist[0]);
         }
     }
 
@@ -69,7 +79,7 @@ public class AudioService
     {
         var prc = new Process();
         prc.StartInfo.FileName = "youtube-dl";
-        prc.StartInfo.Arguments = $"-g {url}";
+        prc.StartInfo.Arguments = $"-g \"ytsearch:{url}\"";
         prc.StartInfo.UseShellExecute = false;
         prc.StartInfo.RedirectStandardOutput = true;
 
@@ -79,4 +89,18 @@ public class AudioService
         string[] outputArray = output.Split(':');
         return outputArray[outputArray.Length-2].Contains("https") ? "https:" + outputArray[outputArray.Length-1] : "http:" + outputArray[outputArray.Length-1];
     }
+
+    public static string VideoTitle(string url)
+    {
+        var prc = new Process();
+        prc.StartInfo.FileName = "youtube-dl";
+        prc.StartInfo.Arguments = $"-e --get-duration \"ytsearch:{url}\"";
+        prc.StartInfo.UseShellExecute = false;
+        prc.StartInfo.RedirectStandardOutput = true;
+
+        prc.Start();
+        
+        return prc.StandardOutput.ReadToEndAsync().Result.Replace("\n", " | ");
+    }
+}
 }

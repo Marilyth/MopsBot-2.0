@@ -2,11 +2,11 @@ using System.Threading.Tasks;
 using Discord.Commands;
 using Discord.Audio;
 
+namespace MopsBot.Module
+{
 public class AudioModule : ModuleBase<ICommandContext>
 {
-    // Scroll down further for the AudioService.
-    // Like, way down.
-    // Hit 'End' on your keyboard if you still can't find it.
+
     private readonly AudioService _service;
 
     public AudioModule(AudioService service)
@@ -14,26 +14,47 @@ public class AudioModule : ModuleBase<ICommandContext>
         _service = service;
     }
 
-    // You *MUST* mark these commands with 'RunMode.Async'
-    // otherwise the bot will not respond until the Task times out.
     [Command("join", RunMode = RunMode.Async)]
+    [Summary("Joins the Voice Channel you are in currently.")]
     public async Task JoinCmd()
     {
         await _service.JoinAudio(Context.Guild, (Context.User as Discord.IVoiceState).VoiceChannel);
     }
 
-    // Remember to add preconditions to your commands,
-    // this is merely the minimal amount necessary.
-    // Adding more commands of your own is also encouraged.
     [Command("leave", RunMode = RunMode.Async)]
+    [Summary("Leaves the AudioChannel.")]
     public async Task LeaveCmd()
     {
         await _service.LeaveAudio(Context.Guild);
     }
-    
-    [Command("play", RunMode = RunMode.Async)]
-    public async Task PlayCmd([Remainder] string song)
+
+    [Command("queue", RunMode = RunMode.Async)]
+    [Summary("Returns the 5 closest entries in the queue.")]
+    public async Task QueueCmd()
     {
-        await _service.SendAudioAsync(Context.Guild, Context.Channel, song);
+        string output = "";
+        int i = 1;
+
+        foreach(string s in StaticBase.playlist){
+            output += $"#{i}: **{AudioService.VideoTitle(s)}**\n";
+            i++;
+
+            if(i > 5)
+                break;
+        }
+
+        await ReplyAsync(output);
     }
+    
+    [Command("add", RunMode = RunMode.Async)]
+    [Summary("Appends an entry into the Queue.")]
+    public async Task AddCmd([Remainder] string song)
+    {
+        StaticBase.playlist.Add(song);
+        if(StaticBase.playlist.Count == 1)
+            await _service.SendAudioAsync(Context.Guild, Context.Channel, song);
+        else
+            await ReplyAsync("Added your request to the Queue (#" + StaticBase.playlist.Count + ")");
+    }
+}
 }
