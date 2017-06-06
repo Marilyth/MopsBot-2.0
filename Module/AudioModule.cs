@@ -28,6 +28,16 @@ public class AudioModule : ModuleBase<ICommandContext>
         await _service.LeaveAudio(Context.Guild);
     }
 
+    [Command("skip", RunMode = RunMode.Async)]
+    [Summary("Skips the song currently at #1")]
+    public async Task SkipCmd()
+    {
+        await _service.LeaveAudio(Context.Guild);
+        StaticBase.playlist.RemoveAt(0);
+        await _service.JoinAudio(Context.Guild, (Context.User as Discord.IVoiceState).VoiceChannel);
+        await _service.SendAudioAsync(Context.Guild, Context.Channel, StaticBase.playlist[0]);
+    }
+
     [Command("queue", RunMode = RunMode.Async)]
     [Summary("Returns the 5 closest entries in the queue.")]
     public async Task QueueCmd()
