@@ -88,7 +88,7 @@ public class AudioService
     {
         var prc = new Process();
         prc.StartInfo.FileName = "youtube-dl";
-        prc.StartInfo.Arguments = $"--extract-audio --audio-format mp3 -o \"data//%(title)s.%(ext)s\" {(url.Contains("://") ? url : $"ytsearch:{url}")}";
+        prc.StartInfo.Arguments = $"--extract-audio --audio-format mp3 -o \"data//%(title)s.%(ext)s\" \"{(url.Contains("://") ? url : $"ytsearch:{url}")}\"";
         prc.StartInfo.UseShellExecute = false;
         prc.StartInfo.RedirectStandardOutput = true;
 
@@ -102,7 +102,7 @@ public class AudioService
     {
         var prc = new Process();
         prc.StartInfo.FileName = "youtube-dl";
-        prc.StartInfo.Arguments = $"-e {(url.Contains("://") ? url : $"ytsearch:{url}")}";
+        prc.StartInfo.Arguments = $"-e \"{(url.Contains("://") ? url : $"ytsearch:{url}")}\"";
         prc.StartInfo.UseShellExecute = false;
         prc.StartInfo.RedirectStandardOutput = true;
 
