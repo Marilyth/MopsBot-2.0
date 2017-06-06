@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using System;
+using System.Linq;
 using Discord;
 using Discord.Audio;
 
@@ -39,7 +40,7 @@ public class AudioService
         if (ConnectedChannels.TryRemove(guild.Id, out client))
         {
             await client.StopAsync();
-            //await Log(LogSeverity.Info, $"Disconnected from voice on {guild.Name}.");
+            DeleteFiles();
         }
     }
     
@@ -48,14 +49,18 @@ public class AudioService
         IAudioClient client;
         if (ConnectedChannels.TryGetValue(guild.Id, out client))
         {
-            await channel.SendMessageAsync($"Now playing **{VideoTitle(url)}**");
+            await channel.SendMessageAsync($"Now downloading **{VideoTitle(url)}**\nPlease wait.");
 
             var output = CreateStream(url).StandardOutput.BaseStream;
             var stream = client.CreatePCMStream(AudioApplication.Music);
+
+            await channel.SendMessageAsync($"Now playing **{VideoTitle(url)}**");
+
             await output.CopyToAsync(stream);
             await stream.FlushAsync().ConfigureAwait(false);
 
             StaticBase.playlist.RemoveAt(0);
+            DeleteFiles();
 
             if(StaticBase.playlist.Count > 0)
                 await SendAudioAsync(guild, channel, StaticBase.playlist[0]);
@@ -64,43 +69,54 @@ public class AudioService
 
     private Process CreateStream(string url)
     {
-        string streamUrl = StreamURL(url);
+        DownloadURL(url);
+
+        var dir = new DirectoryInfo("data//");
+        var file = dir.GetFiles().Where(x => x.Extension.ToLower().Equals(".mp3")).First();
         
         return Process.Start(new ProcessStartInfo
         {
             FileName = "ffmpeg",
-            Arguments = $"-i {streamUrl} -ac 2 -f s16le -ar 48000 pipe:1",
+            Arguments = $"-i \"{file.FullName}\" -ac 2 -f s16le -ar 48000 pipe:1",
             UseShellExecute = false,
             RedirectStandardOutput = true
         });
     }
 
-    private string StreamURL(string url)
+    
+    private void DownloadURL(string url)
     {
         var prc = new Process();
         prc.StartInfo.FileName = "youtube-dl";
-        prc.StartInfo.Arguments = $"-g \"ytsearch:{url}\"";
+        prc.StartInfo.Arguments = $"--extract-audio --audio-format mp3 -o \"data//%(title)s.%(ext)s\" {(url.Contains("://") ? url : $"ytsearch:{url}")}";
         prc.StartInfo.UseShellExecute = false;
         prc.StartInfo.RedirectStandardOutput = true;
 
         prc.Start();
         
-        string output = prc.StandardOutput.ReadToEndAsync().Result.Replace("\n", "");
-        string[] outputArray = output.Split(':');
-        return outputArray[outputArray.Length-2].Contains("https") ? "https:" + outputArray[outputArray.Length-1] : "http:" + outputArray[outputArray.Length-1];
+        prc.WaitForExit();
     }
+    
 
     public static string VideoTitle(string url)
     {
         var prc = new Process();
         prc.StartInfo.FileName = "youtube-dl";
-        prc.StartInfo.Arguments = $"-e --get-duration \"ytsearch:{url}\"";
+        prc.StartInfo.Arguments = $"-e {(url.Contains("://") ? url : $"ytsearch:{url}")}";
         prc.StartInfo.UseShellExecute = false;
         prc.StartInfo.RedirectStandardOutput = true;
 
         prc.Start();
         
-        return prc.StandardOutput.ReadToEndAsync().Result.Replace("\n", " | ");
+        return prc.StandardOutput.ReadToEndAsync().Result.Replace("\n", "");
+    }
+
+    private void DeleteFiles()
+    {
+        var dir = new DirectoryInfo("data//");
+        var files = dir.GetFiles().Where(x => x.Extension.ToLower().Equals(".mp3"));
+        foreach(var f in files)
+            f.Delete();
     }
 }
 }
