@@ -147,7 +147,7 @@ namespace MopsBot.Module.Data.Session
 
             foreach (Blackjack_User cur in players)
             {
-                if (!cur.dealer && cur.cardsValue() <= 21 && cur.cardsValue() > dealerValue)
+                if (!cur.dealer && cur.cardsValue() <= 21 && cur.cardsValue() >= dealerValue)
                     winner.Add(cur);
                 output += $"{cur.player.Username}: **{cur.cardsValue()}**\n";
             }

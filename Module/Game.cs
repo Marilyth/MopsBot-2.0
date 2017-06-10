@@ -32,21 +32,24 @@ namespace MopsBot.Module
             [Summary("Starts the game of Blackjack")]
             public async Task start()
             {
-                await ReplyAsync(StaticBase.blackjack.showCards() + "\n\n" + StaticBase.blackjack.endRound());
+                if(!StaticBase.blackjack.active)
+                    await ReplyAsync(StaticBase.blackjack.showCards() + "\n\n" + StaticBase.blackjack.endRound());
             }
 
             [Command("hit")]
             [Summary("You get another card")]
             public async Task hit()
             {
-                await ReplyAsync(StaticBase.blackjack.drawCard(Context.User, true));
+                if(StaticBase.blackjack.active)
+                    await ReplyAsync(StaticBase.blackjack.drawCard(Context.User, true));
             }
 
             [Command("skip")]
             [Summary("You skip the round")]
             public async Task skip()
             {
-                await ReplyAsync(StaticBase.blackjack.skipRound(Context.User));
+                if(StaticBase.blackjack.active)
+                    await ReplyAsync(StaticBase.blackjack.skipRound(Context.User));
             }
         }
     }
