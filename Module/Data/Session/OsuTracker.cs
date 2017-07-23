@@ -45,9 +45,8 @@ namespace MopsBot.Module.Data
                     if (!Program.client.GetChannel(OUser.channels[0]).GetUser(OUser.discordID).Status.Equals(UserStatus.Offline))
                     {
                         dynamic userInformation = osuUser.userStats(OUser.ident.ToString(), OUser.mainMode);
-                        if(OUser.discordID.Equals(159011004792045569)) OUser.pp = 4300;
                         
-                        if (OUser.pp + 1 <= double.Parse(userInformation["pp_raw"].ToString(), CultureInfo.InvariantCulture))
+                        if (OUser.pp + 0.5 <= double.Parse(userInformation["pp_raw"].ToString(), CultureInfo.InvariantCulture))
                         {
                             string query = Information.readURL($"https://osu.ppy.sh/api/get_user_recent?u={OUser.ident}&{OUser.mainMode}&limit=10&k=8ad11f6daf7b439f96eee1c256d474cd9925d4d8");
 
