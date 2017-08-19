@@ -10,9 +10,15 @@ namespace MopsBot.Module.Data.Individual
     {
         public ulong ID;
         public int Score, Experience, Level, punched, hugged, kissed;
+        public List<Items> equipment;
 
-        public User(ulong userID, int userScore, int XP, int punch, int hug, int kiss)
+        public User(ulong userID, int userScore, int XP, int punch, int hug, int kiss, string[] items)
         {
+            equipment = new List<Items>();
+
+            foreach(string item in items)
+                equipment.Add(new Items(item));
+
             ID = userID;
             Score = userScore;
             Experience = XP;

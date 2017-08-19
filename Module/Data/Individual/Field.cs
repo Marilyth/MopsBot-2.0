@@ -8,20 +8,36 @@ namespace MopsBot.Module.Data.Individual
 {
     class Field
     {
-        internal char letter { get; set; }
+        internal int axisX { get; }
+        internal int axisY { get; }
         internal Type fieldType { get; set; }
 
-        internal enum Type { belongs, empty };
+        internal enum Type {Ground, Wall, Treasure, Enemy, Boss, Player};
 
-        public Field(Type type)
+        public Field(int x, int y, Type type)
         {
+            axisX = x;
+            axisY = y;
             fieldType = type;
         }
 
-        public void setChar(char pLetter)
+        internal string comfyView()
         {
-            letter = pLetter;
-            fieldType = Type.belongs;
+            switch (fieldType)
+            {
+                case Type.Wall:
+                    return "[X]";
+                case Type.Ground:
+                    return "[ ]";
+                case Type.Treasure:
+                    return "[T]";
+                case Type.Enemy:
+                    return "[E]";
+                case Type.Boss:
+                    return "[B]";
+                default:
+                    return "";
+            }
         }
     }
 }
