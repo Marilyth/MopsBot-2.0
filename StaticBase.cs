@@ -20,7 +20,7 @@ namespace MopsBot
         public static Module.Data.MeetUps meetups;
         public static Random ran = new Random();
         public static Module.Data.ClipTracker ClipTracker;
-        public static Module.Data.OsuTracker osuTracker;
+        //public static Module.Data.OsuTracker osuTracker;
         public static List<Module.Data.Session.IdleDungeon> dungeonCrawler;
         public static List<ulong> BotManager;
         public static List<string> playlist;
@@ -31,7 +31,7 @@ namespace MopsBot
             people = new Module.Data.UserScore();
             streamTracks = new Module.Data.StreamerList();
             ClipTracker = new Module.Data.ClipTracker();
-            osuTracker = new Module.Data.OsuTracker();
+            //osuTracker = new Module.Data.OsuTracker();
             dungeonCrawler = new List<Module.Data.Session.IdleDungeon>();
             
             meetups = new Module.Data.MeetUps();

@@ -7,6 +7,7 @@ using System;
 using System.Linq;
 using Discord;
 using Discord.Audio;
+using Newtonsoft.Json;
 
 namespace MopsBot
 {
@@ -49,15 +50,22 @@ public class AudioService
         IAudioClient client;
         if (ConnectedChannels.TryGetValue(guild.Id, out client))
         {
-            await channel.SendMessageAsync($"Now downloading **{VideoTitle(url)}**\nPlease wait.");
+            if(url.ToLower().Contains("playlist"))
+                await channel.SendMessageAsync("Processing Playlist");
+            else
+                await channel.SendMessageAsync($"Now downloading **{VideoTitle(url)}**\nPlease wait.");
+            
+            var result = CreateStream(url);
 
-            var output = CreateStream(url).StandardOutput.BaseStream;
-            var stream = client.CreatePCMStream(AudioApplication.Music);
+            if(result != null){
+                var output = result.StandardOutput.BaseStream;
+                var stream = client.CreatePCMStream(AudioApplication.Music);
 
-            await channel.SendMessageAsync($"Now playing **{VideoTitle(url)}**");
+                await channel.SendMessageAsync($"Now playing **{VideoTitle(url)}**");
 
-            await output.CopyToAsync(stream);
-            await stream.FlushAsync().ConfigureAwait(false);
+                await output.CopyToAsync(stream);
+                await stream.FlushAsync().ConfigureAwait(false);
+            }
 
             StaticBase.playlist.RemoveAt(0);
             DeleteFiles();
@@ -69,7 +77,22 @@ public class AudioService
 
     private Process CreateStream(string url)
     {
-        DownloadURL(url);
+        if(url.ToLower().Contains("playlist")){
+            dynamic entries = JsonConvert.DeserializeObject(playlistURLs(url));
+
+            foreach(dynamic entry in entries["entries"]){
+                try{
+                    StaticBase.playlist.Add($"https://www.youtube.com/watch?v={entry["id"]}");
+                }
+                catch(Exception e){
+                    
+                }
+            }
+            return null;
+        }
+
+        else 
+            DownloadURL(url);
 
         var dir = new DirectoryInfo("data//");
         var file = dir.GetFiles().Where(x => x.Extension.ToLower().Equals(".mp3")).First();
@@ -95,6 +118,19 @@ public class AudioService
         prc.Start();
         
         prc.WaitForExit();
+    }
+
+    private string playlistURLs(string url)
+    {
+        var prc = new Process();
+        prc.StartInfo.FileName = "youtube-dl";
+        prc.StartInfo.Arguments = $"-J -i --flat-playlist --playlist-random \"{url}\"";
+        prc.StartInfo.UseShellExecute = false;
+        prc.StartInfo.RedirectStandardOutput = true;
+
+        prc.Start();
+        
+        return prc.StandardOutput.ReadToEndAsync().Result.Replace("\n", "");
     }
     
 
