@@ -13,7 +13,7 @@ namespace MopsBot.Module.Data.Session
         public Individual.Dungeon dungeon;
         public Random ran;
         public string username, log;
-        public int vitality, attack, length;
+        public int vitality, attack, length, gold;
         public Individual.User player;
         public System.Diagnostics.Stopwatch time;
         public System.Threading.Timer timer;
@@ -47,7 +47,10 @@ namespace MopsBot.Module.Data.Session
             
             string tempLog = $"\n\n{(minute.ToString().Length < 2 ? "0" + minute.ToString() : minute.ToString())}:{(seconds.ToString().Length < 2 ? "0" + seconds.ToString() : seconds.ToString())} ";
 
-            if(minute >= length || vitality <= 1){
+            if(minute >= length || vitality <= 0){
+                if(vitality <= 0)
+                    gold = 0;
+                StaticBase.people.addStat(player.ID, gold, "score");
                 tempLog += $"{username} left the dungeon.";
                 log += tempLog;
                 modifyMessage();
@@ -60,16 +63,16 @@ namespace MopsBot.Module.Data.Session
 
             if(Event <= 2){
                 if(dungeon.treasureCount > 0){
-                    int gold = ran.Next(length/3, length*2);
-                    tempLog += $"{username} has found a treasure!\n     +{gold} gold.";
-                    StaticBase.people.addStat(player.ID, gold, "score");
+                    int treasureValue = ran.Next(length/3, length*2);
+                    gold += treasureValue;
+                    tempLog += $"{username} has found a treasure!\n     +{treasureValue} gold.";
                 }
                 dungeon.treasureCount--;
             }
 
             else if(Event <= 5){
                 if(dungeon.enemyCount > 0){
-                    Individual.Enemy curEnemy = new Individual.Enemy(Individual.Enemy.enemies[ran.Next(0,4)]);
+                    Individual.Enemy curEnemy = new Individual.Enemy(new AllEnemies().getEnemy(length));
                     tempLog += $"{username} encounters a {curEnemy.name}!";
                     while(curEnemy.curHP > 0){
                         vitality -= curEnemy.dmg;
@@ -99,17 +102,17 @@ namespace MopsBot.Module.Data.Session
         {
             string status = "";
 
-            for(int i = 1; i < time.ElapsedMilliseconds/60000; i++)
+            for(int i = 1; i < (time.ElapsedMilliseconds/60000)/(length/10); i++)
             {
                 status += "-";
             }
             status += "⚔";
-            while(status.Count() < length)
+            while(status.Count() < 10)
             {
                 status += "-";
             }
 
-            updateMessage.ModifyAsync(x => x.Content = "```\n" + log + "\n\n\n" + status + $"\nHitpoints: {vitality}```");
+            updateMessage.ModifyAsync(x => x.Content = "```\n" + log + "\n\n\n" + status + $"\nHitpoints: {vitality}```\nGold obtained: {gold}");
         }
     }
 }
