@@ -102,7 +102,7 @@ namespace MopsBot.Module.Data.Session
         {
             string status = "";
 
-            for(int i = 1; i < (time.ElapsedMilliseconds/60000)/(length/10); i++)
+            for(int i = 1; i < (double)(time.ElapsedMilliseconds/60000)/(double)(length/10); i++)
             {
                 status += "-";
             }
@@ -112,7 +112,7 @@ namespace MopsBot.Module.Data.Session
                 status += "-";
             }
 
-            updateMessage.ModifyAsync(x => x.Content = "```\n" + log + "\n\n\n" + status + $"\nHitpoints: {vitality}```\nGold obtained: {gold}");
+            updateMessage.ModifyAsync(x => x.Content = "```\n" + log + "\n\n\n" + status + $"\nHitpoints: {vitality}\nGold obtained: {gold}```");
         }
     }
 }
