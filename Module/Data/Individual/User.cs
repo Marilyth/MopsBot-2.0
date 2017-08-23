@@ -17,7 +17,7 @@ namespace MopsBot.Module.Data.Individual
             equipment = new List<Items>();
 
             foreach(string item in items)
-                equipment.Add(new Items(item));
+                equipment.Add(new Items(item, 0));
 
             ID = userID;
             Score = userScore;

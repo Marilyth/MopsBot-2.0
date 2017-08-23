@@ -9,9 +9,9 @@ namespace MopsBot.Module.Data.Individual
 {
     class Items
     {
-        internal int vitality, attack;
+        internal int vitality, attack, dropChance;
 
-        public Items(string item)
+        public Items(string item, int dropChance)
         {
             vitality = 0;
             attack = 0;

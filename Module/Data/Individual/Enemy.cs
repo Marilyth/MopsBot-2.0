@@ -9,14 +9,11 @@ namespace MopsBot.Module.Data.Individual
 {
     class Enemy
     {
-        internal int axisX { get; set; }
-        internal int axisY { get; set; }
-
         internal List<Items> DropList;
-
+        public string name;
         internal int HP, curHP, dmg, exp;
 
-        public Enemy(int x, int y, Boolean boss, string enemy)
+        public Enemy(string enemy)
         {
             DropList = new List<Items>();
 
@@ -28,47 +25,38 @@ namespace MopsBot.Module.Data.Individual
                     exp = 25;
                     break;
                 case "Snake":
-                    HP = 20;
-                    dmg = 3;
+                    HP = 2;
+                    dmg = 2;
                     exp = 50;
                     break;
                 case "Bat":
-                    HP = 10;
-                    dmg = 5;
+                    HP = 3;
+                    dmg = 1;
                     exp = 60;
                     break;
                 case "Spider":
-                    HP = 100;
-                    dmg = 10;
-                    exp = 370;
-                    break;
-                case "Ghost":
-                    HP = 30;
-                    dmg = 4;
-                    exp = 100;
+                    HP = 4;
+                    dmg = 1;
+                    exp = 70;
                     break;
                 case "Skeleton":
-                    HP = 500;
-                    dmg = 20;
+                    HP = 5;
+                    dmg = 2;
+                    exp = 100;
+                    break;
+                case "Ghost":
+                    HP = 4;
+                    dmg = 3;
                     exp = 1800;
                     break;
                 case "Phoenix":
-                    HP = 200;
-                    dmg = 60;
+                    HP = 7;
+                    dmg = 3;
                     exp = 3500;
-                    break;
-                case "Vampire":
-                    HP = 2000;
-                    dmg = 100;
-                    exp = 13500;
-                    break;
-                case "Dragon":
-                    HP = 50000;
-                    dmg = 200;
-                    exp = 180000;
                     break;
             }
             curHP = HP;
+            name = enemy;
         }
 
         public Treasure uponDeath()
