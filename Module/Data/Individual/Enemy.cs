@@ -40,17 +40,17 @@ namespace MopsBot.Module.Data.Individual
                     exp = 70;
                     break;
                 case "Skeleton":
-                    HP = 5;
+                    HP = 6;
                     dmg = 2;
                     exp = 100;
                     break;
                 case "Ghost":
-                    HP = 4;
+                    HP = 12;
                     dmg = 3;
                     exp = 1800;
                     break;
                 case "Phoenix":
-                    HP = 7;
+                    HP = 17;
                     dmg = 3;
                     exp = 3500;
                     break;

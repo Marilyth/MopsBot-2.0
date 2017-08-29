@@ -10,7 +10,6 @@ namespace MopsBot.Module.Data.Session
     class IdleDungeon
     {
         public Discord.IUserMessage updateMessage;
-        public Individual.Dungeon dungeon;
         public Random ran;
         public string username, log;
         public int vitality, attack, length, gold;
@@ -22,14 +21,15 @@ namespace MopsBot.Module.Data.Session
             username = Program.client.GetUser(pUser.ID).Username;
             log = $"00:00 {username} has entered the dungeon.";
             player = pUser;
+            player.getEquipment();
             ran = new Random();
-            dungeon = new Individual.Dungeon(20, 20);
             updateMessage = pUpdateMessage;
             timer = new System.Threading.Timer(eventHappened, new System.Threading.AutoResetEvent(false), ran.Next(10000, 60000), 100000);
 
+            vitality = 7;
             foreach(Individual.Items item in player.equipment){
                 attack += item.attack;
-                vitality += item.vitality + 7;
+                vitality += item.vitality;
             }
 
             length = pLength;
@@ -62,26 +62,25 @@ namespace MopsBot.Module.Data.Session
             int Event = ran.Next(1, 21);
 
             if(Event <= 2){
-                if(dungeon.treasureCount > 0){
-                    int treasureValue = ran.Next(length/3, length*2);
+                    int treasureValue = ran.Next((minute+1)/3, (minute+1)*2);
                     gold += treasureValue;
                     tempLog += $"{username} has found a treasure!\n     +{treasureValue} gold.";
-                }
-                dungeon.treasureCount--;
             }
 
             else if(Event <= 5){
-                if(dungeon.enemyCount > 0){
-                    Individual.Enemy curEnemy = new Individual.Enemy(new AllEnemies().getEnemy(length));
+                    Individual.Enemy curEnemy = new Individual.Enemy(new AllEnemies().getEnemy(minute));
                     tempLog += $"{username} encounters a {curEnemy.name}!";
-                    while(curEnemy.curHP > 0){
-                        vitality -= curEnemy.dmg;
-                        tempLog += $"\n      {username} got hit for {curEnemy.dmg} damage.";
+                    while(curEnemy.curHP > 0)
+                    {
                         curEnemy.curHP -= attack;
                         tempLog += $"\n      {curEnemy.name} got hit for {attack} damage. -> {curEnemy.curHP}/{curEnemy.HP}";
+                        
+                        if(curEnemy.curHP > 0)
+                        {
+                            vitality -= curEnemy.dmg;
+                            tempLog += $"\n      {username} got hit for {curEnemy.dmg} damage.";
+                        }
                     }
-                }
-                dungeon.enemyCount--;
             }
 
             else if(Event <= 6){

@@ -10,14 +10,44 @@ namespace MopsBot.Module
 {
     public class Game : ModuleBase
     {
-        [Command("dungeon")]
-        [Summary("Crawl through a dungeon.")]
-        public async Task dungeon(int lenghtInMinutes)
+        [Group("dungeon")]
+        public class Dungeon : ModuleBase
         {
-            Discord.IUserMessage updateMessage = Context.Channel.SendMessageAsync("Generating dungeon.").Result;
+            [Command("start")]
+            [Summary("Crawl through a dungeon")]
+            public async Task start(int lenghtInMinutes)
+            {
+                Discord.IUserMessage updateMessage = Context.Channel.SendMessageAsync("Generating dungeon.").Result;
 
-            Data.Session.IdleDungeon test = new Data.Session.IdleDungeon(updateMessage, StaticBase.people.users.Find(x => x.ID.Equals(Context.User.Id)), lenghtInMinutes);
-            StaticBase.dungeonCrawler.Add(test);
+                Data.Session.IdleDungeon test = new Data.Session.IdleDungeon(updateMessage, StaticBase.people.users.Find(x => x.ID.Equals(Context.User.Id)), lenghtInMinutes);
+                StaticBase.dungeonCrawler.Add(test);
+            }
+
+            [Command("buy")]
+            [Summary("Buy equipment")]
+            public async Task buy(int valueOfItem)
+            {
+                var user = StaticBase.people.users.First(x => x.ID == Context.User.Id);
+                if(valueOfItem <= user.Score)
+                {
+                    user.getEquipment();
+                    user.equipment.Add(new Data.AllItems().getItem(valueOfItem));
+                    await ReplyAsync($"Successfully purchased **{new Data.AllItems().getItem(valueOfItem).name}**");
+                    user.saveEquipment();
+                    StaticBase.people.addStat(user.ID, -valueOfItem, "score");
+                }
+                else
+                    await ReplyAsync("Not enough money.");
+            }
+
+            [Command("stock")]
+            [Summary("See all items you could buy")]
+            public async Task stock()
+            {
+                var eligable = new Data.AllItems().getEligable(StaticBase.people.users.First(x => x.ID == Context.User.Id).Score).Select(x => $"${x.Value}: **{x.Key}**");
+                string output = String.Join("\n", eligable);
+                await ReplyAsync(output.Count() > 0 ? output : "There is nothing you could buy.");
+            }
         }
         
         [Group("Blackjack")]

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace MopsBot.Module.Data.Individual
 {
@@ -12,13 +13,8 @@ namespace MopsBot.Module.Data.Individual
         public int Score, Experience, Level, punched, hugged, kissed;
         public List<Items> equipment;
 
-        public User(ulong userID, int userScore, int XP, int punch, int hug, int kiss, string[] items)
+        public User(ulong userID, int userScore, int XP, int punch, int hug, int kiss)
         {
-            equipment = new List<Items>();
-
-            foreach(string item in items)
-                equipment.Add(new Items(item, 0));
-
             ID = userID;
             Score = userScore;
             Experience = XP;
@@ -81,6 +77,43 @@ namespace MopsBot.Module.Data.Individual
                             $"Been punched {punched} times";
 
             return output;
+        }
+
+        public void getEquipment()
+        {
+            equipment = new List<Items>();
+            
+            StreamReader read = new StreamReader(new FileStream("data//dungeonItems.txt", FileMode.Open));
+
+            string fs = "";
+            while (!(fs = read.ReadLine()).Contains(ID.ToString()))
+            {
+                
+            }
+            if(fs == null)
+                equipment.Add(new Items("fists"));
+
+            else
+            {
+                string[] items = fs.Split(':');
+                items = items.Skip(1).ToArray();
+
+                foreach(string item in items)
+                    equipment.Add(new Items(item));
+            }
+
+            read.Dispose();
+        }
+
+        public void saveEquipment()
+        {
+            List<string> allLines = File.ReadAllLines("data//dungeonItems.txt").ToList();
+
+            for(int i = 0; i < allLines.Count; i++)
+                if(allLines[i].Contains(ID.ToString()))
+                    allLines[i] = $"{ID}:" + String.Join(":", equipment.Select(x => x.name));
+
+            File.WriteAllLines("data//dungeonItems.txt", allLines);
         }
     }
 }

@@ -13,12 +13,12 @@ namespace MopsBot.Module.Data
 
         public AllEnemies()
         {
-            enemyLevel.Add("Rat", 1);
-            enemyLevel.Add("Snake", 7);
-            enemyLevel.Add("Bat", 15);
-            enemyLevel.Add("Skeleton", 20);
+            enemyLevel.Add("Rat", 0);
+            enemyLevel.Add("Snake", 10);
+            enemyLevel.Add("Spider", 15);
+            enemyLevel.Add("Bat", 20);
+            enemyLevel.Add("Skeleton", 25);
             enemyLevel.Add("Phoenix", 30);
-            enemyLevel.Add("Spider", 5);
 
             enemyLevel.OrderBy(x => x.Value);
         }

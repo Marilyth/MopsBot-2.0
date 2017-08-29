@@ -20,7 +20,7 @@ namespace MopsBot.Module.Data
             while ((fs = read.ReadLine()) != null)
             {
                 string[] s = fs.Split(':');
-                users.Add(new Individual.User(ulong.Parse(s[0]),int.Parse(s[1]), int.Parse(s[2]), int.Parse(s[3]), int.Parse(s[4]), int.Parse(s[5]), new string[]{"fists"}));
+                users.Add(new Individual.User(ulong.Parse(s[0]),int.Parse(s[1]), int.Parse(s[2]), int.Parse(s[3]), int.Parse(s[4]), int.Parse(s[5])));
             }
             read.Dispose();
             users = users.OrderByDescending(u => u.Experience).ToList();
