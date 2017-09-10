@@ -99,7 +99,7 @@ namespace MopsBot.Module
                 }
                 try
                 {
-                    await part.CreateDMChannelAsync().Result.SendMessageAsync($"{Context.User.Username} has created a poll:\n\n📄: {StaticBase.poll.question}\n{output}\n\nTo vote, simply PM me the **Number** of the answer you agree with.");
+                    await part.GetOrCreateDMChannelAsync().Result.SendMessageAsync($"{Context.User.Username} has created a poll:\n\n📄: {StaticBase.poll.question}\n{output}\n\nTo vote, simply PM me the **Number** of the answer you agree with.");
                 }
                 catch { }
             }
@@ -117,7 +117,7 @@ namespace MopsBot.Module
 
             foreach (IGuildUser part in StaticBase.poll.participants)
             {
-                await part.CreateDMChannelAsync().Result.SendMessageAsync($"📄:{StaticBase.poll.question}\n\nHas ended without your participation, sorry!");
+                await part.GetOrCreateDMChannelAsync().Result.SendMessageAsync($"📄:{StaticBase.poll.question}\n\nHas ended without your participation, sorry!");
                 StaticBase.poll.participants.Remove(part);
             }
 
