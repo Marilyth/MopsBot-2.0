@@ -5,6 +5,6 @@
     <TargetFramework>netcoreapp1.1</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Discord.Net" Version="1.0.0-rc2"/>
+    <PackageReference Include="Discord.Net" Version="1.0.2"/>
   </ItemGroup>
 </Project>
