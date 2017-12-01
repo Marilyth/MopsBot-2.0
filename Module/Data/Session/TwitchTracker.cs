@@ -17,6 +17,7 @@ namespace MopsBot.Module.Data.Session
     public class TwitchTracker
     {
         private System.Threading.Timer checkForChange;
+        private Discord.IUserMessage toUpdate;
         internal Boolean isOnline;
         internal string name, curGame;
         internal Dictionary<ulong, string> ChannelIds;
@@ -107,7 +108,13 @@ namespace MopsBot.Module.Data.Session
 
             foreach(var channel in ChannelIds)
             {
-                await ((SocketTextChannel)Program.client.GetChannel(channel.Key)).SendMessageAsync(channel.Value, false, e);
+                if(toUpdate == null)
+                    toUpdate = ((SocketTextChannel)Program.client.GetChannel(channel.Key)).SendMessageAsync(channel.Value, false, e).Result;
+                else    
+                    await toUpdate.ModifyAsync(x => {
+                        x.Content = channel.Value;
+                        x.Embed = (Embed)e;
+                    });
             }
         }
     }

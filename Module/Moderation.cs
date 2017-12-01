@@ -18,7 +18,7 @@ namespace MopsBot.Module
         {
             [Command("join")]
             [Summary("Joins the specified role")]
-            public async Task joinRole(string role)
+            public async Task joinRole([Remainder]string role)
             {
                 SocketRole pRole = (SocketRole)Context.Guild.Roles.First(x => x.Name.ToLower().Equals(role.ToLower()));
 

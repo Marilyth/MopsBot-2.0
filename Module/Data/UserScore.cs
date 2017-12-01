@@ -42,6 +42,10 @@ namespace MopsBot.Module.Data
 
         public void addStat(ulong id, int value, string stat)
         {
+            if(!users.Exists(x => x.ID.Equals(id))){
+                    users.Add(new Individual.User(id, 0, 0, 0, 0, 0));
+            }
+
             switch (stat.ToLower())
             {
                 case "experience":
