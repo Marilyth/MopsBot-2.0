@@ -17,7 +17,7 @@ namespace MopsBot.Module.Data.Session
     public class TwitchTracker
     {
         private System.Threading.Timer checkForChange;
-        private Discord.IUserMessage toUpdate;
+        private Dictionary<ulong, Discord.IUserMessage> toUpdate;
         internal Boolean isOnline;
         internal string name, curGame;
         internal Dictionary<ulong, string> ChannelIds;
@@ -25,6 +25,7 @@ namespace MopsBot.Module.Data.Session
 
         public TwitchTracker(string streamerName, ulong pChannel, string notificationText, Boolean pIsOnline, string pGame)
         {
+            toUpdate = new Dictionary<ulong, IUserMessage>();
             ChannelIds = new Dictionary<ulong, string>();
             ChannelIds.Add(pChannel, notificationText);
             name = streamerName;
@@ -52,6 +53,7 @@ namespace MopsBot.Module.Data.Session
                 else
                 {
                     isOnline = true;
+                    toUpdate = new Dictionary<ulong, IUserMessage>();
                     try{
                         curGame = (information["stream"]["game"].ToString().Equals(""))?"Nothing":information["stream"]["game"].ToString();
                         sendTwitchNotification(information);
@@ -64,7 +66,8 @@ namespace MopsBot.Module.Data.Session
             }
 
             if(isOnline)
-                if(curGame.CompareTo(information["stream"]["game"].ToString()) != 0 && !information["stream"]["game"].ToString().Equals("")){
+                sendTwitchNotification(information);
+                if(information["stream"] != null && curGame.CompareTo(information["stream"]["game"].ToString()) != 0 && !information["stream"]["game"].ToString().Equals("")){
                     curGame = information["stream"]["game"].ToString();
 
                     foreach(var channel in ChannelIds)
@@ -108,10 +111,10 @@ namespace MopsBot.Module.Data.Session
 
             foreach(var channel in ChannelIds)
             {
-                if(toUpdate == null)
-                    toUpdate = ((SocketTextChannel)Program.client.GetChannel(channel.Key)).SendMessageAsync(channel.Value, false, e).Result;
+                if(!toUpdate.ContainsKey(channel.Key))
+                    toUpdate.Add(channel.Key, ((SocketTextChannel)Program.client.GetChannel(channel.Key)).SendMessageAsync(channel.Value, false, e).Result);
                 else    
-                    await toUpdate.ModifyAsync(x => {
+                    await toUpdate[channel.Key].ModifyAsync(x => {
                         x.Content = channel.Value;
                         x.Embed = (Embed)e;
                     });
