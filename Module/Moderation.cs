@@ -29,7 +29,7 @@ namespace MopsBot.Module
 
             [Command("leave")]
             [Summary("Leaves the specified role")]
-            public async Task leaveRole(string role)
+            public async Task leaveRole([Remainder]string role)
             {
                 SocketRole pRole = (SocketRole)Context.Guild.Roles.First(x => x.Name.ToLower().Equals(role.ToLower()));
 
