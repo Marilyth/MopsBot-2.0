@@ -56,20 +56,13 @@ namespace MopsBot.Module
         }
 
         [Command("translate")]
-        [Summary("Translates your text from srcLanguage to dstLanguage.\nUse the abbreviations noted here http://www.transltr.org/api/getlanguagesfortranslate")]
-        public async Task translate(string srcLanguage, string dstLanguage, [Remainder] string text)
+        [Summary("Translates your text from srcLanguage to tgtLanguage.")]
+        public async Task translate(string srcLanguage, string tgtLanguage, [Remainder] string text)
         {
-            string query = Task.Run(() => readURL($"http://www.transltr.org/api/translate?text={text}&to={dstLanguage}&from={srcLanguage}")).Result;
-
-            #if NET40
-                var jss = new JavaScriptSerializer();
-                dynamic tempDict = jss.Deserialize<dynamic>(query);
-            #else
-                dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
-            #endif
+            string query = Task.Run(() => readURL($"https://translate.googleapis.com/translate_a/single?client=gtx&sl={srcLanguage}&tl={tgtLanguage}&dt=t&q={text}")).Result;
+            dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
             
-
-            await ReplyAsync(tempDict["translationText"].ToString());   
+            await ReplyAsync(tempDict[0][0][0].ToString());   
         }
 
         [Command("dayDiagram")]
