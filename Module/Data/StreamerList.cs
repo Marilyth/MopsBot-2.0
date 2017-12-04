@@ -21,15 +21,25 @@ namespace MopsBot.Module.Data
             while((s = read.ReadLine()) != null)
             {
                 try{
+
                     var trackerInformation = s.Split('|');
                     if (!streamers.Exists(x => x.name.ToLower().Equals(trackerInformation[0].ToLower())))
                     {
-                        streamers.Add(new Session.TwitchTracker(trackerInformation[0], ulong.Parse(trackerInformation[1]), trackerInformation[2], Boolean.Parse(trackerInformation[3].ToLower()), trackerInformation[4]));
+                        streamers.Add(new Session.TwitchTracker(trackerInformation[0], ulong.Parse(trackerInformation[1]), trackerInformation[2], Boolean.Parse(trackerInformation[3].ToLower()), trackerInformation[4])); 
                     }
-                    else
+
+                    else{                     
                         streamers.Find(x => x.name.ToLower().Equals(trackerInformation[0].ToLower())).ChannelIds.Add(ulong.Parse(trackerInformation[1]), trackerInformation[2]);
-                }catch{
-                    Console.WriteLine(System.DateTime.Now.ToString());
+                    }
+
+                    if(trackerInformation[3].Equals("True")){
+                        var channel = Program.client.GetChannel(ulong.Parse(trackerInformation[1]));
+                        var message = ((Discord.ITextChannel)channel).GetMessageAsync(ulong.Parse(trackerInformation[5])).Result;
+                        streamers.Find(x => x.name.ToLower().Equals(trackerInformation[0].ToLower())).toUpdate.Add(ulong.Parse(trackerInformation[1]), (Discord.IUserMessage)message);
+                    }
+
+                }catch(Exception e){
+                    Console.WriteLine(e.Message);
                 }
             }
 
@@ -44,7 +54,10 @@ namespace MopsBot.Module.Data
             {
                 foreach(var channel in tr.ChannelIds)
                 {
-                    write.WriteLine($"{tr.name}|{channel.Key}|{channel.Value}|{tr.isOnline}|{tr.curGame}");
+                    if(tr.toUpdate.ContainsKey(channel.Key))
+                        write.WriteLine($"{tr.name}|{channel.Key}|{channel.Value}|{tr.isOnline}|{tr.curGame}|{tr.toUpdate[channel.Key].Id}");
+                    else
+                        write.WriteLine($"{tr.name}|{channel.Key}|{channel.Value}|{tr.isOnline}|{tr.curGame}|0");
                 }
             }
             write.Dispose();

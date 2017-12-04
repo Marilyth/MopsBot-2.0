@@ -17,7 +17,7 @@ namespace MopsBot.Module.Data.Session
     public class TwitchTracker
     {
         private System.Threading.Timer checkForChange;
-        private Dictionary<ulong, Discord.IUserMessage> toUpdate;
+        public Dictionary<ulong, Discord.IUserMessage> toUpdate;
         internal Boolean isOnline;
         internal string name, curGame;
         internal Dictionary<ulong, string> ChannelIds;
@@ -55,7 +55,7 @@ namespace MopsBot.Module.Data.Session
                     isOnline = true;
                     toUpdate = new Dictionary<ulong, IUserMessage>();
                     try{
-                        curGame = (information["stream"]["game"].ToString().Equals(""))?"Nothing":information["stream"]["game"].ToString();
+                        curGame = (information["stream"] == null)?"Nothing":information["stream"]["game"].ToString();
                         sendTwitchNotification(information);
                     }catch(Exception e){
                         Console.Out.WriteLine(e.Message);
@@ -111,8 +111,11 @@ namespace MopsBot.Module.Data.Session
 
             foreach(var channel in ChannelIds)
             {
-                if(!toUpdate.ContainsKey(channel.Key))
+                if(!toUpdate.ContainsKey(channel.Key)){
                     toUpdate.Add(channel.Key, ((SocketTextChannel)Program.client.GetChannel(channel.Key)).SendMessageAsync(channel.Value, false, e).Result);
+                    StaticBase.streamTracks.writeList();
+                }
+                    
                 else    
                     await toUpdate[channel.Key].ModifyAsync(x => {
                         x.Content = channel.Value;

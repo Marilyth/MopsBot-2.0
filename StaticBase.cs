@@ -29,7 +29,7 @@ namespace MopsBot
         {
             stats = new Module.Data.Statistics();
             people = new Module.Data.UserScore();
-            streamTracks = new Module.Data.StreamerList();
+            //streamTracks = new Module.Data.StreamerList();
             ClipTracker = new Module.Data.ClipTracker();
             //osuTracker = new Module.Data.OsuTracker();
             dungeonCrawler = new List<Module.Data.Session.IdleDungeon>();

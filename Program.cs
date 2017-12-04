@@ -37,6 +37,7 @@ namespace MopsBot
             await client.StartAsync();
 
             client.Log += Client_Log;
+            client.Ready += onClientReady;
 
             var map = new ServiceCollection().AddSingleton(client).AddSingleton(new AudioService());
             var provider = map.BuildServiceProvider();
@@ -60,6 +61,10 @@ namespace MopsBot
         {
             Console.WriteLine(msg.ToString());
             return Task.CompletedTask;
+        }
+
+        private async Task onClientReady(){
+            StaticBase.streamTracks = new Module.Data.StreamerList();
         }
     }
 }
