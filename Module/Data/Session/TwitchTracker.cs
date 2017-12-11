@@ -36,13 +36,14 @@ namespace MopsBot.Module.Data.Session
 
         private void CheckForChange_Elapsed(object stateinfo)
         {
-            dynamic information;
+            TwitchResult information;
             try{
                 information = streamerInformation();
             }catch{
                 return;
             }
-            Boolean isStreaming = information["stream"] != null;
+            if(information == null) return;
+            Boolean isStreaming = information.stream != null;
 
             if(isOnline != isStreaming)
             {
@@ -55,7 +56,7 @@ namespace MopsBot.Module.Data.Session
                     isOnline = true;
                     toUpdate = new Dictionary<ulong, IUserMessage>();
                     try{
-                        curGame = (information["stream"] == null)?"Nothing":information["stream"]["game"].ToString();
+                        curGame = (information.stream == null)?"Nothing":information.stream.game;
                         sendTwitchNotification(information);
                     }catch(Exception e){
                         Console.Out.WriteLine(e.Message);
@@ -67,8 +68,8 @@ namespace MopsBot.Module.Data.Session
 
             if(isOnline)
                 sendTwitchNotification(information);
-                if(information["stream"] != null && curGame.CompareTo(information["stream"]["game"].ToString()) != 0 && !information["stream"]["game"].ToString().Equals("")){
-                    curGame = information["stream"]["game"].ToString();
+                if(information.stream != null && curGame.CompareTo(information.stream.game) != 0 && !information.stream.game.Equals("")){
+                    curGame = information.stream.game;
 
                     foreach(var channel in ChannelIds)
                         ((SocketTextChannel)Program.client.GetChannel(channel.Key)).SendMessageAsync($"{name} spielt jetzt **{curGame}**!");
@@ -77,37 +78,34 @@ namespace MopsBot.Module.Data.Session
                 }
         }
 
-        private dynamic streamerInformation()
+        private TwitchResult streamerInformation()
         {
             string query = Task.Run(() => Information.readURL($"https://api.twitch.tv/kraken/streams/{name}?client_id={Program.twitchId}")).Result;
+            JsonSerializerSettings _jsonWriter = new JsonSerializerSettings {
+                                 NullValueHandling = NullValueHandling.Ignore
+                             };
 
-            #if NET40
-                var jss = new JavaScriptSerializer();
-                dynamic tempDict = jss.Deserialize<dynamic>(query);
-            #else
-                dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
-            #endif
-            return tempDict;
+            return JsonConvert.DeserializeObject<TwitchResult>(query, _jsonWriter);
         }
 
         private async void sendTwitchNotification(dynamic streamInformation)
         {
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0x6441A4);
-            e.Title = streamInformation["stream"]["channel"]["status"];
-            e.Url = streamInformation["stream"]["channel"]["url"];
+            e.Title = streamInformation.stream.channel.status;
+            e.Url = streamInformation.stream.channel.url;
 
             EmbedAuthorBuilder author = new EmbedAuthorBuilder();
             author.Name = name;
-            author.Url = streamInformation["stream"]["channel"]["url"];
-            author.IconUrl = streamInformation["stream"]["channel"]["logo"];
+            author.Url = streamInformation.stream.channel.url;
+            author.IconUrl = streamInformation.stream.channel.logo;
             e.Author = author;
 
-            e.ThumbnailUrl = streamInformation["stream"]["channel"]["logo"];
-            e.ImageUrl = $"{streamInformation["stream"]["preview"]["medium"]}?rand={StaticBase.ran.Next(0,99999999)}";
+            e.ThumbnailUrl = streamInformation.stream.channel.logo;
+            e.ImageUrl = $"{streamInformation.stream.preview.medium}?rand={StaticBase.ran.Next(0,99999999)}";
 
-            e.AddInlineField("Spiel", (streamInformation["stream"]["game"]=="")?"no Game":streamInformation["stream"]["game"]);
-            e.AddInlineField("Zuschauer", streamInformation["stream"]["viewers"]);
+            e.AddInlineField("Spiel", (streamInformation.stream.game=="")?"no Game":streamInformation.stream.game);
+            e.AddInlineField("Zuschauer", streamInformation.stream.viewers);
 
             foreach(var channel in ChannelIds)
             {

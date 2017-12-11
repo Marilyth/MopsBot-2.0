@@ -52,23 +52,26 @@ namespace MopsBot.Module
 
             [Command("blow")]
             [Summary("Deletes a Meet-Up, if you are the creator.")]
-            public async Task blow(int id)
+            public Task blow(int id)
             {
                 StaticBase.meetups.blowMeetUp(id, (SocketGuildUser)Context.User);
+                return Task.CompletedTask;
             }
 
             [Command("join")]
             [Summary("Join the specified meet-up")]
-            public async Task join(int id)
+            public Task join(int id)
             {
                 StaticBase.meetups.upcoming[id-1].addParticipant(Context.User.Id);
+                return Task.CompletedTask;
             }
 
             [Command("leave")]
             [Summary("Leave the specified meet-up")]
-            public async Task leave(int id)
+            public Task leave(int id)
             {
                 StaticBase.meetups.upcoming[id-1].removeParticipant(Context.User.Id);
+                return Task.CompletedTask;
             }
 
             [Command("get")]

@@ -17,7 +17,7 @@ namespace MopsBot.Module
             [Summary("Crawl through a dungeon")]
             public async Task start(int lenghtInMinutes)
             {
-                Discord.IUserMessage updateMessage = Context.Channel.SendMessageAsync("Generating dungeon.").Result;
+                Discord.IUserMessage updateMessage = await Context.Channel.SendMessageAsync("Generating dungeon.");
 
                 Data.Session.IdleDungeon test = new Data.Session.IdleDungeon(updateMessage, StaticBase.people.users.Find(x => x.ID.Equals(Context.User.Id)), lenghtInMinutes);
                 StaticBase.dungeonCrawler.Add(test);
