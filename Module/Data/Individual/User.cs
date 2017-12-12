@@ -42,9 +42,6 @@ namespace MopsBot.Module.Data.Individual
         public int calcLevel()
         {
             int i = 0;
-            System.Console.WriteLine(levelCalc(0));
-            System.Console.WriteLine(Experience);
-            System.Console.WriteLine(Experience>levelCalc(0));
             while(Experience >= levelCalc(i))
             {
                 i++;
