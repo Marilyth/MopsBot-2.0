@@ -74,6 +74,8 @@ namespace MopsBot
             int argPos = 0;
             // Determine if the message has a valid prefix, adjust argPos 
             if (!(message.HasMentionPrefix(client.CurrentUser, ref argPos) || message.HasCharPrefix('!', ref argPos) || message.HasCharPrefix('?', ref argPos))) return;
+            
+            StaticBase.people.addStat(parameterMessage.Author.Id, 0, "experience");
 
             if (message.Content.Contains("help") || message.HasCharPrefix('?', ref argPos))
             {

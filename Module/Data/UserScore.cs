@@ -71,6 +71,7 @@ namespace MopsBot.Module.Data
 
         public string drawDiagram(int count, DiagramType type)
         {
+            count = (users.Count > count) ? count : users.Count;
             List<Individual.User> tempUsers = users.Take(count).ToList();
 
             int maximum = 0;
@@ -96,19 +97,19 @@ namespace MopsBot.Module.Data
                     break;
 
                 case DiagramType.Level:
-                    tempUsers = tempUsers.OrderByDescending(x => x.Level).ToList();
+                    tempUsers = tempUsers.OrderByDescending(x => x.calcLevel()).ToList();
 
-                    maximum = tempUsers[0].Level;
+                    maximum = tempUsers[0].calcLevel();
 
                     for (int i = 0; i < count; i++)
                     {
                         lines[i] = (i + 1).ToString().Length < 2 ? $"#{i + 1} |" : $"#{i + 1}|";
-                        double relPercent = users[i].Level / ((double)maximum / 10);
+                        double relPercent = users[i].calcLevel() / ((double)maximum / 10);
                         for (int j = 0; j < relPercent; j++)
                         {
                             lines[i] += "■";
                         }
-                        lines[i] += $"  ({users[i].Level} / {(Program.client.GetUser(users[i].ID) == null ? "" + users[i].ID : Program.client.GetUser(users[i].ID).Username)})";
+                        lines[i] += $"  ({users[i].calcLevel()} / {(Program.client.GetUser(users[i].ID) == null ? "" + users[i].ID : Program.client.GetUser(users[i].ID).Username)})";
                     }
                     break;
 

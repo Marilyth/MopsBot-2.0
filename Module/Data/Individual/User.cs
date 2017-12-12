@@ -10,7 +10,7 @@ namespace MopsBot.Module.Data.Individual
     class User
     {
         public ulong ID;
-        public int Score, Experience, Level, punched, hugged, kissed;
+        public int Score, Experience, punched, hugged, kissed;
         public List<Items> equipment;
 
         public User(ulong userID, int userScore, int XP, int punch, int hug, int kiss)
@@ -21,7 +21,6 @@ namespace MopsBot.Module.Data.Individual
             punched = punch;
             hugged = hug;
             kissed = kiss;
-            Level = calcLevel();
         }
 
         public User(ulong userID, int userScore, int XP)
@@ -29,7 +28,6 @@ namespace MopsBot.Module.Data.Individual
             ID = userID;
             Score = userScore;
             Experience = XP;
-            Level = calcLevel();
         }
 
         public User(ulong userID, int userScore)
@@ -41,18 +39,23 @@ namespace MopsBot.Module.Data.Individual
         private delegate double del(int i);
         private del levelCalc = x => (200*(x*x));
 
-        private int calcLevel()
+        public int calcLevel()
         {
             int i = 0;
-            while(Experience > levelCalc(i))
+            System.Console.WriteLine(levelCalc(0));
+            System.Console.WriteLine(Experience);
+            System.Console.WriteLine(Experience>levelCalc(0));
+            while(Experience >= levelCalc(i))
             {
                 i++;
             }
-            return (i - 1);
+            System.Console.WriteLine(i);
+            return (i-1);
         }
 
         internal string calcNextLevel()
         {
+            int Level = calcLevel();
             double expCurrentHold = Experience - levelCalc(Level);
             string output = "", TempOutput = "";
             double diffExperience = levelCalc(Level + 1) - levelCalc(Level);
@@ -70,7 +73,7 @@ namespace MopsBot.Module.Data.Individual
         internal string statsToString()
         {
             string output = $"${Score}\n" +
-                            $"Level: {Level} (Experience Bar: {calcNextLevel()})\n" +
+                            $"Level: {calcLevel()} (Experience Bar: {calcNextLevel()})\n" +
                             $"EXP: {Experience}\n\n" +
                             $"Been kissed {kissed} times\n" +
                             $"Been hugged {hugged} times\n" +
