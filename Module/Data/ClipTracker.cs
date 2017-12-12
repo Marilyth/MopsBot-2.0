@@ -21,7 +21,7 @@ namespace MopsBot.Module.Data
             tracklist = new Dictionary<string, List<ulong>>();
             try
             {
-                StreamReader read = new StreamReader(new FileStream("data//lastcheck.txt", FileMode.Open));
+                StreamReader read = new StreamReader(new FileStream("data//lastcheck.txt", FileMode.OpenOrCreate));
                 lastcheck = DateTime.Parse(read.ReadLine());
                 read.Dispose();
             }

@@ -14,7 +14,7 @@ namespace MopsBot.Module.Data
 
         public UserScore()
         {
-            StreamReader read = new StreamReader(new FileStream("data//scores.txt", FileMode.Open));
+            StreamReader read = new StreamReader(new FileStream("data//scores.txt", FileMode.OpenOrCreate));
 
             string fs = "";
             while ((fs = read.ReadLine()) != null)

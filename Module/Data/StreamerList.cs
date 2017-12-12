@@ -15,7 +15,7 @@ namespace MopsBot.Module.Data
         {
             streamers = new List<Session.TwitchTracker>();
 
-            StreamReader read = new StreamReader(new FileStream("data//streamers.txt", FileMode.Open));
+            StreamReader read = new StreamReader(new FileStream("data//streamers.txt", FileMode.OpenOrCreate));
 
             string s = "";
             while((s = read.ReadLine()) != null)

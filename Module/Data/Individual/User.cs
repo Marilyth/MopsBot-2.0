@@ -83,7 +83,7 @@ namespace MopsBot.Module.Data.Individual
         {
             equipment = new List<Items>();
             
-            StreamReader read = new StreamReader(new FileStream("data//dungeonItems.txt", FileMode.Open));
+            StreamReader read = new StreamReader(new FileStream("data//dungeonItems.txt", FileMode.OpenOrCreate));
 
             string fs = "";
             while (!(fs = read.ReadLine()).Contains(ID.ToString()))
