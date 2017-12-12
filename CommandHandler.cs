@@ -28,6 +28,40 @@ namespace MopsBot
             await commands.AddModulesAsync(Assembly.GetEntryAssembly());
 
             client.MessageReceived += HandleCommand;
+            client.UserJoined += Client_UserJoined;
+            client.MessageReceived += Client_MessageReceived;
+        }
+
+        private async Task Client_MessageReceived(SocketMessage arg)
+        {
+            //Poll
+            if (arg.Channel.Name.Contains((arg.Author.Username)) && StaticBase.poll != null)
+            {
+                if (StaticBase.poll.participants.ToList().Select(x => x.Id).ToArray().Contains(arg.Author.Id))
+                {
+                    StaticBase.poll.results[int.Parse(arg.Content) - 1]++;
+                    await arg.Channel.SendMessageAsync("Vote accepted!");
+                    StaticBase.poll.participants.RemoveAll(x => x.Id == arg.Author.Id);
+                }
+
+            }
+
+            //Daily Statistics & User Experience
+            if (!arg.Author.IsBot && !arg.Content.StartsWith("!"))
+            {
+                StaticBase.people.addStat(arg.Author.Id, arg.Content.Length, "experience");
+                StaticBase.stats.addValue(arg.Content.Length);
+            }
+        }
+
+        private async Task Client_UserJoined(SocketGuildUser User)
+        {
+            //PhunkRoyalServer Begruessung
+            if (User.Guild.Id.Equals(205130885337448469))
+                await User.Guild.GetTextChannel(305443055396192267).SendMessageAsync($"Willkommen im **{User.Guild.Name}** Server, {User.Mention}!" +
+                $"\n\nBevor Du vollen Zugriff auf den Server hast, möchten wir Dich auf die Regeln des Servers hinweisen, die Du hier findest:" +
+                $" {User.Guild.GetTextChannel(305443033296535552).Mention}\nSobald Du fertig bist, kannst Du Dich an einen unserer Moderatoren zu Deiner" +
+                $" rechten wenden, die Dich alsbald zum Mitglied ernennen.\n\nHave a very mopsig day\nDein heimlicher Verehrer Mops");
         }
 
         public async Task HandleCommand(SocketMessage parameterMessage)

@@ -157,9 +157,10 @@ namespace MopsBot.Module
         [Summary("Kills Mops to adapt to any new changes in code.")]
         [RequireBotManage()]
         [Hide()]
-        public async Task kill()
+        public Task kill()
         {
             Process.GetCurrentProcess().Kill();   
+            return Task.CompletedTask;
         }
 
     }

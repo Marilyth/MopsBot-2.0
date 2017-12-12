@@ -38,8 +38,8 @@ namespace MopsBot.Module.Data.Individual
             Score = userScore;
         }
 
-        internal delegate double del(int i);
-        internal static del levelCalc = x => (200*(x*x));
+        private delegate double del(int i);
+        private del levelCalc = x => (200*(x*x));
 
         private int calcLevel()
         {

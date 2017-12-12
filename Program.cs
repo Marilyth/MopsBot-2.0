@@ -30,8 +30,7 @@ namespace MopsBot
             StreamReader sr = new StreamReader(new FileStream("data//config.txt", FileMode.Open));
 
             var token = sr.ReadLine();
-            twitchId = sr.ReadLine();
-                        
+            twitchId = sr.ReadLine();          
             
             await client.LoginAsync(TokenType.Bot, token);
             await client.StartAsync();
@@ -44,8 +43,6 @@ namespace MopsBot
 
             handler = new CommandHandler();
             await handler.Install(provider);
-
-            new StaticBase();
 
             var ids = sr.ReadLine();
             foreach(var id in ids.Split(':')){
@@ -64,7 +61,7 @@ namespace MopsBot
         }
 
         private async Task onClientReady(){
-            StaticBase.streamTracks = new Module.Data.StreamerList();
+            await Task.Run(() => StaticBase.initTracking());
         }
     }
 }

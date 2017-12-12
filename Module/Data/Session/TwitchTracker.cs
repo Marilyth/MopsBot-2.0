@@ -17,6 +17,7 @@ namespace MopsBot.Module.Data.Session
     public class TwitchTracker
     {
         private System.Threading.Timer checkForChange;
+        private Task<string> fetchInformation;
         public Dictionary<ulong, Discord.IUserMessage> toUpdate;
         internal Boolean isOnline;
         internal string name, curGame;
@@ -31,6 +32,9 @@ namespace MopsBot.Module.Data.Session
             name = streamerName;
             isOnline = pIsOnline;
             curGame = pGame;
+
+            //Fetch information in background before we need it, so Task is done once it is needed
+            fetchInformation = Task.Run(() => Information.readURL($"https://api.twitch.tv/kraken/streams/{name}?client_id={Program.twitchId}"));
             checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false), StaticBase.ran.Next(6,59)*1000, 60000);
         }
 
@@ -55,13 +59,9 @@ namespace MopsBot.Module.Data.Session
                 {
                     isOnline = true;
                     toUpdate = new Dictionary<ulong, IUserMessage>();
-                    try{
-                        curGame = (information.stream == null)?"Nothing":information.stream.game;
-                        sendTwitchNotification(information);
-                    }catch(Exception e){
-                        Console.Out.WriteLine(e.Message);
-                        Console.Out.WriteLine(name);
-                    }
+                    curGame = (information.stream == null) ? "Nothing" : information.stream.game;
+                    sendTwitchNotification(information);
+
                 }
                 StaticBase.streamTracks.writeList();
             }
@@ -80,7 +80,9 @@ namespace MopsBot.Module.Data.Session
 
         private TwitchResult streamerInformation()
         {
-            string query = Task.Run(() => Information.readURL($"https://api.twitch.tv/kraken/streams/{name}?client_id={Program.twitchId}")).Result;
+            string query = fetchInformation.Result;
+            fetchInformation = Task.Run(() => Information.readURL($"https://api.twitch.tv/kraken/streams/{name}?client_id={Program.twitchId}"));
+            
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings {
                                  NullValueHandling = NullValueHandling.Ignore
                              };
@@ -88,23 +90,25 @@ namespace MopsBot.Module.Data.Session
             return JsonConvert.DeserializeObject<TwitchResult>(query, _jsonWriter);
         }
 
-        private async void sendTwitchNotification(dynamic streamInformation)
+        private async void sendTwitchNotification(TwitchResult streamInformation)
         {
+            Channel streamer = streamInformation.stream.channel;
+
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0x6441A4);
-            e.Title = streamInformation.stream.channel.status;
-            e.Url = streamInformation.stream.channel.url;
+            e.Title = streamer.status;
+            e.Url = streamer.url;
 
             EmbedAuthorBuilder author = new EmbedAuthorBuilder();
             author.Name = name;
-            author.Url = streamInformation.stream.channel.url;
-            author.IconUrl = streamInformation.stream.channel.logo;
+            author.Url = streamer.url;
+            author.IconUrl = streamer.logo;
             e.Author = author;
 
-            e.ThumbnailUrl = streamInformation.stream.channel.logo;
+            e.ThumbnailUrl = streamer.logo;
             e.ImageUrl = $"{streamInformation.stream.preview.medium}?rand={StaticBase.ran.Next(0,99999999)}";
 
-            e.AddInlineField("Spiel", (streamInformation.stream.game=="")?"no Game":streamInformation.stream.game);
+            e.AddInlineField("Spiel", (streamer.game=="")?"no Game":streamer.game);
             e.AddInlineField("Zuschauer", streamInformation.stream.viewers);
 
             foreach(var channel in ChannelIds)

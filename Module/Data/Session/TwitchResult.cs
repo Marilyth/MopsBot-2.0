@@ -10,25 +10,25 @@ namespace MopsBot.Module.Data.Session
 {
     class TwitchResult
     {
-        public Stream stream { get; set; }
+        public Stream stream;
     }
 
     class Stream{
-        public ulong _id {get; set; }
-        public int video_height {get; set; }
-        public int average_fps {get; set; }
-        public int delay {get; set; }
-        public string created_at {get; set; }
-        public bool is_playlist {get; set; }
+        public ulong _id;
+        public int video_height;
+        public double average_fps;
+        public double delay;
+        public string created_at;
+        public bool is_playlist;
         
-        public string game {get; set; }
-        public int viewers {get; set; }
-        public Channel channel {get; set; }
-        public Preview preview {get; set; }
+        public string game;
+        public int viewers;
+        public Channel channel;
+        public Preview preview;
     }
 
     class Channel{
-        public string game {get; set; }
+        public string game;
         public bool mature;
          public string status;
          public string broadcaster_language;
@@ -36,23 +36,23 @@ namespace MopsBot.Module.Data.Session
          public string language;
          public ulong _id;
          public string name;
-         public string created_at {get; set; }
-         public string updated_at {get; set; }
-         public bool partner {get; set; }
-         public string logo {get; set; }
-         public string video_banner {get; set; }
-         public string profile_banner {get; set; }
-         public string profile_banner_background_color {get; set; }
-         public string url {get; set; }
-         public int views {get; set; }
-         public int followers {get; set; }
+         public string created_at;
+         public string updated_at;
+         public bool partner;
+         public string logo ;
+         public string video_banner;
+         public string profile_banner;
+         public string profile_banner_background_color;
+         public string url;
+         public int views;
+         public int followers;
       
     }
     public class Preview{
-        public string small {get; set; }
-        public string medium {get; set; }
-        public string large {get; set; }
-        public string template {get; set; }
+        public string small;
+        public string medium;
+        public string large;
+        public string template;
       
     }
 }
