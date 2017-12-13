@@ -60,14 +60,14 @@ namespace MopsBot.Module
         [Summary("Returns your experience and all that stuff")]
         public async Task getStats()
         {
-            await ReplyAsync(StaticBase.people.users.Find(x => x.ID.Equals(Context.User.Id)).statsToString());
+            await ReplyAsync(StaticBase.people.users[Context.User.Id].statsToString());
         }
 
         [Command("ranking")]
         [Summary("Returns the top limit ranks of level")]
         public async Task ranking(int limit)
         {
-            await ReplyAsync(StaticBase.people.drawDiagram(limit, Data.UserScore.DiagramType.Level));
+            await ReplyAsync(StaticBase.people.drawDiagram(limit));
         }
 
         public static dynamic getRandomWord()

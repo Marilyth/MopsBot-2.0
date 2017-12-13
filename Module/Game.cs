@@ -19,7 +19,7 @@ namespace MopsBot.Module
             {
                 Discord.IUserMessage updateMessage = await Context.Channel.SendMessageAsync("Generating dungeon.");
 
-                Data.Session.IdleDungeon test = new Data.Session.IdleDungeon(updateMessage, StaticBase.people.users.Find(x => x.ID.Equals(Context.User.Id)), lenghtInMinutes);
+                Data.Session.IdleDungeon test = new Data.Session.IdleDungeon(updateMessage, Context.User.Id, lenghtInMinutes);
                 StaticBase.dungeonCrawler.Add(test);
             }
 
@@ -27,14 +27,14 @@ namespace MopsBot.Module
             [Summary("Buy equipment")]
             public async Task buy(int valueOfItem)
             {
-                var user = StaticBase.people.users.First(x => x.ID == Context.User.Id);
+                var user = StaticBase.people.users[Context.User.Id];
                 if(valueOfItem <= user.Score)
                 {
-                    user.getEquipment();
+                    user.getEquipment(Context.User.Id);
                     user.equipment.Add(new Data.AllItems().getItem(valueOfItem));
                     await ReplyAsync($"Successfully purchased **{new Data.AllItems().getItem(valueOfItem).name}**");
-                    user.saveEquipment();
-                    StaticBase.people.addStat(user.ID, -valueOfItem, "score");
+                    user.saveEquipment(Context.User.Id);
+                    StaticBase.people.addStat(Context.User.Id, -valueOfItem, "score");
                 }
                 else
                     await ReplyAsync("Not enough money.");
@@ -44,7 +44,7 @@ namespace MopsBot.Module
             [Summary("See all items you could buy")]
             public async Task stock()
             {
-                var eligable = new Data.AllItems().getEligable(StaticBase.people.users.First(x => x.ID == Context.User.Id).Score).Select(x => $"${x.Value}: **{x.Key}**");
+                var eligable = new Data.AllItems().getEligable(StaticBase.people.users[Context.User.Id].Score).Select(x => $"${x.Value}: **{x.Key}**");
                 string output = String.Join("\n", eligable);
                 await ReplyAsync(output.Count() > 0 ? output : "There is nothing you could buy.");
             }
@@ -62,7 +62,7 @@ namespace MopsBot.Module
                     StaticBase.blackjack = new Data.Session.Blackjack(Context.Client.CurrentUser);
                     await ReplyAsync("Table set up. Woof");
                 }
-                if (betAmount <= StaticBase.people.users.Find(x => x.ID.Equals(Context.User.Id)).Score && betAmount > 0)
+                if (betAmount <= StaticBase.people.users[Context.User.Id].Score && betAmount > 0)
                     await ReplyAsync(StaticBase.blackjack.userJoin(Context.User, betAmount));
                 else
                     await ReplyAsync("You can't bet that much.");

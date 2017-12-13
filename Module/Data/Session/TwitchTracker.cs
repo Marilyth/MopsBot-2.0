@@ -6,11 +6,7 @@ using Discord.WebSocket;
 using Discord.Commands;
 using System.Text;
 using System.Threading.Tasks;
-#if NET40
-    using System.Web.Script.Serialization;
-#else
-    using Newtonsoft.Json;
-#endif
+using Newtonsoft.Json;
 
 namespace MopsBot.Module.Data.Session
 {

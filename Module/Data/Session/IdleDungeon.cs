@@ -13,21 +13,21 @@ namespace MopsBot.Module.Data.Session
         public Random ran;
         public string username, log;
         public int vitality, attack, length, gold;
-        public Individual.User player;
+        public ulong player;
         public System.Diagnostics.Stopwatch time;
         public System.Threading.Timer timer;
-        public IdleDungeon(Discord.IUserMessage pUpdateMessage, Individual.User pUser, int pLength)
+        public IdleDungeon(Discord.IUserMessage pUpdateMessage, ulong ID, int pLength)
         {
-            username = Program.client.GetUser(pUser.ID).Username;
+            username = Program.client.GetUser(ID).Username;
             log = $"00:00 {username} has entered the dungeon.";
-            player = pUser;
-            player.getEquipment();
+            StaticBase.people.users[ID].getEquipment(ID);
+            player = ID;
             ran = new Random();
             updateMessage = pUpdateMessage;
             timer = new System.Threading.Timer(eventHappened, new System.Threading.AutoResetEvent(false), ran.Next(10000, 60000), 100000);
 
-            vitality = 7;
-            foreach(Individual.Items item in player.equipment){
+            vitality = 7;   
+            foreach(Individual.Items item in StaticBase.people.users[ID].equipment){
                 attack += item.attack;
                 vitality += item.vitality;
             }
@@ -50,7 +50,7 @@ namespace MopsBot.Module.Data.Session
             if(minute >= length || vitality <= 0){
                 if(vitality <= 0)
                     gold = 0;
-                StaticBase.people.addStat(player.ID, gold, "score");
+                StaticBase.people.addStat(player, gold, "score");
                 tempLog += $"{username} left the dungeon.";
                 log += tempLog;
                 modifyMessage();

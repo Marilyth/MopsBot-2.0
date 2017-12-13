@@ -9,13 +9,11 @@ namespace MopsBot.Module.Data.Individual
 {
     class User
     {
-        public ulong ID;
         public int Score, Experience, punched, hugged, kissed;
         public List<Items> equipment;
 
-        public User(ulong userID, int userScore, int XP, int punch, int hug, int kiss)
+        public User(int userScore, int XP, int punch, int hug, int kiss)
         {
-            ID = userID;
             Score = userScore;
             Experience = XP;
             punched = punch;
@@ -23,16 +21,14 @@ namespace MopsBot.Module.Data.Individual
             kissed = kiss;
         }
 
-        public User(ulong userID, int userScore, int XP)
+        public User(int userScore, int XP)
         {
-            ID = userID;
             Score = userScore;
             Experience = XP;
         }
 
-        public User(ulong userID, int userScore)
+        public User(int userScore)
         {
-            ID = userID;
             Score = userScore;
         }
 
@@ -46,11 +42,10 @@ namespace MopsBot.Module.Data.Individual
             {
                 i++;
             }
-            System.Console.WriteLine(i);
             return (i-1);
         }
 
-        internal string calcNextLevel()
+        public string calcNextLevel()
         {
             int Level = calcLevel();
             double expCurrentHold = Experience - levelCalc(Level);
@@ -67,7 +62,7 @@ namespace MopsBot.Module.Data.Individual
             return output + TempOutput;
         }
 
-        internal string statsToString()
+        public string statsToString()
         {
             string output = $"${Score}\n" +
                             $"Level: {calcLevel()} (Experience Bar: {calcNextLevel()})\n" +
@@ -79,7 +74,7 @@ namespace MopsBot.Module.Data.Individual
             return output;
         }
 
-        public void getEquipment()
+        public void getEquipment(ulong ID)
         {
             equipment = new List<Items>();
             
@@ -105,7 +100,7 @@ namespace MopsBot.Module.Data.Individual
             read.Dispose();
         }
 
-        public void saveEquipment()
+        public void saveEquipment(ulong ID)
         {
             List<string> allLines = File.ReadAllLines("data//dungeonItems.txt").ToList();
 
