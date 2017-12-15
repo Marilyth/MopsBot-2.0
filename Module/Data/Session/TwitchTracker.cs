@@ -13,11 +13,10 @@ namespace MopsBot.Module.Data.Session
     public class TwitchTracker
     {
         private System.Threading.Timer checkForChange;
-        private Task<string> fetchInformation;
         public Dictionary<ulong, Discord.IUserMessage> toUpdate;
-        internal Boolean isOnline;
-        internal string name, curGame;
-        internal Dictionary<ulong, string> ChannelIds;
+        public Boolean isOnline;
+        public string name, curGame;
+        public Dictionary<ulong, string> ChannelIds;
         
 
         public TwitchTracker(string streamerName, ulong pChannel, string notificationText, Boolean pIsOnline, string pGame)
@@ -29,8 +28,6 @@ namespace MopsBot.Module.Data.Session
             isOnline = pIsOnline;
             curGame = pGame;
 
-            //Fetch information in background before we need it, so Task is done once it is needed
-            fetchInformation = Task.Run(() => Information.readURL($"https://api.twitch.tv/kraken/streams/{name}?client_id={Program.twitchId}"));
             checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false), StaticBase.ran.Next(6,59)*1000, 60000);
         }
 
@@ -76,8 +73,7 @@ namespace MopsBot.Module.Data.Session
 
         private TwitchResult streamerInformation()
         {
-            string query = fetchInformation.Result;
-            fetchInformation = Task.Run(() => Information.readURL($"https://api.twitch.tv/kraken/streams/{name}?client_id={Program.twitchId}"));
+            string query = Information.readURL($"https://api.twitch.tv/kraken/streams/{name}?client_id={Program.twitchId}");
             
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings {
                                  NullValueHandling = NullValueHandling.Ignore

@@ -6,5 +6,6 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Discord.Net" Version="1.0.2"/>
+    <PackageReference Include="TweetinviAPI" Version="2.1.0"/>
   </ItemGroup>
 </Project>

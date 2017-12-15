@@ -143,6 +143,20 @@ namespace MopsBot.Module
             await ReplyAsync("Keeping track of " + streamerName + "'s streams, from now on!");
         }
 
+        [Command("trackTwitter")]
+        [Summary("Keeps track of the specified TwitterUser, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
+        [RequireUserPermission(ChannelPermission.ManageChannel)]
+        public async Task trackStreamer(string twitterUser)
+        {
+            if (!StaticBase.twitterTracks.twitters.ContainsKey(twitterUser))
+                StaticBase.twitterTracks.twitters.Add(twitterUser, new Data.Session.TwitterTracker(twitterUser, 0));
+                
+            StaticBase.twitterTracks.twitters[twitterUser].ChannelIds.Add(Context.Channel.Id);
+            StaticBase.twitterTracks.writeList();
+
+            await ReplyAsync("Keeping track of " + twitterUser + "'s tweets, from now on!");
+        }
+
         [Command("trackClips")]
         [Summary("Keeps track of clips from streams of the specified Streamer, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
         [RequireUserPermission(ChannelPermission.ManageChannel)]

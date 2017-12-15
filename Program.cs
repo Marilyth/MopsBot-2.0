@@ -18,6 +18,7 @@ namespace MopsBot
 
         public static DiscordSocketClient client;
         public static string twitchId;
+        public static string[] twitterAuth;
         private CommandHandler handler;
         
         public async Task Start()
@@ -30,7 +31,8 @@ namespace MopsBot
             StreamReader sr = new StreamReader(new FileStream("data//config.txt", FileMode.Open));
 
             var token = sr.ReadLine();
-            twitchId = sr.ReadLine();          
+            twitchId = sr.ReadLine();
+            twitterAuth = sr.ReadLine().Split(",");     
             
             await client.LoginAsync(TokenType.Bot, token);
             await client.StartAsync();

@@ -24,10 +24,12 @@ namespace MopsBot
         public static Module.Data.ClipTracker ClipTracker;
         public static Module.Data.OsuTracker osuTracker;
         public static Module.Data.StreamerList streamTracks;
+        public static Module.Data.TwitterList twitterTracks;
         
         public static void initTracking()
         {
             streamTracks = new Module.Data.StreamerList();
+            twitterTracks = new Module.Data.TwitterList();
             ClipTracker = new Module.Data.ClipTracker();
             //osuTracker = new Module.Data.OsuTracker();        
         }
