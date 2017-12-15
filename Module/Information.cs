@@ -1,19 +1,12 @@
 ﻿using System;
-
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
-
 using System.Linq;
-
-#if NET40
-    using System.Web.Script.Serialization;
-#else
-    using Newtonsoft.Json;
-#endif
+using Newtonsoft.Json;
 
 namespace MopsBot.Module
 {
@@ -24,11 +17,7 @@ namespace MopsBot.Module
         [Summary("Returns the date you joined the Guild")]
         public async Task howLong()
         {
-            #if NET40
-                await ReplyAsync(((SocketGuildUser)Context.User).JoinedAt.Value.Date.ToShortDateString());
-            #else
-                await ReplyAsync(((SocketGuildUser)Context.User).JoinedAt.Value.Date.ToString("d"));
-            #endif
+            await ReplyAsync(((SocketGuildUser)Context.User).JoinedAt.Value.Date.ToString("d"));
         }
 
         [Command("joinServer")]
@@ -43,33 +32,21 @@ namespace MopsBot.Module
         public async Task define([Remainder] string text)
         {
             string query = Task.Run(() => readURL($"http://api.wordnik.com:80/v4/word.json/{text}/definitions?limit=1&includeRelated=false&sourceDictionaries=all&useCanonical=true&includeTags=false&api_key=a2a73e7b926c924fad7001ca3111acd55af2ffabf50eb4ae5")).Result;
-            
-            #if NET40
-                var jss = new JavaScriptSerializer();
-                dynamic tempDict = jss.Deserialize<dynamic>(query);
-            #else
-                dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
-            #endif
+
+            dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
 
             tempDict = tempDict[0];
             await ReplyAsync($"__**{tempDict["word"]}**__\n\n``{tempDict["text"]}``");
         }
 
         [Command("translate")]
-        [Summary("Translates your text from srcLanguage to dstLanguage.\nUse the abbreviations noted here http://www.transltr.org/api/getlanguagesfortranslate")]
-        public async Task translate(string srcLanguage, string dstLanguage, [Remainder] string text)
+        [Summary("Translates your text from srcLanguage to tgtLanguage.")]
+        public async Task translate(string srcLanguage, string tgtLanguage, [Remainder] string text)
         {
-            string query = Task.Run(() => readURL($"http://www.transltr.org/api/translate?text={text}&to={dstLanguage}&from={srcLanguage}")).Result;
+            string query = Task.Run(() => readURL($"https://translate.googleapis.com/translate_a/single?client=gtx&sl={srcLanguage}&tl={tgtLanguage}&dt=t&q={text}")).Result;
+            dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
 
-            #if NET40
-                var jss = new JavaScriptSerializer();
-                dynamic tempDict = jss.Deserialize<dynamic>(query);
-            #else
-                dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
-            #endif
-            
-
-            await ReplyAsync(tempDict["translationText"].ToString());   
+            await ReplyAsync(tempDict[0][0][0].ToString());
         }
 
         [Command("dayDiagram")]
@@ -83,28 +60,21 @@ namespace MopsBot.Module
         [Summary("Returns your experience and all that stuff")]
         public async Task getStats()
         {
-            await ReplyAsync(StaticBase.people.users.Find(x => x.ID.Equals(Context.User.Id)).statsToString());
+            await ReplyAsync(StaticBase.people.users[Context.User.Id].statsToString());
         }
 
         [Command("ranking")]
         [Summary("Returns the top limit ranks of level")]
         public async Task ranking(int limit)
         {
-            await ReplyAsync(StaticBase.people.drawDiagram(limit, Data.UserScore.DiagramType.Level));
+            await ReplyAsync(StaticBase.people.drawDiagram(limit));
         }
 
         public static dynamic getRandomWord()
         {
             string query = readURL("http://api.wordnik.com:80/v4/words.json/randomWord?hasDictionaryDef=true&excludePartOfSpeech=given-name&minCorpusCount=10000&maxCorpusCount=-1&minDictionaryCount=4&maxDictionaryCount=-1&minLength=3&maxLength=13&api_key=a2a73e7b926c924fad7001ca3111acd55af2ffabf50eb4ae5");
 
-            #if NET40
-                var jss = new JavaScriptSerializer();
-                dynamic tempDict = jss.Deserialize<dynamic>(query);
-            #else
-                dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
-            #endif
-            
-
+            dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
             return tempDict["word"];
         }
 
@@ -114,11 +84,7 @@ namespace MopsBot.Module
             try
             {
                 var request = (System.Net.HttpWebRequest)System.Net.WebRequest.Create(URL);
-                #if NET40
-                    using (var response = request.GetResponse())
-                #else  
-                    using (var response =  request.GetResponseAsync().Result)
-                #endif
+                using (var response = request.GetResponseAsync().Result)
                 using (var content = response.GetResponseStream())
                 using (var reader = new System.IO.StreamReader(content))
                 {

@@ -52,23 +52,26 @@ namespace MopsBot.Module
 
             [Command("blow")]
             [Summary("Deletes a Meet-Up, if you are the creator.")]
-            public async Task blow(int id)
+            public Task blow(int id)
             {
                 StaticBase.meetups.blowMeetUp(id, (SocketGuildUser)Context.User);
+                return Task.CompletedTask;
             }
 
             [Command("join")]
             [Summary("Join the specified meet-up")]
-            public async Task join(int id)
+            public Task join(int id)
             {
                 StaticBase.meetups.upcoming[id-1].addParticipant(Context.User.Id);
+                return Task.CompletedTask;
             }
 
             [Command("leave")]
             [Summary("Leave the specified meet-up")]
-            public async Task leave(int id)
+            public Task leave(int id)
             {
                 StaticBase.meetups.upcoming[id-1].removeParticipant(Context.User.Id);
+                return Task.CompletedTask;
             }
 
             [Command("get")]
@@ -129,15 +132,29 @@ namespace MopsBot.Module
         [RequireUserPermission(ChannelPermission.ManageChannel)]
         public async Task trackStreamer(string streamerName, [Remainder]string notificationMessage)
         {
-            if (!StaticBase.streamTracks.streamers.Exists(x => x.name.ToLower().Equals(streamerName.ToLower())))
+            if (!StaticBase.streamTracks.streamers.ContainsKey(streamerName.ToLower()))
             {
-                StaticBase.streamTracks.streamers.Add(new Data.Session.TwitchTracker(streamerName, Context.Channel.Id, notificationMessage, false, "Nothing"));            }
+                StaticBase.streamTracks.streamers.Add(streamerName, new Data.Session.TwitchTracker(streamerName, Context.Channel.Id, notificationMessage, false, "Nothing"));            }
             else
-                StaticBase.streamTracks.streamers.Find(x => x.name.ToLower().Equals(streamerName.ToLower())).ChannelIds.Add(Context.Channel.Id, notificationMessage);
+                StaticBase.streamTracks.streamers[streamerName].ChannelIds.Add(Context.Channel.Id, notificationMessage);
 
             StaticBase.streamTracks.writeList();
 
             await ReplyAsync("Keeping track of " + streamerName + "'s streams, from now on!");
+        }
+
+        [Command("trackTwitter")]
+        [Summary("Keeps track of the specified TwitterUser, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
+        [RequireUserPermission(ChannelPermission.ManageChannel)]
+        public async Task trackStreamer(string twitterUser)
+        {
+            if (!StaticBase.twitterTracks.twitters.ContainsKey(twitterUser))
+                StaticBase.twitterTracks.twitters.Add(twitterUser, new Data.Session.TwitterTracker(twitterUser, 0));
+                
+            StaticBase.twitterTracks.twitters[twitterUser].ChannelIds.Add(Context.Channel.Id);
+            StaticBase.twitterTracks.writeList();
+
+            await ReplyAsync("Keeping track of " + twitterUser + "'s tweets, from now on!");
         }
 
         [Command("trackClips")]
@@ -154,9 +171,10 @@ namespace MopsBot.Module
         [Summary("Kills Mops to adapt to any new changes in code.")]
         [RequireBotManage()]
         [Hide()]
-        public async Task kill()
+        public Task kill()
         {
             Process.GetCurrentProcess().Kill();   
+            return Task.CompletedTask;
         }
 
     }

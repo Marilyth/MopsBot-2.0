@@ -6,21 +6,17 @@ using Discord.WebSocket;
 using Discord.Commands;
 using System.Text;
 using System.Threading.Tasks;
-#if NET40
-    using System.Web.Script.Serialization;
-#else
-    using Newtonsoft.Json;
-#endif
+using Newtonsoft.Json;
 
 namespace MopsBot.Module.Data.Session
 {
     public class TwitchTracker
     {
         private System.Threading.Timer checkForChange;
-        private Dictionary<ulong, Discord.IUserMessage> toUpdate;
-        internal Boolean isOnline;
-        internal string name, curGame;
-        internal Dictionary<ulong, string> ChannelIds;
+        public Dictionary<ulong, Discord.IUserMessage> toUpdate;
+        public Boolean isOnline;
+        public string name, curGame;
+        public Dictionary<ulong, string> ChannelIds;
         
 
         public TwitchTracker(string streamerName, ulong pChannel, string notificationText, Boolean pIsOnline, string pGame)
@@ -31,18 +27,20 @@ namespace MopsBot.Module.Data.Session
             name = streamerName;
             isOnline = pIsOnline;
             curGame = pGame;
+
             checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false), StaticBase.ran.Next(6,59)*1000, 60000);
         }
 
         private void CheckForChange_Elapsed(object stateinfo)
         {
-            dynamic information;
+            TwitchResult information;
             try{
                 information = streamerInformation();
             }catch{
                 return;
             }
-            Boolean isStreaming = information["stream"] != null;
+            if(information == null) return;
+            Boolean isStreaming = information.stream != null;
 
             if(isOnline != isStreaming)
             {
@@ -54,21 +52,17 @@ namespace MopsBot.Module.Data.Session
                 {
                     isOnline = true;
                     toUpdate = new Dictionary<ulong, IUserMessage>();
-                    try{
-                        curGame = (information["stream"]["game"].ToString().Equals(""))?"Nothing":information["stream"]["game"].ToString();
-                        sendTwitchNotification(information);
-                    }catch(Exception e){
-                        Console.Out.WriteLine(e.Message);
-                        Console.Out.WriteLine(name);
-                    }
+                    curGame = (information.stream == null) ? "Nothing" : information.stream.game;
+                    sendTwitchNotification(information);
+
                 }
                 StaticBase.streamTracks.writeList();
             }
 
             if(isOnline)
                 sendTwitchNotification(information);
-                if(information["stream"] != null && curGame.CompareTo(information["stream"]["game"].ToString()) != 0 && !information["stream"]["game"].ToString().Equals("")){
-                    curGame = information["stream"]["game"].ToString();
+                if(information.stream != null && curGame.CompareTo(information.stream.game) != 0 && !information.stream.game.Equals("")){
+                    curGame = information.stream.game;
 
                     foreach(var channel in ChannelIds)
                         ((SocketTextChannel)Program.client.GetChannel(channel.Key)).SendMessageAsync($"{name} spielt jetzt **{curGame}**!");
@@ -77,42 +71,45 @@ namespace MopsBot.Module.Data.Session
                 }
         }
 
-        private dynamic streamerInformation()
+        private TwitchResult streamerInformation()
         {
-            string query = Task.Run(() => Information.readURL($"https://api.twitch.tv/kraken/streams/{name}?client_id={Program.twitchId}")).Result;
+            string query = Information.readURL($"https://api.twitch.tv/kraken/streams/{name}?client_id={Program.twitchId}");
+            
+            JsonSerializerSettings _jsonWriter = new JsonSerializerSettings {
+                                 NullValueHandling = NullValueHandling.Ignore
+                             };
 
-            #if NET40
-                var jss = new JavaScriptSerializer();
-                dynamic tempDict = jss.Deserialize<dynamic>(query);
-            #else
-                dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
-            #endif
-            return tempDict;
+            return JsonConvert.DeserializeObject<TwitchResult>(query, _jsonWriter);
         }
 
-        private async void sendTwitchNotification(dynamic streamInformation)
+        private async void sendTwitchNotification(TwitchResult streamInformation)
         {
+            Channel streamer = streamInformation.stream.channel;
+
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0x6441A4);
-            e.Title = streamInformation["stream"]["channel"]["status"];
-            e.Url = streamInformation["stream"]["channel"]["url"];
+            e.Title = streamer.status;
+            e.Url = streamer.url;
 
             EmbedAuthorBuilder author = new EmbedAuthorBuilder();
             author.Name = name;
-            author.Url = streamInformation["stream"]["channel"]["url"];
-            author.IconUrl = streamInformation["stream"]["channel"]["logo"];
+            author.Url = streamer.url;
+            author.IconUrl = streamer.logo;
             e.Author = author;
 
-            e.ThumbnailUrl = streamInformation["stream"]["channel"]["logo"];
-            e.ImageUrl = $"{streamInformation["stream"]["preview"]["medium"]}?rand={StaticBase.ran.Next(0,99999999)}";
+            e.ThumbnailUrl = streamer.logo;
+            e.ImageUrl = $"{streamInformation.stream.preview.medium}?rand={StaticBase.ran.Next(0,99999999)}";
 
-            e.AddInlineField("Spiel", (streamInformation["stream"]["game"]=="")?"no Game":streamInformation["stream"]["game"]);
-            e.AddInlineField("Zuschauer", streamInformation["stream"]["viewers"]);
+            e.AddInlineField("Spiel", (streamer.game=="")?"no Game":streamer.game);
+            e.AddInlineField("Zuschauer", streamInformation.stream.viewers);
 
             foreach(var channel in ChannelIds)
             {
-                if(!toUpdate.ContainsKey(channel.Key))
+                if(!toUpdate.ContainsKey(channel.Key)){
                     toUpdate.Add(channel.Key, ((SocketTextChannel)Program.client.GetChannel(channel.Key)).SendMessageAsync(channel.Value, false, e).Result);
+                    StaticBase.streamTracks.writeList();
+                }
+                    
                 else    
                     await toUpdate[channel.Key].ModifyAsync(x => {
                         x.Content = channel.Value;

@@ -9,9 +9,9 @@ namespace MopsBot.Module.Data.Individual
 {
     class Enemy
     {
-        internal List<Items> DropList;
+        private List<Items> DropList;
         public string name;
-        internal int HP, curHP, dmg, exp;
+        public int HP, curHP, dmg, exp;
 
         public Enemy(string enemy)
         {

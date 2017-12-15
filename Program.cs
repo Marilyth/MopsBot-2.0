@@ -18,6 +18,7 @@ namespace MopsBot
 
         public static DiscordSocketClient client;
         public static string twitchId;
+        public static string[] twitterAuth;
         private CommandHandler handler;
         
         public async Task Start()
@@ -31,20 +32,19 @@ namespace MopsBot
 
             var token = sr.ReadLine();
             twitchId = sr.ReadLine();
-                        
+            twitterAuth = sr.ReadLine().Split(",");     
             
             await client.LoginAsync(TokenType.Bot, token);
             await client.StartAsync();
 
             client.Log += Client_Log;
+            client.Ready += onClientReady;
 
             var map = new ServiceCollection().AddSingleton(client).AddSingleton(new AudioService());
             var provider = map.BuildServiceProvider();
 
             handler = new CommandHandler();
             await handler.Install(provider);
-
-            new StaticBase();
 
             var ids = sr.ReadLine();
             foreach(var id in ids.Split(':')){
@@ -60,6 +60,10 @@ namespace MopsBot
         {
             Console.WriteLine(msg.ToString());
             return Task.CompletedTask;
+        }
+
+        private async Task onClientReady(){
+            await Task.Run(() => StaticBase.initTracking());
         }
     }
 }

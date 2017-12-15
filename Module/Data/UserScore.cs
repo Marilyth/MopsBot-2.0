@@ -10,31 +10,29 @@ namespace MopsBot.Module.Data
 {
     class UserScore
     {
-        public List<Individual.User> users = new List<Individual.User>();
+        public Dictionary<ulong, Individual.User> users = new Dictionary<ulong, Individual.User>();
 
         public UserScore()
         {
-            StreamReader read = new StreamReader(new FileStream("data//scores.txt", FileMode.Open));
+            StreamReader read = new StreamReader(new FileStream("data//scores.txt", FileMode.OpenOrCreate));
 
             string fs = "";
             while ((fs = read.ReadLine()) != null)
             {
                 string[] s = fs.Split(':');
-                users.Add(new Individual.User(ulong.Parse(s[0]),int.Parse(s[1]), int.Parse(s[2]), int.Parse(s[3]), int.Parse(s[4]), int.Parse(s[5])));
+                users.Add(ulong.Parse(s[0]), new Individual.User(int.Parse(s[1]), int.Parse(s[2]), int.Parse(s[3]), int.Parse(s[4]), int.Parse(s[5])));
             }
             read.Dispose();
-            users = users.OrderByDescending(u => u.Experience).ToList();
         }
 
         public void writeScore()
         {
-            users = users.OrderByDescending(u => u.Experience).ToList();
-
-            StreamWriter write = new StreamWriter(new FileStream("data//scores.txt",FileMode.Create));
-            write.AutoFlush=true;
-            foreach (Individual.User that in users)
+            StreamWriter write = new StreamWriter(new FileStream("data//scores.txt", FileMode.Create));
+            write.AutoFlush = true;
+            foreach (var that in users)
             {
-                write.WriteLine($"{that.ID}:{that.Score}:{that.Experience}:{that.punched}:{that.hugged}:{that.kissed}");
+                var user = that.Value;
+                write.WriteLine($"{that.Key}:{user.Score}:{user.Experience}:{user.punched}:{user.hugged}:{user.kissed}");
             }
 
             write.Dispose();
@@ -42,26 +40,27 @@ namespace MopsBot.Module.Data
 
         public void addStat(ulong id, int value, string stat)
         {
-            if(!users.Exists(x => x.ID.Equals(id))){
-                    users.Add(new Individual.User(id, 0, 0, 0, 0, 0));
+            if (!users.ContainsKey(id))
+            {
+                users.Add(id, new Individual.User(0, 0, 0, 0, 0));
             }
 
             switch (stat.ToLower())
             {
                 case "experience":
-                    users.Find(x => x.ID.Equals(id)).Experience += value;
+                    users[id].Experience += value;
                     break;
                 case "score":
-                    users.Find(x => x.ID.Equals(id)).Score += value;
+                    users[id].Score += value;
                     break;
                 case "hug":
-                    users.Find(x => x.ID.Equals(id)).hugged += value;
+                    users[id].hugged += value;
                     break;
                 case "kiss":
-                    users.Find(x => x.ID.Equals(id)).kissed += value;
+                    users[id].kissed += value;
                     break;
                 case "punch":
-                    users.Find(x => x.ID.Equals(id)).punched += value;
+                    users[id].punched += value;
                     break;
                 default:
                     return;
@@ -69,72 +68,31 @@ namespace MopsBot.Module.Data
             writeScore();
         }
 
-        public string drawDiagram(int count, DiagramType type)
+        public string drawDiagram(int count)
         {
-            List<Individual.User> tempUsers = users.Take(count).ToList();
+            var sortedDict = (from entry in users orderby entry.Value.Experience descending select entry).Take(count).ToArray();
 
             int maximum = 0;
             string[] lines = new string[count];
 
-            switch (type)
+            maximum = sortedDict[0].Value.calcLevel();
+
+            for (int i = 0; i < count; i++)
             {
-                case DiagramType.Experience:
-                    tempUsers = tempUsers.OrderByDescending(x => x.Experience).ToList();
-
-                    maximum = tempUsers[0].Experience;
-
-                    for (int i = 0; i < count; i++)
-                    {
-                        lines[i] = (i + 1).ToString().Length < 2 ? $"#{i + 1} |" : $"#{i + 1}|";
-                        double relPercent = users[i].Experience / ((double)maximum / 10);
-                        for (int j = 0; j < relPercent; j++)
-                        {
-                            lines[i] += "■";
-                        }
-                        lines[i] += $"  ({users[i].Experience} / {Program.client.GetUser(users[i].ID).Username})";
-                    }
-                    break;
-
-                case DiagramType.Level:
-                    tempUsers = tempUsers.OrderByDescending(x => x.Level).ToList();
-
-                    maximum = tempUsers[0].Level;
-
-                    for (int i = 0; i < count; i++)
-                    {
-                        lines[i] = (i + 1).ToString().Length < 2 ? $"#{i + 1} |" : $"#{i + 1}|";
-                        double relPercent = users[i].Level / ((double)maximum / 10);
-                        for (int j = 0; j < relPercent; j++)
-                        {
-                            lines[i] += "■";
-                        }
-                        lines[i] += $"  ({users[i].Level} / {(Program.client.GetUser(users[i].ID) == null ? "" + users[i].ID : Program.client.GetUser(users[i].ID).Username)})";
-                    }
-                    break;
-
-                case DiagramType.Score:
-                    tempUsers = tempUsers.OrderByDescending(x => x.Score).ToList();
-
-                    maximum = tempUsers[0].Score;
-
-                    for (int i = 0; i < count; i++)
-                    {
-                        lines[i] = (i + 1).ToString().Length < 2 ? $"#{i+1} |" : $"#{i+1}|";
-                        double relPercent = users[i].Score / ((double)maximum / 10);
-                        for (int j = 0; j < relPercent; j++)
-                        {
-                            lines[i] += "■";
-                        }
-                        lines[i] += $"  ({users[i].Score} / {Program.client.GetUser(users[i].ID).Username})";
-                    }
-                    break;
+                Individual.User user = sortedDict[i].Value;
+                lines[i] = (i + 1).ToString().Length < 2 ? $"#{i + 1} |" : $"#{i + 1}|";
+                double relPercent = user.calcLevel() / ((double)maximum / 10);
+                for (int j = 0; j < relPercent; j++)
+                {
+                    lines[i] += "■";
+                }
+                lines[i] += $"  ({user.calcLevel()} / {(Program.client.GetUser(sortedDict[i].Key) == null ? "" + sortedDict[i].Key : Program.client.GetUser(sortedDict[i].Key).Username)})";
             }
+
 
             string output = "```" + string.Join("\n", lines) + "```";
 
             return output;
         }
-
-        public enum DiagramType{Experience, Level, Score}
     }
 }

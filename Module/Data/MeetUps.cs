@@ -16,7 +16,7 @@ namespace MopsBot.Module.Data{
         {
             upcoming = new List<MeetUp>();
 
-            StreamReader sr = new StreamReader(new FileStream("data//meetups.txt", FileMode.Open));
+            StreamReader sr = new StreamReader(new FileStream("data//meetups.txt", FileMode.OpenOrCreate));
 
             string s = "";
 

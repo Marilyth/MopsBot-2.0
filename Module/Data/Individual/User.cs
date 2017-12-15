@@ -9,50 +9,45 @@ namespace MopsBot.Module.Data.Individual
 {
     class User
     {
-        public ulong ID;
-        public int Score, Experience, Level, punched, hugged, kissed;
+        public int Score, Experience, punched, hugged, kissed;
         public List<Items> equipment;
 
-        public User(ulong userID, int userScore, int XP, int punch, int hug, int kiss)
+        public User(int userScore, int XP, int punch, int hug, int kiss)
         {
-            ID = userID;
             Score = userScore;
             Experience = XP;
             punched = punch;
             hugged = hug;
             kissed = kiss;
-            Level = calcLevel();
         }
 
-        public User(ulong userID, int userScore, int XP)
+        public User(int userScore, int XP)
         {
-            ID = userID;
             Score = userScore;
             Experience = XP;
-            Level = calcLevel();
         }
 
-        public User(ulong userID, int userScore)
+        public User(int userScore)
         {
-            ID = userID;
             Score = userScore;
         }
 
-        internal delegate double del(int i);
-        internal static del levelCalc = x => (200*(x*x));
+        private delegate double del(int i);
+        private del levelCalc = x => (200*(x*x));
 
-        private int calcLevel()
+        public int calcLevel()
         {
             int i = 0;
-            while(Experience > levelCalc(i))
+            while(Experience >= levelCalc(i))
             {
                 i++;
             }
-            return (i - 1);
+            return (i-1);
         }
 
-        internal string calcNextLevel()
+        public string calcNextLevel()
         {
+            int Level = calcLevel();
             double expCurrentHold = Experience - levelCalc(Level);
             string output = "", TempOutput = "";
             double diffExperience = levelCalc(Level + 1) - levelCalc(Level);
@@ -67,10 +62,10 @@ namespace MopsBot.Module.Data.Individual
             return output + TempOutput;
         }
 
-        internal string statsToString()
+        public string statsToString()
         {
             string output = $"${Score}\n" +
-                            $"Level: {Level} (Experience Bar: {calcNextLevel()})\n" +
+                            $"Level: {calcLevel()} (Experience Bar: {calcNextLevel()})\n" +
                             $"EXP: {Experience}\n\n" +
                             $"Been kissed {kissed} times\n" +
                             $"Been hugged {hugged} times\n" +
@@ -79,11 +74,11 @@ namespace MopsBot.Module.Data.Individual
             return output;
         }
 
-        public void getEquipment()
+        public void getEquipment(ulong ID)
         {
             equipment = new List<Items>();
             
-            StreamReader read = new StreamReader(new FileStream("data//dungeonItems.txt", FileMode.Open));
+            StreamReader read = new StreamReader(new FileStream("data//dungeonItems.txt", FileMode.OpenOrCreate));
 
             string fs = "";
             while (!(fs = read.ReadLine()).Contains(ID.ToString()))
@@ -105,7 +100,7 @@ namespace MopsBot.Module.Data.Individual
             read.Dispose();
         }
 
-        public void saveEquipment()
+        public void saveEquipment(ulong ID)
         {
             List<string> allLines = File.ReadAllLines("data//dungeonItems.txt").ToList();
 

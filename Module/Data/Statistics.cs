@@ -15,7 +15,7 @@ namespace MopsBot.Module.Data
         public Statistics()
         {
             
-            StreamReader read = new StreamReader(new FileStream("data//statistics.txt", FileMode.Open));
+            StreamReader read = new StreamReader(new FileStream("data//statistics.txt", FileMode.OpenOrCreate));
             
             string s = "";
 
