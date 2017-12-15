@@ -70,6 +70,9 @@ namespace MopsBot.Module.Data.Session
             e.Author = author;
 
             e.ThumbnailUrl = tweet.CreatedBy.ProfileImageUrl;
+            foreach(Tweetinvi.Models.Entities.IMediaEntity cur in tweet.Media)
+                if(cur.MediaType.Equals("photo")) 
+                    e.ImageUrl = cur.MediaURL;
 
             e.Description = tweet.FullText;
 
