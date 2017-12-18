@@ -6,14 +6,14 @@ using System.Threading.Tasks;
 using System.IO;
 using Newtonsoft.Json;
 
-namespace MopsBot.Module.Data.Session
+namespace MopsBot.Module.Data.Session.APIResults
 {
     class TwitchResult
     {
         public Stream stream;
     }
 
-    class Stream{
+    class  Stream{
         public ulong _id;
         public int video_height;
         public double average_fps;

@@ -7,6 +7,7 @@ using Discord.Commands;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using MopsBot.Module.Data.Session.APIResults;
 
 namespace MopsBot.Module.Data.Session
 {

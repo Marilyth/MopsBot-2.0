@@ -157,6 +157,19 @@ namespace MopsBot.Module
             await ReplyAsync("Keeping track of " + twitterUser + "'s tweets, from now on!");
         }
 
+        [Command("trackOverwatch")]
+        [Summary("Keeps track of the specified Overwatch player, in the Channel you are calling this command right now.\nParameter: Username-Battletag")]
+        public async Task trackOW(string owUser)
+        {
+            if (!StaticBase.OverwatchTracks.owPlayers.ContainsKey(owUser))
+                StaticBase.OverwatchTracks.owPlayers.Add(owUser, new Data.Session.OverwatchTracker(owUser));
+                
+            StaticBase.OverwatchTracks.owPlayers[owUser].ChannelIds.Add(Context.Channel.Id);
+            StaticBase.OverwatchTracks.writeList();
+
+            await ReplyAsync("Keeping track of " + owUser + "'s stats, from now on!");
+        }
+
         [Command("trackClips")]
         [Summary("Keeps track of clips from streams of the specified Streamer, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
         [RequireUserPermission(ChannelPermission.ManageChannel)]

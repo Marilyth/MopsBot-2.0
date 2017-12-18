@@ -84,6 +84,7 @@ namespace MopsBot.Module
             try
             {
                 var request = (System.Net.HttpWebRequest)System.Net.WebRequest.Create(URL);
+                request.UserAgent = "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)";
                 using (var response = request.GetResponseAsync().Result)
                 using (var content = response.GetResponseStream())
                 using (var reader = new System.IO.StreamReader(content))
