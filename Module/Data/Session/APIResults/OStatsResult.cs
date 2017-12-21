@@ -10,7 +10,6 @@ namespace MopsBot.Module.Data.Session.APIResults
 {
     class OStatsResult
     {
-        public OStatsResult _request;
         public GameModes eu;
         public GameModes us;
         public GameModes kr;

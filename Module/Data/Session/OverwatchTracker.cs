@@ -39,16 +39,27 @@ namespace MopsBot.Module.Data.Session
 
             if (newInformation == null) return;
 
-            if (newInformation.eu.stats.quickplay.overall_stats.level > information.eu.stats.quickplay.overall_stats.level)
+            OverallStats compNew = newInformation.eu.stats.competitive.overall_stats;
+            OverallStats compOld = information.eu.stats.competitive.overall_stats;
+            OverallStats quickNew = newInformation.eu.stats.quickplay.overall_stats;
+            OverallStats quickOld = information.eu.stats.quickplay.overall_stats;
+
+            if (quickNew.level > quickOld.level)
             {
-                changedStats.Add("Level", newInformation.eu.stats.quickplay.overall_stats.level.ToString() +
-                                $" (+{newInformation.eu.stats.quickplay.overall_stats.level - information.eu.stats.quickplay.overall_stats.level})");
+                changedStats.Add("Level", quickNew.level.ToString() +
+                                $" (+{quickNew.level - quickOld.level})");
             }
 
-            if (newInformation.eu.stats.quickplay.overall_stats.wins > information.eu.stats.quickplay.overall_stats.wins)
+            if (quickNew.wins > quickOld.wins)
             {
-                changedStats.Add("Games won", newInformation.eu.stats.quickplay.overall_stats.wins.ToString() +
-                                $" (+{newInformation.eu.stats.quickplay.overall_stats.wins - information.eu.stats.quickplay.overall_stats.wins})");
+                changedStats.Add("Games won", quickNew.wins.ToString() +
+                                $" (+{quickNew.wins - quickOld.wins})");
+            }
+
+            if (compNew.comprank != compOld.comprank)
+            {
+                changedStats.Add("Comp Rank", compNew.comprank.ToString() +
+                                $" (+{compNew.comprank - compOld.comprank})");
             }
 
             if (changedStats.Count != 0)
