@@ -36,20 +36,23 @@ namespace MopsBot.Module.Data.Session
             Tweetinvi.Parameters.IUserTimelineParameters parameters = Timeline.CreateUserTimelineParameter();
             if(lastMessage != 0) parameters.SinceId = lastMessage;
             parameters.MaximumNumberOfTweetsToRetrieve = 5;
-
-            ITweet[] newTweets = Timeline.GetUserTimeline(name, parameters).Reverse().ToArray();
-
-            if(newTweets.Length != 0){
+            try{
+                ITweet[] newTweets = Timeline.GetUserTimeline(name, parameters).Reverse().ToArray();
+            
+                if(newTweets.Length != 0){
                  lastMessage = newTweets[newTweets.Length -1].Id;
                  StaticBase.twitterTracks.writeList();
-            }
+                }
             
-            foreach(ITweet newTweet in newTweets){
-                sendTwitterNotification(newTweet);
-                System.Threading.Thread.Sleep(5000);
+                foreach(ITweet newTweet in newTweets){
+                    sendTwitterNotification(newTweet);
+                    System.Threading.Thread.Sleep(5000);
+                }
+            }catch{
+                return;
             }
         }
-
+    
         private void sendTwitterNotification(ITweet tweet)
         {
             EmbedBuilder e = new EmbedBuilder();

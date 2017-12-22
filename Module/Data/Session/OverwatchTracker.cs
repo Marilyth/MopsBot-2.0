@@ -29,43 +29,47 @@ namespace MopsBot.Module.Data.Session
 
         private void CheckForChange_Elapsed(object stateinfo)
         {
-            OStatsResult newInformation = overwatchInformation();
-            Dictionary<string, string> changedStats = new Dictionary<string, string>();
+            try{
+                OStatsResult newInformation = overwatchInformation();
+                Dictionary<string, string> changedStats = new Dictionary<string, string>();
 
-            if (information == null)
-            {
-                information = newInformation;
-            }
+                if (information == null)
+                {
+                    information = newInformation;
+                }
 
-            if (newInformation == null) return;
+                if (newInformation == null) return;
+            
+                OverallStats compNew = newInformation.eu.stats.competitive.overall_stats;
+                OverallStats compOld = information.eu.stats.competitive.overall_stats;
+                OverallStats quickNew = newInformation.eu.stats.quickplay.overall_stats;
+                OverallStats quickOld = information.eu.stats.quickplay.overall_stats;
+            
+                if (quickNew.level > quickOld.level)
+                {
+                    changedStats.Add("Level", quickNew.level.ToString() +
+                                    $" (+{quickNew.level - quickOld.level})");
+                }
 
-            OverallStats compNew = newInformation.eu.stats.competitive.overall_stats;
-            OverallStats compOld = information.eu.stats.competitive.overall_stats;
-            OverallStats quickNew = newInformation.eu.stats.quickplay.overall_stats;
-            OverallStats quickOld = information.eu.stats.quickplay.overall_stats;
+                if (quickNew.wins > quickOld.wins)
+                {
+                    changedStats.Add("Games won", quickNew.wins.ToString() +
+                                    $" (+{quickNew.wins - quickOld.wins})");
+                }
 
-            if (quickNew.level > quickOld.level)
-            {
-                changedStats.Add("Level", quickNew.level.ToString() +
-                                $" (+{quickNew.level - quickOld.level})");
-            }
+                if (compNew.comprank != compOld.comprank)
+                {
+                    changedStats.Add("Comp Rank", compNew.comprank.ToString() +
+                                    $" (+{compNew.comprank - compOld.comprank})");
+                }
 
-            if (quickNew.wins > quickOld.wins)
-            {
-                changedStats.Add("Games won", quickNew.wins.ToString() +
-                                $" (+{quickNew.wins - quickOld.wins})");
-            }
-
-            if (compNew.comprank != compOld.comprank)
-            {
-                changedStats.Add("Comp Rank", compNew.comprank.ToString() +
-                                $" (+{compNew.comprank - compOld.comprank})");
-            }
-
-            if (changedStats.Count != 0)
-            {
-                sendNotification(newInformation, changedStats);
-                information = newInformation;
+                if (changedStats.Count != 0)
+                {
+                    sendNotification(newInformation, changedStats);
+                    information = newInformation;
+                }
+            }catch{
+                
             }
         }
 
