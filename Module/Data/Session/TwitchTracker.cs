@@ -49,10 +49,12 @@ namespace MopsBot.Module.Data.Session
                 if (isOnline)
                 {
                     isOnline = false;
+                    Console.Out.WriteLine($"{name} went Offline");
                 }
                 else
                 {
                     isOnline = true;
+                    Console.Out.WriteLine($"{name} went Online");
                     toUpdate = new Dictionary<ulong, IUserMessage>();
                     curGame = (information.stream == null) ? "Nothing" : information.stream.game;
                     sendTwitchNotification(information);
@@ -109,6 +111,7 @@ namespace MopsBot.Module.Data.Session
             {
                 if(!toUpdate.ContainsKey(channel.Key)){
                     toUpdate.Add(channel.Key, ((SocketTextChannel)Program.client.GetChannel(channel.Key)).SendMessageAsync(channel.Value, false, e).Result);
+                    Console.Out.WriteLine($"{name} toUpdate added {channel.Key}");
                     StaticBase.streamTracks.writeList();
                 }
                     
@@ -117,6 +120,7 @@ namespace MopsBot.Module.Data.Session
                         x.Content = channel.Value;
                         x.Embed = (Embed)e;
                     });
+                    Console.Out.WriteLine($"{name} edit Message in {channel.Key}");
             }
         }
     }
