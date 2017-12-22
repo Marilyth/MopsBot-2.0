@@ -22,7 +22,7 @@ namespace MopsBot.Module.Data.Session
 
         public TwitchTracker(string streamerName, ulong pChannel, string notificationText, Boolean pIsOnline, string pGame)
         {
-            Console.Out.WriteLine($"Started Twitchtracker for {streamerName} w/ channel {pChannel}");
+            Console.Out.WriteLine($"{DateTime.Now} Started Twitchtracker for {streamerName} w/ channel {pChannel}");
             toUpdate = new Dictionary<ulong, IUserMessage>();
             ChannelIds = new Dictionary<ulong, string>();
             ChannelIds.Add(pChannel, notificationText);
@@ -49,12 +49,12 @@ namespace MopsBot.Module.Data.Session
                 if (isOnline)
                 {
                     isOnline = false;
-                    Console.Out.WriteLine($"{name} went Offline");
+                    Console.Out.WriteLine($"{DateTime.Now} {name} went Offline");
                 }
                 else
                 {
                     isOnline = true;
-                    Console.Out.WriteLine($"{name} went Online");
+                    Console.Out.WriteLine($"{DateTime.Now} {name} went Online");
                     toUpdate = new Dictionary<ulong, IUserMessage>();
                     curGame = (information.stream == null) ? "Nothing" : information.stream.game;
                     sendTwitchNotification(information);
@@ -111,7 +111,7 @@ namespace MopsBot.Module.Data.Session
             {
                 if(!toUpdate.ContainsKey(channel.Key)){
                     toUpdate.Add(channel.Key, ((SocketTextChannel)Program.client.GetChannel(channel.Key)).SendMessageAsync(channel.Value, false, e).Result);
-                    Console.Out.WriteLine($"{name} toUpdate added {channel.Key}");
+                    Console.Out.WriteLine($"{DateTime.Now} {name} toUpdate added {channel.Key}");
                     StaticBase.streamTracks.writeList();
                 }
                     
@@ -120,7 +120,7 @@ namespace MopsBot.Module.Data.Session
                         x.Content = channel.Value;
                         x.Embed = (Embed)e;
                     });
-                    Console.Out.WriteLine($"{name} edit Message in {channel.Key}");
+                    Console.Out.WriteLine($"{DateTime.Now} {name} edit Message in {channel.Key}");
             }
         }
     }
