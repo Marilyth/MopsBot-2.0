@@ -30,6 +30,7 @@ namespace MopsBot.Module.Data
 
                     else{                     
                         streamers[trackerInformation[0]].ChannelIds.Add(ulong.Parse(trackerInformation[1]), trackerInformation[2]);
+                        Console.Out.WriteLine($"Added {trackerInformation[1]} to {trackerInformation[0]}");
                     }
 
                     if(trackerInformation[3].Equals("True")){

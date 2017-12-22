@@ -22,6 +22,7 @@ namespace MopsBot.Module.Data.Session
 
         public TwitchTracker(string streamerName, ulong pChannel, string notificationText, Boolean pIsOnline, string pGame)
         {
+            Console.Out.WriteLine($"Started Twitchtracker for {streamerName} w/ channel {pChannel}");
             toUpdate = new Dictionary<ulong, IUserMessage>();
             ChannelIds = new Dictionary<ulong, string>();
             ChannelIds.Add(pChannel, notificationText);
