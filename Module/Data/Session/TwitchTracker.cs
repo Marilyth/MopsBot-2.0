@@ -104,8 +104,8 @@ namespace MopsBot.Module.Data.Session
             e.ThumbnailUrl = streamer.logo;
             e.ImageUrl = $"{streamInformation.stream.preview.medium}?rand={StaticBase.ran.Next(0,99999999)}";
 
-            e.AddInlineField("Spiel", (streamer.game=="")?"no Game":streamer.game);
-            e.AddInlineField("Zuschauer", streamInformation.stream.viewers);
+            e.AddInlineField("Game", (streamer.game=="")?"no Game":streamer.game);
+            e.AddInlineField("Viewers", streamInformation.stream.viewers);
 
             foreach(var channel in ChannelIds)
             {
