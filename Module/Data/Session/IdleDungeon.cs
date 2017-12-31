@@ -101,7 +101,7 @@ namespace MopsBot.Module.Data.Session
         {
             string status = "";
 
-            for(int i = 1; i < (double)(time.ElapsedMilliseconds/60000)/(double)(length/10); i++)
+            for(int i = 1; i < (time.ElapsedMilliseconds/60000.0)/(length/10.0); i++)
             {
                 status += "-";
             }
