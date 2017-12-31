@@ -19,6 +19,7 @@ namespace MopsBot.Module.Data
             enemyLevel.Add("Bat", 20);
             enemyLevel.Add("Skeleton", 25);
             enemyLevel.Add("Phoenix", 30);
+            enemyLevel.Add("The Wall", 40);
 
             enemyLevel.OrderBy(x => x.Value);
         }
