@@ -54,6 +54,11 @@ namespace MopsBot.Module.Data.Individual
                     dmg = 3;
                     exp = 3500;
                     break;
+                case "The Wall":
+                    HP = 10000;
+                    dmg = 10000;
+                    exp = 2;
+                    break;
             }
             curHP = HP;
             name = enemy;
