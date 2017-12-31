@@ -17,10 +17,14 @@ namespace MopsBot.Module
             [Summary("Crawl through a dungeon")]
             public async Task start(int lenghtInMinutes)
             {
-                Discord.IUserMessage updateMessage = await Context.Channel.SendMessageAsync("Generating dungeon.");
+                if(lengthInMinutes <= 0){
+                    Discord.IUserMessage updateMessage = await Context.Channel.SendMessageAsync("Generating dungeon.");
 
-                Data.Session.IdleDungeon test = new Data.Session.IdleDungeon(updateMessage, Context.User.Id, lenghtInMinutes);
-                StaticBase.dungeonCrawler.Add(test);
+                    Data.Session.IdleDungeon test = new Data.Session.IdleDungeon(updateMessage, Context.User.Id, lenghtInMinutes);
+                    StaticBase.dungeonCrawler.Add(test);
+                }
+                else
+                    await ReplyAsync("Fuck you.");
             }
 
             [Command("buy")]
