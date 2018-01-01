@@ -64,10 +64,14 @@ namespace MopsBot.Module
                 if (StaticBase.blackjack == null || !StaticBase.blackjack.active)
                 {
                     StaticBase.blackjack = new Data.Session.Blackjack(Context.Client.CurrentUser);
-                    await ReplyAsync("Table set up. Woof");
+                    StaticBase.blackjack.toEdit = await ReplyAsync("Table set up. Woof");
                 }
+
                 if (betAmount <= StaticBase.people.users[Context.User.Id].Score && betAmount > 0)
-                    await ReplyAsync(StaticBase.blackjack.userJoin(Context.User, betAmount));
+                    await StaticBase.blackjack.toEdit.ModifyAsync(x => {
+                        x.Content = StaticBase.blackjack.userJoin(Context.User, betAmount);
+                    });
+
                 else
                     await ReplyAsync("You can't bet that much.");
             }
@@ -77,7 +81,9 @@ namespace MopsBot.Module
             public async Task start()
             {
                 if(!StaticBase.blackjack.active)
-                    await ReplyAsync(StaticBase.blackjack.showCards() + "\n\n" + StaticBase.blackjack.endRound());
+                    await StaticBase.blackjack.toEdit.ModifyAsync(x => {
+                        x.Content = StaticBase.blackjack.start();
+                    });
             }
 
             [Command("hit")]
@@ -85,7 +91,9 @@ namespace MopsBot.Module
             public async Task hit()
             {
                 if(StaticBase.blackjack.active)
-                    await ReplyAsync(StaticBase.blackjack.drawCard(Context.User, true));
+                    await StaticBase.blackjack.toEdit.ModifyAsync(x => {
+                        x.Content = StaticBase.blackjack.drawCard(Context.User, true);
+                    });
             }
 
             [Command("skip")]
@@ -93,7 +101,9 @@ namespace MopsBot.Module
             public async Task skip()
             {
                 if(StaticBase.blackjack.active)
-                    await ReplyAsync(StaticBase.blackjack.skipRound(Context.User));
+                    await StaticBase.blackjack.toEdit.ModifyAsync(x => {
+                        x.Content = StaticBase.blackjack.skipRound(Context.User);
+                    });
             }
         }
     }
