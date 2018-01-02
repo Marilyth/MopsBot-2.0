@@ -80,6 +80,7 @@ namespace MopsBot.Module.Data.Session
                 if (information.stream != null && curGame.CompareTo(information.stream.game) != 0 && !information.stream.game.Equals(""))
                 {
                     curGame = information.stream.game;
+                    gameChange();
 
                     foreach (var channel in ChannelIds)
                         ((SocketTextChannel)Program.client.GetChannel(channel.Key)).SendMessageAsync($"{name} spielt jetzt **{curGame}**!");
