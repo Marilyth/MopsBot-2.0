@@ -8,9 +8,6 @@ using Discord;
 using Discord.WebSocket;
 using Discord.Commands;
 using System.Threading.Tasks;
-using System.Drawing;
-using OxyPlot;
-using ImageMagick;
 
 namespace MopsBot
 {
