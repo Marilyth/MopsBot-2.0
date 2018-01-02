@@ -183,6 +183,8 @@ namespace MopsBot.Module.Data.Session
             var valueAxisX = new OxyPlot.Axes.LinearAxis { Position = OxyPlot.Axes.AxisPosition.Bottom, TicklineColor = OxyColor.FromRgb(125, 125, 155), Title = "Time in Minutes" };
             viewerChart.Axes.Add(valueAxisY);
             viewerChart.Axes.Add(valueAxisX);
+
+            series = new Dictionary<string, OxyPlot.Series.LineSeries>();
         }
 
         private void gameChange()
