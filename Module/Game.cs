@@ -68,9 +68,7 @@ namespace MopsBot.Module
                 }
 
                 if (betAmount <= StaticBase.people.users[Context.User.Id].Score && betAmount > 0)
-                    await StaticBase.blackjack.toEdit.ModifyAsync(x => {
-                        x.Content = StaticBase.blackjack.userJoin(Context.User, betAmount);
-                    });
+                    StaticBase.blackjack.userJoin(Context.User, betAmount);
 
                 else
                     await ReplyAsync("You can't bet that much.");
@@ -78,32 +76,32 @@ namespace MopsBot.Module
 
             [Command("start")]
             [Summary("Starts the game of Blackjack")]
-            public async Task start()
+            public Task start()
             {
                 if(!StaticBase.blackjack.active)
-                    await StaticBase.blackjack.toEdit.ModifyAsync(x => {
-                        x.Content = StaticBase.blackjack.start();
-                    });
+                    StaticBase.blackjack.start();
+
+                return Task.CompletedTask;
             }
 
             [Command("hit")]
             [Summary("You get another card")]
-            public async Task hit()
+            public Task hit()
             {
                 if(StaticBase.blackjack.active)
-                    await StaticBase.blackjack.toEdit.ModifyAsync(x => {
-                        x.Content = StaticBase.blackjack.drawCard(Context.User, true);
-                    });
+                    StaticBase.blackjack.drawCard(Context.User, true);
+
+                return Task.CompletedTask;
             }
 
             [Command("skip")]
             [Summary("You skip the round")]
-            public async Task skip()
+            public Task skip()
             {
                 if(StaticBase.blackjack.active)
-                    await StaticBase.blackjack.toEdit.ModifyAsync(x => {
-                        x.Content = StaticBase.blackjack.skipRound(Context.User);
-                    });
+                    StaticBase.blackjack.skipRound(Context.User);
+
+                return Task.CompletedTask;
             }
         }
     }

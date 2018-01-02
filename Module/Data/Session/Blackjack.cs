@@ -27,10 +27,17 @@ namespace MopsBot.Module.Data.Session
             drawCard(players[0].player, false);
         }
 
-        public string start()
+        public void start()
         {
             active = true;
-            return showCards() + "\n\n" + endRound();
+            editMessage(showCards() + "\n\n" + endRound());
+        }
+
+        public void editMessage(string newMessage)
+        {
+            toEdit.ModifyAsync(x => {
+                        x.Content = newMessage;
+                    });
         }
 
         private void fillDeck()
@@ -66,7 +73,7 @@ namespace MopsBot.Module.Data.Session
             }
         }
 
-        public string drawCard(IUser pUser, bool show)
+        public void drawCard(IUser pUser, bool show)
         {
             string output = "";
 
@@ -82,13 +89,12 @@ namespace MopsBot.Module.Data.Session
                 }
                 cards.RemoveAt(0);
             }
-            if(show)
-                output += endRound();
 
-            return output;
+            if(show)
+                editMessage(output + endRound());
         }
 
-        public string skipRound(IUser pUser)
+        public void skipRound(IUser pUser)
         {
             string output = "";
 
@@ -97,10 +103,10 @@ namespace MopsBot.Module.Data.Session
 
             output += endRound();
 
-            return output;
+            editMessage(output);
         }
 
-        public string userJoin(IUser pUser, int bet)
+        public void userJoin(IUser pUser, int bet)
         {
             string output = "";
 
@@ -117,7 +123,7 @@ namespace MopsBot.Module.Data.Session
             else
                 output += "You are already at the table. Duh.";
 
-            return output;
+            editMessage(output);
         }
 
         public string showCards()
