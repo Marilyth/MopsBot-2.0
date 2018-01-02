@@ -69,8 +69,7 @@ namespace MopsBot.Module.Data.Session
                     Console.Out.WriteLine($"{DateTime.Now} {name} went Online");
                     toUpdate = new Dictionary<ulong, IUserMessage>();
                     curGame = (information.stream == null) ? "Nothing" : information.stream.game;
-                    sendTwitchNotification(information);
-
+                    gameChange();
                 }
                 StaticBase.streamTracks.writeList();
             }
@@ -90,6 +89,7 @@ namespace MopsBot.Module.Data.Session
 
                 columnCount++;
                 series[curGame].Points.Add(new DataPoint(columnCount, information.stream.viewers));
+
                 updateChart();
                 sendTwitchNotification(information);
             }
@@ -157,7 +157,7 @@ namespace MopsBot.Module.Data.Session
         {
             using (var stream = File.Create($"data//{name}plot.pdf"))
             {
-                var pdfExporter = new PdfExporter { Width = 1280, Height = 720 };
+                var pdfExporter = new PdfExporter { Width = 800, Height = 400 };
                 pdfExporter.Export(viewerChart, stream);
             }
 
@@ -180,10 +180,11 @@ namespace MopsBot.Module.Data.Session
             viewerChart = new PlotModel();
             viewerChart.TextColor = OxyColor.FromRgb(175, 175, 175);
             viewerChart.PlotAreaBorderColor = OxyColor.FromRgb(125, 125, 155);
-            var valueAxisY = new OxyPlot.Axes.LinearAxis { Position = OxyPlot.Axes.AxisPosition.Left, TicklineColor = OxyColor.FromRgb(125, 125, 155), Title = "Viewers" };
-            var valueAxisX = new OxyPlot.Axes.LinearAxis { Position = OxyPlot.Axes.AxisPosition.Bottom, TicklineColor = OxyColor.FromRgb(125, 125, 155), Title = "Time in Minutes" };
+            var valueAxisY = new OxyPlot.Axes.LinearAxis { Position = OxyPlot.Axes.AxisPosition.Left, TicklineColor = OxyColor.FromRgb(125, 125, 155), Title = "Viewers", Minimum = 0, FontSize = 13};
+            var valueAxisX = new OxyPlot.Axes.LinearAxis { Position = OxyPlot.Axes.AxisPosition.Bottom, TicklineColor = OxyColor.FromRgb(125, 125, 155), Title = "Time in Minutes", FontSize = 13};
             viewerChart.Axes.Add(valueAxisY);
             viewerChart.Axes.Add(valueAxisX);
+            viewerChart.LegendFontSize = 13;
 
             series = new Dictionary<string, OxyPlot.Series.LineSeries>();
         }
