@@ -223,6 +223,7 @@ namespace MopsBot.Module.Data.Session
                 series.Add(curGame, new OxyPlot.Series.LineSeries());
                 series[curGame].Color = OxyColor.FromRgb((byte)StaticBase.ran.Next(30, 220), (byte)StaticBase.ran.Next(30, 220), (byte)StaticBase.ran.Next(30, 220));
                 series[curGame].Title = curGame;
+                series[curGame].StrokeThickness = 5;
                 viewerChart.Series.Add(series[curGame]);
             }
         }
@@ -234,6 +235,7 @@ namespace MopsBot.Module.Data.Session
                 series.Add(newGame, new OxyPlot.Series.LineSeries());
                 series[newGame].Color = OxyColor.FromRgb((byte)StaticBase.ran.Next(30, 220), (byte)StaticBase.ran.Next(30, 220), (byte)StaticBase.ran.Next(30, 220));
                 series[newGame].Title = newGame;
+                series[newGame].StrokeThickness = 5;
                 viewerChart.Series.Add(series[newGame]);
             }
         }
