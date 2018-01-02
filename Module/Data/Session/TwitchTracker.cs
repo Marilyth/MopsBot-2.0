@@ -193,7 +193,7 @@ namespace MopsBot.Module.Data.Session
                 TicklineColor = OxyColor.FromRgb(125, 125, 155),
                 Title = "Viewers",
                 Minimum = 0,
-                FontSize = 18,
+                FontSize = 24,
                 AxislineStyle = LineStyle.Solid,
                 AxislineColor = OxyColor.FromRgb(125, 125, 155)
             };
@@ -203,14 +203,14 @@ namespace MopsBot.Module.Data.Session
                 Position = OxyPlot.Axes.AxisPosition.Bottom,
                 TicklineColor = OxyColor.FromRgb(125, 125, 155),
                 Title = "Time in Minutes",
-                FontSize = 18,
+                FontSize = 24,
                 AxislineStyle = LineStyle.Solid,
                 AxislineColor = OxyColor.FromRgb(125, 125, 155)
             };
 
             viewerChart.Axes.Add(valueAxisY);
             viewerChart.Axes.Add(valueAxisX);
-            viewerChart.LegendFontSize = 18;
+            viewerChart.LegendFontSize = 24;
             viewerChart.LegendPosition = LegendPosition.BottomCenter;
 
             series = new Dictionary<string, OxyPlot.Series.LineSeries>();
