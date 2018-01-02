@@ -163,7 +163,7 @@ namespace MopsBot.Module.Data.Session
 
             var prc = new System.Diagnostics.Process();
             prc.StartInfo.FileName = "convert";
-            prc.StartInfo.Arguments = $"-set density 300 \"data//{name}plot.pdf\" \"//var//www//html//StreamerCharts//{name}plot.png\"";
+            prc.StartInfo.Arguments = $"-set density 300 \"data//{name}plot.pdf\" \"//var//www//html//StreamCharts//{name}plot.png\"";
 
             prc.Start();
 
