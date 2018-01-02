@@ -218,10 +218,13 @@ namespace MopsBot.Module.Data.Session
 
         private void gameChange()
         {
-            series.Add(curGame, new OxyPlot.Series.LineSeries());
-            series[curGame].Color = OxyColor.FromRgb((byte)StaticBase.ran.Next(30, 220), (byte)StaticBase.ran.Next(30, 220), (byte)StaticBase.ran.Next(30, 220));
-            series[curGame].Title = curGame;
-            viewerChart.Series.Add(series[curGame]);
+            if (!series.ContainsKey(curGame))
+            {
+                series.Add(curGame, new OxyPlot.Series.LineSeries());
+                series[curGame].Color = OxyColor.FromRgb((byte)StaticBase.ran.Next(30, 220), (byte)StaticBase.ran.Next(30, 220), (byte)StaticBase.ran.Next(30, 220));
+                series[curGame].Title = curGame;
+                viewerChart.Series.Add(series[curGame]);
+            }
         }
 
         private void gameChange(string newGame)
