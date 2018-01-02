@@ -76,19 +76,19 @@ namespace MopsBot.Module.Data.Session
 
             if (isOnline)
             {
+                columnCount++;
+                series[curGame].Points.Add(new DataPoint(columnCount, information.stream.viewers));
                 if (information.stream != null && curGame.CompareTo(information.stream.game) != 0 && !information.stream.game.Equals(""))
                 {
                     curGame = information.stream.game;
                     gameChange();
+                    series[curGame].Points.Add(new DataPoint(columnCount, information.stream.viewers));
 
                     foreach (var channel in ChannelIds)
                         ((SocketTextChannel)Program.client.GetChannel(channel.Key)).SendMessageAsync($"{name} spielt jetzt **{curGame}**!");
 
                     StaticBase.streamTracks.writeList();
                 }
-
-                columnCount++;
-                series[curGame].Points.Add(new DataPoint(columnCount, information.stream.viewers));
 
                 updateChart();
                 sendTwitchNotification(information);
