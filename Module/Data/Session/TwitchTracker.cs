@@ -8,12 +8,17 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using MopsBot.Module.Data.Session.APIResults;
+using OxyPlot;
+using System.IO;
 
 namespace MopsBot.Module.Data.Session
 {
     public class TwitchTracker
     {
         private System.Threading.Timer checkForChange;
+        private PlotModel viewerChart;
+        private Dictionary<string, OxyPlot.Series.LineSeries> series;
+        private int columnCount;
         public Dictionary<ulong, Discord.IUserMessage> toUpdate;
         public Boolean isOnline;
         public string name, curGame;
@@ -22,6 +27,8 @@ namespace MopsBot.Module.Data.Session
 
         public TwitchTracker(string streamerName, ulong pChannel, string notificationText, Boolean pIsOnline, string pGame)
         {
+            initViewerChart();
+
             Console.Out.WriteLine($"{DateTime.Now} Started Twitchtracker for {streamerName} w/ channel {pChannel}");
             toUpdate = new Dictionary<ulong, IUserMessage>();
             ChannelIds = new Dictionary<ulong, string>();
@@ -29,6 +36,8 @@ namespace MopsBot.Module.Data.Session
             name = streamerName;
             isOnline = pIsOnline;
             curGame = pGame;
+
+            gameChange();
 
             checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false), StaticBase.ran.Next(6, 59) * 1000, 60000);
         }
@@ -67,15 +76,21 @@ namespace MopsBot.Module.Data.Session
             }
 
             if (isOnline)
-                sendTwitchNotification(information);
-            if (information.stream != null && curGame.CompareTo(information.stream.game) != 0 && !information.stream.game.Equals(""))
             {
-                curGame = information.stream.game;
+                if (information.stream != null && curGame.CompareTo(information.stream.game) != 0 && !information.stream.game.Equals(""))
+                {
+                    curGame = information.stream.game;
 
-                foreach (var channel in ChannelIds)
-                    ((SocketTextChannel)Program.client.GetChannel(channel.Key)).SendMessageAsync($"{name} spielt jetzt **{curGame}**!");
+                    foreach (var channel in ChannelIds)
+                        ((SocketTextChannel)Program.client.GetChannel(channel.Key)).SendMessageAsync($"{name} spielt jetzt **{curGame}**!");
 
-                StaticBase.streamTracks.writeList();
+                    StaticBase.streamTracks.writeList();
+                }
+
+                columnCount++;
+                series[curGame].Points.Add(new DataPoint(columnCount, information.stream.viewers));
+                updateChart();
+                sendTwitchNotification(information);
             }
         }
 
@@ -111,8 +126,8 @@ namespace MopsBot.Module.Data.Session
             footer.Text = "Twitch";
             e.Footer = footer;
 
-            e.ThumbnailUrl = streamer.logo;
-            e.ImageUrl = $"{streamInformation.stream.preview.medium}?rand={StaticBase.ran.Next(0, 99999999)}";
+            e.ThumbnailUrl = $"{streamInformation.stream.preview.medium}?rand={StaticBase.ran.Next(0, 99999999)}";
+            e.ImageUrl = $"http://5.45.104.29/StreamCharts/{name}plot.png?rand={StaticBase.ran.Next(0, 99999999)}";
 
             e.AddInlineField("Game", (streamer.game == "") ? "no Game" : streamer.game);
             e.AddInlineField("Viewers", streamInformation.stream.viewers);
@@ -134,6 +149,48 @@ namespace MopsBot.Module.Data.Session
                     });
                 Console.Out.WriteLine($"{DateTime.Now} {name} edit Message in {channel.Key}");
             }
+        }
+
+
+        private void updateChart()
+        {
+            using (var stream = File.Create($"data//{name}plot.pdf"))
+            {
+                var pdfExporter = new PdfExporter { Width = 1280, Height = 720 };
+                pdfExporter.Export(viewerChart, stream);
+            }
+
+            var prc = new System.Diagnostics.Process();
+            prc.StartInfo.FileName = "convert";
+            prc.StartInfo.Arguments = $"-set density 300 \"data//{name}plot.pdf\" \"//var//www//html//StreamerCharts//{name}plot.png\"";
+
+            prc.Start();
+
+            prc.WaitForExit();
+
+            var dir = new DirectoryInfo("data//");
+            var files = dir.GetFiles().Where(x => x.Extension.ToLower().Equals($"{name}.pdf"));
+            foreach (var f in files)
+                f.Delete();
+        }
+
+        private void initViewerChart()
+        {
+            viewerChart = new PlotModel();
+            viewerChart.TextColor = OxyColor.FromRgb(175, 175, 175);
+            viewerChart.PlotAreaBorderColor = OxyColor.FromRgb(125, 125, 155);
+            var valueAxisY = new OxyPlot.Axes.LinearAxis { Position = OxyPlot.Axes.AxisPosition.Left, TicklineColor = OxyColor.FromRgb(125, 125, 155), Title = "Viewers" };
+            var valueAxisX = new OxyPlot.Axes.LinearAxis { Position = OxyPlot.Axes.AxisPosition.Bottom, TicklineColor = OxyColor.FromRgb(125, 125, 155), Title = "Time in Minutes" };
+            viewerChart.Axes.Add(valueAxisY);
+            viewerChart.Axes.Add(valueAxisX);
+        }
+
+        private void gameChange()
+        {
+            series.Add(curGame, new OxyPlot.Series.LineSeries());
+            series[curGame].Color = OxyColor.FromRgb((byte)StaticBase.ran.Next(30, 220), (byte)StaticBase.ran.Next(30, 220), (byte)StaticBase.ran.Next(30, 220));
+            series[curGame].Title = curGame;
+            viewerChart.Series.Add(series[curGame]);
         }
     }
 }

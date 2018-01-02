@@ -8,6 +8,9 @@ using Discord;
 using Discord.WebSocket;
 using Discord.Commands;
 using System.Threading.Tasks;
+using System.Drawing;
+using OxyPlot;
+using ImageMagick;
 
 namespace MopsBot
 {
@@ -20,20 +23,20 @@ namespace MopsBot
         public static string twitchId;
         public static string[] twitterAuth;
         private CommandHandler handler;
-        
+
         public async Task Start()
         {
             client = new DiscordSocketClient(new DiscordSocketConfig()
             {
                 LogLevel = LogSeverity.Info,
             });
-            
+
             StreamReader sr = new StreamReader(new FileStream("data//config.txt", FileMode.Open));
 
             var token = sr.ReadLine();
             twitchId = sr.ReadLine();
-            twitterAuth = sr.ReadLine().Split(",");     
-            
+            twitterAuth = sr.ReadLine().Split(",");
+
             await client.LoginAsync(TokenType.Bot, token);
             await client.StartAsync();
 
@@ -47,7 +50,8 @@ namespace MopsBot
             await handler.Install(provider);
 
             var ids = sr.ReadLine();
-            foreach(var id in ids.Split(':')){
+            foreach (var id in ids.Split(':'))
+            {
                 StaticBase.BotManager.Add(ulong.Parse(id));
             }
 
@@ -62,7 +66,8 @@ namespace MopsBot
             return Task.CompletedTask;
         }
 
-        private async Task onClientReady(){
+        private async Task onClientReady()
+        {
             await Task.Run(() => StaticBase.initTracking());
         }
     }
