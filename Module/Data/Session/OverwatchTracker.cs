@@ -100,6 +100,11 @@ namespace MopsBot.Module.Data.Session
             author.IconUrl = stats.avatar;
             e.Author = author;
 
+            EmbedFooterBuilder footer = new EmbedFooterBuilder();
+            footer.IconUrl = "http://i.imgur.com/YZ4w2ey.png";
+            footer.Text = "Overwatch";
+            e.Footer = footer;
+
             e.ThumbnailUrl = stats.avatar;
             //e.ImageUrl = $"{overwatchInformation.stream.preview.medium}?rand={StaticBase.ran.Next(0,99999999)}";
 

@@ -18,7 +18,7 @@ namespace MopsBot.Module.Data.Session
         public Boolean isOnline;
         public string name, curGame;
         public Dictionary<ulong, string> ChannelIds;
-        
+
 
         public TwitchTracker(string streamerName, ulong pChannel, string notificationText, Boolean pIsOnline, string pGame)
         {
@@ -30,21 +30,24 @@ namespace MopsBot.Module.Data.Session
             isOnline = pIsOnline;
             curGame = pGame;
 
-            checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false), StaticBase.ran.Next(6,59)*1000, 60000);
+            checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false), StaticBase.ran.Next(6, 59) * 1000, 60000);
         }
 
         private void CheckForChange_Elapsed(object stateinfo)
         {
             TwitchResult information;
-            try{
+            try
+            {
                 information = streamerInformation();
-            }catch{
+            }
+            catch
+            {
                 return;
             }
-            if(information == null) return;
+            if (information == null) return;
             Boolean isStreaming = information.stream != null;
 
-            if(isOnline != isStreaming)
+            if (isOnline != isStreaming)
             {
                 if (isOnline)
                 {
@@ -63,25 +66,27 @@ namespace MopsBot.Module.Data.Session
                 StaticBase.streamTracks.writeList();
             }
 
-            if(isOnline)
+            if (isOnline)
                 sendTwitchNotification(information);
-                if(information.stream != null && curGame.CompareTo(information.stream.game) != 0 && !information.stream.game.Equals("")){
-                    curGame = information.stream.game;
+            if (information.stream != null && curGame.CompareTo(information.stream.game) != 0 && !information.stream.game.Equals(""))
+            {
+                curGame = information.stream.game;
 
-                    foreach(var channel in ChannelIds)
-                        ((SocketTextChannel)Program.client.GetChannel(channel.Key)).SendMessageAsync($"{name} spielt jetzt **{curGame}**!");
-                    
-                    StaticBase.streamTracks.writeList();
-                }
+                foreach (var channel in ChannelIds)
+                    ((SocketTextChannel)Program.client.GetChannel(channel.Key)).SendMessageAsync($"{name} spielt jetzt **{curGame}**!");
+
+                StaticBase.streamTracks.writeList();
+            }
         }
 
         private TwitchResult streamerInformation()
         {
             string query = Information.readURL($"https://api.twitch.tv/kraken/streams/{name}?client_id={Program.twitchId}");
-            
-            JsonSerializerSettings _jsonWriter = new JsonSerializerSettings {
-                                 NullValueHandling = NullValueHandling.Ignore
-                             };
+
+            JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
+            {
+                NullValueHandling = NullValueHandling.Ignore
+            };
 
             return JsonConvert.DeserializeObject<TwitchResult>(query, _jsonWriter);
         }
@@ -101,26 +106,33 @@ namespace MopsBot.Module.Data.Session
             author.IconUrl = streamer.logo;
             e.Author = author;
 
-            e.ThumbnailUrl = streamer.logo;
-            e.ImageUrl = $"{streamInformation.stream.preview.medium}?rand={StaticBase.ran.Next(0,99999999)}";
+            EmbedFooterBuilder footer = new EmbedFooterBuilder();
+            footer.IconUrl = "https://media-elerium.cursecdn.com/attachments/214/576/twitch.png";
+            footer.Text = "Twitch";
+            e.Footer = footer;
 
-            e.AddInlineField("Game", (streamer.game=="")?"no Game":streamer.game);
+            e.ThumbnailUrl = streamer.logo;
+            e.ImageUrl = $"{streamInformation.stream.preview.medium}?rand={StaticBase.ran.Next(0, 99999999)}";
+
+            e.AddInlineField("Game", (streamer.game == "") ? "no Game" : streamer.game);
             e.AddInlineField("Viewers", streamInformation.stream.viewers);
 
-            foreach(var channel in ChannelIds)
+            foreach (var channel in ChannelIds)
             {
-                if(!toUpdate.ContainsKey(channel.Key)){
+                if (!toUpdate.ContainsKey(channel.Key))
+                {
                     toUpdate.Add(channel.Key, ((SocketTextChannel)Program.client.GetChannel(channel.Key)).SendMessageAsync(channel.Value, false, e).Result);
                     Console.Out.WriteLine($"{DateTime.Now} {name} toUpdate added {channel.Key}");
                     StaticBase.streamTracks.writeList();
                 }
-                    
-                else    
-                    await toUpdate[channel.Key].ModifyAsync(x => {
+
+                else
+                    await toUpdate[channel.Key].ModifyAsync(x =>
+                    {
                         x.Content = channel.Value;
                         x.Embed = (Embed)e;
                     });
-                    Console.Out.WriteLine($"{DateTime.Now} {name} edit Message in {channel.Key}");
+                Console.Out.WriteLine($"{DateTime.Now} {name} edit Message in {channel.Key}");
             }
         }
     }
