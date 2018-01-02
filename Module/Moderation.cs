@@ -132,7 +132,7 @@ namespace MopsBot.Module
         [RequireUserPermission(ChannelPermission.ManageChannel)]
         public async Task trackStreamer(string streamerName, [Remainder]string notificationMessage)
         {
-            if (!StaticBase.streamTracks.streamers.ContainsKey(streamerName.ToLower()))
+            if (!StaticBase.streamTracks.streamers.ContainsKey(streamerName))
             {
                 StaticBase.streamTracks.streamers.Add(streamerName, new Data.Session.TwitchTracker(streamerName, Context.Channel.Id, notificationMessage, false, "Nothing"));
             }
