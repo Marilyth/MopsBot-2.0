@@ -179,9 +179,11 @@ namespace MopsBot.Module.Data.Session
         {
             viewerChart = new PlotModel();
             viewerChart.TextColor = OxyColor.FromRgb(175, 175, 175);
-            viewerChart.PlotAreaBorderColor = OxyColor.FromRgb(125, 125, 155);
-            var valueAxisY = new OxyPlot.Axes.LinearAxis { Position = OxyPlot.Axes.AxisPosition.Left, TicklineColor = OxyColor.FromRgb(125, 125, 155), Title = "Viewers", Minimum = 0, FontSize = 13};
-            var valueAxisX = new OxyPlot.Axes.LinearAxis { Position = OxyPlot.Axes.AxisPosition.Bottom, TicklineColor = OxyColor.FromRgb(125, 125, 155), Title = "Time in Minutes", FontSize = 13};
+            viewerChart.PlotAreaBorderThickness = new OxyThickness(0);
+            var valueAxisY = new OxyPlot.Axes.LinearAxis { Position = OxyPlot.Axes.AxisPosition.Left, TicklineColor = OxyColor.FromRgb(125, 125, 155), Title = "Viewers", Minimum = 0, FontSize = 13
+            , AxislineStyle = LineStyle.Solid, AxislineColor = OxyColor.FromRgb(125, 125, 155)};
+            var valueAxisX = new OxyPlot.Axes.LinearAxis { Position = OxyPlot.Axes.AxisPosition.Bottom, TicklineColor = OxyColor.FromRgb(125, 125, 155), Title = "Time in Minutes", FontSize = 13
+            , AxislineStyle = LineStyle.Solid, AxislineColor = OxyColor.FromRgb(125, 125, 155)};
             viewerChart.Axes.Add(valueAxisY);
             viewerChart.Axes.Add(valueAxisX);
             viewerChart.LegendFontSize = 13;
