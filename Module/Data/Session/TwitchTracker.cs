@@ -218,14 +218,7 @@ namespace MopsBot.Module.Data.Session
 
         private void gameChange()
         {
-            if (!series.ContainsKey(curGame))
-            {
-                series.Add(curGame, new OxyPlot.Series.LineSeries());
-                series[curGame].Color = OxyColor.FromRgb((byte)StaticBase.ran.Next(30, 220), (byte)StaticBase.ran.Next(30, 220), (byte)StaticBase.ran.Next(30, 220));
-                series[curGame].Title = curGame;
-                series[curGame].StrokeThickness = 3;
-                viewerChart.Series.Add(series[curGame]);
-            }
+            gameChange(curGame);
         }
 
         private void gameChange(string newGame)
@@ -237,6 +230,20 @@ namespace MopsBot.Module.Data.Session
                 series[newGame].Title = newGame;
                 series[newGame].StrokeThickness = 3;
                 viewerChart.Series.Add(series[newGame]);
+            }
+            else{
+                Boolean occured = false;
+                for(int i = 0; i < viewerChart.Series.Count; i++){
+
+                    if(occured && !viewerChart.Series[i].Title.Equals(newGame)){
+                        var pointsToAdd = (viewerChart.Series[i] as OxyPlot.Series.LineSeries).Points;
+                        series[newGame].Points.AddRange(pointsToAdd);
+                    }
+
+                    else if(viewerChart.Series[i].Title.Equals(newGame)){
+                        occured = true;
+                    }
+                }
             }
         }
 
