@@ -261,7 +261,7 @@ namespace MopsBot.Module.Data.Session
             write.WriteLine(columnCount);
             foreach (var game in series.Keys)
             {
-                write.WriteLine($"GAMECHANGE:{game}");
+                write.WriteLine($"GAMECHANGE={game}");
                 foreach (var point in series[game].Points)
                 {
                     write.WriteLine($"{point.X}:{point.Y}");
@@ -281,7 +281,7 @@ namespace MopsBot.Module.Data.Session
             {
                 if (s.StartsWith("GAMECHANGE"))
                 {
-                    currentGame = s.Split(":")[1];
+                    currentGame = s.Split("=")[1];
                     gameChange(currentGame);
                 }
                 else
