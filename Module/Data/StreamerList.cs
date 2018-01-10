@@ -63,5 +63,9 @@ namespace MopsBot.Module.Data
             }
             write.Dispose();
         }
+
+        private void onGameChanged(){
+            
+        }
     }
 }

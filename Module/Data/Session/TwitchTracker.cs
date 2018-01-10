@@ -238,6 +238,7 @@ namespace MopsBot.Module.Data.Session
                     if(occured && !viewerChart.Series[i].Title.Equals(newGame)){
                         var pointsToAdd = (viewerChart.Series[i] as OxyPlot.Series.LineSeries).Points;
                         series[newGame].Points.AddRange(pointsToAdd);
+                        series[newGame].Points.OrderBy(x => x.X);
                     }
 
                     else if(viewerChart.Series[i].Title.Equals(newGame)){

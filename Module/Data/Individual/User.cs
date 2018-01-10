@@ -32,7 +32,7 @@ namespace MopsBot.Module.Data.Individual
             Score = userScore;
         }
 
-        private delegate double del(int i);
+        private delegate int del(int i);
         private del levelCalc = x => (200 * (x * x));
 
         public int calcLevel()
@@ -44,7 +44,7 @@ namespace MopsBot.Module.Data.Individual
             }
             return (i - 1);
         }
-
+        
         public string calcNextLevel()
         {
             int Level = calcLevel();
