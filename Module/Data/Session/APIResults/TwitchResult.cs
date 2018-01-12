@@ -8,12 +8,12 @@ using Newtonsoft.Json;
 
 namespace MopsBot.Module.Data.Session.APIResults
 {
-    class TwitchResult
+    public class TwitchResult
     {
         public Stream stream;
     }
 
-    class  Stream{
+    public class Stream{
         public ulong _id;
         public int video_height;
         public double average_fps;
@@ -27,7 +27,7 @@ namespace MopsBot.Module.Data.Session.APIResults
         public Preview preview;
     }
 
-    class Channel{
+    public class Channel{
         public string game;
         public bool mature;
          public string status;

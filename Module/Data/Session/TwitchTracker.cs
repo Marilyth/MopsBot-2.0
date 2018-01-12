@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Discord;
-using Discord.WebSocket;
-using Discord.Commands;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
@@ -15,6 +13,11 @@ namespace MopsBot.Module.Data.Session
 {
     public class TwitchTracker
     {
+        public event EventHandler StreamerWentOnline;
+        public event EventHandler StreamerWentOffline;
+        public event EventHandler StreamerGameChanged;
+        public event EventHandler StreamerStatusChanged;
+        public delegate Task EventHandler(TwitchTracker e);
         private System.Threading.Timer checkForChange;
         private PlotModel viewerChart;
         private Dictionary<string, OxyPlot.Series.LineSeries> series;
@@ -23,7 +26,7 @@ namespace MopsBot.Module.Data.Session
         public Boolean isOnline;
         public string name, curGame;
         public Dictionary<ulong, string> ChannelIds;
-
+        public APIResults.TwitchResult streamerStatus;
 
         public TwitchTracker(string streamerName, ulong pChannel, string notificationText, Boolean pIsOnline, string pGame)
         {
@@ -46,57 +49,54 @@ namespace MopsBot.Module.Data.Session
 
         private void CheckForChange_Elapsed(object stateinfo)
         {
-            TwitchResult information;
             try
             {
-                information = streamerInformation();
+                streamerStatus = streamerInformation();
             }
             catch
             {
                 return;
             }
-            if (information == null) return;
-            Boolean isStreaming = information.stream != null;
+
+            if (streamerStatus == null) return;
+            Boolean isStreaming = streamerStatus.stream != null;
 
             if (isOnline != isStreaming)
             {
                 if (isOnline)
                 {
                     isOnline = false;
+                    columnCount = 0;
                     Console.Out.WriteLine($"{DateTime.Now} {name} went Offline");
                     var file = new FileInfo($"data//plots//{name}.txt");
                     file.Delete();
                     initViewerChart();
+                    OnStreamerWentOffline();
                 }
                 else
                 {
                     isOnline = true;
-                    Console.Out.WriteLine($"{DateTime.Now} {name} went Online");
                     toUpdate = new Dictionary<ulong, IUserMessage>();
-                    curGame = (information.stream == null) ? "Nothing" : information.stream.game;
+                    curGame = (streamerStatus.stream == null) ? "Nothing" : streamerStatus.stream.game;
                     gameChange();
+                    OnStreamerWentOnline();
                 }
-                StaticBase.streamTracks.writeList();
             }
 
             if (isOnline)
             {
                 columnCount++;
-                series[curGame].Points.Add(new DataPoint(columnCount, information.stream.viewers));
-                if (information.stream != null && curGame.CompareTo(information.stream.game) != 0 && !information.stream.game.Equals(""))
+                series[curGame].Points.Add(new DataPoint(columnCount, streamerStatus.stream.viewers));
+                if (streamerStatus.stream != null && curGame.CompareTo(streamerStatus.stream.game) != 0 && !streamerStatus.stream.game.Equals(""))
                 {
-                    curGame = information.stream.game;
+                    curGame = streamerStatus.stream.game;
                     gameChange();
-                    series[curGame].Points.Add(new DataPoint(columnCount, information.stream.viewers));
-
-                    foreach (var channel in ChannelIds)
-                        ((SocketTextChannel)Program.client.GetChannel(channel.Key)).SendMessageAsync($"{name} spielt jetzt **{curGame}**!");
-
-                    StaticBase.streamTracks.writeList();
+                    series[curGame].Points.Add(new DataPoint(columnCount, streamerStatus.stream.viewers));
+                    OnStreamerGameChanged();
                 }
 
+                OnStreamerStatusChanged();
                 updateChart();
-                sendTwitchNotification(information);
             }
         }
 
@@ -112,9 +112,9 @@ namespace MopsBot.Module.Data.Session
             return JsonConvert.DeserializeObject<TwitchResult>(query, _jsonWriter);
         }
 
-        private async void sendTwitchNotification(TwitchResult streamInformation)
+        public EmbedBuilder createEmbed()
         {
-            Channel streamer = streamInformation.stream.channel;
+            Channel streamer = streamerStatus.stream.channel;
 
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0x6441A4);
@@ -132,29 +132,13 @@ namespace MopsBot.Module.Data.Session
             footer.Text = "Twitch";
             e.Footer = footer;
 
-            e.ThumbnailUrl = $"{streamInformation.stream.preview.medium}?rand={StaticBase.ran.Next(0, 99999999)}";
+            e.ThumbnailUrl = $"{streamerStatus.stream.preview.medium}?rand={StaticBase.ran.Next(0, 99999999)}";
             e.ImageUrl = $"http://5.45.104.29/StreamCharts/{name}plot.png?rand={StaticBase.ran.Next(0, 99999999)}";
 
             e.AddInlineField("Game", (streamer.game == "") ? "no Game" : streamer.game);
-            e.AddInlineField("Viewers", streamInformation.stream.viewers);
+            e.AddInlineField("Viewers", streamerStatus.stream.viewers);
 
-            foreach (var channel in ChannelIds)
-            {
-                if (!toUpdate.ContainsKey(channel.Key))
-                {
-                    toUpdate.Add(channel.Key, ((SocketTextChannel)Program.client.GetChannel(channel.Key)).SendMessageAsync(channel.Value, false, e).Result);
-                    Console.Out.WriteLine($"{DateTime.Now} {name} toUpdate added {channel.Key}");
-                    StaticBase.streamTracks.writeList();
-                }
-
-                else
-                    await toUpdate[channel.Key].ModifyAsync(x =>
-                    {
-                        x.Content = channel.Value;
-                        x.Embed = (Embed)e;
-                    });
-                Console.Out.WriteLine($"{DateTime.Now} {name} edit Message in {channel.Key}");
-            }
+            return e;
         }
 
 
@@ -231,20 +215,24 @@ namespace MopsBot.Module.Data.Session
                 series[newGame].StrokeThickness = 3;
                 viewerChart.Series.Add(series[newGame]);
             }
-            else{
+            else
+            {
                 Boolean occured = false;
-                for(int i = 0; i < viewerChart.Series.Count; i++){
+                for (int i = 0; i < viewerChart.Series.Count; i++)
+                {
 
-                    if(occured && !viewerChart.Series[i].Title.Equals(newGame)){
+                    if (occured && !viewerChart.Series[i].Title.Equals(newGame))
+                    {
                         var pointsToAdd = (viewerChart.Series[i] as OxyPlot.Series.LineSeries).Points;
                         series[newGame].Points.AddRange(pointsToAdd);
-                        
+
                         var sortedPoints = series[newGame].Points.OrderBy(x => x.X);
                         series[newGame].Points.Clear();
                         series[newGame].Points.AddRange(sortedPoints);
                     }
 
-                    else if(viewerChart.Series[i].Title.Equals(newGame)){
+                    else if (viewerChart.Series[i].Title.Equals(newGame))
+                    {
                         occured = true;
                     }
                 }
@@ -274,8 +262,7 @@ namespace MopsBot.Module.Data.Session
             write.Dispose();
         }
 
-        private void readPlotPoints()
-        {
+        private void readPlotPoints(){
             StreamReader read = new StreamReader(new FileStream($"data//plots//{name}.txt", FileMode.OpenOrCreate));
 
             columnCount = int.Parse(read.ReadLine());
@@ -293,6 +280,30 @@ namespace MopsBot.Module.Data.Session
             }
 
             read.Dispose();
+        }
+
+        protected async virtual void OnStreamerGameChanged()
+        {
+            if (StreamerGameChanged != null)
+                await StreamerGameChanged(this);
+        }
+
+        protected async virtual void OnStreamerWentOnline()
+        {
+            if (StreamerWentOnline != null)
+                await StreamerWentOnline(this);
+        }
+
+        protected async virtual void OnStreamerWentOffline()
+        {
+            if (StreamerWentOffline != null)
+                await StreamerWentOffline(this);
+        }
+
+        protected async virtual void OnStreamerStatusChanged()
+        {
+            if (StreamerStatusChanged != null)
+                await StreamerStatusChanged(this);
         }
     }
 }
