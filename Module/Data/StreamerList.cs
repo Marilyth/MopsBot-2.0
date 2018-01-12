@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Discord;
+using Discord.WebSocket;
 
 namespace MopsBot.Module.Data
 {
@@ -15,57 +17,108 @@ namespace MopsBot.Module.Data
         {
             streamers = new Dictionary<string, Session.TwitchTracker>();
 
-            StreamReader read = new StreamReader(new FileStream("data//streamers.txt", FileMode.OpenOrCreate));
-
-            string s = "";
-            while((s = read.ReadLine()) != null)
+            using (StreamReader read = new StreamReader(new FileStream("data//streamers.txt", FileMode.OpenOrCreate)))
             {
-                try{
-
-                    var trackerInformation = s.Split('|');
-                    if (!streamers.ContainsKey(trackerInformation[0]))
+                string s = "";
+                while ((s = read.ReadLine()) != null)
+                {
+                    try
                     {
-                        streamers.Add(trackerInformation[0], new Session.TwitchTracker(trackerInformation[0], ulong.Parse(trackerInformation[1]), trackerInformation[2], Boolean.Parse(trackerInformation[3].ToLower()), trackerInformation[4])); 
-                    }
 
-                    else{                     
-                        streamers[trackerInformation[0]].ChannelIds.Add(ulong.Parse(trackerInformation[1]), trackerInformation[2]);
-                        Console.Out.WriteLine($"Added {trackerInformation[1]} to {trackerInformation[0]}");
-                    }
+                        var trackerInformation = s.Split('|');
+                        if (!streamers.ContainsKey(trackerInformation[0]))
+                        {
+                            Session.TwitchTracker streamer = new Session.TwitchTracker(trackerInformation[0], ulong.Parse(trackerInformation[1]), trackerInformation[2], Boolean.Parse(trackerInformation[3].ToLower()), trackerInformation[4]);
+                            streamer.StreamerGameChanged += onGameChanged;
+                            streamer.StreamerStatusChanged += onStatusChanged;
+                            streamer.StreamerWentOnline += onWentOnline;
+                            streamer.StreamerWentOffline += onWentOffline;
 
-                    if(trackerInformation[3].Equals("True")){
-                        var channel = Program.client.GetChannel(ulong.Parse(trackerInformation[1]));
-                        var message = ((Discord.ITextChannel)channel).GetMessageAsync(ulong.Parse(trackerInformation[5])).Result;
-                        streamers[trackerInformation[0]].toUpdate.Add(ulong.Parse(trackerInformation[1]), (Discord.IUserMessage)message);
-                    }
+                            streamers.Add(trackerInformation[0], streamer);
+                        }
 
-                }catch(Exception e){
-                    Console.WriteLine(e.Message);
+                        else
+                        {
+                            streamers[trackerInformation[0]].ChannelIds.Add(ulong.Parse(trackerInformation[1]), trackerInformation[2]);
+                            Console.Out.WriteLine($"Added {trackerInformation[1]} to {trackerInformation[0]}");
+                        }
+
+                        if (trackerInformation[3].Equals("True"))
+                        {
+                            var channel = Program.client.GetChannel(ulong.Parse(trackerInformation[1]));
+                            var message = ((Discord.ITextChannel)channel).GetMessageAsync(ulong.Parse(trackerInformation[5])).Result;
+                            streamers[trackerInformation[0]].toUpdate.Add(ulong.Parse(trackerInformation[1]), (Discord.IUserMessage)message);
+                        }
+
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
                 }
             }
-
-            read.Dispose();
         }
 
         public void writeList()
         {
-            StreamWriter write = new StreamWriter(new FileStream("data//streamers.txt", FileMode.Create));
-            write.AutoFlush=true;
-            foreach(Session.TwitchTracker tr in streamers.Values)
-            {
-                foreach(var channel in tr.ChannelIds)
+            using (StreamWriter write = new StreamWriter(new FileStream("data//streamers.txt", FileMode.Create)))
+                foreach (Session.TwitchTracker tr in streamers.Values)
                 {
-                    if(tr.toUpdate.ContainsKey(channel.Key))
-                        write.WriteLine($"{tr.name}|{channel.Key}|{channel.Value}|{tr.isOnline}|{tr.curGame}|{tr.toUpdate[channel.Key].Id}");
-                    else
-                        write.WriteLine($"{tr.name}|{channel.Key}|{channel.Value}|{tr.isOnline}|{tr.curGame}|0");
+                    foreach (var channel in tr.ChannelIds)
+                    {
+                        if (tr.toUpdate.ContainsKey(channel.Key))
+                            write.WriteLine($"{tr.name}|{channel.Key}|{channel.Value}|{tr.isOnline}|{tr.curGame}|{tr.toUpdate[channel.Key].Id}");
+                        else
+                            write.WriteLine($"{tr.name}|{channel.Key}|{channel.Value}|{tr.isOnline}|{tr.curGame}|0");
+                    }
                 }
-            }
-            write.Dispose();
         }
 
-        private void onGameChanged(){
-            
+        private async Task onGameChanged(Session.TwitchTracker streamer)
+        {
+            foreach (var channel in streamer.ChannelIds)
+                await ((Discord.WebSocket.SocketTextChannel)Program.client.GetChannel(channel.Key)).SendMessageAsync($"{streamer.name} spielt jetzt **{streamer.curGame}**!");
+
+            writeList();
+        }
+        private async Task onStatusChanged(Session.TwitchTracker streamer)
+        {
+            var e = streamer.createEmbed();
+
+            foreach (var channel in streamer.ChannelIds)
+            {
+                if (!streamer.toUpdate.ContainsKey(channel.Key))
+                {
+                    streamer.toUpdate.Add(channel.Key, await ((SocketTextChannel)Program.client.GetChannel(channel.Key)).SendMessageAsync(channel.Value, false, e));
+                    Console.Out.WriteLine($"{DateTime.Now} {streamer.name} toUpdate added {streamer.toUpdate[channel.Key].Id}");
+                    StaticBase.streamTracks.writeList();
+                }
+
+                else
+                    await streamer.toUpdate[channel.Key].ModifyAsync(x =>
+                    {
+                        x.Content = channel.Value;
+                        x.Embed = (Embed)e;
+                    });
+
+                Console.Out.WriteLine($"{DateTime.Now} {streamer.name} edit Message on {streamer.toUpdate[channel.Key].Id}");
+            }
+        }
+
+        private Task onWentOnline(Session.TwitchTracker streamer)
+        {
+            Console.WriteLine($"Streamer {streamer.name} went online");
+
+            writeList();
+            return Task.CompletedTask;
+        }
+
+        private Task onWentOffline(Session.TwitchTracker streamer)
+        {
+            Console.WriteLine($"Streamer {streamer.name} went online");
+
+            writeList();
+            return Task.CompletedTask;
         }
     }
 }
