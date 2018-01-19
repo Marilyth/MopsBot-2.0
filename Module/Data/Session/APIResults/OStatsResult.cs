@@ -8,97 +8,123 @@ using Newtonsoft.Json;
 
 namespace MopsBot.Module.Data.Session.APIResults
 {
-    class OStatsResult
+    public class Request
     {
-        public GameModes eu;
-        public GameModes us;
-        public GameModes kr;
+        public int api_ver { get; set; }
+        public string route { get; set; }
     }
 
-    class StatsWrapper
+    public class GameStats
     {
-        public Stats quickplay;
-        public Stats competitive;
+        public double hero_damage_done { get; set; }
+        public double medals { get; set; }
+        public double kill_streak_best { get; set; }
+        public double solo_kills { get; set; }
+        public double eliminations { get; set; }
+        public double games_lost { get; set; }
+        public double healing_done { get; set; }
+        public double eliminations_most_in_game { get; set; }
+        public double barrier_damage_done { get; set; }
+        public double objective_kills { get; set; }
+        public double games_played { get; set; }
+        public double hero_damage_done_most_in_game { get; set; }
+        public double all_damage_done { get; set; }
+        public double all_damage_done_most_in_game { get; set; }
+        public double solo_kills_most_in_game { get; set; }
+        public double medals_silver { get; set; }
+        public double defensive_assists_most_in_game { get; set; }
+        public double offensive_assists_most_in_game { get; set; }
+        public double deaths { get; set; }
+        public double objective_time_most_in_game { get; set; }
+        public double turret_destroyed_most_in_game { get; set; }
+        public double medals_bronze { get; set; }
+        public double barrier_damage_done_most_in_game { get; set; }
+        public double objective_kills_most_in_game { get; set; }
+        public double final_blows { get; set; }
+        public double healing_done_most_in_game { get; set; }
+        public double medals_gold { get; set; }
+        public double turret_destroyed { get; set; }
+        public double offensive_assists { get; set; }
+        public double objective_time { get; set; }
+        public double kpd { get; set; }
+        public double final_blows_most_in_game { get; set; }
+        public double time_played { get; set; }
+        public double defensive_assists { get; set; }
     }
 
-    class GameModes
+    public class OverallStats
     {
-        public StatsWrapper stats;
+        public int games { get; set; }
+        public int tier { get; set; }
+        public string rank_image { get; set; }
+        public int prestige { get; set; }
+        public int wins { get; set; }
+        public string avatar { get; set; }
+        public int comprank { get; set; }
+        public int losses { get; set; }
+        public int ties { get; set; }
+        public double win_rate { get; set; }
+        public int level { get; set; }
     }
 
-    class Stats
+    public class AverageStats
     {
-        public OverallStats overall_stats;
-        public TotalStats game_stats;
-        public AverageStats rolling_average_stats;
-        public Boolean competitive;
     }
 
-    class OverallStats
+    public class RollingAverageStats
     {
-        public double win_rate;
-        public int level;
-        public int prestige;
-        public string avatar;
-        public int wins;
-        public int games;
-        public int comprank;
-        public int losses;
+        public double barrier_damage_done { get; set; }
+        public double objective_kills { get; set; }
+        public double deaths { get; set; }
+        public double hero_damage_done { get; set; }
+        public double all_damage_done { get; set; }
+        public double objective_time { get; set; }
+        public double final_blows { get; set; }
+        public double eliminations { get; set; }
+        public double solo_kills { get; set; }
+        public double healing_done { get; set; }
     }
 
-    class TotalStats
+    public class Competitive
     {
-        public double objective_kills;
-        public double games_won;
-        public double kpd;
-        public double objective_kills_most_in_game;
-        public double time_spent_on_fire_most_in_game;
-        public double healing_done;
-        public double defensive_assists;
-        public double offensive_assists;
-        public double final_blows_most_in_game;
-        public double objective_time;
-        public double melee_final_blows;
-        public double medals;
-        public double cards;
-        public double multikill_best;
-        public double multikills;
-        public double defensive_assists_most_in_game;
-        public double offensive_assists_most_in_game;
-        public double melee_final_blow_most_in_game;
-        public double damage_done;
-        public double medals_silver;
-        public double medals_gold;
-        public double healing_done_most_in_game;
-        public double environmental_kills;
-        public double medals_bronze;
-        public double solo_kills;
-        public double time_spent_on_fire;
-        public double eliminations_most_in_game;
-        public double final_blows;
-        public double time_played;
-        public double environmental_deaths;
-        public double solo_kills_most_in_game;
-        public double damage_done_most_in_game;
-        public double games_played;
-        public double eliminations;
-        public double objective_time_most_in_game;
-        public double deaths;
+        public GameStats game_stats { get; set; }
+        public OverallStats overall_stats { get; set; }
+        public AverageStats average_stats { get; set; }
+        public bool competitive { get; set; }
+        public RollingAverageStats rolling_average_stats { get; set; }
     }
 
-    class AverageStats
+    public class Quickplay
     {
-        public double healing_done_avg;
-        public double eliminations_avg;
-        public double melee_final_blows_avg;
-        public double final_blows_avg;
-        public double defensive_assists_avg;
-        public double damage_done_avg;
-        public double deaths_avg;
-        public double objective_time_avg;
-        public double offensive_assists_avg;
-        public double solo_kills_avg;
-        public double time_spent_on_fire_avg;
-        public double objective_kills_avg;
+        public GameStats game_stats { get; set; }
+        public OverallStats overall_stats { get; set; }
+        public AverageStats average_stats { get; set; }
+        public bool competitive { get; set; }
+        public RollingAverageStats rolling_average_stats { get; set; }
+    }
+
+    public class Stats
+    {
+        public Competitive competitive { get; set; }
+        public Quickplay quickplay { get; set; }
+    }
+
+    public class Location
+    {
+        public Stats stats { get; set; }
+        public Heroes heroes {get; set;}
+    }
+
+    public class OStatsResult
+    {
+        public Request _request { get; set; }
+        public Location eu { get; set; }
+        public object any { get; set; }
+        public Location us { get; set; }
+        public Location kr { get; set; }
+
+        public Location getNotNull(){
+            return eu != null ? eu : kr != null ? kr : us;
+        }
     }
 }
