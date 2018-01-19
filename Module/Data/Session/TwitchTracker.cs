@@ -20,7 +20,7 @@ namespace MopsBot.Module.Data.Session
         public delegate Task EventHandler(TwitchTracker e);
         private System.Threading.Timer checkForChange;
         private PlotModel viewerChart;
-        private Dictionary<string, OxyPlot.Series.LineSeries> series;
+        private Dictionary<string, List<OxyPlot.Series.LineSeries>> series;
         private int columnCount;
         public Dictionary<ulong, Discord.IUserMessage> toUpdate;
         public Boolean isOnline;
@@ -86,12 +86,12 @@ namespace MopsBot.Module.Data.Session
             if (isOnline)
             {
                 columnCount++;
-                series[curGame].Points.Add(new DataPoint(columnCount, streamerStatus.stream.viewers));
+                series[curGame].Last().Points.Add(new DataPoint(columnCount, streamerStatus.stream.viewers));
                 if (streamerStatus.stream != null && curGame.CompareTo(streamerStatus.stream.game) != 0 && !streamerStatus.stream.game.Equals(""))
                 {
                     curGame = streamerStatus.stream.game;
                     gameChange();
-                    series[curGame].Points.Add(new DataPoint(columnCount, streamerStatus.stream.viewers));
+                    series[curGame].Last().Points.Add(new DataPoint(columnCount, streamerStatus.stream.viewers));
                     OnStreamerGameChanged();
                 }
 
@@ -197,7 +197,7 @@ namespace MopsBot.Module.Data.Session
             viewerChart.LegendFontSize = 24;
             viewerChart.LegendPosition = LegendPosition.BottomCenter;
 
-            series = new Dictionary<string, OxyPlot.Series.LineSeries>();
+            series = new Dictionary<string, List<OxyPlot.Series.LineSeries>>();
         }
 
         private void gameChange()
@@ -209,77 +209,67 @@ namespace MopsBot.Module.Data.Session
         {
             if (!series.ContainsKey(newGame))
             {
-                series.Add(newGame, new OxyPlot.Series.LineSeries());
-                series[newGame].Color = OxyColor.FromRgb((byte)StaticBase.ran.Next(30, 220), (byte)StaticBase.ran.Next(30, 220), (byte)StaticBase.ran.Next(30, 220));
-                series[newGame].Title = newGame;
-                series[newGame].StrokeThickness = 3;
-                viewerChart.Series.Add(series[newGame]);
+                series.Add(newGame, new List<OxyPlot.Series.LineSeries>());
+                series[newGame].Add(new OxyPlot.Series.LineSeries());
+                series[newGame].Last().Color = OxyColor.FromRgb((byte)StaticBase.ran.Next(30, 220), (byte)StaticBase.ran.Next(30, 220), (byte)StaticBase.ran.Next(30, 220));
+                series[newGame].Last().Title = newGame;
+                series[newGame].Last().StrokeThickness = 3;
+                viewerChart.Series.Add(series[newGame].Last());
             }
             else
             {
-                Boolean occured = false;
-                for (int i = 0; i < viewerChart.Series.Count; i++)
-                {
-
-                    if (occured && !viewerChart.Series[i].Title.Equals(newGame))
-                    {
-                        var pointsToAdd = (viewerChart.Series[i] as OxyPlot.Series.LineSeries).Points;
-                        series[newGame].Points.AddRange(pointsToAdd);
-
-                        var sortedPoints = series[newGame].Points.OrderBy(x => x.X);
-                        series[newGame].Points.Clear();
-                        series[newGame].Points.AddRange(sortedPoints);
-                    }
-
-                    else if (viewerChart.Series[i].Title.Equals(newGame))
-                    {
-                        occured = true;
-                    }
-                }
+                series[newGame].Add(new OxyPlot.Series.LineSeries());
+                series[newGame].Last().Color = series[newGame].First().Color;
+                series[newGame].Last().StrokeThickness = 3;
+                viewerChart.Series.Add(series[newGame].Last());
             }
         }
 
         public void recolour()
         {
             initViewerChart();
-            series = new Dictionary<string, OxyPlot.Series.LineSeries>();
+            series = new Dictionary<string, List<OxyPlot.Series.LineSeries>>();
             readPlotPoints();
         }
 
         private void writePlotPoints()
         {
-            StreamWriter write = new StreamWriter(new FileStream($"data//plots//{name}.txt", FileMode.Create));
-            write.AutoFlush = true;
-            write.WriteLine(columnCount);
-            foreach (var game in series.Keys)
+            using (StreamWriter write = new StreamWriter(new FileStream($"data//plots//{name}.txt", FileMode.Create)))
             {
-                write.WriteLine($"GAMECHANGE={game}");
-                foreach (var point in series[game].Points)
+                write.WriteLine(columnCount);
+                foreach (var game in series.Keys)
                 {
-                    write.WriteLine($"{point.X}:{point.Y}");
+                    foreach (var lineseries in series[game])
+                    {
+                        write.WriteLine($"GAMECHANGE={game}");
+                        foreach (var point in lineseries.Points)
+                        {
+                            write.WriteLine($"{point.X}:{point.Y}");
+                        }
+                    }
                 }
             }
-            write.Dispose();
         }
 
-        private void readPlotPoints(){
-            StreamReader read = new StreamReader(new FileStream($"data//plots//{name}.txt", FileMode.OpenOrCreate));
+        private void readPlotPoints()
+        {
 
-            columnCount = int.Parse(read.ReadLine());
-            string currentGame = "";
-            string s = "";
-            while ((s = read.ReadLine()) != null)
+            using (StreamReader read = new StreamReader(new FileStream($"data//plots//{name}.txt", FileMode.OpenOrCreate)))
             {
-                if (s.StartsWith("GAMECHANGE"))
+                columnCount = int.Parse(read.ReadLine());
+                string currentGame = "";
+                string s = "";
+                while ((s = read.ReadLine()) != null)
                 {
-                    currentGame = s.Split("=")[1];
-                    gameChange(currentGame);
+                    if (s.StartsWith("GAMECHANGE"))
+                    {
+                        currentGame = s.Split("=")[1];
+                        gameChange(currentGame);
+                    }
+                    else
+                        series[currentGame].Last().Points.Add(new DataPoint(double.Parse(s.Split(":")[0]), double.Parse(s.Split(":")[1])));
                 }
-                else
-                    series[currentGame].Points.Add(new DataPoint(double.Parse(s.Split(":")[0]), double.Parse(s.Split(":")[1])));
             }
-
-            read.Dispose();
         }
 
         protected async virtual void OnStreamerGameChanged()
