@@ -33,7 +33,7 @@ namespace MopsBot.Module.Data
                             }
 
                             owPlayers[trackerInformation[0]].ChannelIds.Add(ulong.Parse(trackerInformation[1]));
-                            System.Threading.Thread.Sleep(6000);
+                            System.Threading.Thread.Sleep(20000);
 
                         }
                         catch (Exception e)
