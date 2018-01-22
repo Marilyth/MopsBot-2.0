@@ -16,36 +16,42 @@ namespace MopsBot.Module.Data
         {
             owPlayers = new Dictionary<string, Session.OverwatchTracker>();
 
-            StreamReader read = new StreamReader(new FileStream("data//overwatchid.txt", FileMode.OpenOrCreate));
-
-            string s = "";
-            while((s = read.ReadLine()) != null)
+            Task.Run(() =>
             {
-                try{
-
-                    var trackerInformation = s.Split('|');
-                    if (!owPlayers.ContainsKey(trackerInformation[0]))
+                string s = "";
+                using (StreamReader read = new StreamReader(new FileStream("data//overwatchid.txt", FileMode.OpenOrCreate)))
+                {
+                    while ((s = read.ReadLine()) != null)
                     {
-                        owPlayers.Add(trackerInformation[0], new Session.OverwatchTracker(trackerInformation[0])); 
+                        try
+                        {
+
+                            var trackerInformation = s.Split('|');
+                            if (!owPlayers.ContainsKey(trackerInformation[0]))
+                            {
+                                owPlayers.Add(trackerInformation[0], new Session.OverwatchTracker(trackerInformation[0]));
+                            }
+
+                            owPlayers[trackerInformation[0]].ChannelIds.Add(ulong.Parse(trackerInformation[1]));
+                            System.Threading.Thread.Sleep(6000);
+
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e.Message);
+                        }
                     }
-                   
-                    owPlayers[trackerInformation[0]].ChannelIds.Add(ulong.Parse(trackerInformation[1]));
-
-                }catch(Exception e){
-                    Console.WriteLine(e.Message);
                 }
-            }
-
-            read.Dispose();
+            });
         }
 
         public void writeList()
         {
             StreamWriter write = new StreamWriter(new FileStream("data//overwatchid.txt", FileMode.Create));
-            write.AutoFlush=true;
-            foreach(Session.OverwatchTracker tr in owPlayers.Values)
+            write.AutoFlush = true;
+            foreach (Session.OverwatchTracker tr in owPlayers.Values)
             {
-                foreach(var channel in tr.ChannelIds)
+                foreach (var channel in tr.ChannelIds)
                 {
                     write.WriteLine($"{tr.name}|{channel}");
                 }
