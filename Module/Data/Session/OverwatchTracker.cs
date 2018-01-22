@@ -24,7 +24,8 @@ namespace MopsBot.Module.Data.Session
             ChannelIds = new HashSet<ulong>();
             name = OWName;
 
-            checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false), StaticBase.ran.Next(6, 59) * 1000, 600000);
+            checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false), 0, 600000);
+            Console.WriteLine(DateTime.Now + " OW Tracker started for " + name);
         }
 
         private void CheckForChange_Elapsed(object stateinfo)
@@ -40,14 +41,15 @@ namespace MopsBot.Module.Data.Session
                 if (newInformation == null) return;
 
                 var changedStats = getChangedStats(information, newInformation);
+                Console.WriteLine(DateTime.Now + " OW Tracker fetched Stats for " + name + "\nNew Stats?: " + (changedStats.Count != 0) + $" (Wins: {newInformation.eu.stats.quickplay.overall_stats.wins})");
 
                 if (changedStats.Count != 0)
                 {
                     sendNotification(newInformation, changedStats, getSessionMostPlayed(information, newInformation));
                     information = newInformation;
                 }
-            }catch{
-                
+            }catch(Exception e){
+                Console.WriteLine(e.Message);
             }
         }
 

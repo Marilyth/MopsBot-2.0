@@ -100,8 +100,6 @@ namespace MopsBot.Module.Data
                         x.Content = channel.Value;
                         x.Embed = (Embed)e;
                     });
-
-                Console.Out.WriteLine($"{DateTime.Now} {streamer.name} edit Message on {streamer.toUpdate[channel.Key].Id}");
             }
         }
 
