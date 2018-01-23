@@ -5,11 +5,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Tweetinvi;
+using System.Runtime.InteropServices;
+using Microsoft.Win32.SafeHandles;
 
 namespace MopsBot.Module.Data
 {
-    class OverwatchList
+    class OverwatchList : IDisposable
     {
+        bool disposed = false;
+        SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
+        
         public Dictionary<string, Session.OverwatchTracker> owPlayers;
 
         public OverwatchList()
@@ -57,6 +62,27 @@ namespace MopsBot.Module.Data
                 }
             }
             write.Dispose();
+        }
+
+        public void Dispose()
+        { 
+            Dispose(true);
+            GC.SuppressFinalize(this);           
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposed)
+                return; 
+      
+            if (disposing) {
+                handle.Dispose();
+                // Free any other managed objects here.
+                //
+            }
+      
+            owPlayers = new Dictionary<string, Session.OverwatchTracker>();
+            disposed = true;
         }
     }
 }

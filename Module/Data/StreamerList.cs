@@ -6,11 +6,17 @@ using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
+using Microsoft.Win32.SafeHandles;
+using System.Runtime.InteropServices;
 
 namespace MopsBot.Module.Data
 {
-    class StreamerList
+    class StreamerList : IDisposable
     {
+        bool disposed = false;
+        SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
+
+
         public Dictionary<string, Session.TwitchTracker> streamers;
 
         public StreamerList()
@@ -118,5 +124,28 @@ namespace MopsBot.Module.Data
             writeList();
             return Task.CompletedTask;
         }
+
+        public void Dispose()
+        { 
+            Dispose(true);
+            GC.SuppressFinalize(this);           
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposed)
+                return; 
+      
+            if (disposing) {
+                handle.Dispose();
+                // Free any other managed objects here.
+                //
+            }
+      
+            streamers = new Dictionary<string, Session.TwitchTracker>();
+            disposed = true;
+        }
+
+
     }
 }

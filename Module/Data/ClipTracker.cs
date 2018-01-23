@@ -7,11 +7,16 @@ using System.Linq;
 using System.IO;
 using Discord.WebSocket;
 using Newtonsoft.Json;
+using System.Runtime.InteropServices;
+using Microsoft.Win32.SafeHandles;
 
 namespace MopsBot.Module.Data
 {
-    public class ClipTracker
+    public class ClipTracker : IDisposable
     {
+        bool disposed = false;
+        SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
+        
         Dictionary<string, List<ulong>> tracklist;
         public DateTime lastcheck;
         private System.Threading.Timer checkForChange;
@@ -141,6 +146,29 @@ namespace MopsBot.Module.Data
                 Console.WriteLine(e.Message);
                 return new List<dynamic>();
             }
+
+                        
         }
+        public void Dispose()
+        { 
+            Dispose(true);
+            GC.SuppressFinalize(this);           
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposed)
+                return; 
+      
+            if (disposing) {
+                handle.Dispose();
+                // Free any other managed objects here.
+                //
+            }
+      
+            tracklist = new Dictionary<string, List<ulong>>();
+            disposed = true;
+        }
+
     }
 }

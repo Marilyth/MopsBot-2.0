@@ -5,11 +5,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Tweetinvi;
+using System.Runtime.InteropServices;
+using Microsoft.Win32.SafeHandles;
 
 namespace MopsBot.Module.Data
 {
-    class TwitterList
+    class TwitterList : IDisposable
     {
+        bool disposed = false;
+        SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
         public Dictionary<string, Session.TwitterTracker> twitters;
 
         public TwitterList()
@@ -55,6 +59,27 @@ namespace MopsBot.Module.Data
                 }
             }
             write.Dispose();
+        }
+
+        public void Dispose()
+        { 
+            Dispose(true);
+            GC.SuppressFinalize(this);           
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposed)
+                return; 
+      
+            if (disposing) {
+                handle.Dispose();
+                // Free any other managed objects here.
+                //
+            }
+      
+            twitters = new Dictionary<string, Session.TwitterTracker>();
+            disposed = true;
         }
     }
 }

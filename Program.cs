@@ -39,6 +39,7 @@ namespace MopsBot
 
             client.Log += Client_Log;
             client.Ready += onClientReady;
+            client.Disconnected += onClientDC;
 
             var map = new ServiceCollection().AddSingleton(client).AddSingleton(new AudioService());
             var provider = map.BuildServiceProvider();
@@ -66,6 +67,11 @@ namespace MopsBot
         private async Task onClientReady()
         {
             await Task.Run(() => StaticBase.initTracking());
+        }
+
+        private async Task onClientDC(Exception e)
+        {
+            await Task.Run(() => StaticBase.disconnected());
         }
     }
 }

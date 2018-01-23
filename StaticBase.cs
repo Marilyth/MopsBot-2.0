@@ -27,6 +27,8 @@ namespace MopsBot
         public static Module.Data.TwitterList twitterTracks;
         public static Module.Data.OverwatchList OverwatchTracks;
         
+        public static bool init = false;
+
         public static void initTracking()
         {
             streamTracks = new Module.Data.StreamerList();
@@ -34,6 +36,17 @@ namespace MopsBot
             ClipTracker = new Module.Data.ClipTracker();
             OverwatchTracks = new Module.Data.OverwatchList();
             //osuTracker = new Module.Data.OsuTracker();        
+
+            init = true;
+        }
+
+        public static void disconnected(){
+            if(init){
+                streamTracks.Dispose();
+                twitterTracks.Dispose();
+                ClipTracker.Dispose();
+                OverwatchTracks.Dispose();
+            }
         }
 
         public static List<IGuildUser> getMentionedUsers(CommandContext Context)
