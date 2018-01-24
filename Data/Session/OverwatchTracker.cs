@@ -207,7 +207,7 @@ namespace MopsBot.Data.Session
             if(difference[sortedList[0].Key] > 0)
                 return Tuple.Create(sortedList[0].Key, leaderboard);
 
-            return Tuple.Create("CannotFetchArcade", "");
+            return Tuple.Create("CannotFetchArcade", "CannotFetchArcade");
         }
 
         public void Dispose()
