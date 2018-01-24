@@ -73,7 +73,7 @@ namespace MopsBot.Data.Session
         /// <returns>An OStatsResult representing the fetched JSON as an object</returns>
         private OStatsResult overwatchInformation()
         {
-            string query = Information.readURL($"https://owapi.net/api/v3/u/{name}/blob");
+            string query = MopsBot.Module.Information.readURL($"https://owapi.net/api/v3/u/{name}/blob");
 
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {

@@ -102,7 +102,7 @@ namespace MopsBot.Data.Session
 
         private TwitchResult streamerInformation()
         {
-            string query = Information.readURL($"https://api.twitch.tv/kraken/streams/{name}?client_id={Program.twitchId}");
+            string query = MopsBot.Module.Information.readURL($"https://api.twitch.tv/kraken/streams/{name}?client_id={Program.twitchId}");
 
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {

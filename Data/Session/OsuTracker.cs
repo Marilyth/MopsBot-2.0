@@ -48,7 +48,7 @@ namespace MopsBot.Data
                         
                         if (OUser.pp + 0.5 <= double.Parse(userInformation["pp_raw"].ToString(), CultureInfo.InvariantCulture))
                         {
-                            string query = Information.readURL($"https://osu.ppy.sh/api/get_user_recent?u={OUser.ident}&{OUser.mainMode}&limit=10&k=8ad11f6daf7b439f96eee1c256d474cd9925d4d8");
+                            string query = MopsBot.Module.Information.readURL($"https://osu.ppy.sh/api/get_user_recent?u={OUser.ident}&{OUser.mainMode}&limit=10&k=8ad11f6daf7b439f96eee1c256d474cd9925d4d8");
 
                             dynamic recentScores = JsonConvert.DeserializeObject(query);
 
@@ -61,12 +61,12 @@ namespace MopsBot.Data
                             }
 
                             string beatmap_ID = recentScores["beatmap_id"];
-                            query = Information.readURL($@"https://osu.ppy.sh/api/get_scores?b={beatmap_ID}&{OUser.mainMode}&u={OUser.username}&limit=1&k=8ad11f6daf7b439f96eee1c256d474cd9925d4d8");
+                            query = MopsBot.Module.Information.readURL($@"https://osu.ppy.sh/api/get_scores?b={beatmap_ID}&{OUser.mainMode}&u={OUser.username}&limit=1&k=8ad11f6daf7b439f96eee1c256d474cd9925d4d8");
 
                             dynamic ppInformation = JsonConvert.DeserializeObject(query);
                             ppInformation = ppInformation[0];
 
-                            query = Information.readURL($@"https://osu.ppy.sh/api/get_beatmaps?b={beatmap_ID}&{OUser.mainMode}&a=1&k=8ad11f6daf7b439f96eee1c256d474cd9925d4d8");                       
+                            query = MopsBot.Module.Information.readURL($@"https://osu.ppy.sh/api/get_beatmaps?b={beatmap_ID}&{OUser.mainMode}&a=1&k=8ad11f6daf7b439f96eee1c256d474cd9925d4d8");                       
 
                             dynamic beatmapInformation = JsonConvert.DeserializeObject(query);
                             beatmapInformation = beatmapInformation[0];
@@ -185,7 +185,7 @@ namespace MopsBot.Data
 
         public static dynamic userStats(string id, string mode)
         {
-            string query = Information.readURL($"https://osu.ppy.sh/api/get_user?u={id}&{mode}&k=8ad11f6daf7b439f96eee1c256d474cd9925d4d8");
+            string query = MopsBot.Module.Information.readURL($"https://osu.ppy.sh/api/get_user?u={id}&{mode}&k=8ad11f6daf7b439f96eee1c256d474cd9925d4d8");
             query = query.Remove(0, 1);
             query = query.Remove(query.Length - 1, 1);
 
@@ -194,7 +194,7 @@ namespace MopsBot.Data
 
         public static dynamic userStats(string id)
         {
-            string query = Information.readURL($"https://osu.ppy.sh/api/get_user?u={id}&k=8ad11f6daf7b439f96eee1c256d474cd9925d4d8");
+            string query = MopsBot.Module.Information.readURL($"https://osu.ppy.sh/api/get_user?u={id}&k=8ad11f6daf7b439f96eee1c256d474cd9925d4d8");
             query = query.Remove(0, 1);
             query = query.Remove(query.Length - 1, 1);
 
