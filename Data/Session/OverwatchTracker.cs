@@ -198,7 +198,7 @@ namespace MopsBot.Data.Session
             var sortedList = (from entry in difference orderby entry.Value descending select entry).ToList();
             string leaderboard = "";
             for(int i = 0; i < 5; i++){
-                if(sortedList[i].Value > 0)
+                if(sortedList[i].Value > 0.005)
                     leaderboard += $"{sortedList[i].Key}: {Math.Round(New[sortedList[i].Key], 2)}hrs (+{Math.Round(sortedList[i].Value, 2)})\n";
                 else
                     break;
