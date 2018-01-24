@@ -110,7 +110,7 @@ namespace MopsBot.Data.Session.APIResults
                 {"Mercy", mercy},
                 {"Moira", moira},
                 {"Symmetra", symmetra},
-                {"Zenytta", zenyatta}
+                {"Zenyatta", zenyatta}
             };
         }
     }
@@ -178,7 +178,7 @@ namespace MopsBot.Data.Session.APIResults
                 {"Mercy", mercy},
                 {"Moira", moira},
                 {"Symmetra", symmetra},
-                {"Zenytta", zenyatta}
+                {"Zenyatta", zenyatta}
             };
         }
     }
