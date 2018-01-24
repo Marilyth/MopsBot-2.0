@@ -189,12 +189,15 @@ namespace MopsBot.Data.Session.APIResults
         public GamePlaytime quickplay { get; set; }
         public Dictionary<string, double> merge(){
             var mergedDictionary = quickplay.heroesToDict();
+            
+            if(competitive != null){
             var toMerge = competitive.heroesToDict();
 
             foreach(string key in toMerge.Keys)
                 mergedDictionary[key] += toMerge[key];
-
+            }
             return mergedDictionary;
+            
         }
     }
 

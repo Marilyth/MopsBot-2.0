@@ -20,7 +20,7 @@ namespace MopsBot.Data.Session
     {
         bool disposed = false;
         SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
-        
+
         private System.Threading.Timer checkForChange;
         public string name;
         public HashSet<ulong> ChannelIds;
@@ -143,10 +143,8 @@ namespace MopsBot.Data.Session
         {
             Dictionary<string, string> changedStats = new Dictionary<string, string>();
 
-            OverallStats compNew = newStats.getNotNull().stats.competitive.overall_stats;
-            OverallStats compOld = oldStats.getNotNull().stats.competitive.overall_stats;
-            OverallStats quickNew = newStats.getNotNull().stats.quickplay.overall_stats;
-            OverallStats quickOld = oldStats.getNotNull().stats.quickplay.overall_stats;
+            OverallStats quickNew = newStats.eu.stats.quickplay.overall_stats;
+            OverallStats quickOld = oldStats.eu.stats.quickplay.overall_stats;
 
             if (quickNew.level * (quickNew.prestige + 1) > quickOld.level * (quickOld.prestige + 1))
             {
@@ -160,17 +158,23 @@ namespace MopsBot.Data.Session
                                 $" (+{quickNew.wins - quickOld.wins})");
             }
 
-            if (compNew.comprank != compOld.comprank)
+            if (oldStats.eu.stats.competitive != null)
             {
-                int difference = compNew.comprank - compOld.comprank;
-                changedStats.Add("Comp Rank", compNew.comprank.ToString() +
-                                $" ({(difference > 0 ? "+" : "-") + difference})");
-            }
+                OverallStats compNew = newStats.eu.stats.competitive.overall_stats;
+                OverallStats compOld = oldStats.eu.stats.competitive.overall_stats;
 
-            if (compNew.wins > compOld.wins)
-            {
-                changedStats.Add("Comp Games won", compNew.wins.ToString() +
-                                $" (+{compNew.wins - compOld.wins})");
+                if (compNew.comprank != compOld.comprank)
+                {
+                    int difference = compNew.comprank - compOld.comprank;
+                    changedStats.Add("Comp Rank", compNew.comprank.ToString() +
+                                    $" ({(difference > 0 ? "+" : "-") + difference})");
+                }
+
+                if (compNew.wins > compOld.wins)
+                {
+                    changedStats.Add("Comp Games won", compNew.wins.ToString() +
+                                    $" (+{compNew.wins - compOld.wins})");
+                }
             }
 
             return changedStats;
@@ -197,25 +201,28 @@ namespace MopsBot.Data.Session
                 if (difference[key] - difference[max] > 0)
                     max = key;
 
-            return Tuple.Create(max, $"{Math.Round(New[max], 2)}hrs (+{Math.Round(difference[max], 2)})");
+            if(difference[max] != 0)
+                return Tuple.Create(max, $"{Math.Round(New[max], 2)}hrs (+{Math.Round(difference[max], 2)})");
+                return Tuple.Create("Cannot fetch playtime for Arcade", "");
         }
 
         public void Dispose()
-        { 
+        {
             Dispose(true);
-            GC.SuppressFinalize(this);           
+            GC.SuppressFinalize(this);
         }
 
         protected virtual void Dispose(bool disposing)
         {
             if (disposed)
-                return; 
-      
-            if (disposing) {
+                return;
+
+            if (disposing)
+            {
                 handle.Dispose();
                 checkForChange.Dispose();
             }
-      
+
             disposed = true;
         }
     }
