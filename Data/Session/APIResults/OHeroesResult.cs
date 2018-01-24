@@ -196,8 +196,8 @@ namespace MopsBot.Data.Session.APIResults
             foreach(string key in toMerge.Keys)
                 mergedDictionary[key] += toMerge[key];
             }
-            return mergedDictionary;
-            
+
+            return mergedDictionary;           
         }
     }
 

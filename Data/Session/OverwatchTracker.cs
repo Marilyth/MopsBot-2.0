@@ -120,7 +120,7 @@ namespace MopsBot.Data.Session
                 e.AddInlineField(kvPair.Key, kvPair.Value);
             }
 
-            e.AddField("Sessions most played Hero", $"{mostPlayed.Item1}: {mostPlayed.Item2}");
+            e.AddField("Sessions most played Hero", $"{mostPlayed.Item2}");
             if (mostPlayed.Item1.Equals("Ana") || mostPlayed.Item1.Equals("Moira") || mostPlayed.Item1.Equals("Orisa") || mostPlayed.Item1.Equals("Doomfist") || mostPlayed.Item1.Equals("Sombra"))
                 e.ImageUrl = $"https://blzgdapipro-a.akamaihd.net/hero/{mostPlayed.Item1.ToLower()}/full-portrait.png";
             else
@@ -194,16 +194,20 @@ namespace MopsBot.Data.Session
 
             foreach (string key in Old.Keys)
                 difference.Add(key, New[key] - Old[key]);
+                
+            var sortedList = (from entry in difference orderby entry.Value descending select entry).ToList();
+            string leaderboard = "";
+            for(int i = 0; i < 5; i++){
+                if(sortedList[i].Value > 0)
+                    leaderboard += $"{sortedList[i].Key}: {Math.Round(New[sortedList[i].Key], 2)}hrs (+{Math.Round(sortedList[i].Value, 2)})\n";
+                else
+                    break;
+            }
 
-            string max = "McCree";
+            if(difference[sortedList[0].Key] > 0)
+                return Tuple.Create(sortedList[0].Key, leaderboard);
 
-            foreach (string key in difference.Keys)
-                if (difference[key] - difference[max] > 0)
-                    max = key;
-
-            if(difference[max] != 0)
-                return Tuple.Create(max, $"{Math.Round(New[max], 2)}hrs (+{Math.Round(difference[max], 2)})");
-                return Tuple.Create("Cannot fetch playtime for Arcade", "");
+            return Tuple.Create("CannotFetchArcade", "");
         }
 
         public void Dispose()
