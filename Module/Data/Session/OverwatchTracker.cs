@@ -8,11 +8,16 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using MopsBot.Module.Data.Session.APIResults;
+using System.Runtime.InteropServices;
+using Microsoft.Win32.SafeHandles;
 
 namespace MopsBot.Module.Data.Session
 {
-    public class OverwatchTracker
+    public class OverwatchTracker : IDisposable
     {
+         bool disposed = false;
+        SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
+        
         private System.Threading.Timer checkForChange;
         public string name;
         public HashSet<ulong> ChannelIds;
@@ -156,6 +161,26 @@ namespace MopsBot.Module.Data.Session
                         max = key;
 
                 return Tuple.Create(max, $"{Math.Round(New[max], 2)}hrs (+{Math.Round(difference[max], 2)})");
+        }
+
+        public void Dispose()
+        { 
+            Dispose(true);
+            GC.SuppressFinalize(this);           
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposed)
+                return; 
+      
+            if (disposing) {
+                handle.Dispose();
+                checkForChange.Dispose();
+                
+            }
+      
+            disposed = true;
         }
     }
 }

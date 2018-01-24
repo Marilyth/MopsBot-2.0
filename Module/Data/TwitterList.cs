@@ -74,8 +74,8 @@ namespace MopsBot.Module.Data
       
             if (disposing) {
                 handle.Dispose();
-                // Free any other managed objects here.
-                //
+                foreach(Session.TwitterTracker t in twitters.Values)
+                    t.Dispose();
             }
       
             twitters = new Dictionary<string, Session.TwitterTracker>();
