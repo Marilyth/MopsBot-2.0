@@ -86,8 +86,8 @@ namespace MopsBot.Data
       
             if (disposing) {
                 handle.Dispose();
-                // Free any other managed objects here.
-                //
+                foreach (Session.OverwatchTracker t in owPlayers.Values)
+                    t.Dispose();
             }
       
             owPlayers = new Dictionary<string, Session.OverwatchTracker>();

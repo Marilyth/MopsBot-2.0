@@ -166,8 +166,7 @@ namespace MopsBot.Data
       
             if (disposing) {
                 handle.Dispose();
-                // Free any other managed objects here.
-                //
+                checkForChange.Dispose();
             }
       
             tracklist = new Dictionary<string, List<ulong>>();

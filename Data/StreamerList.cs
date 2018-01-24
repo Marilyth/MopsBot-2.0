@@ -171,8 +171,8 @@ namespace MopsBot.Data
       
             if (disposing) {
                 handle.Dispose();
-                // Free any other managed objects here.
-                //
+                foreach(Session.TwitchTracker t in streamers.Values)
+                    t.Dispose();
             }
       
             streamers = new Dictionary<string, Session.TwitchTracker>();

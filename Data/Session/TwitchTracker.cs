@@ -8,11 +8,16 @@ using Newtonsoft.Json;
 using MopsBot.Data.Session.APIResults;
 using OxyPlot;
 using System.IO;
+using System.Runtime.InteropServices;
+using Microsoft.Win32.SafeHandles;
 
 namespace MopsBot.Data.Session
 {
-    public class TwitchTracker
+    public class TwitchTracker : IDisposable
     {
+         bool disposed = false;
+        SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
+        
         public event EventHandler StreamerWentOnline;
         public event EventHandler StreamerWentOffline;
         public event EventHandler StreamerGameChanged;
@@ -294,6 +299,25 @@ namespace MopsBot.Data.Session
         {
             if (StreamerStatusChanged != null)
                 await StreamerStatusChanged(this);
+        }
+
+        public void Dispose()
+        { 
+            Dispose(true);
+            GC.SuppressFinalize(this);           
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposed)
+                return; 
+      
+            if (disposing) {
+                handle.Dispose();
+                checkForChange.Dispose();
+            }
+      
+            disposed = true;
         }
     }
 }
