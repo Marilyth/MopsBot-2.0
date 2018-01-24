@@ -15,6 +15,13 @@ public class AudioService
 {
     private readonly ConcurrentDictionary<ulong, IAudioClient> ConnectedChannels = new ConcurrentDictionary<ulong, IAudioClient>();
     private List<string> urlQueue = new List<string>();
+
+    /// <summary>
+    /// Joins an Audio Channel
+    /// </summary>
+    /// <param name="guild">The Guild the channel is located in</param>
+    /// <param name="target">The channel to join</param>
+    /// <returns>An async task that can be awaited</returns>
     public async Task JoinAudio(IGuild guild, IVoiceChannel target)
     {
         IAudioClient client;
@@ -35,6 +42,11 @@ public class AudioService
 }
     }
 
+    /// <summary>
+    /// Leaves an Audio Channel
+    /// </summary>
+    /// <param name="guild">The Guild to leave the Channel in</param>
+    /// <returns>An async task that can be awaited</returns>
     public async Task LeaveAudio(IGuild guild)
     {
         IAudioClient client;
@@ -45,6 +57,13 @@ public class AudioService
         }
     }
     
+    /// <summary>
+    /// Main job is to send an Audio Stream to the Voice Channel
+    /// </summary>
+    /// <param name="guild">The Guild whose Voice Channel it should send the Stream into</param>
+    /// <param name="channel">The Channel in which to notify when the song changes etc</param>
+    /// <param name="url">The url or song name to stream</param>
+    /// <returns>An async task that can be awaited</returns>
     public async Task SendAudioAsync(IGuild guild, IMessageChannel channel, string url)
     {
         IAudioClient client;
@@ -75,6 +94,11 @@ public class AudioService
         }
     }
 
+    /// <summary>
+    /// Creates an audio stream to send
+    /// </summary>
+    /// <param name="url">The url or song name</param>
+    /// <returns>A Process which fetches the audio stream</returns>
     private Process CreateStream(string url)
     {
         if(url.ToLower().Contains("playlist")){
@@ -106,7 +130,10 @@ public class AudioService
         });
     }
 
-    
+    /// <summary>
+    /// Downloads the url as .mp3 to stream it
+    /// </summary>
+    /// <param name="url">The url or song name</param>
     private void DownloadURL(string url)
     {
         var prc = new Process();
@@ -120,6 +147,11 @@ public class AudioService
         prc.WaitForExit();
     }
 
+    /// <summary>
+    /// Fetches all youtube-links corresponding to a playlist
+    /// </summary>
+    /// <param name="url">The playlist url</param>
+    /// <returns>A string representing all youtube links of the playlist</returns>
     private string playlistURLs(string url)
     {
         var prc = new Process();
@@ -133,7 +165,11 @@ public class AudioService
         return prc.StandardOutput.ReadToEndAsync().Result.Replace("\n", "");
     }
     
-
+    /// <summary>
+    /// Fetches the title of the specified Video/Song/Stream
+    /// </summary>
+    /// <param name="url">The url or song name</param>
+    /// <returns></returns>
     public static string VideoTitle(string url)
     {
         var prc = new Process();
@@ -147,6 +183,9 @@ public class AudioService
         return prc.StandardOutput.ReadToEndAsync().Result.Replace("\n", "");
     }
 
+    /// <summary>
+    /// Deletes all .mp3 files after streaming them
+    /// </summary>
     private void DeleteFiles()
     {
         var dir = new DirectoryInfo("data//");

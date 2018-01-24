@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MopsBot.Module.Data.Individual
+namespace MopsBot.Data.Individual
 {
-    class Treasure
+    public class Treasure
     {
         public Items drop;
         public int gold;

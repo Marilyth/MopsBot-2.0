@@ -7,7 +7,11 @@ using System.Linq;
 using System.IO;
 using Discord.WebSocket;
 
-namespace MopsBot.Module.Data{
+namespace MopsBot.Data{
+    /// <summary>
+    /// Class to handle special Date Events, like Gamescom or something like that
+    /// (Unfinished)
+    /// </summary>
     public class MeetUps
     {
         public List<MeetUp> upcoming;

@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace MopsBot
 {
-    class Program
+    public class Program
     {
         public static void Main(string[] args) =>
             new Program().Start().GetAwaiter().GetResult();

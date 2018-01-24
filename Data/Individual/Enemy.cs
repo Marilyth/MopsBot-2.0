@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MopsBot.Module.Data.Individual
+namespace MopsBot.Data.Individual
 {
-    class Enemy
+    public class Enemy
     {
         private List<Items> DropList;
         public string name;

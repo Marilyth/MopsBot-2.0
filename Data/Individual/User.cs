@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 
-namespace MopsBot.Module.Data.Individual
+namespace MopsBot.Data.Individual
 {
-    class User
+    public class User
     {
         public int Score, Experience, punched, hugged, kissed;
         public List<Items> equipment;

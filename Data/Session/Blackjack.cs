@@ -6,9 +6,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MopsBot.Module.Data.Session
+namespace MopsBot.Data.Session
 {
-    class Blackjack
+    public class Blackjack
     {
         public List<Blackjack_User> players;
         private List<Card> cards;
@@ -227,7 +227,7 @@ namespace MopsBot.Module.Data.Session
         }
     }
 
-    class Blackjack_User
+    public class Blackjack_User
     {
         public IUser player;
         public bool done, dealer, skipped;
@@ -290,7 +290,7 @@ namespace MopsBot.Module.Data.Session
         }
     }
 
-    class Card
+    public class Card
     {
         public Suit Suit { get; set; }
         public Face Face { get; set; }

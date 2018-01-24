@@ -9,9 +9,9 @@ using System.Text;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace MopsBot.Module.Data
+namespace MopsBot.Data
 {
-    class OsuTracker
+    public class OsuTracker
     {
         public List<osuUser> osuUsers = new List<osuUser>();
         private System.Threading.Timer checkForChange;
@@ -155,7 +155,7 @@ namespace MopsBot.Module.Data
 }
     }
 
-    class osuUser
+    public class osuUser
     {
         public string username, ident, mainMode;
         public double accuracy, pp;

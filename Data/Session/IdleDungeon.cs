@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Discord;
 
-namespace MopsBot.Module.Data.Session
+namespace MopsBot.Data.Session
 {
-    class IdleDungeon
+    public class IdleDungeon
     {
         public Discord.IUserMessage updateMessage;
         public Random ran;

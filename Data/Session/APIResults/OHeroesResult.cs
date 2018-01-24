@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace MopsBot.Module.Data.Session.APIResults
+namespace MopsBot.Data.Session.APIResults
 {
     public class GeneralStats
     {

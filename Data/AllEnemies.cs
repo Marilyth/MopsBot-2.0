@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MopsBot.Module.Data
+namespace MopsBot.Data
 {
-    class AllEnemies
+    public class AllEnemies
     {
         public Dictionary<string, int> enemyLevel = new Dictionary<string, int>();
         public Random ran = new Random();
