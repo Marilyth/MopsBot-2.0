@@ -33,23 +33,25 @@ namespace MopsBot
         /// Initialises the Twitch, Twitter and Overwatch trackers
         /// </summary>
         public static void initTracking()
-        {
-            streamTracks = new Data.StreamerList();
-            twitterTracks = new Data.TwitterList();
-            ClipTracker = new Data.ClipTracker();
-            OverwatchTracks = new Data.OverwatchList();
-            //osuTracker = new Data.OsuTracker();        
+        {   if(!init){
+                streamTracks = new Data.StreamerList();
+                twitterTracks = new Data.TwitterList();
+                ClipTracker = new Data.ClipTracker();
+                OverwatchTracks = new Data.OverwatchList();
+                //osuTracker = new Data.OsuTracker();        
 
-            init = true;
+                init = true;
+            }
         }
 
         public static void disconnected(){
+            /*
             if(init){
                 streamTracks.Dispose();
                 twitterTracks.Dispose();
                 ClipTracker.Dispose();
                 OverwatchTracks.Dispose();
-            }
+            }*/
         }
 
         /// <summary>
