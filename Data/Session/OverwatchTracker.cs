@@ -146,9 +146,9 @@ namespace MopsBot.Data.Session
             OverallStats quickNew = newStats.eu.stats.quickplay.overall_stats;
             OverallStats quickOld = oldStats.eu.stats.quickplay.overall_stats;
 
-            if (quickNew.level * (quickNew.prestige + 1) > quickOld.level * (quickOld.prestige + 1))
+            if ((quickNew.level + (quickNew.prestige * 100)) > (quickOld.level + (quickOld.prestige * 100)))
             {
-                changedStats.Add("Level", quickNew.level.ToString() +
+                changedStats.Add("Level", (quickNew.level + (quickNew.prestige * 100)).ToString() +
                                 $" (+{(quickNew.level + (quickNew.prestige * 100)) - (quickOld.level + (quickOld.prestige * 100))})");
             }
 
