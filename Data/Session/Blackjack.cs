@@ -6,17 +6,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MopsBot.Module.Data.Session
+namespace MopsBot.Data.Session
 {
-    class Blackjack
+    public class Blackjack
     {
         public List<Blackjack_User> players;
         private List<Card> cards;
+        public IUserMessage toEdit;
         public bool active;
 
         public Blackjack(IUser pDealer)
         {
-            active = true;
+            active = false;
             players = new List<Blackjack_User>();
             players.Add(new Blackjack_User(pDealer, true));
             fillDeck();
@@ -24,6 +25,19 @@ namespace MopsBot.Module.Data.Session
             
             drawCard(players[0].player, false);
             drawCard(players[0].player, false);
+        }
+
+        public void start()
+        {
+            active = true;
+            editMessage(showCards() + "\n\n" + endRound());
+        }
+
+        public void editMessage(string newMessage)
+        {
+            toEdit.ModifyAsync(x => {
+                        x.Content = newMessage;
+                    });
         }
 
         private void fillDeck()
@@ -59,7 +73,7 @@ namespace MopsBot.Module.Data.Session
             }
         }
 
-        public string drawCard(IUser pUser, bool show)
+        public void drawCard(IUser pUser, bool show)
         {
             string output = "";
 
@@ -75,13 +89,12 @@ namespace MopsBot.Module.Data.Session
                 }
                 cards.RemoveAt(0);
             }
-            if(show)
-                output += endRound();
 
-            return output;
+            if(show)
+                editMessage(output + endRound());
         }
 
-        public string skipRound(IUser pUser)
+        public void skipRound(IUser pUser)
         {
             string output = "";
 
@@ -90,10 +103,10 @@ namespace MopsBot.Module.Data.Session
 
             output += endRound();
 
-            return output;
+            editMessage(output);
         }
 
-        public string userJoin(IUser pUser, int bet)
+        public void userJoin(IUser pUser, int bet)
         {
             string output = "";
 
@@ -110,7 +123,7 @@ namespace MopsBot.Module.Data.Session
             else
                 output += "You are already at the table. Duh.";
 
-            return output;
+            editMessage(output);
         }
 
         public string showCards()
@@ -163,7 +176,7 @@ namespace MopsBot.Module.Data.Session
 
         public string endRound()
         {
-            string output = "\n\n";
+            string output = "\n";
             bool done = true;
             bool result = true;
 
@@ -208,13 +221,13 @@ namespace MopsBot.Module.Data.Session
             }
 
             else
-                output += $"\n{players.Find(x => x.done == false).player.Username}, what about you?";
+                output += $"{players.Find(x => x.done == false).player.Username}, what about you?";
 
             return output;
         }
     }
 
-    class Blackjack_User
+    public class Blackjack_User
     {
         public IUser player;
         public bool done, dealer, skipped;
@@ -277,7 +290,7 @@ namespace MopsBot.Module.Data.Session
         }
     }
 
-    class Card
+    public class Card
     {
         public Suit Suit { get; set; }
         public Face Face { get; set; }

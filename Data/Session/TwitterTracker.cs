@@ -9,11 +9,16 @@ using Tweetinvi.Models;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using System.Runtime.InteropServices;
+using Microsoft.Win32.SafeHandles;
 
-namespace MopsBot.Module.Data.Session
+namespace MopsBot.Data.Session
 {
-    public class TwitterTracker
+    public class TwitterTracker : IDisposable
     {
+        bool disposed = false;
+        SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
+        
         private System.Threading.Timer checkForChange;
         public string name;
         private IUserIdentifier ident;
@@ -36,20 +41,23 @@ namespace MopsBot.Module.Data.Session
             Tweetinvi.Parameters.IUserTimelineParameters parameters = Timeline.CreateUserTimelineParameter();
             if(lastMessage != 0) parameters.SinceId = lastMessage;
             parameters.MaximumNumberOfTweetsToRetrieve = 5;
-
-            ITweet[] newTweets = Timeline.GetUserTimeline(name, parameters).Reverse().ToArray();
-
-            if(newTweets.Length != 0){
+            try{
+                ITweet[] newTweets = Timeline.GetUserTimeline(name, parameters).Reverse().ToArray();
+            
+                if(newTweets.Length != 0){
                  lastMessage = newTweets[newTweets.Length -1].Id;
                  StaticBase.twitterTracks.writeList();
-            }
+                }
             
-            foreach(ITweet newTweet in newTweets){
-                sendTwitterNotification(newTweet);
-                System.Threading.Thread.Sleep(5000);
+                foreach(ITweet newTweet in newTweets){
+                    sendTwitterNotification(newTweet);
+                    System.Threading.Thread.Sleep(5000);
+                }
+            }catch{
+                return;
             }
         }
-
+    
         private void sendTwitterNotification(ITweet tweet)
         {
             EmbedBuilder e = new EmbedBuilder();
@@ -70,6 +78,9 @@ namespace MopsBot.Module.Data.Session
             e.Author = author;
 
             e.ThumbnailUrl = tweet.CreatedBy.ProfileImageUrl;
+            foreach(Tweetinvi.Models.Entities.IMediaEntity cur in tweet.Media)
+                if(cur.MediaType.Equals("photo")) 
+                    e.ImageUrl = cur.MediaURL;
 
             e.Description = tweet.FullText;
 
@@ -77,6 +88,25 @@ namespace MopsBot.Module.Data.Session
             {
                 ((SocketTextChannel)Program.client.GetChannel(channel)).SendMessageAsync("~ Tweet Tweet ~", false, e);
             }
+        }
+
+        public void Dispose()
+        { 
+            Dispose(true);
+            GC.SuppressFinalize(this);           
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposed)
+                return; 
+      
+            if (disposing) {
+                handle.Dispose();
+                checkForChange.Dispose();
+            }
+      
+            disposed = true;
         }
     }
 }

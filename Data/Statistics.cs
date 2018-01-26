@@ -5,13 +5,19 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MopsBot.Module.Data
+namespace MopsBot.Data
 {
-    class Statistics
+    /// <summary>
+    /// A class that keeps track of how many characters have been recieved each day
+    /// </summary>
+    public class Statistics
     {
         public List<Day> days = new List<Day>();
         public DateTime today = DateTime.Today;
 
+        /// <summary>
+        /// Initialises Statistics, by reading from a text file containing Date and Characters Count and adding them to a List
+        /// </summary>
         public Statistics()
         {
             
@@ -28,6 +34,10 @@ namespace MopsBot.Module.Data
             read.Dispose();
         }
 
+        /// <summary>
+        /// Adds the "increase" parameter to todays value
+        /// </summary>
+        /// <param name="increase">Integer repesenting how many characters have been recieved</param>
         public void addValue(int increase)
         {
             today = DateTime.Today;
@@ -40,6 +50,9 @@ namespace MopsBot.Module.Data
             saveData();
         }
 
+        /// <summary>
+        /// Writes all days and values into a text file
+        /// </summary>
         private void saveData()
         {
             StreamWriter write = new StreamWriter(new FileStream("data//statistics.txt", FileMode.Create));
@@ -53,6 +66,11 @@ namespace MopsBot.Module.Data
             
         }
 
+        /// <summary>
+        /// Creates an ASCII chart presenting the past "count" days and their values
+        /// </summary>
+        /// <param name="count">Integer, representing how many days should be shown</param>
+        /// <returns></returns>
         public string drawDiagram(int count)
         {
             days = days.OrderByDescending(x => x.date).ToList();
@@ -81,7 +99,10 @@ namespace MopsBot.Module.Data
         }
     }
 
-    class Day
+    /// <summary>
+    /// Class representing a single Day for the Statistics
+    /// </summary>
+    public class Day
     {
         public DateTime date;
         public int value;

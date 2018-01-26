@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MopsBot.Module.Data.Individual
+namespace MopsBot.Data.Individual
 {
-    class Enemy
+    public class Enemy
     {
         private List<Items> DropList;
         public string name;
@@ -53,6 +53,11 @@ namespace MopsBot.Module.Data.Individual
                     HP = 17;
                     dmg = 3;
                     exp = 3500;
+                    break;
+                case "The Wall":
+                    HP = 10000;
+                    dmg = 10000;
+                    exp = 2;
                     break;
             }
             curHP = HP;

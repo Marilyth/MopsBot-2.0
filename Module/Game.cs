@@ -15,12 +15,16 @@ namespace MopsBot.Module
         {
             [Command("start")]
             [Summary("Crawl through a dungeon")]
-            public async Task start(int lenghtInMinutes)
+            public async Task start(uint lengthInMinutes)
             {
-                Discord.IUserMessage updateMessage = await Context.Channel.SendMessageAsync("Generating dungeon.");
+                if(lengthInMinutes > 0){
+                    Discord.IUserMessage updateMessage = await Context.Channel.SendMessageAsync("Generating dungeon.");
 
-                Data.Session.IdleDungeon test = new Data.Session.IdleDungeon(updateMessage, Context.User.Id, lenghtInMinutes);
-                StaticBase.dungeonCrawler.Add(test);
+                    Data.Session.IdleDungeon test = new Data.Session.IdleDungeon(updateMessage, Context.User.Id, (int)lengthInMinutes);
+                    StaticBase.dungeonCrawler.Add(test);
+                }
+                else
+                    await ReplyAsync("Fuck you.");
             }
 
             [Command("buy")]
@@ -60,36 +64,44 @@ namespace MopsBot.Module
                 if (StaticBase.blackjack == null || !StaticBase.blackjack.active)
                 {
                     StaticBase.blackjack = new Data.Session.Blackjack(Context.Client.CurrentUser);
-                    await ReplyAsync("Table set up. Woof");
+                    StaticBase.blackjack.toEdit = await ReplyAsync("Table set up. Woof");
                 }
+
                 if (betAmount <= StaticBase.people.users[Context.User.Id].Score && betAmount > 0)
-                    await ReplyAsync(StaticBase.blackjack.userJoin(Context.User, betAmount));
+                    StaticBase.blackjack.userJoin(Context.User, betAmount);
+
                 else
                     await ReplyAsync("You can't bet that much.");
             }
 
             [Command("start")]
             [Summary("Starts the game of Blackjack")]
-            public async Task start()
+            public Task start()
             {
                 if(!StaticBase.blackjack.active)
-                    await ReplyAsync(StaticBase.blackjack.showCards() + "\n\n" + StaticBase.blackjack.endRound());
+                    StaticBase.blackjack.start();
+
+                return Task.CompletedTask;
             }
 
             [Command("hit")]
             [Summary("You get another card")]
-            public async Task hit()
+            public Task hit()
             {
                 if(StaticBase.blackjack.active)
-                    await ReplyAsync(StaticBase.blackjack.drawCard(Context.User, true));
+                    StaticBase.blackjack.drawCard(Context.User, true);
+
+                return Task.CompletedTask;
             }
 
             [Command("skip")]
             [Summary("You skip the round")]
-            public async Task skip()
+            public Task skip()
             {
                 if(StaticBase.blackjack.active)
-                    await ReplyAsync(StaticBase.blackjack.skipRound(Context.User));
+                    StaticBase.blackjack.skipRound(Context.User);
+
+                return Task.CompletedTask;
             }
         }
     }

@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Discord;
 
-namespace MopsBot.Module.Data.Session
+namespace MopsBot.Data.Session
 {
-    class IdleDungeon
+    public class IdleDungeon
     {
         public Discord.IUserMessage updateMessage;
         public Random ran;
@@ -101,7 +101,7 @@ namespace MopsBot.Module.Data.Session
         {
             string status = "";
 
-            for(int i = 1; i < (double)(time.ElapsedMilliseconds/60000)/(double)(length/10); i++)
+            for(int i = 1; i < (time.ElapsedMilliseconds/60000.0)/(length/10.0); i++)
             {
                 status += "-";
             }

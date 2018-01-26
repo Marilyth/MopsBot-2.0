@@ -16,6 +16,12 @@ namespace MopsBot
         private CommandService commands;
         private DiscordSocketClient client;
         private IServiceProvider _provider;
+
+        /// <summary>
+        /// Add command/module Service and create Events
+        /// </summary>
+        /// <param name="provider">The Service Provider</param>
+        /// <returns>A Task that can be awaited</returns>
         public async Task Install(IServiceProvider provider)
         {
             // Create Command Service, inject it into Dependency Map
@@ -32,6 +38,12 @@ namespace MopsBot
             client.MessageReceived += Client_MessageReceived;
         }
 
+        /// <summary>
+        /// Manages polls and experience gain whenever a message is recieved
+        /// Also keeps track of how many characters have been sent each day
+        /// </summary>
+        /// <param name="arg">The recieved message</param>
+        /// <returns>A Task that can be awaited</returns>
         private async Task Client_MessageReceived(SocketMessage arg)
         {
             //Poll
@@ -54,6 +66,11 @@ namespace MopsBot
             }
         }
 
+        /// <summary>
+        /// Greets User when he joins a Guild
+        /// </summary>
+        /// <param name="User">The User who joined</param>
+        /// <returns>A Task that can be awaited</returns>
         private async Task Client_UserJoined(SocketGuildUser User)
         {
             //PhunkRoyalServer Begruessung
@@ -64,6 +81,11 @@ namespace MopsBot
                 $" rechten wenden, die Dich alsbald zum Mitglied ernennen.\n\nHave a very mopsig day\nDein heimlicher Verehrer Mops");
         }
 
+        /// <summary>
+        /// Checks if message is a command, and executes it
+        /// </summary>
+        /// <param name="parameterMessage">The message to check</param>
+        /// <returns>A Task that can be awaited</returns>
         public async Task HandleCommand(SocketMessage parameterMessage)
         {
             // Don't handle the command if it is a system message
@@ -93,7 +115,12 @@ namespace MopsBot
                 await message.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}");
         }
 
-        public Task getCommands(SocketMessage msg)
+        /// <summary>
+        /// Creates help message as well as command information, and sends it
+        /// </summary>
+        /// <param name="msg">The message recieved</param>
+        /// <returns>A Task that can be awaited</returns>
+        public async Task getCommands(SocketMessage msg)
         {
             string output = "";
 
@@ -158,9 +185,7 @@ namespace MopsBot
                 }
             }
 
-            msg.Channel.SendMessageAsync(output);
-
-            return Task.CompletedTask;
+            await msg.Channel.SendMessageAsync(output);
         }
     }
 }

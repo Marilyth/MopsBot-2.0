@@ -6,9 +6,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MopsBot.Module.Data.Session
+namespace MopsBot.Data.Session
 {
-    class Poll
+    public class Poll
     {
         public string question;
         public string[] answers;

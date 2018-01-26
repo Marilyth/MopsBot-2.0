@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 
-namespace MopsBot.Module.Data.Individual
+namespace MopsBot.Data.Individual
 {
-    class User
+    public class User
     {
         public int Score, Experience, punched, hugged, kissed;
         public List<Items> equipment;
@@ -32,30 +32,30 @@ namespace MopsBot.Module.Data.Individual
             Score = userScore;
         }
 
-        private delegate double del(int i);
-        private del levelCalc = x => (200*(x*x));
+        private delegate int del(int i);
+        private del levelCalc = x => (200 * (x * x));
 
         public int calcLevel()
         {
             int i = 0;
-            while(Experience >= levelCalc(i))
+            while (Experience >= levelCalc(i))
             {
                 i++;
             }
-            return (i-1);
+            return (i - 1);
         }
-
+        
         public string calcNextLevel()
         {
             int Level = calcLevel();
             double expCurrentHold = Experience - levelCalc(Level);
             string output = "", TempOutput = "";
             double diffExperience = levelCalc(Level + 1) - levelCalc(Level);
-            for (int i = 0; i < Math.Floor(expCurrentHold/(diffExperience/10)); i++)
+            for (int i = 0; i < Math.Floor(expCurrentHold / (diffExperience / 10)); i++)
             {
                 output += "■";
             }
-            for (int i = 0; i < 10-output.Length; i++)
+            for (int i = 0; i < 10 - output.Length; i++)
             {
                 TempOutput += "□";
             }
@@ -77,25 +77,31 @@ namespace MopsBot.Module.Data.Individual
         public void getEquipment(ulong ID)
         {
             equipment = new List<Items>();
-            
+
             StreamReader read = new StreamReader(new FileStream("data//dungeonItems.txt", FileMode.OpenOrCreate));
 
             string fs = "";
+            string fullFile = read.ReadToEnd();
+
+            if (!fullFile.Contains(ID.ToString()))
+            {
+                equipment.Add(new Items("Fists"));
+                saveEquipment(ID);
+            }
+
+            read.Dispose();
+            read = new StreamReader(new FileStream("data//dungeonItems.txt", FileMode.OpenOrCreate));
+
             while (!(fs = read.ReadLine()).Contains(ID.ToString()))
             {
-                
-            }
-            if(fs == null)
-                equipment.Add(new Items("fists"));
 
-            else
-            {
-                string[] items = fs.Split(':');
-                items = items.Skip(1).ToArray();
-
-                foreach(string item in items)
-                    equipment.Add(new Items(item));
             }
+
+            string[] items = fs.Split(':');
+            items = items.Skip(1).ToArray();
+
+            foreach (string item in items)
+                equipment.Add(new Items(item));
 
             read.Dispose();
         }
@@ -103,10 +109,18 @@ namespace MopsBot.Module.Data.Individual
         public void saveEquipment(ulong ID)
         {
             List<string> allLines = File.ReadAllLines("data//dungeonItems.txt").ToList();
+            bool hasLine = false;
 
-            for(int i = 0; i < allLines.Count; i++)
-                if(allLines[i].Contains(ID.ToString()))
-                    allLines[i] = $"{ID}:" + String.Join(":", equipment.Select(x => x.name));
+            for (int i = 0; i < allLines.Count; i++)
+                if (allLines[i].Contains(ID.ToString()))
+                {
+                    hasLine = true;
+                    allLines[i] = $"{ID}:{String.Join(":", equipment.Select(x => x.name))}";
+                }
+
+            if (!hasLine)
+                allLines.Add($"{ID}:{String.Join(":", equipment.Select(x => x.name))}");
+
 
             File.WriteAllLines("data//dungeonItems.txt", allLines);
         }

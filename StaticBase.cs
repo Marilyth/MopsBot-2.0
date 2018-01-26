@@ -10,30 +10,55 @@ using System.IO;
 
 namespace MopsBot
 {
-    class StaticBase
+    public class StaticBase
     {
-        public static Module.Data.Statistics stats = new Module.Data.Statistics();
-        public static Module.Data.UserScore people = new Module.Data.UserScore();
-        public static Module.Data.MeetUps meetups = new Module.Data.MeetUps();
+        public static Data.Statistics stats = new Data.Statistics();
+        public static Data.UserScore people = new Data.UserScore();
+        public static Data.MeetUps meetups = new Data.MeetUps();
         public static Random ran = new Random();
-        public static List<Module.Data.Session.IdleDungeon> dungeonCrawler = new List<Module.Data.Session.IdleDungeon>();
+        public static List<Data.Session.IdleDungeon> dungeonCrawler = new List<Data.Session.IdleDungeon>();
         public static List<ulong> BotManager = new List<ulong>();
         public static List<string> playlist = new List<string>();
-        public static Module.Data.Session.Poll poll;
-        public static Module.Data.Session.Blackjack blackjack;
-        public static Module.Data.ClipTracker ClipTracker;
-        public static Module.Data.OsuTracker osuTracker;
-        public static Module.Data.StreamerList streamTracks;
-        public static Module.Data.TwitterList twitterTracks;
+        public static Data.Session.Poll poll;
+        public static Data.Session.Blackjack blackjack;
+        public static Data.ClipTracker ClipTracker;
+        public static Data.OsuTracker osuTracker;
+        public static Data.StreamerList streamTracks;
+        public static Data.TwitterList twitterTracks;
+        public static Data.OverwatchList OverwatchTracks;
         
+        public static bool init = false;
+
+        /// <summary>
+        /// Initialises the Twitch, Twitter and Overwatch trackers
+        /// </summary>
         public static void initTracking()
-        {
-            streamTracks = new Module.Data.StreamerList();
-            twitterTracks = new Module.Data.TwitterList();
-            ClipTracker = new Module.Data.ClipTracker();
-            //osuTracker = new Module.Data.OsuTracker();        
+        {   if(!init){
+                streamTracks = new Data.StreamerList();
+                twitterTracks = new Data.TwitterList();
+                ClipTracker = new Data.ClipTracker();
+                OverwatchTracks = new Data.OverwatchList();
+                //osuTracker = new Data.OsuTracker();        
+
+                init = true;
+            }
         }
 
+        public static void disconnected(){
+            /*
+            if(init){
+                streamTracks.Dispose();
+                twitterTracks.Dispose();
+                ClipTracker.Dispose();
+                OverwatchTracks.Dispose();
+            }*/
+        }
+
+        /// <summary>
+        /// Finds out who was mentioned in a command
+        /// </summary>
+        /// <param name="Context">The CommandContext containing the command message </param>
+        /// <returns>A List of IGuildUsers representing the mentioned Users</returns>
         public static List<IGuildUser> getMentionedUsers(CommandContext Context)
         {
             List<IGuildUser> user = Context.Message.MentionedUserIds.Select(id => Context.Guild.GetUserAsync(id).Result).ToList();

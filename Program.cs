@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace MopsBot
 {
-    class Program
+    public class Program
     {
         public static void Main(string[] args) =>
             new Program().Start().GetAwaiter().GetResult();
@@ -20,25 +20,26 @@ namespace MopsBot
         public static string twitchId;
         public static string[] twitterAuth;
         private CommandHandler handler;
-        
+
         public async Task Start()
         {
             client = new DiscordSocketClient(new DiscordSocketConfig()
             {
                 LogLevel = LogSeverity.Info,
             });
-            
+
             StreamReader sr = new StreamReader(new FileStream("data//config.txt", FileMode.Open));
 
             var token = sr.ReadLine();
             twitchId = sr.ReadLine();
-            twitterAuth = sr.ReadLine().Split(",");     
-            
+            twitterAuth = sr.ReadLine().Split(",");
+
             await client.LoginAsync(TokenType.Bot, token);
             await client.StartAsync();
 
             client.Log += Client_Log;
             client.Ready += onClientReady;
+            client.Disconnected += onClientDC;
 
             var map = new ServiceCollection().AddSingleton(client).AddSingleton(new AudioService());
             var provider = map.BuildServiceProvider();
@@ -47,7 +48,8 @@ namespace MopsBot
             await handler.Install(provider);
 
             var ids = sr.ReadLine();
-            foreach(var id in ids.Split(':')){
+            foreach (var id in ids.Split(':'))
+            {
                 StaticBase.BotManager.Add(ulong.Parse(id));
             }
 
@@ -62,8 +64,14 @@ namespace MopsBot
             return Task.CompletedTask;
         }
 
-        private async Task onClientReady(){
+        private async Task onClientReady()
+        {
             await Task.Run(() => StaticBase.initTracking());
+        }
+
+        private async Task onClientDC(Exception e)
+        {
+            await Task.Run(() => StaticBase.disconnected());
         }
     }
 }
