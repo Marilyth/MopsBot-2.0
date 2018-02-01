@@ -167,7 +167,7 @@ namespace MopsBot.Data.Session
                 {
                     int difference = compNew.comprank - compOld.comprank;
                     changedStats.Add("Comp Rank", compNew.comprank.ToString() +
-                                    $" ({(difference > 0 ? "+" : "-") + difference})");
+                                    $" ({(difference > 0 ? "+" : "") + difference})");
                 }
 
                 if (compNew.wins > compOld.wins)
