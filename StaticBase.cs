@@ -19,6 +19,7 @@ namespace MopsBot
         public static List<Data.Session.IdleDungeon> dungeonCrawler = new List<Data.Session.IdleDungeon>();
         public static List<ulong> BotManager = new List<ulong>();
         public static List<string> playlist = new List<string>();
+        public static Dictionary<ulong, char> guildPrefix;
         public static Data.Session.Poll poll;
         public static Data.Session.Blackjack blackjack;
         public static Data.ClipTracker ClipTracker;
@@ -26,14 +27,16 @@ namespace MopsBot
         public static Data.StreamerList streamTracks;
         public static Data.TwitterList twitterTracks;
         public static Data.OverwatchList OverwatchTracks;
-        
+
         public static bool init = false;
 
         /// <summary>
         /// Initialises the Twitch, Twitter and Overwatch trackers
         /// </summary>
         public static void initTracking()
-        {   if(!init){
+        {
+            if (!init)
+            {
                 streamTracks = new Data.StreamerList();
                 twitterTracks = new Data.TwitterList();
                 ClipTracker = new Data.ClipTracker();
@@ -44,7 +47,20 @@ namespace MopsBot
             }
         }
 
-        public static void disconnected(){
+        public static void savePrefix()
+        {
+            using (StreamWriter write = new StreamWriter(new FileStream("mopsdata//guildprefixes.txt", FileMode.Create)))
+            {
+                write.AutoFlush = true;
+                foreach (var kv in guildPrefix)
+                {
+                    write.WriteLine($"{kv.Key}|{kv.Value}");
+                }
+            }
+        }
+
+        public static void disconnected()
+        {
             /*
             if(init){
                 streamTracks.Dispose();

@@ -8,6 +8,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Discord.Commands;
 using Discord.WebSocket;
 using MopsBot.Module.Preconditions;
+using System.IO;
+using static MopsBot.StaticBase;
 
 namespace MopsBot
 {
@@ -33,6 +35,8 @@ namespace MopsBot
 
             await commands.AddModulesAsync(Assembly.GetEntryAssembly());
 
+            guildPrefix = new Dictionary<ulong, char>();
+            fillPrefix();
             client.MessageReceived += HandleCommand;
             client.UserJoined += Client_UserJoined;
             client.MessageReceived += Client_MessageReceived;
@@ -94,14 +98,19 @@ namespace MopsBot
 
             // Mark where the prefix ends and the command begins
             int argPos = 0;
+
+            //Determines if the Guild has set a special prefix, if not, ! is used
+            var id = ((SocketGuildChannel)message.Channel).Guild.Id;
+            var prefix = guildPrefix.ContainsKey(id) ? guildPrefix[id] : '!';
+
             // Determine if the message has a valid prefix, adjust argPos 
-            if (!(message.HasMentionPrefix(client.CurrentUser, ref argPos) || message.HasCharPrefix('!', ref argPos) || message.HasCharPrefix('?', ref argPos))) return;
+            if (!(message.HasMentionPrefix(client.CurrentUser, ref argPos) || message.HasCharPrefix(prefix, ref argPos) || message.HasCharPrefix('?', ref argPos))) return;
             
             StaticBase.people.addStat(parameterMessage.Author.Id, 0, "experience");
 
             if (message.Content.Contains("help") || message.HasCharPrefix('?', ref argPos))
             {
-                await getCommands(parameterMessage);
+                await getCommands(parameterMessage, prefix);
                 return;
             }
 
@@ -120,7 +129,7 @@ namespace MopsBot
         /// </summary>
         /// <param name="msg">The message recieved</param>
         /// <returns>A Task that can be awaited</returns>
-        public async Task getCommands(SocketMessage msg)
+        public async Task getCommands(SocketMessage msg, char prefix)
         {
             string output = "";
 
@@ -167,7 +176,7 @@ namespace MopsBot
 
                     output += $"`{curCommand.Name}`:\n";
                     output += curCommand.Summary;
-                    output += $"\n\n**Usage**: `!{(curCommand.Module.IsSubmodule ? curCommand.Module.Name + " " + curCommand.Name : curCommand.Name)}";
+                    output += $"\n\n**Usage**: `{prefix}{(curCommand.Module.IsSubmodule ? curCommand.Module.Name + " " + curCommand.Name : curCommand.Name)}";
                     foreach (Discord.Commands.ParameterInfo p in curCommand.Parameters)
                     {
                         output += $" <{p.Name}>";
@@ -186,6 +195,31 @@ namespace MopsBot
             }
 
             await msg.Channel.SendMessageAsync(output);
+        }
+
+        private void fillPrefix(){
+            string s = "";
+                using (StreamReader read = new StreamReader(new FileStream("mopsdata//guildprefixes.txt", FileMode.OpenOrCreate)))
+                {
+                    while ((s = read.ReadLine()) != null)
+                    {
+                        try
+                        {
+                            var trackerInformation = s.Split('|');
+                            var prefix = trackerInformation[1][0];
+                            var guildID = ulong.Parse(trackerInformation[0]);
+                            if (!guildPrefix.ContainsKey(guildID))
+                            {
+                                guildPrefix.Add(guildID, prefix);
+                            }
+
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e.Message);
+                        }
+                    }
+                }
         }
     }
 }

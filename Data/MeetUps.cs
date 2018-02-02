@@ -20,7 +20,7 @@ namespace MopsBot.Data{
         {
             upcoming = new List<MeetUp>();
 
-            StreamReader sr = new StreamReader(new FileStream("data//meetups.txt", FileMode.OpenOrCreate));
+            StreamReader sr = new StreamReader(new FileStream("mopsdata//meetups.txt", FileMode.OpenOrCreate));
 
             string s = "";
 
@@ -81,7 +81,7 @@ namespace MopsBot.Data{
 
         public void writeData()
         {
-            StreamWriter sw = new StreamWriter(new FileStream("data//meetups.txt", FileMode.Create));
+            StreamWriter sw = new StreamWriter(new FileStream("mopsdata//meetups.txt", FileMode.Create));
 
             foreach(MeetUp cur in upcoming)
             {

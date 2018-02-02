@@ -20,7 +20,7 @@ namespace MopsBot.Data
         /// </summary>
         public UserScore()
         {
-            StreamReader read = new StreamReader(new FileStream("data//scores.txt", FileMode.OpenOrCreate));
+            StreamReader read = new StreamReader(new FileStream("mopsdata//scores.txt", FileMode.OpenOrCreate));
 
             string fs = "";
             while ((fs = read.ReadLine()) != null)
@@ -37,7 +37,7 @@ namespace MopsBot.Data
         /// </summary>
         public void writeScore()
         {
-            StreamWriter write = new StreamWriter(new FileStream("data//scores.txt", FileMode.Create));
+            StreamWriter write = new StreamWriter(new FileStream("mopsdata//scores.txt", FileMode.Create));
             write.AutoFlush = true;
             foreach (var that in users)
             {

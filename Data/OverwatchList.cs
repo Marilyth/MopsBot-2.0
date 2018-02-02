@@ -30,7 +30,7 @@ namespace MopsBot.Data
             Task.Run(() =>
             {
                 string s = "";
-                using (StreamReader read = new StreamReader(new FileStream("data//overwatchid.txt", FileMode.OpenOrCreate)))
+                using (StreamReader read = new StreamReader(new FileStream("mopsdata//overwatchid.txt", FileMode.OpenOrCreate)))
                 {
                     while ((s = read.ReadLine()) != null)
                     {
@@ -61,7 +61,7 @@ namespace MopsBot.Data
         /// </summary>
         public void writeList()
         {
-            StreamWriter write = new StreamWriter(new FileStream("data//overwatchid.txt", FileMode.Create));
+            StreamWriter write = new StreamWriter(new FileStream("mopsdata//overwatchid.txt", FileMode.Create));
             write.AutoFlush = true;
             foreach (Session.OverwatchTracker tr in owPlayers.Values)
             {

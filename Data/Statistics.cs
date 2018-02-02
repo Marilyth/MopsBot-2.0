@@ -21,7 +21,7 @@ namespace MopsBot.Data
         public Statistics()
         {
             
-            StreamReader read = new StreamReader(new FileStream("data//statistics.txt", FileMode.OpenOrCreate));
+            StreamReader read = new StreamReader(new FileStream("mopsdata//statistics.txt", FileMode.OpenOrCreate));
             
             string s = "";
 
@@ -55,7 +55,7 @@ namespace MopsBot.Data
         /// </summary>
         private void saveData()
         {
-            StreamWriter write = new StreamWriter(new FileStream("data//statistics.txt", FileMode.Create));
+            StreamWriter write = new StreamWriter(new FileStream("mopsdata//statistics.txt", FileMode.Create));
             write.AutoFlush=true;
             foreach(Day cur in days)
             {

@@ -78,7 +78,7 @@ namespace MopsBot.Data.Individual
         {
             equipment = new List<Items>();
 
-            StreamReader read = new StreamReader(new FileStream("data//dungeonItems.txt", FileMode.OpenOrCreate));
+            StreamReader read = new StreamReader(new FileStream("mopsdata//dungeonItems.txt", FileMode.OpenOrCreate));
 
             string fs = "";
             string fullFile = read.ReadToEnd();
@@ -90,7 +90,7 @@ namespace MopsBot.Data.Individual
             }
 
             read.Dispose();
-            read = new StreamReader(new FileStream("data//dungeonItems.txt", FileMode.OpenOrCreate));
+            read = new StreamReader(new FileStream("mopsdata//dungeonItems.txt", FileMode.OpenOrCreate));
 
             while (!(fs = read.ReadLine()).Contains(ID.ToString()))
             {
@@ -108,7 +108,7 @@ namespace MopsBot.Data.Individual
 
         public void saveEquipment(ulong ID)
         {
-            List<string> allLines = File.ReadAllLines("data//dungeonItems.txt").ToList();
+            List<string> allLines = File.ReadAllLines("mopsdata//dungeonItems.txt").ToList();
             bool hasLine = false;
 
             for (int i = 0; i < allLines.Count; i++)
@@ -122,7 +122,7 @@ namespace MopsBot.Data.Individual
                 allLines.Add($"{ID}:{String.Join(":", equipment.Select(x => x.name))}");
 
 
-            File.WriteAllLines("data//dungeonItems.txt", allLines);
+            File.WriteAllLines("mopsdata//dungeonItems.txt", allLines);
         }
     }
 }

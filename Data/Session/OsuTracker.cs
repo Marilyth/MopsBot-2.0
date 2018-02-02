@@ -17,7 +17,7 @@ namespace MopsBot.Data
         private System.Threading.Timer checkForChange;
         public OsuTracker()
         {
-            StreamReader read = new StreamReader(new FileStream("data//osuid.txt", FileMode.Open));
+            StreamReader read = new StreamReader(new FileStream("mopsdata//osuid.txt", FileMode.Open));
 
             string stats = "";
             while ((stats = read.ReadLine()) != null)
@@ -113,7 +113,7 @@ namespace MopsBot.Data
 
         public void writeInformation()
         {
-            StreamWriter write = new StreamWriter(new FileStream("data//osuid.txt", FileMode.Create));
+            StreamWriter write = new StreamWriter(new FileStream("mopsdata//osuid.txt", FileMode.Create));
 
             foreach(osuUser user in osuUsers)
             {

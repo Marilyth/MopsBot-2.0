@@ -31,7 +31,7 @@ namespace MopsBot.Data
         {
             streamers = new Dictionary<string, Session.TwitchTracker>();
 
-            using (StreamReader read = new StreamReader(new FileStream("data//streamers.txt", FileMode.OpenOrCreate)))
+            using (StreamReader read = new StreamReader(new FileStream("mopsdata//streamers.txt", FileMode.OpenOrCreate)))
             {
                 string s = "";
                 while ((s = read.ReadLine()) != null)
@@ -78,7 +78,7 @@ namespace MopsBot.Data
         /// </summary>
         public void writeList()
         {
-            using (StreamWriter write = new StreamWriter(new FileStream("data//streamers.txt", FileMode.Create)))
+            using (StreamWriter write = new StreamWriter(new FileStream("mopsdata//streamers.txt", FileMode.Create)))
                 foreach (Session.TwitchTracker tr in streamers.Values)
                 {
                     foreach (var channel in tr.ChannelIds)

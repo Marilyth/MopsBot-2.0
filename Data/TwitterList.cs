@@ -31,7 +31,7 @@ namespace MopsBot.Data
 
             twitters = new Dictionary<string, Session.TwitterTracker>();
 
-            StreamReader read = new StreamReader(new FileStream("data//twitters.txt", FileMode.OpenOrCreate));
+            StreamReader read = new StreamReader(new FileStream("mopsdata//twitters.txt", FileMode.OpenOrCreate));
 
             string s = "";
             while((s = read.ReadLine()) != null)
@@ -59,7 +59,7 @@ namespace MopsBot.Data
         /// </summary>
         public void writeList()
         {
-            StreamWriter write = new StreamWriter(new FileStream("data//twitters.txt", FileMode.Create));
+            StreamWriter write = new StreamWriter(new FileStream("mopsdata//twitters.txt", FileMode.Create));
             write.AutoFlush=true;
             foreach(Session.TwitterTracker tr in twitters.Values)
             {

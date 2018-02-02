@@ -30,14 +30,14 @@ namespace MopsBot.Data
             tracklist = new Dictionary<string, List<ulong>>();
             try
             {
-                StreamReader read = new StreamReader(new FileStream("data//lastcheck.txt", FileMode.OpenOrCreate));
+                StreamReader read = new StreamReader(new FileStream("mopsdata//lastcheck.txt", FileMode.OpenOrCreate));
                 lastcheck = DateTime.Parse(read.ReadLine());
                 read.Dispose();
             }
             catch
             {
                 lastcheck = DateTime.MinValue;
-                StreamWriter write = new StreamWriter(new FileStream("data//lastcheck.txt", FileMode.Create));
+                StreamWriter write = new StreamWriter(new FileStream("mopsdata//lastcheck.txt", FileMode.Create));
                 write.AutoFlush = true;
                 write.WriteLine(lastcheck.ToString());
                 write.Dispose();
@@ -73,7 +73,7 @@ namespace MopsBot.Data
 
         public void readList()
         {
-            StreamReader read = new StreamReader(new FileStream("data//clips.txt", FileMode.Open));
+            StreamReader read = new StreamReader(new FileStream("mopsdata//clips.txt", FileMode.Open));
             tracklist = new Dictionary<string, List<ulong>>();
             string s = "";
             while ((s = read.ReadLine()) != null)
@@ -91,7 +91,7 @@ namespace MopsBot.Data
 
         public void writeList()
         {
-            StreamWriter write = new StreamWriter(new FileStream("data//clips.txt", FileMode.Create));
+            StreamWriter write = new StreamWriter(new FileStream("mopsdata//clips.txt", FileMode.Create));
             foreach (var entry in tracklist)
             {
                 write.WriteLine($"{entry.Key}:{String.Join(":", entry.Value)}");
@@ -135,7 +135,7 @@ namespace MopsBot.Data
                     {
                         if (clips.Count > 0)
                             lastcheck = DateTime.Now;
-                        StreamWriter write = new StreamWriter(new FileStream("data//lastcheck.txt", FileMode.Create));
+                        StreamWriter write = new StreamWriter(new FileStream("mopsdata//lastcheck.txt", FileMode.Create));
                         write.AutoFlush = true;
                         write.WriteLine(lastcheck.ToString());
                         write.Dispose();

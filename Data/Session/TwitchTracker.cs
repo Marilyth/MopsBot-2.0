@@ -73,7 +73,7 @@ namespace MopsBot.Data.Session
                     isOnline = false;
                     columnCount = 0;
                     Console.Out.WriteLine($"{DateTime.Now} {name} went Offline");
-                    var file = new FileInfo($"data//plots//{name}.txt");
+                    var file = new FileInfo($"mopsdata//plots//{name}.txt");
                     file.Delete();
                     initViewerChart();
                     OnStreamerWentOffline();
@@ -149,7 +149,7 @@ namespace MopsBot.Data.Session
 
         private void updateChart()
         {
-            using (var stream = File.Create($"data//{name}plot.pdf"))
+            using (var stream = File.Create($"mopsdata//{name}plot.pdf"))
             {
                 var pdfExporter = new PdfExporter { Width = 800, Height = 400 };
                 pdfExporter.Export(viewerChart, stream);
@@ -157,13 +157,13 @@ namespace MopsBot.Data.Session
 
             var prc = new System.Diagnostics.Process();
             prc.StartInfo.FileName = "convert";
-            prc.StartInfo.Arguments = $"-set density 300 \"data//{name}plot.pdf\" \"//var//www//html//StreamCharts//{name}plot.png\"";
+            prc.StartInfo.Arguments = $"-set density 300 \"mopsdata//{name}plot.pdf\" \"//var//www//html//StreamCharts//{name}plot.png\"";
 
             prc.Start();
 
             prc.WaitForExit();
 
-            var dir = new DirectoryInfo("data//");
+            var dir = new DirectoryInfo("mopsdata//");
             var files = dir.GetFiles().Where(x => x.Extension.ToLower().Equals($"{name}.pdf"));
             foreach (var f in files)
                 f.Delete();
@@ -239,7 +239,7 @@ namespace MopsBot.Data.Session
 
         private void writePlotPoints()
         {
-            using (StreamWriter write = new StreamWriter(new FileStream($"data//plots//{name}.txt", FileMode.Create)))
+            using (StreamWriter write = new StreamWriter(new FileStream($"mopsdata//plots//{name}.txt", FileMode.Create)))
             {
                 write.WriteLine(columnCount);
                 foreach (var game in series.Keys)
@@ -259,7 +259,7 @@ namespace MopsBot.Data.Session
         private void readPlotPoints()
         {
 
-            using (StreamReader read = new StreamReader(new FileStream($"data//plots//{name}.txt", FileMode.OpenOrCreate)))
+            using (StreamReader read = new StreamReader(new FileStream($"mopsdata//plots//{name}.txt", FileMode.OpenOrCreate)))
             {
                 columnCount = int.Parse(read.ReadLine());
                 string currentGame = "";
