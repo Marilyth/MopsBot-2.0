@@ -197,9 +197,9 @@ namespace MopsBot.Module
         [Command("setPrefix")]
         [Summary("Changes the prefix of Mops in the current Guild")]
         [RequireUserPermission(ChannelPermission.ManageChannel)]
-        public async Task setPrefix(char prefix)
+        public async Task setPrefix([Remainder]string prefix)
         {
-            char oldPrefix;
+            string oldPrefix;
 
             if(guildPrefix.ContainsKey(Context.Guild.Id)){
                 oldPrefix = guildPrefix[Context.Guild.Id];
@@ -207,7 +207,7 @@ namespace MopsBot.Module
             }
 
             else{
-                oldPrefix = '!';
+                oldPrefix = "!";
                 guildPrefix.Add(Context.Guild.Id, prefix);
             }
 

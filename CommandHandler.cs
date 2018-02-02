@@ -35,7 +35,7 @@ namespace MopsBot
 
             await commands.AddModulesAsync(Assembly.GetEntryAssembly());
 
-            guildPrefix = new Dictionary<ulong, char>();
+            guildPrefix = new Dictionary<ulong, string>();
             fillPrefix();
             client.MessageReceived += HandleCommand;
             client.UserJoined += Client_UserJoined;
@@ -101,11 +101,11 @@ namespace MopsBot
 
             //Determines if the Guild has set a special prefix, if not, ! is used
             var id = ((SocketGuildChannel)message.Channel).Guild.Id;
-            var prefix = guildPrefix.ContainsKey(id) ? guildPrefix[id] : '!';
+            var prefix = guildPrefix.ContainsKey(id) ? guildPrefix[id] : "!";
 
             // Determine if the message has a valid prefix, adjust argPos 
-            if (!(message.HasMentionPrefix(client.CurrentUser, ref argPos) || message.HasCharPrefix(prefix, ref argPos) || message.HasCharPrefix('?', ref argPos))) return;
-            
+            if (!(message.HasMentionPrefix(client.CurrentUser, ref argPos) || message.HasStringPrefix(prefix, ref argPos) || message.HasCharPrefix('?', ref argPos))) return;
+
             StaticBase.people.addStat(parameterMessage.Author.Id, 0, "experience");
 
             if (message.Content.Contains("help") || message.HasCharPrefix('?', ref argPos))
@@ -113,6 +113,9 @@ namespace MopsBot
                 await getCommands(parameterMessage, prefix);
                 return;
             }
+
+            if (char.IsWhiteSpace(message.Content[argPos]))
+                argPos += 1;
 
             // Create a Command Context
             var context = new CommandContext(client, message);
@@ -129,7 +132,7 @@ namespace MopsBot
         /// </summary>
         /// <param name="msg">The message recieved</param>
         /// <returns>A Task that can be awaited</returns>
-        public async Task getCommands(SocketMessage msg, char prefix)
+        public async Task getCommands(SocketMessage msg, string prefix)
         {
             string output = "";
 
@@ -147,7 +150,7 @@ namespace MopsBot
                     {
                         output += $"\n**{module.Name}**: ";
                         foreach (var command in module.Commands)
-                            if(!command.Preconditions.OfType<HideAttribute>().Any())
+                            if (!command.Preconditions.OfType<HideAttribute>().Any())
                                 output += $"`{command.Name}` ";
                     }
                 }
@@ -166,7 +169,7 @@ namespace MopsBot
                     commandName = tempMessages[1];
                 }
 
-                if(commands.Commands.ToList().Exists(x => x.Name.ToLower().Equals(commandName)))
+                if (commands.Commands.ToList().Exists(x => x.Name.ToLower().Equals(commandName)))
                 {
                     CommandInfo curCommand = commands.Commands.First(x => x.Name.ToLower().Equals(commandName));
                     if (!moduleName.Equals(commandName))
@@ -197,29 +200,30 @@ namespace MopsBot
             await msg.Channel.SendMessageAsync(output);
         }
 
-        private void fillPrefix(){
+        private void fillPrefix()
+        {
             string s = "";
-                using (StreamReader read = new StreamReader(new FileStream("mopsdata//guildprefixes.txt", FileMode.OpenOrCreate)))
+            using (StreamReader read = new StreamReader(new FileStream("mopsdata//guildprefixes.txt", FileMode.OpenOrCreate)))
+            {
+                while ((s = read.ReadLine()) != null)
                 {
-                    while ((s = read.ReadLine()) != null)
+                    try
                     {
-                        try
+                        var trackerInformation = s.Split('|');
+                        var prefix = trackerInformation[1];
+                        var guildID = ulong.Parse(trackerInformation[0]);
+                        if (!guildPrefix.ContainsKey(guildID))
                         {
-                            var trackerInformation = s.Split('|');
-                            var prefix = trackerInformation[1][0];
-                            var guildID = ulong.Parse(trackerInformation[0]);
-                            if (!guildPrefix.ContainsKey(guildID))
-                            {
-                                guildPrefix.Add(guildID, prefix);
-                            }
+                            guildPrefix.Add(guildID, prefix);
+                        }
 
-                        }
-                        catch (Exception e)
-                        {
-                            Console.WriteLine(e.Message);
-                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.Message);
                     }
                 }
+            }
         }
     }
 }

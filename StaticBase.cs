@@ -19,7 +19,7 @@ namespace MopsBot
         public static List<Data.Session.IdleDungeon> dungeonCrawler = new List<Data.Session.IdleDungeon>();
         public static List<ulong> BotManager = new List<ulong>();
         public static List<string> playlist = new List<string>();
-        public static Dictionary<ulong, char> guildPrefix;
+        public static Dictionary<ulong, string> guildPrefix;
         public static Data.Session.Poll poll;
         public static Data.Session.Blackjack blackjack;
         public static Data.ClipTracker ClipTracker;
