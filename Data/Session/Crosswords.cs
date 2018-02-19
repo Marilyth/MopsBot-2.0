@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Discord;
 
 namespace MopsBot.Data.Session
 {
@@ -12,6 +13,7 @@ namespace MopsBot.Data.Session
         public List<Word> guessWords;
         public Tuple<direction, char>[,] mapset;
         private Random decider;
+        private IUserMessage toUpdate; 
 
 
         public Crosswords(string[] pWords)
@@ -43,6 +45,11 @@ namespace MopsBot.Data.Session
                 for (int j = 0; j < mapset.GetLength(1); j++)
                     mapset[i, j] = new Tuple<direction, char>(direction.UnAllocated, (char)decider.Next(65, 91));
             }
+        }
+
+        public void setToUpdate(IUserMessage message)
+        {
+            toUpdate = message;
         }
 
         private void allocate()
@@ -177,6 +184,10 @@ namespace MopsBot.Data.Session
             return true;
         }
 
+        public void updateMap(){
+            toUpdate.ModifyAsync(x => x.Content = drawMap());
+        }
+
         public string drawMap()
         {
             string[] lines = new string[mapset.GetLength(1) + 1];
@@ -189,32 +200,37 @@ namespace MopsBot.Data.Session
                 lines[i + 1] += i.ToString().Length < 2 ? $"{i}  " : $"{i} ";
                 for (int j = 0; j < mapset.GetLength(1); j++)
                 {
-                    lines[i + 1] += $"[{mapset[j, i].Item2}]";
+                    lines[i + 1] += mapset[j, i].Item1 == direction.Solved ? $" {mapset[j, i].Item2} " : $"[{mapset[j, i].Item2}]";
                 }
             }
 
-            return "```\n" +
+            return  "```css\n" +
                     $"{String.Join("\n", lines)}" +
-                    $"\n```\nA total of {guessWords.Count} words are being searched. Good luck :d";
+                    $"\n```\nA total of {guessWords.Count} words are still being searched. Good luck :d";
         }
 
         public string guessWord(ulong pUser, string guess)
         {
-            var points = guess.Split(' ', ':');
+            Word tempWord = guessWords.Where(x => x.word.ToLower().Equals(guess.ToLower())).FirstOrDefault();
 
-            Word tempWord = guessWords.Where(x => x.Xstart == int.Parse(points[0]) && x.Ystart == int.Parse(points[1]) && x.Xend == int.Parse(points[2]) && x.Yend == int.Parse(points[3])).ElementAt(0);
-
-            if (!string.IsNullOrEmpty(tempWord.word))
+            if (tempWord.word != null)
             {
+                if(tempWord.Xstart == tempWord.Xend)
+                    for(int i = tempWord.Ystart; i <= tempWord.Yend; i++)
+                        mapset[tempWord.Xstart, i] = new Tuple<direction, char>(direction.Solved, mapset[tempWord.Xstart, i].Item2);
+                else
+                    for(int i = tempWord.Xstart; i <= tempWord.Xend; i++)
+                        mapset[i, tempWord.Ystart] = new Tuple<direction, char>(direction.Solved, mapset[i, tempWord.Ystart].Item2);
+                
                 guessWords.Remove(tempWord);
+                updateMap();
                 StaticBase.people.addStat(pUser, (mapset.GetLength(0) - (tempWord.word.Length - 1)) * tempWord.word.Length, "Score");
                 return $"Yes! You found {tempWord.word} ({guessWords.Count} words remaining)\n+**[$ {(mapset.GetLength(0) - (tempWord.word.Length - 1)) * tempWord.word.Length} $]**";
             }
-
-            else return "Nope";
+            else return "Nope"; 
         }
 
-        public enum direction { Right, Down, DownRight, UpRight, UnAllocated };
+        public enum direction { Right, Down, DownRight, UpRight, UnAllocated, Solved };
     }
 
     public class Word

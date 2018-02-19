@@ -63,13 +63,14 @@ namespace MopsBot.Module
             {
                 string[] wordArray = words.Split(" ");
                 StaticBase.crosswords = new MopsBot.Data.Session.Crosswords(wordArray);
-                await ReplyAsync(StaticBase.crosswords.drawMap());
+                StaticBase.crosswords.setToUpdate(await ReplyAsync(StaticBase.crosswords.drawMap()));
             }
             [Command("guess")]
-            [Summary("Guess the location of a word, by providing the beginning and ending position.\nPosition: HorizontalValue:VerticalValue")]
-            public async Task guess(string beginning, string ending)
+            [Summary("Guess a word.")]
+            public async Task guess(string guess)
             {
-                await ReplyAsync(StaticBase.crosswords.guessWord(Context.User.Id, beginning + " " + ending));
+                StaticBase.crosswords.guessWord(Context.User.Id, guess);
+                await Context.Message.DeleteAsync();
             }
         }
         
