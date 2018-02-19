@@ -13,6 +13,7 @@ namespace MopsBot.Data.Session
         public Tuple<direction, char>[,] mapset;
         private Random decider;
 
+
         public Crosswords(string[] pWords)
         {
             decider = new Random();
@@ -146,10 +147,10 @@ namespace MopsBot.Data.Session
                 switch (dir)
                 {
                     case direction.Right:
-                        mapset[x + i, y] = new Tuple<direction, char>(dir, word[i]);
+                        mapset[x + i, y] = new Tuple<direction, char>(dir, char.ToUpper(word[i]));
                         break;
                     case direction.Down:
-                        mapset[x, y + i] = new Tuple<direction, char>(dir, word[i]);
+                        mapset[x, y + i] = new Tuple<direction, char>(dir, char.ToUpper(word[i]));
                         break;
                 }
             }
