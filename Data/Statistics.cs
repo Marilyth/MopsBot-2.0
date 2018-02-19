@@ -12,8 +12,8 @@ namespace MopsBot.Data
     /// </summary>
     public class Statistics
     {
-        public List<Day> days = new List<Day>();
-        public DateTime today = DateTime.Today;
+        public Dictionary<string, int> days = new Dictionary<string, int>();
+        public string today;
 
         /// <summary>
         /// Initialises Statistics, by reading from a text file containing Date and Characters Count and adding them to a List
@@ -28,7 +28,7 @@ namespace MopsBot.Data
             while ((s = read.ReadLine()) != null)
             {
                 string[] data = s.Split(':');
-                days.Add(new Day(data[0], int.Parse(data[1])));
+                days.Add(data[0], int.Parse(data[1]));
             }
             
             read.Dispose();
@@ -40,12 +40,12 @@ namespace MopsBot.Data
         /// <param name="increase">Integer repesenting how many characters have been recieved</param>
         public void addValue(int increase)
         {
-            today = DateTime.Today;
+            today = DateTime.Today.ToString("dd.MM.yyyy");
 
-            if (days.Exists(x => x.date.Equals(today)))
-                days.Find(x => x.date.Equals(today)).value += increase;
+            if (days.ContainsKey(today))
+                days[today] += increase;
 
-            else days.Add(new Day(today.ToString("dd/MM/yyyy"), increase));
+            else days.Add(today, increase);
 
             saveData();
         }
@@ -57,9 +57,9 @@ namespace MopsBot.Data
         {
             StreamWriter write = new StreamWriter(new FileStream("mopsdata//statistics.txt", FileMode.Create));
             write.AutoFlush=true;
-            foreach(Day cur in days)
+            foreach(string cur in days.Keys)
             {
-                write.WriteLine($"{cur.date.ToString("dd/MM/yyyy")}:{cur.value}");
+                write.WriteLine($"{cur}:{days[cur]}");
             }
 
             write.Dispose();
@@ -73,44 +73,25 @@ namespace MopsBot.Data
         /// <returns></returns>
         public string drawDiagram(int count)
         {
-            days = days.OrderByDescending(x => x.date).ToList();
-
-            List<Day> tempDays = days.Take(count).ToList();
-            tempDays = tempDays.OrderByDescending(x => x.value).ToList();
-
-            int maximum = tempDays[0].value;
+            int maximum = (from entry in days orderby entry.Value descending select entry).Take(1).ToArray()[0].Value;
+            var tempDays = (from entry in days orderby DateTime.ParseExact(entry.Key, "dd/MM/yyyy", null) descending select entry).Take(count).ToArray();
 
             string[] lines = new string[count];
 
             for(int i = 0; i < count; i++)
             {
-                lines[i] = $"{days[i].date.ToString("dd/MM/yyyy")}|";
-                double relPercent = days[i].value / ((double)maximum / 10);
+                lines[i] = $"{tempDays[i].Key}|";
+                double relPercent = tempDays[i].Value / ((double)maximum / 10);
                 for(int j = 0; j < relPercent; j++)
                 {
                     lines[i] += "■";
                 }
-                lines[i] += $" {days[i].value}";
+                lines[i] += $" {tempDays[i].Value}";
             }
 
             string output = "```coq\n" + string.Join("\n", lines) + "```";
 
             return output;
-        }
-    }
-
-    /// <summary>
-    /// Class representing a single Day for the Statistics
-    /// </summary>
-    public class Day
-    {
-        public DateTime date;
-        public int value;
-
-        public Day(string pDate, int pValue)
-        {
-            date = DateTime.ParseExact(pDate, "dd.MM.yyyy", System.Globalization.CultureInfo.InvariantCulture);
-            value = pValue;
         }
     }
 }
