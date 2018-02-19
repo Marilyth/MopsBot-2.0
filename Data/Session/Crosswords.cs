@@ -45,6 +45,7 @@ namespace MopsBot.Data.Session
                 for (int j = 0; j < mapset.GetLength(1); j++)
                     mapset[i, j] = new Tuple<direction, char>(direction.UnAllocated, (char)decider.Next(65, 91));
             }
+            guessWords = new List<Word>();
         }
 
         public void setToUpdate(IUserMessage message)
@@ -82,7 +83,7 @@ namespace MopsBot.Data.Session
                 {
                     errorCount++;
                     delayCount++;
-                    if(errorCount > mapset.GetLength(0) + words.Length * 4){
+                    if(errorCount > mapset.GetLength(0) * 50){
                         mapset = new Tuple<direction, char>[mapset.GetLength(0) + 4, mapset.GetLength(0) + 4];
                         fillField();
                         allocate();
@@ -100,7 +101,7 @@ namespace MopsBot.Data.Session
                                 }
 
                             else{
-                                if(x > 0)
+                                if(y > 0)
                                     y--;
                                 else{
                                     shift = false;
@@ -171,12 +172,12 @@ namespace MopsBot.Data.Session
                 {
                     case direction.Right:
                         if (!mapset[x + i, y].Item1.Equals(direction.UnAllocated)
-                            && mapset[x + i, y].Item2 != (word[i]))
+                            && mapset[x + i, y].Item2 != (char.ToUpper(word[i])))
                             return false;
                         break;
                     case direction.Down:
                         if (!mapset[x, y+i].Item1.Equals(direction.UnAllocated)
-                            && mapset[x, y+i].Item2 != (word[i]))
+                            && mapset[x, y+i].Item2 != (char.ToUpper(word[i])))
                             return false;
                         break;
                 }
