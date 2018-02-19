@@ -53,6 +53,25 @@ namespace MopsBot.Module
                 await ReplyAsync(output.Count() > 0 ? output : "There is nothing you could buy.");
             }
         }
+
+        [Group("salad")]
+        public class Salad : ModuleBase
+        {
+            [Command("create")]
+            [Summary("Creates a letter salad consisting of the parameter words.\nrandom to use Randomly generated english words.")]
+            public async Task start([Remainder] string words)
+            {
+                string[] wordArray = words.Split(" ");
+                StaticBase.crosswords = new MopsBot.Data.Session.Crosswords(wordArray);
+                await ReplyAsync(StaticBase.crosswords.drawMap());
+            }
+            [Command("guess")]
+            [Summary("Guess the location of a word, by providing the beginning and ending position.\nPosition: HorizontalValue:VerticalValue")]
+            public async Task guess(string beginning, string ending)
+            {
+                await ReplyAsync(StaticBase.crosswords.guessWord(Context.User.Id, beginning + " " + ending));
+            }
+        }
         
         [Group("Blackjack")]
         public class Blackjack : ModuleBase

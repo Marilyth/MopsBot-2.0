@@ -22,6 +22,7 @@ namespace MopsBot
         public static Dictionary<ulong, string> guildPrefix;
         public static Data.Session.Poll poll;
         public static Data.Session.Blackjack blackjack;
+        public static Data.Session.Crosswords crosswords;
         public static Data.ClipTracker ClipTracker;
         public static Data.OsuTracker osuTracker;
         public static Data.StreamerList streamTracks;
