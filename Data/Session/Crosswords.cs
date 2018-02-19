@@ -213,7 +213,7 @@ namespace MopsBot.Data.Session
         {
             Word tempWord = guessWords.Where(x => x.word.ToLower().Equals(guess.ToLower())).FirstOrDefault();
 
-            if (tempWord.word != null)
+            if (tempWord != null)
             {
                 if(tempWord.Xstart == tempWord.Xend)
                     for(int i = tempWord.Ystart; i <= tempWord.Yend; i++)
