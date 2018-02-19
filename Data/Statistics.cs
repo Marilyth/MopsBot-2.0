@@ -73,8 +73,8 @@ namespace MopsBot.Data
         /// <returns></returns>
         public string drawDiagram(int count)
         {
-            int maximum = (from entry in days orderby entry.Value descending select entry).Take(1).ToArray()[0].Value;
             var tempDays = (from entry in days orderby DateTime.ParseExact(entry.Key, "dd/MM/yyyy", null) descending select entry).Take(count).ToArray();
+            int maximum = (from entry in tempDays orderby entry.Value descending select entry).ToArray()[0].Value;
 
             string[] lines = new string[count];
 
