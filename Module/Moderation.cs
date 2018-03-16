@@ -136,6 +136,7 @@ namespace MopsBot.Module
             if (!streamTracks.streamers.ContainsKey(streamerName))
             {
                 streamTracks.streamers.Add(streamerName, new Data.Session.TwitchTracker(streamerName, Context.Channel.Id, notificationMessage, false));
+                TrackerHandle.addTracker(streamTracks.streamers.Last().Value);
             }
             else
                 streamTracks.streamers[streamerName].ChannelIds.Add(Context.Channel.Id, notificationMessage);
@@ -162,8 +163,10 @@ namespace MopsBot.Module
         [RequireUserPermission(ChannelPermission.ManageChannel)]
         public async Task trackStreamer(string twitterUser)
         {
-            if (!twitterTracks.twitters.ContainsKey(twitterUser))
+            if (!twitterTracks.twitters.ContainsKey(twitterUser)){
                 twitterTracks.twitters.Add(twitterUser, new Data.Session.TwitterTracker(twitterUser, 0));
+                TrackerHandle.addTracker(twitterTracks.twitters.Last().Value);
+            }
 
             twitterTracks.twitters[twitterUser].ChannelIds.Add(Context.Channel.Id);
             twitterTracks.writeList();
@@ -175,8 +178,10 @@ namespace MopsBot.Module
         [Summary("Keeps track of the specified Overwatch player, in the Channel you are calling this command right now.\nParameter: Username-Battletag")]
         public async Task trackOW(string owUser)
         {
-            if (!OverwatchTracks.owPlayers.ContainsKey(owUser))
+            if (!OverwatchTracks.owPlayers.ContainsKey(owUser)){
                 OverwatchTracks.owPlayers.Add(owUser, new Data.Session.OverwatchTracker(owUser));
+                TrackerHandle.addTracker(OverwatchTracks.owPlayers.Last().Value);
+            }
 
             OverwatchTracks.owPlayers[owUser].ChannelIds.Add(Context.Channel.Id);
             OverwatchTracks.writeList();
