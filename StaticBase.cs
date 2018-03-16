@@ -24,7 +24,7 @@ namespace MopsBot
         public static Data.Session.Blackjack blackjack;
         public static Data.Session.Crosswords crosswords;
         public static Data.ClipTracker ClipTracker;
-        public static Data.OsuTracker osuTracker;
+        //public static Data.OsuTracker osuTracker;
         public static Data.StreamerList streamTracks;
         public static Data.TwitterList twitterTracks;
         public static Data.OverwatchList OverwatchTracks;
