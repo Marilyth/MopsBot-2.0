@@ -135,7 +135,7 @@ namespace MopsBot.Module
         {
             if (!streamTracks.streamers.ContainsKey(streamerName))
             {
-                streamTracks.streamers.Add(streamerName, new Data.Session.TwitchTracker(streamerName, Context.Channel.Id, notificationMessage, false, "Nothing"));
+                streamTracks.streamers.Add(streamerName, new Data.Session.TwitchTracker(streamerName, Context.Channel.Id, notificationMessage, false));
             }
             else
                 streamTracks.streamers[streamerName].ChannelIds.Add(Context.Channel.Id, notificationMessage);

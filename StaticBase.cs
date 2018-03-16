@@ -28,6 +28,7 @@ namespace MopsBot
         public static Data.StreamerList streamTracks;
         public static Data.TwitterList twitterTracks;
         public static Data.OverwatchList OverwatchTracks;
+        public static Data.TrackerHandler TrackerHandle;
 
         public static bool init = false;
 
@@ -38,6 +39,7 @@ namespace MopsBot
         {
             if (!init)
             {
+                TrackerHandle = new Data.TrackerHandler();
                 streamTracks = new Data.StreamerList();
                 twitterTracks = new Data.TwitterList();
                 ClipTracker = new Data.ClipTracker();

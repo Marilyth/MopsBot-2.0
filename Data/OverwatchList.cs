@@ -41,6 +41,7 @@ namespace MopsBot.Data
                             if (!owPlayers.ContainsKey(trackerInformation[0]))
                             {
                                 owPlayers.Add(trackerInformation[0], new Session.OverwatchTracker(trackerInformation[0]));
+                                StaticBase.TrackerHandle.addTracker(owPlayers.Last().Value);
                             }
 
                             owPlayers[trackerInformation[0]].ChannelIds.Add(ulong.Parse(trackerInformation[1]));

@@ -13,16 +13,10 @@ using Microsoft.Win32.SafeHandles;
 
 namespace MopsBot.Data.Session
 {
-    public class TwitchTracker : IDisposable
+    public class TwitchTracker : ITracker
     {
          bool disposed = false;
         SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
-        
-        public event EventHandler StreamerWentOnline;
-        public event EventHandler StreamerWentOffline;
-        public event EventHandler StreamerGameChanged;
-        public event EventHandler StreamerStatusChanged;
-        public delegate Task EventHandler(TwitchTracker e);
         private System.Threading.Timer checkForChange;
         private PlotModel viewerChart;
         private Dictionary<string, List<OxyPlot.Series.LineSeries>> series;
@@ -33,7 +27,7 @@ namespace MopsBot.Data.Session
         public Dictionary<ulong, string> ChannelIds;
         public APIResults.TwitchResult streamerStatus;
 
-        public TwitchTracker(string streamerName, ulong pChannel, string notificationText, Boolean pIsOnline, string pGame)
+        public TwitchTracker(string streamerName, ulong pChannel, string notificationText, Boolean pIsOnline)
         {
             initViewerChart();
 
@@ -43,7 +37,7 @@ namespace MopsBot.Data.Session
             ChannelIds.Add(pChannel, notificationText);
             name = streamerName;
             isOnline = pIsOnline;
-            curGame = pGame;
+            curGame = streamerInformation().stream.game;
 
             if (isOnline) readPlotPoints();
 
@@ -52,7 +46,7 @@ namespace MopsBot.Data.Session
             checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false), StaticBase.ran.Next(6, 59) * 1000, 60000);
         }
 
-        private void CheckForChange_Elapsed(object stateinfo)
+        protected override void CheckForChange_Elapsed(object stateinfo)
         {
             try
             {
@@ -76,7 +70,9 @@ namespace MopsBot.Data.Session
                     var file = new FileInfo($"mopsdata//plots//{name}.txt");
                     file.Delete();
                     initViewerChart();
-                    OnStreamerWentOffline();
+
+                    foreach(ulong channel in ChannelIds.Keys)
+                        OnMinorChangeTracked(channel, $"{name} went Offline!");
                 }
                 else
                 {
@@ -84,8 +80,12 @@ namespace MopsBot.Data.Session
                     toUpdate = new Dictionary<ulong, IUserMessage>();
                     curGame = (streamerStatus.stream == null) ? "Nothing" : streamerStatus.stream.game;
                     gameChange();
-                    OnStreamerWentOnline();
+                    
+                    foreach(ulong channel in ChannelIds.Keys)
+                        OnMinorChangeTracked(channel, ChannelIds[channel]);
                 }
+
+                StaticBase.streamTracks.writeList();
             }
 
             if (isOnline)
@@ -97,10 +97,12 @@ namespace MopsBot.Data.Session
                     curGame = streamerStatus.stream.game;
                     gameChange();
                     series[curGame].Last().Points.Add(new DataPoint(columnCount, streamerStatus.stream.viewers));
-                    OnStreamerGameChanged();
+                    
+                    foreach(ulong channel in ChannelIds.Keys)
+                        OnMinorChangeTracked(channel, $"{name} switched games to **{curGame}**");
                 }
-
-                OnStreamerStatusChanged();
+                foreach(ulong channel in ChannelIds.Keys)
+                    OnMajorChangeTracked(channel, createEmbed());
                 updateChart();
             }
         }
@@ -277,37 +279,13 @@ namespace MopsBot.Data.Session
             }
         }
 
-        protected async virtual void OnStreamerGameChanged()
-        {
-            if (StreamerGameChanged != null)
-                await StreamerGameChanged(this);
-        }
-
-        protected async virtual void OnStreamerWentOnline()
-        {
-            if (StreamerWentOnline != null)
-                await StreamerWentOnline(this);
-        }
-
-        protected async virtual void OnStreamerWentOffline()
-        {
-            if (StreamerWentOffline != null)
-                await StreamerWentOffline(this);
-        }
-
-        protected async virtual void OnStreamerStatusChanged()
-        {
-            if (StreamerStatusChanged != null)
-                await StreamerStatusChanged(this);
-        }
-
-        public void Dispose()
+        public override void Dispose()
         { 
             Dispose(true);
             GC.SuppressFinalize(this);           
         }
 
-        protected virtual void Dispose(bool disposing)
+        protected override void Dispose(bool disposing)
         {
             if (disposed)
                 return; 

@@ -42,6 +42,7 @@ namespace MopsBot.Data
                     if (!twitters.ContainsKey(trackerInformation[0]))
                     {
                         twitters.Add(trackerInformation[0], new Session.TwitterTracker(trackerInformation[0], long.Parse(trackerInformation[2]))); 
+                        StaticBase.TrackerHandle.addTracker(twitters.Last().Value);
                     }
                    
                     twitters[trackerInformation[0]].ChannelIds.Add(ulong.Parse(trackerInformation[1]));

@@ -16,11 +16,10 @@ namespace MopsBot.Data.Session
     /// <summary>
     /// A tracker which keeps track of an Overwatch players stats
     /// </summary>
-    public class OverwatchTracker : IDisposable
+    public class OverwatchTracker : ITracker
     {
         bool disposed = false;
         SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
-
         private System.Threading.Timer checkForChange;
         public string name;
         public HashSet<ulong> ChannelIds;
@@ -43,7 +42,7 @@ namespace MopsBot.Data.Session
         /// Event for the Timer, to check for changed stats
         /// </summary>
         /// <param name="stateinfo"></param>
-        private void CheckForChange_Elapsed(object stateinfo)
+        protected override void CheckForChange_Elapsed(object stateinfo)
         {
             try
             {
@@ -61,7 +60,8 @@ namespace MopsBot.Data.Session
 
                 if (changedStats.Count != 0)
                 {
-                    sendNotification(newInformation, changedStats, getSessionMostPlayed(information.eu.heroes.playtime, newInformation.eu.heroes.playtime));
+                    foreach(ulong channel in ChannelIds)
+                        OnMajorChangeTracked(channel, sendNotification(newInformation, changedStats, getSessionMostPlayed(information.eu.heroes.playtime, newInformation.eu.heroes.playtime)));
                     information = newInformation;
                 }
             }
@@ -92,7 +92,7 @@ namespace MopsBot.Data.Session
         /// <param name="overwatchInformation">All fetched stats of the user </param>
         /// <param name="changedStats">All changed stats of the user, together with a string presenting them </param>
         /// <param name="mostPlayed">The most played Hero of the session, together with a string presenting them </param>
-        private async void sendNotification(OStatsResult overwatchInformation, Dictionary<string, string> changedStats, Tuple<string, string> mostPlayed)
+        private EmbedBuilder sendNotification(OStatsResult overwatchInformation, Dictionary<string, string> changedStats, Tuple<string, string> mostPlayed)
         {
             OverallStats stats = overwatchInformation.eu.stats.quickplay.overall_stats;
 
@@ -126,10 +126,7 @@ namespace MopsBot.Data.Session
             else
                 e.ImageUrl = $"https://blzgdapipro-a.akamaihd.net/media/thumbnail/{mostPlayed.Item1.ToLower()}-gameplay.jpg";
 
-            foreach (var channel in ChannelIds)
-            {
-                await ((SocketTextChannel)Program.client.GetChannel(channel)).SendMessageAsync("", false, e);
-            }
+            return e;
         }
 
         /// <summary>
@@ -210,13 +207,13 @@ namespace MopsBot.Data.Session
             return Tuple.Create("CannotFetchArcade", "CannotFetchArcade");
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
         }
 
-        protected virtual void Dispose(bool disposing)
+        protected override void Dispose(bool disposing)
         {
             if (disposed)
                 return;

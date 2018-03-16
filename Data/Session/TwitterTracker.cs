@@ -14,7 +14,7 @@ using Microsoft.Win32.SafeHandles;
 
 namespace MopsBot.Data.Session
 {
-    public class TwitterTracker : IDisposable
+    public class TwitterTracker : ITracker
     {
         bool disposed = false;
         SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
@@ -36,7 +36,7 @@ namespace MopsBot.Data.Session
             checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false), StaticBase.ran.Next(6,59)*1000, 300000);
         }
 
-        private void CheckForChange_Elapsed(object stateinfo)
+        protected override void CheckForChange_Elapsed(object stateinfo)
         {
             Tweetinvi.Parameters.IUserTimelineParameters parameters = Timeline.CreateUserTimelineParameter();
             if(lastMessage != 0) parameters.SinceId = lastMessage;
@@ -50,7 +50,9 @@ namespace MopsBot.Data.Session
                 }
             
                 foreach(ITweet newTweet in newTweets){
-                    sendTwitterNotification(newTweet);
+                    foreach(ulong channel in ChannelIds)
+                        OnMajorChangeTracked(channel, sendTwitterNotification(newTweet), "~Tweet Tweet~");
+                    
                     System.Threading.Thread.Sleep(5000);
                 }
             }catch{
@@ -58,7 +60,7 @@ namespace MopsBot.Data.Session
             }
         }
     
-        private void sendTwitterNotification(ITweet tweet)
+        private EmbedBuilder sendTwitterNotification(ITweet tweet)
         {
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0x6441A4);
@@ -84,19 +86,16 @@ namespace MopsBot.Data.Session
 
             e.Description = tweet.FullText;
 
-            foreach(var channel in ChannelIds)
-            {
-                ((SocketTextChannel)Program.client.GetChannel(channel)).SendMessageAsync("~ Tweet Tweet ~", false, e);
-            }
+            return e;
         }
 
-        public void Dispose()
+        public override void Dispose()
         { 
             Dispose(true);
             GC.SuppressFinalize(this);           
         }
 
-        protected virtual void Dispose(bool disposing)
+        protected override void Dispose(bool disposing)
         {
             if (disposed)
                 return; 
