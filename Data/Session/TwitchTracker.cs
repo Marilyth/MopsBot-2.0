@@ -84,8 +84,6 @@ namespace MopsBot.Data.Session
                     foreach(ulong channel in ChannelIds.Keys)
                         OnMinorChangeTracked(channel, ChannelIds[channel]);
                 }
-
-                StaticBase.streamTracks.writeList();
             }
 
             if (isOnline)
@@ -104,6 +102,7 @@ namespace MopsBot.Data.Session
                 foreach(ulong channel in ChannelIds.Keys)
                     OnMajorChangeTracked(channel, createEmbed());
                 updateChart();
+                StaticBase.streamTracks.writeList();
             }
         }
 
