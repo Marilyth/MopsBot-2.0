@@ -37,7 +37,10 @@ namespace MopsBot.Data.Session
             ChannelIds.Add(pChannel, notificationText);
             name = streamerName;
             isOnline = pIsOnline;
-            curGame = streamerInformation().stream.game;
+            curGame = "Nothing";
+            try{
+                curGame = streamerInformation().stream.game;
+            }catch(Exception e){}
 
             if (isOnline) readPlotPoints();
 
@@ -61,7 +64,10 @@ namespace MopsBot.Data.Session
                 }
             }
 
-            curGame = streamerInformation().stream.game;
+            curGame = "Nothing";
+            try{
+                curGame = streamerInformation().stream.game;
+            }catch(Exception e){}
 
             if(isOnline){
                 foreach(string message in initArray[3].Split(new char[]{'{','}',';'})){
