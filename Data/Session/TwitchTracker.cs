@@ -64,7 +64,7 @@ namespace MopsBot.Data.Session
             curGame = streamerInformation().stream.game;
 
             if(isOnline){
-                foreach(string message in initArray[2].Split(new char[]{'{','}',';'})){
+                foreach(string message in initArray[3].Split(new char[]{'{','}',';'})){
                     if(message != ""){
                         string[] messageInformation = message.Split("=");
                         var channel = Program.client.GetChannel(ulong.Parse(messageInformation[0]));
