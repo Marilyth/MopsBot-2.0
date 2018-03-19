@@ -127,7 +127,7 @@ namespace MopsBot.Module
 
             poll = null;
         }
-
+        
         [Command("trackStreamer")]
         [Summary("Keeps track of the specified Streamer, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
         [RequireUserPermission(ChannelPermission.ManageChannel)]

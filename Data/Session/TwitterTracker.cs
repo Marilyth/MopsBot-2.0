@@ -36,6 +36,21 @@ namespace MopsBot.Data.Session
             checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false), StaticBase.ran.Next(6,59)*1000, 300000);
         }
 
+        public TwitterTracker(string[] initArray)
+        {
+            ChannelIds = new HashSet<ulong>();
+
+            name = initArray[0];
+            lastMessage = long.Parse(initArray[1]);
+            foreach(string channel in initArray[2].Split(new char[]{'{','}',';'})){
+                if(channel != "")
+                    ChannelIds.Add(ulong.Parse(channel));
+            }
+            
+
+            checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false), StaticBase.ran.Next(6,59)*1000, 300000);
+        }
+
         protected override void CheckForChange_Elapsed(object stateinfo)
         {
             Tweetinvi.Parameters.IUserTimelineParameters parameters = Timeline.CreateUserTimelineParameter();
@@ -88,6 +103,16 @@ namespace MopsBot.Data.Session
 
             return e;
         }
+
+        public override string[] getInitArray(){
+            string[] informationArray = new string[2 + ChannelIds.Count];
+            informationArray[0] = name;
+            informationArray[1] = lastMessage.ToString();
+            informationArray[2] = "{" + string.Join(";", ChannelIds) + "}";
+
+            return informationArray;
+        }
+
 
         public override void Dispose()
         { 

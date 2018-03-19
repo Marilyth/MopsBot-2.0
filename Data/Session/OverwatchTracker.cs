@@ -38,6 +38,20 @@ namespace MopsBot.Data.Session
             Console.WriteLine(DateTime.Now + " OW Tracker started for " + name);
         }
 
+        public OverwatchTracker(string[] initArray)
+        {
+            ChannelIds = new HashSet<ulong>();
+            name = initArray[0];
+
+            foreach(string channel in initArray[1].Split(new char[]{'{','}',';'})){
+                if(channel != "")
+                    ChannelIds.Add(ulong.Parse(channel));
+            }
+
+            checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false), 0, 600000);
+            Console.WriteLine(DateTime.Now + " OW Tracker started for " + name);
+        }
+
         /// <summary>
         /// Event for the Timer, to check for changed stats
         /// </summary>
@@ -205,6 +219,14 @@ namespace MopsBot.Data.Session
                 return Tuple.Create(sortedList[0].Key, leaderboard);
 
             return Tuple.Create("CannotFetchArcade", "CannotFetchArcade");
+        }
+
+        public override string[] getInitArray(){
+            string[] informationArray = new string[2];
+            informationArray[0] = name;
+            informationArray[1] = "{" + string.Join(";", ChannelIds) + "}";
+
+            return informationArray;
         }
 
         public override void Dispose()

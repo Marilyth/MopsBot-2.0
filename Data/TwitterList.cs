@@ -37,8 +37,10 @@ namespace MopsBot.Data
             while((s = read.ReadLine()) != null)
             {
                 try{
-
                     var trackerInformation = s.Split('|');
+                    twitters.Add(trackerInformation[0], new Session.TwitterTracker(trackerInformation));
+                    StaticBase.TrackerHandle.addTracker(twitters.Last().Value);
+                    /*
                     if (!twitters.ContainsKey(trackerInformation[0]))
                     {
                         twitters.Add(trackerInformation[0], new Session.TwitterTracker(trackerInformation[0], long.Parse(trackerInformation[2]))); 
@@ -46,6 +48,7 @@ namespace MopsBot.Data
                     }
                    
                     twitters[trackerInformation[0]].ChannelIds.Add(ulong.Parse(trackerInformation[1]));
+                    */
 
                 }catch(Exception e){
                     Console.WriteLine(e.Message);
@@ -60,16 +63,11 @@ namespace MopsBot.Data
         /// </summary>
         public void writeList()
         {
-            StreamWriter write = new StreamWriter(new FileStream("mopsdata//twitters.txt", FileMode.Create));
-            write.AutoFlush=true;
-            foreach(Session.TwitterTracker tr in twitters.Values)
-            {
-                foreach(var channel in tr.ChannelIds)
+            using (StreamWriter write = new StreamWriter(new FileStream("mopsdata//twitters.txt", FileMode.Create)))
+                foreach(Session.TwitterTracker tt in twitters.Values)
                 {
-                    write.WriteLine($"{tr.name}|{channel}|{tr.lastMessage}");
+                    write.WriteLine(string.Join("|", tt.getInitArray()));
                 }
-            }
-            write.Dispose();
         }
 
         public void Dispose()

@@ -32,7 +32,7 @@ namespace MopsBot.Data.Session
             initViewerChart();
 
             Console.Out.WriteLine($"{DateTime.Now} Started Twitchtracker for {streamerName} w/ channel {pChannel}");
-            toUpdate = new Dictionary<ulong, IUserMessage>();
+            toUpdate = new Dictionary<ulong, Discord.IUserMessage>();
             ChannelIds = new Dictionary<ulong, string>();
             ChannelIds.Add(pChannel, notificationText);
             name = streamerName;
@@ -42,6 +42,42 @@ namespace MopsBot.Data.Session
             if (isOnline) readPlotPoints();
 
             else gameChange();
+
+            checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false), StaticBase.ran.Next(6, 59) * 1000, 60000);
+        }
+
+        public TwitchTracker(string[] initArray)
+        {
+            initViewerChart();
+            toUpdate = new Dictionary<ulong, Discord.IUserMessage>();
+            ChannelIds = new Dictionary<ulong, string>();
+
+            name = initArray[0];
+            isOnline = Boolean.Parse(initArray[1]);
+            foreach(string channel in initArray[2].Split(new char[]{'{','}',';'})){
+                if(channel != ""){
+                    string[] channelText = channel.Split("=");
+                    ChannelIds.Add(ulong.Parse(channelText[0]), channelText[1]);
+                }
+            }
+
+            curGame = streamerInformation().stream.game;
+
+            if(isOnline){
+                foreach(string message in initArray[2].Split(new char[]{'{','}',';'})){
+                    if(message != ""){
+                        string[] messageInformation = message.Split("=");
+                        var channel = Program.client.GetChannel(ulong.Parse(messageInformation[0]));
+                        var discordMessage = ((Discord.ITextChannel)channel).GetMessageAsync(ulong.Parse(messageInformation[1])).Result;
+                        toUpdate.Add(ulong.Parse(messageInformation[0]), (Discord.IUserMessage)discordMessage);
+                    }
+                }
+                readPlotPoints();
+            }
+
+            else gameChange();
+
+            Console.Out.WriteLine($"{DateTime.Now} Started Twitchtracker for {name} per array");
 
             checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false), StaticBase.ran.Next(6, 59) * 1000, 60000);
         }
@@ -77,7 +113,7 @@ namespace MopsBot.Data.Session
                 else
                 {
                     isOnline = true;
-                    toUpdate = new Dictionary<ulong, IUserMessage>();
+                    toUpdate = new Dictionary<ulong, Discord.IUserMessage>();
                     curGame = (streamerStatus.stream == null) ? "Nothing" : streamerStatus.stream.game;
                     gameChange();
                     
@@ -276,6 +312,16 @@ namespace MopsBot.Data.Session
                         series[currentGame].Last().Points.Add(new DataPoint(double.Parse(s.Split(":")[0]), double.Parse(s.Split(":")[1])));
                 }
             }
+        }
+
+        public override string[] getInitArray(){
+            string[] informationArray = new string[4];
+            informationArray[0] = name;
+            informationArray[1] = isOnline.ToString();
+            informationArray[2] = "{" + string.Join(";", ChannelIds.Select(x => x.Key + "=" + x.Value)) + "}";
+            informationArray[3] = "{" + string.Join(";", toUpdate.Select(x => x.Key + "=" + x.Value.Id)) + "}";
+
+            return informationArray;
         }
 
         public override void Dispose()

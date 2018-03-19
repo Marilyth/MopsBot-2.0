@@ -36,8 +36,10 @@ namespace MopsBot.Data
                     {
                         try
                         {
-
                             var trackerInformation = s.Split('|');
+                            owPlayers.Add(trackerInformation[0], new Session.OverwatchTracker(s.Split("|")));
+                            StaticBase.TrackerHandle.addTracker(owPlayers.Last().Value);
+                            /*
                             if (!owPlayers.ContainsKey(trackerInformation[0]))
                             {
                                 owPlayers.Add(trackerInformation[0], new Session.OverwatchTracker(trackerInformation[0]));
@@ -46,7 +48,7 @@ namespace MopsBot.Data
 
                             owPlayers[trackerInformation[0]].ChannelIds.Add(ulong.Parse(trackerInformation[1]));
                             System.Threading.Thread.Sleep(20000);
-
+                            */
                         }
                         catch (Exception e)
                         {
@@ -62,16 +64,11 @@ namespace MopsBot.Data
         /// </summary>
         public void writeList()
         {
-            StreamWriter write = new StreamWriter(new FileStream("mopsdata//overwatchid.txt", FileMode.Create));
-            write.AutoFlush = true;
-            foreach (Session.OverwatchTracker tr in owPlayers.Values)
-            {
-                foreach (var channel in tr.ChannelIds)
+            using (StreamWriter write = new StreamWriter(new FileStream("mopsdata//overwatchid.txt", FileMode.Create)))
+                foreach(Session.OverwatchTracker ot in owPlayers.Values)
                 {
-                    write.WriteLine($"{tr.name}|{channel}");
+                    write.WriteLine(string.Join("|", ot.getInitArray()));
                 }
-            }
-            write.Dispose();
         }
 
         public void Dispose()

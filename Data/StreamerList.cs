@@ -38,8 +38,10 @@ namespace MopsBot.Data
                 {
                     try
                     {
-                        Session.TwitchTracker streamer = null;
                         var trackerInformation = s.Split('|');
+                        streamers.Add(trackerInformation[0], new Session.TwitchTracker(trackerInformation));
+                        StaticBase.TrackerHandle.addTracker(streamers.Last().Value);
+                        /*
                         if (!streamers.ContainsKey(trackerInformation[0]))
                         {
                             streamer = new Session.TwitchTracker(trackerInformation[0], ulong.Parse(trackerInformation[1]), trackerInformation[2], Boolean.Parse(trackerInformation[3].ToLower()));
@@ -58,7 +60,7 @@ namespace MopsBot.Data
                             var channel = Program.client.GetChannel(ulong.Parse(trackerInformation[1]));
                             var message = ((Discord.ITextChannel)channel).GetMessageAsync(ulong.Parse(trackerInformation[4])).Result;
                             streamer.toUpdate.Add(ulong.Parse(trackerInformation[1]), (Discord.IUserMessage)message);
-                        }
+                        }*/
                     }
                     catch (Exception e)
                     {
@@ -76,13 +78,7 @@ namespace MopsBot.Data
             using (StreamWriter write = new StreamWriter(new FileStream("mopsdata//streamers.txt", FileMode.Create)))
                 foreach (Session.TwitchTracker tr in streamers.Values)
                 {
-                    foreach (var channel in tr.ChannelIds)
-                    {
-                        if (tr.toUpdate.ContainsKey(channel.Key))
-                            write.WriteLine($"{tr.name}|{channel.Key}|{channel.Value}|{tr.isOnline}|{tr.toUpdate[channel.Key].Id}");
-                        else
-                            write.WriteLine($"{tr.name}|{channel.Key}|{channel.Value}|{tr.isOnline}|0");
-                    }
+                    write.WriteLine(string.Join("|", tr.getInitArray()));
                 }
         }
 
