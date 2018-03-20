@@ -24,12 +24,9 @@ namespace MopsBot.Data.Session
         private IUserIdentifier ident;
         public long lastMessage;
         private Task<IEnumerable<ITweet>> fetchTweets;
-        public HashSet<ulong> ChannelIds;
-        
 
-        public TwitterTracker(string twitterName, long pLastMessage)
+        public TwitterTracker(string twitterName)
         {
-            lastMessage = pLastMessage;
             name = twitterName;
             ChannelIds = new HashSet<ulong>();
 

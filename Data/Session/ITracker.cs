@@ -19,7 +19,8 @@ namespace MopsBot.Data.Session
         public event MinorEventHandler OnMinorEventFired;
         public delegate Task MinorEventHandler(ulong channelID, ITracker self, string notificationText);
         public delegate Task MainEventHandler(ulong channelID, EmbedBuilder embed, ITracker self, string notificationText="");
-
+        public HashSet<ulong> ChannelIds;
+        
         protected abstract void CheckForChange_Elapsed(object stateinfo);
 
         protected async void OnMajorChangeTracked(ulong channelID, EmbedBuilder embed, string notificationText=""){

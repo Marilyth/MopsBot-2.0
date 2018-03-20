@@ -7,6 +7,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using MopsBot.Data;
+using MopsBot.Data.Session;
+using Tweetinvi;
 
 namespace MopsBot
 {
@@ -25,10 +28,9 @@ namespace MopsBot
         public static Data.Session.Crosswords crosswords;
         public static Data.ClipTracker ClipTracker;
         //public static Data.OsuTracker osuTracker;
-        public static Data.StreamerList streamTracks;
-        public static Data.TwitterList twitterTracks;
-        public static Data.OverwatchList OverwatchTracks;
-        public static Data.TrackerHandler TrackerHandle;
+        public static TrackerHandler<TwitchTracker> streamTracks;
+        public static TrackerHandler<TwitterTracker> twitterTracks;
+        public static TrackerHandler<OverwatchTracker> OverwatchTracks;
 
         public static bool init = false;
 
@@ -39,11 +41,14 @@ namespace MopsBot
         {
             if (!init)
             {
-                TrackerHandle = new Data.TrackerHandler();
-                streamTracks = new Data.StreamerList();
-                twitterTracks = new Data.TwitterList();
+                Auth.SetUserCredentials(Program.twitterAuth[0], Program.twitterAuth[1], Program.twitterAuth[2], Program.twitterAuth[3]);
+                TweetinviConfig.CurrentThreadSettings.TweetMode = TweetMode.Extended;
+                TweetinviConfig.ApplicationSettings.TweetMode = TweetMode.Extended;
+
+                streamTracks = new TrackerHandler<TwitchTracker>();
+                twitterTracks = new TrackerHandler<TwitterTracker>();
+                OverwatchTracks = new TrackerHandler<OverwatchTracker>();
                 ClipTracker = new Data.ClipTracker();
-                OverwatchTracks = new Data.OverwatchList();
                 //osuTracker = new Data.OsuTracker();        
 
                 init = true;

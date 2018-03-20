@@ -133,26 +133,28 @@ namespace MopsBot.Module
         [RequireUserPermission(ChannelPermission.ManageChannel)]
         public async Task trackStreamer(string streamerName, [Remainder]string notificationMessage)
         {
-            if (!streamTracks.streamers.ContainsKey(streamerName))
-            {
-                streamTracks.streamers.Add(streamerName, new Data.Session.TwitchTracker(streamerName, Context.Channel.Id, notificationMessage, false));
-                TrackerHandle.addTracker(streamTracks.streamers.Last().Value);
-            }
-            else
-                streamTracks.streamers[streamerName].ChannelIds.Add(Context.Channel.Id, notificationMessage);
-
-            streamTracks.writeList();
+            streamTracks.addTracker(streamerName, Context.Channel.Id, notificationMessage);
 
             await ReplyAsync("Keeping track of " + streamerName + "'s streams, from now on!");
+        }
+
+        [Command("unTrackStreamer")]
+        [Summary("Stops tracking the specified streamer.\nRequires Manage channel permissions.")]
+        [RequireUserPermission(ChannelPermission.ManageChannel)]
+        public async Task unTrackStreamer(string streamerName)
+        {
+            streamTracks.removeTracker(streamerName, Context.Channel.Id);
+
+            await ReplyAsync("Stopped tracking " + streamerName + "'s streams!");
         }
 
         [Command("changeChartColour")]
         [Summary("Changes the colour of the chart of the specified Streamer, in case it is not distinguishable-")]
         public Task changeColour(string streamerName)
         {
-            if (streamTracks.streamers.ContainsKey(streamerName))
+            if (streamTracks.trackers.ContainsKey(streamerName))
             {
-                streamTracks.streamers[streamerName].recolour();
+                streamTracks.trackers[streamerName].recolour();
             }
 
             return Task.CompletedTask;
@@ -161,32 +163,39 @@ namespace MopsBot.Module
         [Command("trackTwitter")]
         [Summary("Keeps track of the specified TwitterUser, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
         [RequireUserPermission(ChannelPermission.ManageChannel)]
-        public async Task trackStreamer(string twitterUser)
+        public async Task trackTwitter(string twitterUser)
         {
-            if (!twitterTracks.twitters.ContainsKey(twitterUser)){
-                twitterTracks.twitters.Add(twitterUser, new Data.Session.TwitterTracker(twitterUser, 0));
-                TrackerHandle.addTracker(twitterTracks.twitters.Last().Value);
-            }
-
-            twitterTracks.twitters[twitterUser].ChannelIds.Add(Context.Channel.Id);
-            twitterTracks.writeList();
+            twitterTracks.addTracker(twitterUser, Context.Channel.Id);
 
             await ReplyAsync("Keeping track of " + twitterUser + "'s tweets, from now on!");
+        }
+
+        [Command("unTrackTwitter")]
+        [Summary("Stops keeping track of the specified TwitterUser, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
+        [RequireUserPermission(ChannelPermission.ManageChannel)]
+        public async Task unTrackTwitter(string twitterUser)
+        {
+            twitterTracks.removeTracker(twitterUser, Context.Channel.Id);
+
+            await ReplyAsync("Stopped keeping track of " + twitterUser + "'s tweets!");
         }
 
         [Command("trackOverwatch")]
         [Summary("Keeps track of the specified Overwatch player, in the Channel you are calling this command right now.\nParameter: Username-Battletag")]
         public async Task trackOW(string owUser)
         {
-            if (!OverwatchTracks.owPlayers.ContainsKey(owUser)){
-                OverwatchTracks.owPlayers.Add(owUser, new Data.Session.OverwatchTracker(owUser));
-                TrackerHandle.addTracker(OverwatchTracks.owPlayers.Last().Value);
-            }
-
-            OverwatchTracks.owPlayers[owUser].ChannelIds.Add(Context.Channel.Id);
-            OverwatchTracks.writeList();
+            OverwatchTracks.addTracker(owUser, Context.Channel.Id);
 
             await ReplyAsync("Keeping track of " + owUser + "'s stats, from now on!");
+        }
+
+        [Command("unTrackOverwatch")]
+        [Summary("Stops keeping track of the specified Overwatch player, in the Channel you are calling this command right now.\nParameter: Username-Battletag")]
+        public async Task unTrackOW(string owUser)
+        {
+            OverwatchTracks.removeTracker(owUser, Context.Channel.Id);
+
+            await ReplyAsync("Stopped keeping track of " + owUser + "'s stats!");
         }
 
         [Command("trackClips")]

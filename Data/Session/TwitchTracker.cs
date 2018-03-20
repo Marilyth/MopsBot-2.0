@@ -24,27 +24,25 @@ namespace MopsBot.Data.Session
         public Dictionary<ulong, Discord.IUserMessage> toUpdate;
         public Boolean isOnline;
         public string name, curGame;
-        public Dictionary<ulong, string> ChannelIds;
+        public Dictionary<ulong, string> ChannelMessages;
         public APIResults.TwitchResult streamerStatus;
 
-        public TwitchTracker(string streamerName, ulong pChannel, string notificationText, Boolean pIsOnline)
+        public TwitchTracker(string streamerName)
         {
             initViewerChart();
 
-            Console.Out.WriteLine($"{DateTime.Now} Started Twitchtracker for {streamerName} w/ channel {pChannel}");
+            Console.Out.WriteLine($"{DateTime.Now} Started Twitchtracker for {streamerName}");
             toUpdate = new Dictionary<ulong, Discord.IUserMessage>();
-            ChannelIds = new Dictionary<ulong, string>();
-            ChannelIds.Add(pChannel, notificationText);
+            ChannelMessages = new Dictionary<ulong, string>();
+            ChannelIds = new HashSet<ulong>();
             name = streamerName;
-            isOnline = pIsOnline;
+            isOnline = false;
             curGame = "Nothing";
             try{
                 curGame = streamerInformation().stream.game;
             }catch(Exception e){}
 
-            if (isOnline) readPlotPoints();
-
-            else gameChange();
+            gameChange();
 
             checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false), StaticBase.ran.Next(6, 59) * 1000, 60000);
         }
@@ -53,14 +51,16 @@ namespace MopsBot.Data.Session
         {
             initViewerChart();
             toUpdate = new Dictionary<ulong, Discord.IUserMessage>();
-            ChannelIds = new Dictionary<ulong, string>();
+            ChannelMessages = new Dictionary<ulong, string>();
+            ChannelIds = new HashSet<ulong>();
 
             name = initArray[0];
             isOnline = Boolean.Parse(initArray[1]);
             foreach(string channel in initArray[2].Split(new char[]{'{','}',';'})){
                 if(channel != ""){
                     string[] channelText = channel.Split("=");
-                    ChannelIds.Add(ulong.Parse(channelText[0]), channelText[1]);
+                    ChannelMessages.Add(ulong.Parse(channelText[0]), channelText[1]);
+                    ChannelIds.Add(ulong.Parse(channelText[0]));
                 }
             }
 
@@ -113,7 +113,7 @@ namespace MopsBot.Data.Session
                     file.Delete();
                     initViewerChart();
 
-                    foreach(ulong channel in ChannelIds.Keys)
+                    foreach(ulong channel in ChannelMessages.Keys)
                         OnMinorChangeTracked(channel, $"{name} went Offline!");
                 }
                 else
@@ -123,8 +123,8 @@ namespace MopsBot.Data.Session
                     curGame = (streamerStatus.stream == null) ? "Nothing" : streamerStatus.stream.game;
                     gameChange();
                     
-                    foreach(ulong channel in ChannelIds.Keys)
-                        OnMinorChangeTracked(channel, ChannelIds[channel]);
+                    foreach(ulong channel in ChannelMessages.Keys)
+                        OnMinorChangeTracked(channel, ChannelMessages[channel]);
                 }
             }
 
@@ -138,10 +138,10 @@ namespace MopsBot.Data.Session
                     gameChange();
                     series[curGame].Last().Points.Add(new DataPoint(columnCount, streamerStatus.stream.viewers));
                     
-                    foreach(ulong channel in ChannelIds.Keys)
+                    foreach(ulong channel in ChannelMessages.Keys)
                         OnMinorChangeTracked(channel, $"{name} switched games to **{curGame}**");
                 }
-                foreach(ulong channel in ChannelIds.Keys)
+                foreach(ulong channel in ChannelIds)
                     OnMajorChangeTracked(channel, createEmbed());
                 updateChart();
                 StaticBase.streamTracks.writeList();
@@ -324,7 +324,7 @@ namespace MopsBot.Data.Session
             string[] informationArray = new string[4];
             informationArray[0] = name;
             informationArray[1] = isOnline.ToString();
-            informationArray[2] = "{" + string.Join(";", ChannelIds.Select(x => x.Key + "=" + x.Value)) + "}";
+            informationArray[2] = "{" + string.Join(";", ChannelMessages.Select(x => x.Key + "=" + x.Value)) + "}";
             informationArray[3] = "{" + string.Join(";", toUpdate.Select(x => x.Key + "=" + x.Value.Id)) + "}";
 
             return informationArray;

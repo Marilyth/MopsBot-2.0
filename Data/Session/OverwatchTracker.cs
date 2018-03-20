@@ -22,7 +22,6 @@ namespace MopsBot.Data.Session
         SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
         private System.Threading.Timer checkForChange;
         public string name;
-        public HashSet<ulong> ChannelIds;
         private OStatsResult information;
 
         /// <summary>
