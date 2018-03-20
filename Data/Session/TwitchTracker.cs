@@ -115,6 +115,7 @@ namespace MopsBot.Data.Session
 
                     foreach(ulong channel in ChannelMessages.Keys)
                         OnMinorChangeTracked(channel, $"{name} went Offline!");
+                    StaticBase.streamTracks.writeList();
                 }
                 else
                 {
