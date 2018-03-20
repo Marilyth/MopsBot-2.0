@@ -21,7 +21,6 @@ namespace MopsBot.Data
         public TrackerHandler(int sleepTime=0)
         {
             trackers = new Dictionary<string, T>();
-            string test = $"mopsdata//{typeof(T).Name}.txt";
             using (StreamReader read = new StreamReader(new FileStream($"mopsdata//{typeof(T).Name}.txt", FileMode.OpenOrCreate)))
             {
                 string s = "";
