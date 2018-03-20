@@ -145,7 +145,6 @@ namespace MopsBot.Data.Session
                 foreach(ulong channel in ChannelIds)
                     OnMajorChangeTracked(channel, createEmbed());
                 updateChart();
-                StaticBase.streamTracks.writeList();
             }
         }
 
