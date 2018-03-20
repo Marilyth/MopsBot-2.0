@@ -47,7 +47,7 @@ namespace MopsBot
 
                 streamTracks = new TrackerHandler<TwitchTracker>();
                 twitterTracks = new TrackerHandler<TwitterTracker>();
-                OverwatchTracks = new TrackerHandler<OverwatchTracker>();
+                OverwatchTracks = new TrackerHandler<OverwatchTracker>(20000);
                 ClipTracker = new Data.ClipTracker();
                 //osuTracker = new Data.OsuTracker();        
 

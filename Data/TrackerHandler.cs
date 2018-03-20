@@ -18,7 +18,7 @@ namespace MopsBot.Data
     public class TrackerHandler<T> where T : Session.ITracker
     {
         public Dictionary<string, T> trackers;
-        public TrackerHandler()
+        public TrackerHandler(int sleepTime=0)
         {
             trackers = new Dictionary<string, T>();
             string test = $"mopsdata//{typeof(T).Name}.txt";
@@ -33,6 +33,7 @@ namespace MopsBot.Data
                         trackers.Add(trackerInformation[0], (T)Activator.CreateInstance(typeof(T), new object[] { trackerInformation }));
                         trackers[trackerInformation[0]].OnMajorEventFired += OnMajorEvent;
                         trackers[trackerInformation[0]].OnMinorEventFired += OnMinorEvent;
+                        System.Threading.Thread.Sleep(sleepTime);
                     }
                     catch (Exception e)
                     {
