@@ -113,6 +113,7 @@ namespace MopsBot.Data
                 else{
                     parentHandle.toUpdate.Add(channelID, await ((Discord.WebSocket.SocketTextChannel)Program.client.GetChannel(channelID)).SendMessageAsync(notification, false, embed));
                     writeList();
+                }
             }
             
             else

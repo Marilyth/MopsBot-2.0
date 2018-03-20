@@ -39,7 +39,7 @@ namespace MopsBot.Data.Session
             isOnline = false;
             curGame = "Nothing";
             try{
-                curGame = streamerInformation().stream.game;
+                curGame = channelInformation().game;
             }catch(Exception e){}
 
             gameChange();
@@ -66,7 +66,7 @@ namespace MopsBot.Data.Session
 
             curGame = "Nothing";
             try{
-                curGame = streamerInformation().stream.game;
+                curGame = channelInformation().game;
             }catch(Exception e){}
 
             if(isOnline){
@@ -137,6 +137,7 @@ namespace MopsBot.Data.Session
                 {
                     curGame = streamerStatus.stream.game;
                     gameChange();
+
                     series[curGame].Last().Points.Add(new DataPoint(columnCount, streamerStatus.stream.viewers));
                     
                     foreach(ulong channel in ChannelMessages.Keys)
@@ -158,6 +159,18 @@ namespace MopsBot.Data.Session
             };
 
             return JsonConvert.DeserializeObject<TwitchResult>(query, _jsonWriter);
+        }
+
+        private Channel channelInformation()
+        {
+            string query = MopsBot.Module.Information.readURL($"https://api.twitch.tv/kraken/channels/{name}?client_id={Program.twitchId}");
+
+            JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
+            {
+                NullValueHandling = NullValueHandling.Ignore
+            };
+
+            return JsonConvert.DeserializeObject<Channel>(query, _jsonWriter);
         }
 
         public EmbedBuilder createEmbed()
