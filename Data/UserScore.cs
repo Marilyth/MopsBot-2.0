@@ -13,7 +13,7 @@ namespace MopsBot.Data
     /// </summary>
     public class UserScore
     {
-        public Dictionary<ulong, Individual.User> users = new Dictionary<ulong, Individual.User>();
+        public Dictionary<ulong, Individual.User> Users = new Dictionary<ulong, Individual.User>();
 
         /// <summary>
         /// Reads data from text file, and fills Dictionary of Users with it
@@ -27,7 +27,7 @@ namespace MopsBot.Data
             {
                 string[] s = fs.Split(':');
                 Individual.User user = new Individual.User(int.Parse(s[1]), int.Parse(s[2]), int.Parse(s[3]), int.Parse(s[4]), int.Parse(s[5]));
-                users.Add(ulong.Parse(s[0]), user);
+                Users.Add(ulong.Parse(s[0]), user);
             }
             read.Dispose();
         }
@@ -35,11 +35,11 @@ namespace MopsBot.Data
         /// <summary>
         /// Writes all information of the User Dictionary to the text file
         /// </summary>
-        public void writeScore()
+        public void WriteScore()
         {
             StreamWriter write = new StreamWriter(new FileStream("mopsdata//scores.txt", FileMode.Create));
             write.AutoFlush = true;
-            foreach (var that in users)
+            foreach (var that in Users)
             {
                 var user = that.Value;
                 write.WriteLine($"{that.Key}:{user.Score}:{user.Experience}:{user.punched}:{user.hugged}:{user.kissed}");
@@ -54,34 +54,34 @@ namespace MopsBot.Data
         /// <param name="id">The User-ID</param>
         /// <param name="value">The value to add</param>
         /// <param name="stat">The stat to add the value to</param>
-        public void addStat(ulong id, int value, string stat)
+        public void AddStat(ulong id, int value, string stat)
         {
-            if (!users.ContainsKey(id))
+            if (!Users.ContainsKey(id))
             {
-                users.Add(id, new Individual.User(0, 0, 0, 0, 0));
+                Users.Add(id, new Individual.User(0, 0, 0, 0, 0));
             }
 
             switch (stat.ToLower())
             {
                 case "experience":
-                    users[id].Experience += value;
+                    Users[id].Experience += value;
                     break;
                 case "score":
-                    users[id].Score += value;
+                    Users[id].Score += value;
                     break;
                 case "hug":
-                    users[id].hugged += value;
+                    Users[id].hugged += value;
                     break;
                 case "kiss":
-                    users[id].kissed += value;
+                    Users[id].kissed += value;
                     break;
                 case "punch":
-                    users[id].punched += value;
+                    Users[id].punched += value;
                     break;
                 default:
                     return;
             }
-            writeScore();
+            WriteScore();
         }
 
         /// <summary>
@@ -91,7 +91,7 @@ namespace MopsBot.Data
         /// <returns>A string representing the leaderboard</returns>
         public string drawDiagram(int count)
         {
-            var sortedDict = (from entry in users orderby entry.Value.Experience descending select entry).Take(count).ToArray();
+            var sortedDict = (from entry in Users orderby entry.Value.Experience descending select entry).Take(count).ToArray();
 
             int maximum = 0;
             string[] lines = new string[count];

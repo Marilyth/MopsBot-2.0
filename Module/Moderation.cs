@@ -148,18 +148,6 @@ namespace MopsBot.Module
             await ReplyAsync("Stopped tracking " + streamerName + "'s streams!");
         }
 
-        [Command("changeChartColour")]
-        [Summary("Changes the colour of the chart of the specified Streamer, in case it is not distinguishable-")]
-        public Task changeColour(string streamerName)
-        {
-            if (streamTracks.trackers.ContainsKey(streamerName))
-            {
-                streamTracks.trackers[streamerName].recolour();
-            }
-
-            return Task.CompletedTask;
-        }
-
         [Command("trackTwitter")]
         [Summary("Keeps track of the specified TwitterUser, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
         [RequireUserPermission(ChannelPermission.ManageChannel)]
