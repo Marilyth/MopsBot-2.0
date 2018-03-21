@@ -122,7 +122,7 @@ namespace MopsBot.Data.Session
             EmbedAuthorBuilder author = new EmbedAuthorBuilder();
             author.Name = owName.Split("-")[0];
             author.Url = $"https://playoverwatch.com/en-us/career/pc/eu/{owName}";
-            author.IconUrl = stats.overall_stats.avatar;
+            author.IconUrl = info.eu.stats.competitive.overall_stats.tier_image;
             e.Author = author;
 
             EmbedFooterBuilder footer = new EmbedFooterBuilder();
