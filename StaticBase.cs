@@ -17,7 +17,6 @@ namespace MopsBot
     {
         public static Data.Statistics stats = new Data.Statistics();
         public static Data.UserScore people = new Data.UserScore();
-        public static Data.MeetUps meetups = new Data.MeetUps();
         public static Random ran = new Random();
         public static List<Data.Session.IdleDungeon> dungeonCrawler = new List<Data.Session.IdleDungeon>();
         public static List<ulong> BotManager = new List<ulong>();

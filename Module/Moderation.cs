@@ -40,49 +40,6 @@ namespace MopsBot.Module
             }
         }
 
-        [Group("MeetUp")]
-        public class treffen : ModuleBase
-        {
-            [Command("create")]
-            [Summary("Creates a Meet-Up others can participate in.\n<Text> = 13.12.2017;Bowling;China")]
-            public async Task create([Remainder] string Text)
-            {
-                meetups.addMeetUp(Text, (SocketGuildUser)Context.User);
-                await ReplyAsync("Done ~");
-            }
-
-            [Command("blow")]
-            [Summary("Deletes a Meet-Up, if you are the creator.")]
-            public Task blow(int id)
-            {
-                meetups.blowMeetUp(id, (SocketGuildUser)Context.User);
-                return Task.CompletedTask;
-            }
-
-            [Command("join")]
-            [Summary("Join the specified meet-up")]
-            public Task join(int id)
-            {
-                meetups.upcoming[id - 1].addParticipant(Context.User.Id);
-                return Task.CompletedTask;
-            }
-
-            [Command("leave")]
-            [Summary("Leave the specified meet-up")]
-            public Task leave(int id)
-            {
-                meetups.upcoming[id - 1].removeParticipant(Context.User.Id);
-                return Task.CompletedTask;
-            }
-
-            [Command("get")]
-            [Summary("Provides you with a list of all upcoming Meet-Ups, including their ID")]
-            public async Task get()
-            {
-                await ReplyAsync(meetups.meetupToString());
-            }
-        }
-
         [Command("poll"), Summary("Creates a poll\nExample: !poll Am I sexy?;Yes:No;@Panda @Demon @Snail")]
         public async Task Poll([Remainder] string Poll)
         {
@@ -127,63 +84,72 @@ namespace MopsBot.Module
 
             poll = null;
         }
-        
-        [Command("trackStreamer")]
-        [Summary("Keeps track of the specified Streamer, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
-        [RequireUserPermission(ChannelPermission.ManageChannel)]
-        public async Task trackStreamer(string streamerName, [Remainder]string notificationMessage)
+        [Group("Twitter")]
+        public class Twitter : ModuleBase
         {
-            streamTracks.addTracker(streamerName, Context.Channel.Id, notificationMessage);
+            [Command("Track")]
+            [Summary("Keeps track of the specified TwitterUser, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
+            [RequireUserPermission(ChannelPermission.ManageChannel)]
+            public async Task trackTwitter(string twitterUser)
+            {
+                twitterTracks.addTracker(twitterUser, Context.Channel.Id);
 
-            await ReplyAsync("Keeping track of " + streamerName + "'s streams, from now on!");
+                await ReplyAsync("Keeping track of " + twitterUser + "'s tweets, from now on!");
+            }
+
+            [Command("UnTrack")]
+            [Summary("Stops keeping track of the specified TwitterUser, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
+            [RequireUserPermission(ChannelPermission.ManageChannel)]
+            public async Task unTrackTwitter(string twitterUser)
+            {
+                twitterTracks.removeTracker(twitterUser, Context.Channel.Id);
+
+                await ReplyAsync("Stopped keeping track of " + twitterUser + "'s tweets!");
+            }
         }
-
-        [Command("unTrackStreamer")]
-        [Summary("Stops tracking the specified streamer.\nRequires Manage channel permissions.")]
-        [RequireUserPermission(ChannelPermission.ManageChannel)]
-        public async Task unTrackStreamer(string streamerName)
+        [Group("Twitch")]
+        public class Twitch : ModuleBase
         {
-            streamTracks.removeTracker(streamerName, Context.Channel.Id);
+            [Command("Track")]
+            [Summary("Keeps track of the specified Streamer, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
+            [RequireUserPermission(ChannelPermission.ManageChannel)]
+            public async Task trackStreamer(string streamerName, [Remainder]string notificationMessage="Stream went live!")
+            {
+                streamTracks.addTracker(streamerName, Context.Channel.Id, notificationMessage);
 
-            await ReplyAsync("Stopped tracking " + streamerName + "'s streams!");
+                await ReplyAsync("Keeping track of " + streamerName + "'s streams, from now on!");
+            }
+
+            [Command("UnTrack")]
+            [Summary("Stops tracking the specified streamer.\nRequires Manage channel permissions.")]
+            [RequireUserPermission(ChannelPermission.ManageChannel)]
+            public async Task unTrackStreamer(string streamerName)
+            {
+                streamTracks.removeTracker(streamerName, Context.Channel.Id);
+
+                await ReplyAsync("Stopped tracking " + streamerName + "'s streams!");
+            }
         }
-
-        [Command("trackTwitter")]
-        [Summary("Keeps track of the specified TwitterUser, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
-        [RequireUserPermission(ChannelPermission.ManageChannel)]
-        public async Task trackTwitter(string twitterUser)
+        [Group("Overwatch")]
+        public class Overwatch : ModuleBase
         {
-            twitterTracks.addTracker(twitterUser, Context.Channel.Id);
+            [Command("Track")]
+            [Summary("Keeps track of the specified Overwatch player, in the Channel you are calling this command right now.\nParameter: Username-Battletag")]
+            public async Task trackOW(string owUser)
+            {
+                OverwatchTracks.addTracker(owUser, Context.Channel.Id);
 
-            await ReplyAsync("Keeping track of " + twitterUser + "'s tweets, from now on!");
-        }
+                await ReplyAsync("Keeping track of " + owUser + "'s stats, from now on!");
+            }
 
-        [Command("unTrackTwitter")]
-        [Summary("Stops keeping track of the specified TwitterUser, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
-        [RequireUserPermission(ChannelPermission.ManageChannel)]
-        public async Task unTrackTwitter(string twitterUser)
-        {
-            twitterTracks.removeTracker(twitterUser, Context.Channel.Id);
+            [Command("UnTrack")]
+            [Summary("Stops keeping track of the specified Overwatch player, in the Channel you are calling this command right now.\nParameter: Username-Battletag")]
+            public async Task unTrackOW(string owUser)
+            {
+                OverwatchTracks.removeTracker(owUser, Context.Channel.Id);
 
-            await ReplyAsync("Stopped keeping track of " + twitterUser + "'s tweets!");
-        }
-
-        [Command("trackOverwatch")]
-        [Summary("Keeps track of the specified Overwatch player, in the Channel you are calling this command right now.\nParameter: Username-Battletag")]
-        public async Task trackOW(string owUser)
-        {
-            OverwatchTracks.addTracker(owUser, Context.Channel.Id);
-
-            await ReplyAsync("Keeping track of " + owUser + "'s stats, from now on!");
-        }
-
-        [Command("unTrackOverwatch")]
-        [Summary("Stops keeping track of the specified Overwatch player, in the Channel you are calling this command right now.\nParameter: Username-Battletag")]
-        public async Task unTrackOW(string owUser)
-        {
-            OverwatchTracks.removeTracker(owUser, Context.Channel.Id);
-
-            await ReplyAsync("Stopped keeping track of " + owUser + "'s stats!");
+                await ReplyAsync("Stopped keeping track of " + owUser + "'s stats!");
+            }
         }
 
         [Command("trackClips")]
@@ -196,6 +162,7 @@ namespace MopsBot.Module
             await ReplyAsync("Keeping track of clips of " + streamerName + "'s streams, from now on!");
         }
 
+
         [Command("setPrefix")]
         [Summary("Changes the prefix of Mops in the current Guild")]
         [RequireUserPermission(ChannelPermission.ManageChannel)]
@@ -203,12 +170,14 @@ namespace MopsBot.Module
         {
             string oldPrefix;
 
-            if(guildPrefix.ContainsKey(Context.Guild.Id)){
+            if (guildPrefix.ContainsKey(Context.Guild.Id))
+            {
                 oldPrefix = guildPrefix[Context.Guild.Id];
                 guildPrefix[Context.Guild.Id] = prefix;
             }
 
-            else{
+            else
+            {
                 oldPrefix = "!";
                 guildPrefix.Add(Context.Guild.Id, prefix);
             }
