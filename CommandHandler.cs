@@ -65,8 +65,8 @@ namespace MopsBot
             //Daily Statistics & User Experience
             if (!arg.Author.IsBot && !arg.Content.StartsWith("!"))
             {
-                StaticBase.people.addStat(arg.Author.Id, arg.Content.Length, "experience");
-                StaticBase.stats.addValue(arg.Content.Length);
+                StaticBase.people.AddStat(arg.Author.Id, arg.Content.Length, "experience");
+                StaticBase.stats.AddValue(arg.Content.Length);
             }
         }
 
@@ -106,7 +106,7 @@ namespace MopsBot
             // Determine if the message has a valid prefix, adjust argPos 
             if (!(message.HasMentionPrefix(client.CurrentUser, ref argPos) || message.HasStringPrefix(prefix, ref argPos) || message.HasCharPrefix('?', ref argPos))) return;
 
-            StaticBase.people.addStat(parameterMessage.Author.Id, 0, "experience");
+            StaticBase.people.AddStat(parameterMessage.Author.Id, 0, "experience");
 
             if (message.Content.Contains("help") || message.HasCharPrefix('?', ref argPos))
             {

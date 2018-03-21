@@ -12,7 +12,7 @@ namespace MopsBot.Data
     /// </summary>
     public class Statistics
     {
-        public Dictionary<string, int> days = new Dictionary<string, int>();
+        public Dictionary<string, int> Days = new Dictionary<string, int>();
         public string today;
 
         /// <summary>
@@ -28,7 +28,7 @@ namespace MopsBot.Data
             while ((s = read.ReadLine()) != null)
             {
                 string[] data = s.Split(':');
-                days.Add(data[0], int.Parse(data[1]));
+                Days.Add(data[0], int.Parse(data[1]));
             }
             
             read.Dispose();
@@ -38,28 +38,28 @@ namespace MopsBot.Data
         /// Adds the "increase" parameter to todays value
         /// </summary>
         /// <param name="increase">Integer repesenting how many characters have been recieved</param>
-        public void addValue(int increase)
+        public void AddValue(int increase)
         {
             today = DateTime.Today.ToString("dd.MM.yyyy");
 
-            if (days.ContainsKey(today))
-                days[today] += increase;
+            if (Days.ContainsKey(today))
+                Days[today] += increase;
 
-            else days.Add(today, increase);
+            else Days.Add(today, increase);
 
             saveData();
         }
 
         /// <summary>
-        /// Writes all days and values into a text file
+        /// Writes all Days and values into a text file
         /// </summary>
         private void saveData()
         {
             StreamWriter write = new StreamWriter(new FileStream("mopsdata//statistics.txt", FileMode.Create));
             write.AutoFlush=true;
-            foreach(string cur in days.Keys)
+            foreach(string cur in Days.Keys)
             {
-                write.WriteLine($"{cur}:{days[cur]}");
+                write.WriteLine($"{cur}:{Days[cur]}");
             }
 
             write.Dispose();
@@ -67,13 +67,13 @@ namespace MopsBot.Data
         }
 
         /// <summary>
-        /// Creates an ASCII chart presenting the past "count" days and their values
+        /// Creates an ASCII chart presenting the past "count" Days and their values
         /// </summary>
-        /// <param name="count">Integer, representing how many days should be shown</param>
+        /// <param name="count">Integer, representing how many Days should be shown</param>
         /// <returns></returns>
-        public string drawDiagram(int count)
+        public string DrawDiagram(int count)
         {
-            var tempDays = (from entry in days orderby DateTime.ParseExact(entry.Key, "dd/MM/yyyy", null) descending select entry).Take(count).ToArray();
+            var tempDays = (from entry in Days orderby DateTime.ParseExact(entry.Key, "dd/MM/yyyy", null) descending select entry).Take(count).ToArray();
             int maximum = (from entry in tempDays orderby entry.Value descending select entry).ToArray()[0].Value;
 
             string[] lines = new string[count];

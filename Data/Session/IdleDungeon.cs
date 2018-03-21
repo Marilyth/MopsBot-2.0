@@ -20,14 +20,14 @@ namespace MopsBot.Data.Session
         {
             username = Program.client.GetUser(ID).Username;
             log = $"00:00 {username} has entered the dungeon.";
-            StaticBase.people.users[ID].getEquipment(ID);
+            StaticBase.people.Users[ID].getEquipment(ID);
             player = ID;
             ran = new Random();
             updateMessage = pUpdateMessage;
             timer = new System.Threading.Timer(eventHappened, new System.Threading.AutoResetEvent(false), ran.Next(10000, 60000), 100000);
 
             vitality = 7;   
-            foreach(Individual.Items item in StaticBase.people.users[ID].equipment){
+            foreach(Individual.Items item in StaticBase.people.Users[ID].equipment){
                 attack += item.attack;
                 vitality += item.vitality;
             }
@@ -50,7 +50,7 @@ namespace MopsBot.Data.Session
             if(minute >= length || vitality <= 0){
                 if(vitality <= 0)
                     gold = 0;
-                StaticBase.people.addStat(player, gold, "score");
+                StaticBase.people.AddStat(player, gold, "score");
                 tempLog += $"{username} left the dungeon.";
                 log += tempLog;
                 modifyMessage();

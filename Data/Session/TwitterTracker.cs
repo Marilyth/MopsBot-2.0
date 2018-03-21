@@ -20,14 +20,14 @@ namespace MopsBot.Data.Session
         SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
         
         private System.Threading.Timer checkForChange;
-        public string name;
+        public string Name;
         private IUserIdentifier ident;
-        public long lastMessage;
+        private long lastMessage;
         private Task<IEnumerable<ITweet>> fetchTweets;
 
         public TwitterTracker(string twitterName)
         {
-            name = twitterName;
+            Name = twitterName;
             ChannelIds = new HashSet<ulong>();
 
             checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false), StaticBase.ran.Next(6,59)*1000, 300000);
@@ -37,7 +37,7 @@ namespace MopsBot.Data.Session
         {
             ChannelIds = new HashSet<ulong>();
 
-            name = initArray[0];
+            Name = initArray[0];
             lastMessage = long.Parse(initArray[1]);
             foreach(string channel in initArray[2].Split(new char[]{'{','}',';'})){
                 if(channel != "")
@@ -54,7 +54,7 @@ namespace MopsBot.Data.Session
             if(lastMessage != 0) parameters.SinceId = lastMessage;
             parameters.MaximumNumberOfTweetsToRetrieve = 5;
             try{
-                ITweet[] newTweets = Timeline.GetUserTimeline(name, parameters).Reverse().ToArray();
+                ITweet[] newTweets = Timeline.GetUserTimeline(Name, parameters).Reverse().ToArray();
             
                 if(newTweets.Length != 0){
                  lastMessage = newTweets[newTweets.Length -1].Id;
@@ -101,9 +101,9 @@ namespace MopsBot.Data.Session
             return e;
         }
 
-        public override string[] getInitArray(){
+        public override string[] GetInitArray(){
             string[] informationArray = new string[2 + ChannelIds.Count];
-            informationArray[0] = name;
+            informationArray[0] = Name;
             informationArray[1] = lastMessage.ToString();
             informationArray[2] = "{" + string.Join(";", ChannelIds) + "}";
 

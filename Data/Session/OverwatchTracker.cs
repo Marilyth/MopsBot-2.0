@@ -21,26 +21,26 @@ namespace MopsBot.Data.Session
         bool disposed = false;
         SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
         private System.Threading.Timer checkForChange;
-        public string name;
+        public string Name;
         private OStatsResult information;
 
         /// <summary>
         /// Initialises the tracker by setting attributes and setting up a Timer with a 10 minutes interval
         /// </summary>
-        /// <param name="OWName"> The Name-Battletag combination of the player to track </param>
+        /// <param Name="OWName"> The Name-Battletag combination of the player to track </param>
         public OverwatchTracker(string OWName)
         {
             ChannelIds = new HashSet<ulong>();
-            name = OWName;
+            Name = OWName;
 
             checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false), 0, 600000);
-            Console.WriteLine(DateTime.Now + " OW Tracker started for " + name);
+            Console.WriteLine(DateTime.Now + " OW Tracker started for " + Name);
         }
 
         public OverwatchTracker(string[] initArray)
         {
             ChannelIds = new HashSet<ulong>();
-            name = initArray[0];
+            Name = initArray[0];
 
             foreach(string channel in initArray[1].Split(new char[]{'{','}',';'})){
                 if(channel != "")
@@ -48,13 +48,13 @@ namespace MopsBot.Data.Session
             }
 
             checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false), 0, 600000);
-            Console.WriteLine(DateTime.Now + " OW Tracker started for " + name);
+            Console.WriteLine(DateTime.Now + " OW Tracker started for " + Name);
         }
 
         /// <summary>
         /// Event for the Timer, to check for changed stats
         /// </summary>
-        /// <param name="stateinfo"></param>
+        /// <param Name="stateinfo"></param>
         protected override void CheckForChange_Elapsed(object stateinfo)
         {
             try
@@ -69,7 +69,7 @@ namespace MopsBot.Data.Session
                 if (newInformation == null) return;
 
                 var changedStats = getChangedStats(information, newInformation);
-                Console.WriteLine(DateTime.Now + " OW Tracker fetched Stats for " + name + "\nNew Stats?: " + (changedStats.Count != 0) + $" (Wins: {newInformation.eu.stats.quickplay.overall_stats.wins})");
+                Console.WriteLine(DateTime.Now + " OW Tracker fetched Stats for " + Name + "\nNew Stats?: " + (changedStats.Count != 0) + $" (Wins: {newInformation.eu.stats.quickplay.overall_stats.wins})");
 
                 if (changedStats.Count != 0)
                 {
@@ -91,7 +91,7 @@ namespace MopsBot.Data.Session
         /// <returns>An OStatsResult representing the fetched JSON as an object</returns>
         private OStatsResult overwatchInformation()
         {
-            string query = MopsBot.Module.Information.readURL($"https://owapi.net/api/v3/u/{name}/blob");
+            string query = MopsBot.Module.Information.readURL($"https://owapi.net/api/v3/u/{Name}/blob");
 
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {
@@ -102,9 +102,9 @@ namespace MopsBot.Data.Session
         }
 
         ///<summary>Builds an embed out of the changed stats, and sends it as a Discord message </summary>
-        /// <param name="overwatchInformation">All fetched stats of the user </param>
-        /// <param name="changedStats">All changed stats of the user, together with a string presenting them </param>
-        /// <param name="mostPlayed">The most played Hero of the session, together with a string presenting them </param>
+        /// <param Name="overwatchInformation">All fetched stats of the user </param>
+        /// <param Name="changedStats">All changed stats of the user, together with a string presenting them </param>
+        /// <param Name="mostPlayed">The most played Hero of the session, together with a string presenting them </param>
         private EmbedBuilder sendNotification(OStatsResult overwatchInformation, Dictionary<string, string> changedStats, Tuple<string, string> mostPlayed)
         {
             OverallStats stats = overwatchInformation.eu.stats.quickplay.overall_stats;
@@ -112,11 +112,11 @@ namespace MopsBot.Data.Session
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0x6441A4);
             e.Title = "New Stats!";
-            e.Url = $"https://playoverwatch.com/en-us/career/pc/eu/{name}";
+            e.Url = $"https://playoverwatch.com/en-us/career/pc/eu/{Name}";
 
             EmbedAuthorBuilder author = new EmbedAuthorBuilder();
-            author.Name = name.Split("-")[0];
-            author.Url = $"https://playoverwatch.com/en-us/career/pc/eu/{name}";
+            author.Name = Name.Split("-")[0];
+            author.Url = $"https://playoverwatch.com/en-us/career/pc/eu/{Name}";
             author.IconUrl = stats.avatar;
             e.Author = author;
 
@@ -146,8 +146,8 @@ namespace MopsBot.Data.Session
         /// Checks if there were any changes in major stats
         /// Major stats are: Level, Quickplay Wins, Competitive Wins, Competitive Rank
         /// </summary>
-        /// <param name="oldStats">OStatsResult representing the stats before the Timer elapsed</param>
-        /// <param name="newStats">OStatsResult representing the stats after the Timer elapsed</param>
+        /// <param Name="oldStats">OStatsResult representing the stats before the Timer elapsed</param>
+        /// <param Name="newStats">OStatsResult representing the stats after the Timer elapsed</param>
         /// <returns>A Dictionary with changed stats as Key, and a string presenting them as Value</returns>
         private Dictionary<string, string> getChangedStats(OStatsResult oldStats, OStatsResult newStats)
         {
@@ -193,9 +193,9 @@ namespace MopsBot.Data.Session
         /// <summary>
         /// Determines the most played Hero of the last play session
         /// </summary>
-        /// <param name="oldStats">Playtime of each hero before the Timer elapsed</param>
-        /// <param name="newStats">Playtime of each hero after the Timer elapsed</param>
-        /// <returns>A Tuple with the name of the most played Hero, and a string presenting the change in playtime</returns>
+        /// <param Name="oldStats">Playtime of each hero before the Timer elapsed</param>
+        /// <param Name="newStats">Playtime of each hero after the Timer elapsed</param>
+        /// <returns>A Tuple with the Name of the most played Hero, and a string presenting the change in playtime</returns>
         private Tuple<string, string> getSessionMostPlayed(Playtime oldStats, Playtime newStats)
         {
             var New = newStats.merge();
@@ -220,9 +220,9 @@ namespace MopsBot.Data.Session
             return Tuple.Create("CannotFetchArcade", "CannotFetchArcade");
         }
 
-        public override string[] getInitArray(){
+        public override string[] GetInitArray(){
             string[] informationArray = new string[2];
-            informationArray[0] = name;
+            informationArray[0] = Name;
             informationArray[1] = "{" + string.Join(";", ChannelIds) + "}";
 
             return informationArray;

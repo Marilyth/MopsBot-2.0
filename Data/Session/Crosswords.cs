@@ -225,7 +225,7 @@ namespace MopsBot.Data.Session
                 
                 guessWords.Remove(tempWord);
                 updateMap();
-                StaticBase.people.addStat(pUser, (mapset.GetLength(0) - (tempWord.word.Length - 1)) * tempWord.word.Length, "Score");
+                StaticBase.people.AddStat(pUser, (mapset.GetLength(0) - (tempWord.word.Length - 1)) * tempWord.word.Length, "Score");
                 return $"Yes! You found {tempWord.word} ({guessWords.Count} words remaining)\n+**[$ {(mapset.GetLength(0) - (tempWord.word.Length - 1)) * tempWord.word.Length} $]**";
             }
             else return "Nope"; 

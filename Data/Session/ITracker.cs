@@ -32,7 +32,7 @@ namespace MopsBot.Data.Session
                await OnMinorEventFired(channelID, this, notificationText);
         }
 
-        public abstract string[] getInitArray();
+        public abstract string[] GetInitArray();
 
         public abstract void Dispose();
 

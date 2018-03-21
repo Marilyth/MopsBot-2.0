@@ -89,7 +89,7 @@ namespace MopsBot.Data
         /// </summary>
         /// <param name="count">How many Users should be shown</param>
         /// <returns>A string representing the leaderboard</returns>
-        public string drawDiagram(int count)
+        public string DrawDiagram(int count)
         {
             var sortedDict = (from entry in Users orderby entry.Value.Experience descending select entry).Take(count).ToArray();
 

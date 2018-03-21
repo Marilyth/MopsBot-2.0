@@ -17,7 +17,7 @@ namespace MopsBot.Data
     /// </summary>
     public class TrackerHandler<T> where T : Session.ITracker
     {
-        public Dictionary<string, T> trackers;
+        private Dictionary<string, T> trackers;
         public TrackerHandler(int sleepTime=0)
         {
             trackers = new Dictionary<string, T>();
@@ -47,7 +47,7 @@ namespace MopsBot.Data
             using (StreamWriter write = new StreamWriter(new FileStream($"mopsdata//{typeof(T).Name}.txt", FileMode.Create)))
                 foreach (T tr in trackers.Values)
                 {
-                    write.WriteLine(string.Join("|", tr.getInitArray()));
+                    write.WriteLine(string.Join("|", tr.GetInitArray()));
                 }
         }
 
@@ -104,14 +104,14 @@ namespace MopsBot.Data
             if(parent is Session.TwitchTracker){
                 Session.TwitchTracker parentHandle = parent as Session.TwitchTracker;
 
-                if(parentHandle.toUpdate.ContainsKey(channelID))
-                    await parentHandle.toUpdate[channelID].ModifyAsync(x => {
+                if(parentHandle.ToUpdate.ContainsKey(channelID))
+                    await parentHandle.ToUpdate[channelID].ModifyAsync(x => {
                         x.Content = notification;
                         x.Embed = (Embed)embed;
                     });
 
                 else{
-                    parentHandle.toUpdate.Add(channelID, await ((Discord.WebSocket.SocketTextChannel)Program.client.GetChannel(channelID)).SendMessageAsync(notification, false, embed));
+                    parentHandle.ToUpdate.Add(channelID, await ((Discord.WebSocket.SocketTextChannel)Program.client.GetChannel(channelID)).SendMessageAsync(notification, false, embed));
                     writeList();
                 }
             }

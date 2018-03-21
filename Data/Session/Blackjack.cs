@@ -115,7 +115,7 @@ namespace MopsBot.Data.Session
             if (!players.Exists(x => x.player.Equals(pUser)))
             {
                 players.Add(temp);
-                StaticBase.people.addStat(pUser.Id, -bet, "score");
+                StaticBase.people.AddStat(pUser.Id, -bet, "score");
                 output += $"Ooooh. A newcomer. {pUser.Username} just joined our table.\n\n";
                 drawCard(players[players.Count - 1].player, false);
                 drawCard(players[players.Count - 1].player, false);
@@ -168,7 +168,7 @@ namespace MopsBot.Data.Session
             foreach (Blackjack_User win in winner)
             {
                 winners += win.player.Username + ", ";
-                StaticBase.people.addStat(win.player.Id, win.bet*2, "score");
+                StaticBase.people.AddStat(win.player.Id, win.bet*2, "score");
             }
 
             return output += $"\nThe winner is: {(winner.Count > 0 ? winners : "Nobody" )} yay.\nWinners have been paid out double their original bet.";
