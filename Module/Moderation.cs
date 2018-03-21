@@ -150,6 +150,13 @@ namespace MopsBot.Module
 
                 await ReplyAsync("Stopped keeping track of " + owUser + "'s stats!");
             }
+
+            [Command("GetStats")]
+            [Summary("Returns an embed representating the stats of the specified Overwatch player")]
+            public async Task GetStats(string owUser)
+            {
+                await ReplyAsync("Stats fetched:", false, (Embed)Data.Session.OverwatchTracker.overwatchInformation(owUser));
+            }
         }
 
         [Command("trackClips")]

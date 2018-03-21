@@ -101,6 +101,72 @@ namespace MopsBot.Data.Session
             return JsonConvert.DeserializeObject<OStatsResult>(query, _jsonWriter);
         }
 
+        public static EmbedBuilder overwatchInformation(string owName)
+        {
+            string query = MopsBot.Module.Information.readURL($"https://owapi.net/api/v3/u/{owName}/blob");
+
+            JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
+            {
+                NullValueHandling = NullValueHandling.Ignore
+            };
+
+            OStatsResult info = JsonConvert.DeserializeObject<OStatsResult>(query, _jsonWriter);
+            Quickplay stats = info.eu.stats.quickplay;
+            var mostPlayed = getMostPlayed(info.eu.heroes.playtime);
+            
+            EmbedBuilder e = new EmbedBuilder();
+            e.Color = new Color(0x6441A4);
+            e.Title = "Stats";
+            e.Url = $"https://playoverwatch.com/en-us/career/pc/eu/{owName}";
+
+            EmbedAuthorBuilder author = new EmbedAuthorBuilder();
+            author.Name = owName.Split("-")[0];
+            author.Url = $"https://playoverwatch.com/en-us/career/pc/eu/{owName}";
+            author.IconUrl = stats.overall_stats.avatar;
+            e.Author = author;
+
+            EmbedFooterBuilder footer = new EmbedFooterBuilder();
+            footer.IconUrl = "http://i.imgur.com/YZ4w2ey.png";
+            footer.Text = "Overwatch";
+            e.Timestamp = DateTime.Now;
+            e.Footer = footer;
+
+            e.ThumbnailUrl = stats.overall_stats.avatar;
+
+            e.AddInlineField("Damage", $"Total: {stats.game_stats.all_damage_done}"+
+                            $"\nBest: {stats.game_stats.all_damage_done_most_in_game}"+
+                            $"\nAverage: {stats.rolling_average_stats.all_damage_done * 1000}");
+
+            e.AddInlineField("Eliminations", $"Total: {stats.game_stats.eliminations}"+
+                            $"\nKPD Best: {stats.game_stats.kill_streak_best}"+
+                            $"\nKPD Average: {stats.game_stats.kpd}");
+
+            e.AddInlineField("Healing", $"Total: {stats.game_stats.healing_done}"+
+                            $"\nBest: {stats.game_stats.healing_done_most_in_game}"+
+                            $"\nAverage: {stats.rolling_average_stats.healing_done * 1000}");
+
+            e.AddInlineField("Medals", $"Bronze: {stats.game_stats.medals_bronze}"+
+                            $"\nSilver: {stats.game_stats.medals_silver}"+
+                            $"\nGold: {stats.game_stats.medals_gold}");
+
+            e.AddInlineField("General", $"Time played: {stats.game_stats.time_played}hrs"+
+                            $"\nLevel: {stats.overall_stats.level + (100 * stats.overall_stats.prestige)}"+
+                            $"\nWon Games: {stats.overall_stats.wins}");
+
+            e.AddInlineField("Competitive", $"Time played: {info.eu.stats.competitive.game_stats.time_played}hrs"+
+                            $"\nWin Rate: {info.eu.stats.competitive.overall_stats.win_rate}%"+
+                            $"\nRank: {info.eu.stats.competitive.overall_stats.comprank}");
+
+            e.AddField("Most Played", mostPlayed.Item2);
+
+            if (mostPlayed.Item1.Equals("Ana") || mostPlayed.Item1.Equals("Moira") || mostPlayed.Item1.Equals("Orisa") || mostPlayed.Item1.Equals("Doomfist") || mostPlayed.Item1.Equals("Sombra"))
+                e.ImageUrl = $"https://blzgdapipro-a.akamaihd.net/hero/{mostPlayed.Item1.ToLower()}/full-portrait.png";
+            else
+                e.ImageUrl = $"https://blzgdapipro-a.akamaihd.net/media/thumbnail/{mostPlayed.Item1.ToLower()}-gameplay.jpg";
+
+            return e;
+        }
+
         ///<summary>Builds an embed out of the changed stats, and sends it as a Discord message </summary>
         /// <param Name="overwatchInformation">All fetched stats of the user </param>
         /// <param Name="changedStats">All changed stats of the user, together with a string presenting them </param>
@@ -215,6 +281,24 @@ namespace MopsBot.Data.Session
             }
 
             if(difference[sortedList[0].Key] > 0)
+                return Tuple.Create(sortedList[0].Key, leaderboard);
+
+            return Tuple.Create("CannotFetchArcade", "CannotFetchArcade");
+        }
+
+        private static Tuple<string, string> getMostPlayed(Playtime stats)
+        {
+            var playtime = stats.merge();
+            var sortedList = (from entry in playtime orderby entry.Value descending select entry).ToList();
+            string leaderboard = "";
+            for(int i = 0; i < 5; i++){
+                if(sortedList[i].Value > 0.005)
+                    leaderboard += $"{sortedList[i].Key}: {Math.Round(playtime[sortedList[i].Key], 2)}hrs\n";
+                else
+                    break;
+            }
+
+            if(playtime[sortedList[0].Key] > 0)
                 return Tuple.Create(sortedList[0].Key, leaderboard);
 
             return Tuple.Create("CannotFetchArcade", "CannotFetchArcade");
