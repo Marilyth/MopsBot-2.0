@@ -106,6 +106,14 @@ namespace MopsBot.Module
 
                 await ReplyAsync("Stopped keeping track of " + twitterUser + "'s tweets!");
             }
+
+            [Command("GetTracks")]
+            [Summary("Returns the twitters that are tracked in the current channel.")]
+            [RequireUserPermission(ChannelPermission.ManageChannel)]
+            public async Task getTracks()
+            {
+                await ReplyAsync("Following twitters are currently being tracked:\n``" + StaticBase.twitterTracks.getTracker(Context.Channel.Id) + "``");
+            }
         }
         [Group("Twitch")]
         public class Twitch : ModuleBase
@@ -128,6 +136,14 @@ namespace MopsBot.Module
                 streamTracks.removeTracker(streamerName, Context.Channel.Id);
 
                 await ReplyAsync("Stopped tracking " + streamerName + "'s streams!");
+            }
+
+            [Command("GetTracks")]
+            [Summary("Returns the streamers that are tracked in the current channel.")]
+            [RequireUserPermission(ChannelPermission.ManageChannel)]
+            public async Task getTracks()
+            {
+                await ReplyAsync("Following streamers are currently being tracked:\n``" + StaticBase.streamTracks.getTracker(Context.Channel.Id) + "``");
             }
         }
         [Group("Overwatch")]
@@ -156,6 +172,14 @@ namespace MopsBot.Module
             public async Task GetStats(string owUser)
             {
                 await ReplyAsync("Stats fetched:", false, (Embed)Data.Session.OverwatchTracker.overwatchInformation(owUser));
+            }
+
+            [Command("GetTracks")]
+            [Summary("Returns the players that are tracked in the current channel.")]
+            [RequireUserPermission(ChannelPermission.ManageChannel)]
+            public async Task getTracks()
+            {
+                await ReplyAsync("Following players are currently being tracked:\n``" + StaticBase.OverwatchTracks.getTracker(Context.Channel.Id) + "``");
             }
         }
 
