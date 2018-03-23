@@ -15,7 +15,7 @@ namespace MopsBot.Data.Session
 {
     public class TwitchTracker : ITracker
     {
-         bool disposed = false;
+        bool disposed = false;
         SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
         private System.Threading.Timer checkForChange;
         private PlotModel viewerChart;
@@ -37,12 +37,6 @@ namespace MopsBot.Data.Session
             ChannelIds = new HashSet<ulong>();
             Name = streamerName;
             IsOnline = false;
-            CurGame = "Nothing";
-            try{
-                CurGame = channelInformation().game;
-            }catch(Exception e){}
-
-            gameChange();
 
             checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false), StaticBase.ran.Next(6, 59) * 1000, 60000);
         }
@@ -56,32 +50,31 @@ namespace MopsBot.Data.Session
 
             Name = initArray[0];
             IsOnline = Boolean.Parse(initArray[1]);
-            foreach(string channel in initArray[2].Split(new char[]{'{','}',';'})){
-                if(channel != ""){
+            foreach (string channel in initArray[2].Split(new char[] { '{', '}', ';' }))
+            {
+                if (channel != "")
+                {
                     string[] channelText = channel.Split("=");
                     ChannelMessages.Add(ulong.Parse(channelText[0]), channelText[1]);
                     ChannelIds.Add(ulong.Parse(channelText[0]));
                 }
             }
 
-            CurGame = "Nothing";
-            try{
-                CurGame = channelInformation().game;
-            }catch(Exception e){}
-
-            if(IsOnline){
-                foreach(string message in initArray[3].Split(new char[]{'{','}',';'})){
-                    if(message != ""){
+            if (IsOnline)
+            {
+                foreach (string message in initArray[3].Split(new char[] { '{', '}', ';' }))
+                {
+                    if (message != "")
+                    {
                         string[] messageInformation = message.Split("=");
                         var channel = Program.client.GetChannel(ulong.Parse(messageInformation[0]));
                         var discordMessage = ((Discord.ITextChannel)channel).GetMessageAsync(ulong.Parse(messageInformation[1])).Result;
                         ToUpdate.Add(ulong.Parse(messageInformation[0]), (Discord.IUserMessage)discordMessage);
                     }
                 }
+                CurGame = streamerInformation().stream.game;
                 readPlotPoints();
             }
-
-            else gameChange();
 
             Console.Out.WriteLine($"{DateTime.Now} Started Twitchtracker for {Name} per array");
 
@@ -99,8 +92,7 @@ namespace MopsBot.Data.Session
                 return;
             }
 
-            if (StreamerStatus == null) return;
-            Boolean isStreaming = StreamerStatus.stream != null;
+            Boolean isStreaming = StreamerStatus.stream.channel != null;
 
             if (IsOnline != isStreaming)
             {
@@ -113,7 +105,7 @@ namespace MopsBot.Data.Session
                     file.Delete();
                     initViewerChart();
 
-                    foreach(ulong channel in ChannelMessages.Keys)
+                    foreach (ulong channel in ChannelMessages.Keys)
                         OnMinorChangeTracked(channel, $"{Name} went Offline!");
                     StaticBase.streamTracks.writeList();
                 }
@@ -121,10 +113,10 @@ namespace MopsBot.Data.Session
                 {
                     IsOnline = true;
                     ToUpdate = new Dictionary<ulong, Discord.IUserMessage>();
-                    CurGame = (StreamerStatus.stream == null) ? "Nothing" : StreamerStatus.stream.game;
+                    CurGame = StreamerStatus.stream.game;
                     gameChange();
-                    
-                    foreach(ulong channel in ChannelMessages.Keys)
+
+                    foreach (ulong channel in ChannelMessages.Keys)
                         OnMinorChangeTracked(channel, ChannelMessages[channel]);
                 }
             }
@@ -132,20 +124,24 @@ namespace MopsBot.Data.Session
             if (IsOnline)
             {
                 columnCount++;
-                series[CurGame].Last().Points.Add(new DataPoint(columnCount, StreamerStatus.stream.viewers));
-                if (StreamerStatus.stream != null && CurGame.CompareTo(StreamerStatus.stream.game) != 0 && !StreamerStatus.stream.game.Equals(""))
+
+                if (!series.ContainsKey(CurGame))
+                    gameChange(CurGame);
+                series[CurGame].Last().Points.Add(new DataPoint(columnCount, 100));
+
+                if (CurGame.CompareTo(StreamerStatus.stream.game) != 0)
                 {
                     CurGame = StreamerStatus.stream.game;
                     gameChange();
 
-                    series[CurGame].Last().Points.Add(new DataPoint(columnCount, StreamerStatus.stream.viewers));
-                    
-                    foreach(ulong channel in ChannelMessages.Keys)
+                    series[CurGame].Last().Points.Add(new DataPoint(columnCount, 100));
+
+                    foreach (ulong channel in ChannelMessages.Keys)
                         OnMinorChangeTracked(channel, $"{Name} switched games to **{CurGame}**");
                 }
-                foreach(ulong channel in ChannelIds)
-                    OnMajorChangeTracked(channel, createEmbed());
                 updateChart();
+                foreach (ulong channel in ChannelIds)
+                    OnMajorChangeTracked(channel, createEmbed());
             }
         }
 
@@ -158,19 +154,11 @@ namespace MopsBot.Data.Session
                 NullValueHandling = NullValueHandling.Ignore
             };
 
-            return JsonConvert.DeserializeObject<TwitchResult>(query, _jsonWriter);
-        }
+            TwitchResult tmpResult = JsonConvert.DeserializeObject<TwitchResult>(query, _jsonWriter);
+            if (tmpResult.stream == null) tmpResult.stream = new APIResults.Stream();
+            if (tmpResult.stream.game == "" || tmpResult.stream.game == null) tmpResult.stream.game = "Nothing";
 
-        private Channel channelInformation()
-        {
-            string query = MopsBot.Module.Information.readURL($"https://api.twitch.tv/kraken/channels/{Name}?client_id={Program.twitchId}");
-
-            JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
-            {
-                NullValueHandling = NullValueHandling.Ignore
-            };
-
-            return JsonConvert.DeserializeObject<Channel>(query, _jsonWriter);
+            return tmpResult;
         }
 
         public EmbedBuilder createEmbed()
@@ -196,7 +184,7 @@ namespace MopsBot.Data.Session
             e.ThumbnailUrl = $"{StreamerStatus.stream.preview.medium}?rand={StaticBase.ran.Next(0, 99999999)}";
             e.ImageUrl = $"http://5.45.104.29/StreamCharts/{Name}plot.png?rand={StaticBase.ran.Next(0, 99999999)}";
 
-            e.AddInlineField("Game", (streamer.game == "") ? "no Game" : streamer.game);
+            e.AddInlineField("Game", streamer.game);
             e.AddInlineField("Viewers", StreamerStatus.stream.viewers);
 
             return e;
@@ -333,7 +321,8 @@ namespace MopsBot.Data.Session
             }
         }
 
-        public override string[] GetInitArray(){
+        public override string[] GetInitArray()
+        {
             string[] informationArray = new string[4];
             informationArray[0] = Name;
             informationArray[1] = IsOnline.ToString();
@@ -344,21 +333,22 @@ namespace MopsBot.Data.Session
         }
 
         public override void Dispose()
-        { 
+        {
             Dispose(true);
-            GC.SuppressFinalize(this);           
+            GC.SuppressFinalize(this);
         }
 
         protected override void Dispose(bool disposing)
         {
             if (disposed)
-                return; 
-      
-            if (disposing) {
+                return;
+
+            if (disposing)
+            {
                 handle.Dispose();
                 checkForChange.Dispose();
             }
-      
+
             disposed = true;
         }
     }
