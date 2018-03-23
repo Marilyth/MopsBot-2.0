@@ -69,7 +69,6 @@ namespace MopsBot.Data.Session
                 if (newInformation == null) return;
 
                 var changedStats = getChangedStats(information, newInformation);
-                Console.WriteLine(DateTime.Now + " OW Tracker fetched Stats for " + Name + "\nNew Stats?: " + (changedStats.Count != 0) + $" (Wins: {newInformation.eu.stats.quickplay.overall_stats.wins})");
 
                 if (changedStats.Count != 0)
                 {
