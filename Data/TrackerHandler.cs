@@ -84,6 +84,10 @@ namespace MopsBot.Data
             writeList();
         }
 
+        public string getTracker(ulong channelID){
+            return string.Join(", ", trackers.Where(x => x.Value.ChannelIds.Contains(channelID)).Select(x => x.Key));
+        }
+
 
         /// <summary>
         /// Event that is called when the Tracker fetches new data containing no Embed
