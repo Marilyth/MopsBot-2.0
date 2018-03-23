@@ -64,9 +64,10 @@ namespace MopsBot
             return Task.CompletedTask;
         }
 
-        private async Task onClientReady()
+        private Task onClientReady()
         {
-            await Task.Run(() => StaticBase.initTracking());
+            Task.Run(() => StaticBase.initTracking());
+            return Task.CompletedTask;
         }
 
         private async Task onClientDC(Exception e)
