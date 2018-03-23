@@ -28,7 +28,7 @@ namespace MopsBot
                 LogLevel = LogSeverity.Info,
             });
 
-            StreamReader sr = new StreamReader(new FileStream("data//config.txt", FileMode.Open));
+            StreamReader sr = new StreamReader(new FileStream("mopsdata//config.txt", FileMode.Open));
 
             var token = sr.ReadLine();
             twitchId = sr.ReadLine();

@@ -57,6 +57,7 @@ namespace MopsBot.Data.Session.APIResults
         public int games { get; set; }
         public string tier { get; set; }
         public string rank_image { get; set; }
+        public string tier_image {get; set;}
         public int prestige { get; set; }
         public int wins { get; set; }
         public string avatar { get; set; }

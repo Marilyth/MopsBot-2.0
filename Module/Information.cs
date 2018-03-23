@@ -53,21 +53,21 @@ namespace MopsBot.Module
         [Summary("Returns the total characters send for the past limit days")]
         public async Task dayDiagram(int limit)
         {
-            await ReplyAsync(StaticBase.stats.drawDiagram(limit));
+            await ReplyAsync(StaticBase.stats.DrawDiagram(limit));
         }
 
         [Command("getStats")]
         [Summary("Returns your experience and all that stuff")]
         public async Task getStats()
         {
-            await ReplyAsync(StaticBase.people.users[Context.User.Id].statsToString());
+            await ReplyAsync(StaticBase.people.Users[Context.User.Id].statsToString());
         }
 
         [Command("ranking")]
         [Summary("Returns the top limit ranks of level")]
         public async Task ranking(int limit)
         {
-            await ReplyAsync(StaticBase.people.drawDiagram(limit));
+            await ReplyAsync(StaticBase.people.DrawDiagram(limit));
         }
 
         public static dynamic getRandomWord()

@@ -12,8 +12,8 @@ namespace MopsBot.Data
     /// </summary>
     public class Statistics
     {
-        public List<Day> days = new List<Day>();
-        public DateTime today = DateTime.Today;
+        public Dictionary<string, int> Days = new Dictionary<string, int>();
+        public string today;
 
         /// <summary>
         /// Initialises Statistics, by reading from a text file containing Date and Characters Count and adding them to a List
@@ -21,14 +21,14 @@ namespace MopsBot.Data
         public Statistics()
         {
             
-            StreamReader read = new StreamReader(new FileStream("data//statistics.txt", FileMode.OpenOrCreate));
+            StreamReader read = new StreamReader(new FileStream("mopsdata//statistics.txt", FileMode.OpenOrCreate));
             
             string s = "";
 
             while ((s = read.ReadLine()) != null)
             {
                 string[] data = s.Split(':');
-                days.Add(new Day(data[0], int.Parse(data[1])));
+                Days.Add(data[0], int.Parse(data[1]));
             }
             
             read.Dispose();
@@ -38,28 +38,28 @@ namespace MopsBot.Data
         /// Adds the "increase" parameter to todays value
         /// </summary>
         /// <param name="increase">Integer repesenting how many characters have been recieved</param>
-        public void addValue(int increase)
+        public void AddValue(int increase)
         {
-            today = DateTime.Today;
+            today = DateTime.Today.ToString("dd.MM.yyyy");
 
-            if (days.Exists(x => x.date.Equals(today)))
-                days.Find(x => x.date.Equals(today)).value += increase;
+            if (Days.ContainsKey(today))
+                Days[today] += increase;
 
-            else days.Add(new Day(today.ToString("dd/MM/yyyy"), increase));
+            else Days.Add(today, increase);
 
             saveData();
         }
 
         /// <summary>
-        /// Writes all days and values into a text file
+        /// Writes all Days and values into a text file
         /// </summary>
         private void saveData()
         {
-            StreamWriter write = new StreamWriter(new FileStream("data//statistics.txt", FileMode.Create));
+            StreamWriter write = new StreamWriter(new FileStream("mopsdata//statistics.txt", FileMode.Create));
             write.AutoFlush=true;
-            foreach(Day cur in days)
+            foreach(string cur in Days.Keys)
             {
-                write.WriteLine($"{cur.date.ToString("dd/MM/yyyy")}:{cur.value}");
+                write.WriteLine($"{cur}:{Days[cur]}");
             }
 
             write.Dispose();
@@ -67,50 +67,31 @@ namespace MopsBot.Data
         }
 
         /// <summary>
-        /// Creates an ASCII chart presenting the past "count" days and their values
+        /// Creates an ASCII chart presenting the past "count" Days and their values
         /// </summary>
-        /// <param name="count">Integer, representing how many days should be shown</param>
+        /// <param name="count">Integer, representing how many Days should be shown</param>
         /// <returns></returns>
-        public string drawDiagram(int count)
+        public string DrawDiagram(int count)
         {
-            days = days.OrderByDescending(x => x.date).ToList();
-
-            List<Day> tempDays = days.Take(count).ToList();
-            tempDays = tempDays.OrderByDescending(x => x.value).ToList();
-
-            int maximum = tempDays[0].value;
+            var tempDays = (from entry in Days orderby DateTime.ParseExact(entry.Key, "dd/MM/yyyy", null) descending select entry).Take(count).ToArray();
+            int maximum = (from entry in tempDays orderby entry.Value descending select entry).ToArray()[0].Value;
 
             string[] lines = new string[count];
 
             for(int i = 0; i < count; i++)
             {
-                lines[i] = $"{days[i].date.ToString("dd/MM/yyyy")}|";
-                double relPercent = days[i].value / ((double)maximum / 10);
+                lines[i] = $"{tempDays[i].Key}|";
+                double relPercent = tempDays[i].Value / ((double)maximum / 10);
                 for(int j = 0; j < relPercent; j++)
                 {
                     lines[i] += "■";
                 }
-                lines[i] += $" {days[i].value}";
+                lines[i] += $" {tempDays[i].Value}";
             }
 
             string output = "```coq\n" + string.Join("\n", lines) + "```";
 
             return output;
-        }
-    }
-
-    /// <summary>
-    /// Class representing a single Day for the Statistics
-    /// </summary>
-    public class Day
-    {
-        public DateTime date;
-        public int value;
-
-        public Day(string pDate, int pValue)
-        {
-            date = DateTime.ParseExact(pDate, "dd.MM.yyyy", System.Globalization.CultureInfo.InvariantCulture);
-            value = pValue;
         }
     }
 }

@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using MopsBot.Module.Preconditions;
+using static MopsBot.StaticBase;
 
 namespace MopsBot.Module
 {
@@ -39,49 +40,6 @@ namespace MopsBot.Module
             }
         }
 
-        [Group("MeetUp")]
-        public class treffen : ModuleBase
-        {
-            [Command("create")]
-            [Summary("Creates a Meet-Up others can participate in.\n<Text> = 13.12.2017;Bowling;China")]
-            public async Task create([Remainder] string Text)
-            {
-                StaticBase.meetups.addMeetUp(Text, (SocketGuildUser)Context.User);
-                await ReplyAsync("Done ~");
-            }
-
-            [Command("blow")]
-            [Summary("Deletes a Meet-Up, if you are the creator.")]
-            public Task blow(int id)
-            {
-                StaticBase.meetups.blowMeetUp(id, (SocketGuildUser)Context.User);
-                return Task.CompletedTask;
-            }
-
-            [Command("join")]
-            [Summary("Join the specified meet-up")]
-            public Task join(int id)
-            {
-                StaticBase.meetups.upcoming[id - 1].addParticipant(Context.User.Id);
-                return Task.CompletedTask;
-            }
-
-            [Command("leave")]
-            [Summary("Leave the specified meet-up")]
-            public Task leave(int id)
-            {
-                StaticBase.meetups.upcoming[id - 1].removeParticipant(Context.User.Id);
-                return Task.CompletedTask;
-            }
-
-            [Command("get")]
-            [Summary("Provides you with a list of all upcoming Meet-Ups, including their ID")]
-            public async Task get()
-            {
-                await ReplyAsync(StaticBase.meetups.meetupToString());
-            }
-        }
-
         [Command("poll"), Summary("Creates a poll\nExample: !poll Am I sexy?;Yes:No;@Panda @Demon @Snail")]
         public async Task Poll([Remainder] string Poll)
         {
@@ -89,20 +47,20 @@ namespace MopsBot.Module
                 return;
 
             string[] pollSegments = Poll.Split(';');
-            List<IGuildUser> participants = StaticBase.getMentionedUsers((CommandContext)Context);
+            List<IGuildUser> participants = getMentionedUsers((CommandContext)Context);
 
-            StaticBase.poll = new Data.Session.Poll(pollSegments[0], pollSegments[1].Split(':'), participants.ToArray());
+            poll = new Data.Session.Poll(pollSegments[0], pollSegments[1].Split(':'), participants.ToArray());
 
             foreach (IGuildUser part in participants)
             {
                 string output = "";
-                for (int i = 0; i < StaticBase.poll.answers.Length; i++)
+                for (int i = 0; i < poll.answers.Length; i++)
                 {
-                    output += $"\n``{i + 1}`` {StaticBase.poll.answers[i]}";
+                    output += $"\n``{i + 1}`` {poll.answers[i]}";
                 }
                 try
                 {
-                    await part.GetOrCreateDMChannelAsync().Result.SendMessageAsync($"{Context.User.Username} has created a poll:\n\n📄: {StaticBase.poll.question}\n{output}\n\nTo vote, simply PM me the **Number** of the answer you agree with.");
+                    await part.GetOrCreateDMChannelAsync().Result.SendMessageAsync($"{Context.User.Username} has created a poll:\n\n📄: {poll.question}\n{output}\n\nTo vote, simply PM me the **Number** of the answer you agree with.");
                 }
                 catch { }
             }
@@ -116,71 +74,89 @@ namespace MopsBot.Module
             if (!Context.Guild.GetUserAsync(Context.User.Id).Result.GuildPermissions.Administrator)
                 return;
 
-            await ReplyAsync(StaticBase.poll.pollToText());
+            await ReplyAsync(poll.pollToText());
 
-            foreach (IGuildUser part in StaticBase.poll.participants)
+            foreach (IGuildUser part in poll.participants)
             {
-                await part.GetOrCreateDMChannelAsync().Result.SendMessageAsync($"📄:{StaticBase.poll.question}\n\nHas ended without your participation, sorry!");
-                StaticBase.poll.participants.Remove(part);
+                await part.GetOrCreateDMChannelAsync().Result.SendMessageAsync($"📄:{poll.question}\n\nHas ended without your participation, sorry!");
+                poll.participants.Remove(part);
             }
 
-            StaticBase.poll = null;
+            poll = null;
         }
-
-        [Command("trackStreamer")]
-        [Summary("Keeps track of the specified Streamer, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
-        [RequireUserPermission(ChannelPermission.ManageChannel)]
-        public async Task trackStreamer(string streamerName, [Remainder]string notificationMessage)
+        [Group("Twitter")]
+        public class Twitter : ModuleBase
         {
-            if (!StaticBase.streamTracks.streamers.ContainsKey(streamerName))
+            [Command("Track")]
+            [Summary("Keeps track of the specified TwitterUser, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
+            [RequireUserPermission(ChannelPermission.ManageChannel)]
+            public async Task trackTwitter(string twitterUser)
             {
-                StaticBase.streamTracks.streamers.Add(streamerName, new Data.Session.TwitchTracker(streamerName, Context.Channel.Id, notificationMessage, false, "Nothing"));
-            }
-            else
-                StaticBase.streamTracks.streamers[streamerName].ChannelIds.Add(Context.Channel.Id, notificationMessage);
+                twitterTracks.addTracker(twitterUser, Context.Channel.Id);
 
-            StaticBase.streamTracks.writeList();
-
-            await ReplyAsync("Keeping track of " + streamerName + "'s streams, from now on!");
-        }
-
-        [Command("changeChartColour")]
-        [Summary("Changes the colour of the chart of the specified Streamer, in case it is not distinguishable-")]
-        public Task changeColour(string streamerName)
-        {
-            if (StaticBase.streamTracks.streamers.ContainsKey(streamerName))
-            {
-                StaticBase.streamTracks.streamers[streamerName].recolour();
+                await ReplyAsync("Keeping track of " + twitterUser + "'s tweets, from now on!");
             }
 
-            return Task.CompletedTask;
+            [Command("UnTrack")]
+            [Summary("Stops keeping track of the specified TwitterUser, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
+            [RequireUserPermission(ChannelPermission.ManageChannel)]
+            public async Task unTrackTwitter(string twitterUser)
+            {
+                twitterTracks.removeTracker(twitterUser, Context.Channel.Id);
+
+                await ReplyAsync("Stopped keeping track of " + twitterUser + "'s tweets!");
+            }
         }
-
-        [Command("trackTwitter")]
-        [Summary("Keeps track of the specified TwitterUser, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
-        [RequireUserPermission(ChannelPermission.ManageChannel)]
-        public async Task trackStreamer(string twitterUser)
+        [Group("Twitch")]
+        public class Twitch : ModuleBase
         {
-            if (!StaticBase.twitterTracks.twitters.ContainsKey(twitterUser))
-                StaticBase.twitterTracks.twitters.Add(twitterUser, new Data.Session.TwitterTracker(twitterUser, 0));
+            [Command("Track")]
+            [Summary("Keeps track of the specified Streamer, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
+            [RequireUserPermission(ChannelPermission.ManageChannel)]
+            public async Task trackStreamer(string streamerName, [Remainder]string notificationMessage="Stream went live!")
+            {
+                streamTracks.addTracker(streamerName, Context.Channel.Id, notificationMessage);
 
-            StaticBase.twitterTracks.twitters[twitterUser].ChannelIds.Add(Context.Channel.Id);
-            StaticBase.twitterTracks.writeList();
+                await ReplyAsync("Keeping track of " + streamerName + "'s streams, from now on!");
+            }
 
-            await ReplyAsync("Keeping track of " + twitterUser + "'s tweets, from now on!");
+            [Command("UnTrack")]
+            [Summary("Stops tracking the specified streamer.\nRequires Manage channel permissions.")]
+            [RequireUserPermission(ChannelPermission.ManageChannel)]
+            public async Task unTrackStreamer(string streamerName)
+            {
+                streamTracks.removeTracker(streamerName, Context.Channel.Id);
+
+                await ReplyAsync("Stopped tracking " + streamerName + "'s streams!");
+            }
         }
-
-        [Command("trackOverwatch")]
-        [Summary("Keeps track of the specified Overwatch player, in the Channel you are calling this command right now.\nParameter: Username-Battletag")]
-        public async Task trackOW(string owUser)
+        [Group("Overwatch")]
+        public class Overwatch : ModuleBase
         {
-            if (!StaticBase.OverwatchTracks.owPlayers.ContainsKey(owUser))
-                StaticBase.OverwatchTracks.owPlayers.Add(owUser, new Data.Session.OverwatchTracker(owUser));
+            [Command("Track")]
+            [Summary("Keeps track of the specified Overwatch player, in the Channel you are calling this command right now.\nParameter: Username-Battletag")]
+            public async Task trackOW(string owUser)
+            {
+                OverwatchTracks.addTracker(owUser, Context.Channel.Id);
 
-            StaticBase.OverwatchTracks.owPlayers[owUser].ChannelIds.Add(Context.Channel.Id);
-            StaticBase.OverwatchTracks.writeList();
+                await ReplyAsync("Keeping track of " + owUser + "'s stats, from now on!");
+            }
 
-            await ReplyAsync("Keeping track of " + owUser + "'s stats, from now on!");
+            [Command("UnTrack")]
+            [Summary("Stops keeping track of the specified Overwatch player, in the Channel you are calling this command right now.\nParameter: Username-Battletag")]
+            public async Task unTrackOW(string owUser)
+            {
+                OverwatchTracks.removeTracker(owUser, Context.Channel.Id);
+
+                await ReplyAsync("Stopped keeping track of " + owUser + "'s stats!");
+            }
+
+            [Command("GetStats")]
+            [Summary("Returns an embed representating the stats of the specified Overwatch player")]
+            public async Task GetStats(string owUser)
+            {
+                await ReplyAsync("Stats fetched:", false, (Embed)Data.Session.OverwatchTracker.overwatchInformation(owUser));
+            }
         }
 
         [Command("trackClips")]
@@ -188,9 +164,34 @@ namespace MopsBot.Module
         [RequireUserPermission(ChannelPermission.ManageChannel)]
         public async Task trackClips(string streamerName)
         {
-            StaticBase.ClipTracker.addTracker(streamerName, Context.Channel.Id);
+            ClipTracker.addTracker(streamerName, Context.Channel.Id);
 
             await ReplyAsync("Keeping track of clips of " + streamerName + "'s streams, from now on!");
+        }
+
+
+        [Command("setPrefix")]
+        [Summary("Changes the prefix of Mops in the current Guild")]
+        [RequireUserPermission(ChannelPermission.ManageChannel)]
+        public async Task setPrefix([Remainder]string prefix)
+        {
+            string oldPrefix;
+
+            if (guildPrefix.ContainsKey(Context.Guild.Id))
+            {
+                oldPrefix = guildPrefix[Context.Guild.Id];
+                guildPrefix[Context.Guild.Id] = prefix;
+            }
+
+            else
+            {
+                oldPrefix = "!";
+                guildPrefix.Add(Context.Guild.Id, prefix);
+            }
+
+            savePrefix();
+
+            await ReplyAsync($"Changed prefix from `{oldPrefix}` to `{prefix}`");
         }
 
         [Command("kill")]

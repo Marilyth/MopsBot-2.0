@@ -14,35 +14,47 @@ using Microsoft.Win32.SafeHandles;
 
 namespace MopsBot.Data.Session
 {
-    public class TwitterTracker : IDisposable
+    public class TwitterTracker : ITracker
     {
         bool disposed = false;
         SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
         
         private System.Threading.Timer checkForChange;
-        public string name;
+        public string Name;
         private IUserIdentifier ident;
-        public long lastMessage;
+        private long lastMessage;
         private Task<IEnumerable<ITweet>> fetchTweets;
-        public HashSet<ulong> ChannelIds;
-        
 
-        public TwitterTracker(string twitterName, long pLastMessage)
+        public TwitterTracker(string twitterName)
         {
-            lastMessage = pLastMessage;
-            name = twitterName;
+            Name = twitterName;
             ChannelIds = new HashSet<ulong>();
 
             checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false), StaticBase.ran.Next(6,59)*1000, 300000);
         }
 
-        private void CheckForChange_Elapsed(object stateinfo)
+        public TwitterTracker(string[] initArray)
+        {
+            ChannelIds = new HashSet<ulong>();
+
+            Name = initArray[0];
+            lastMessage = long.Parse(initArray[1]);
+            foreach(string channel in initArray[2].Split(new char[]{'{','}',';'})){
+                if(channel != "")
+                    ChannelIds.Add(ulong.Parse(channel));
+            }
+            
+
+            checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false), StaticBase.ran.Next(6,59)*1000, 300000);
+        }
+
+        protected override void CheckForChange_Elapsed(object stateinfo)
         {
             Tweetinvi.Parameters.IUserTimelineParameters parameters = Timeline.CreateUserTimelineParameter();
             if(lastMessage != 0) parameters.SinceId = lastMessage;
             parameters.MaximumNumberOfTweetsToRetrieve = 5;
             try{
-                ITweet[] newTweets = Timeline.GetUserTimeline(name, parameters).Reverse().ToArray();
+                ITweet[] newTweets = Timeline.GetUserTimeline(Name, parameters).Reverse().ToArray();
             
                 if(newTweets.Length != 0){
                  lastMessage = newTweets[newTweets.Length -1].Id;
@@ -50,7 +62,9 @@ namespace MopsBot.Data.Session
                 }
             
                 foreach(ITweet newTweet in newTweets){
-                    sendTwitterNotification(newTweet);
+                    foreach(ulong channel in ChannelIds)
+                        OnMajorChangeTracked(channel, sendTwitterNotification(newTweet), "~Tweet Tweet~");
+                    
                     System.Threading.Thread.Sleep(5000);
                 }
             }catch{
@@ -58,7 +72,7 @@ namespace MopsBot.Data.Session
             }
         }
     
-        private void sendTwitterNotification(ITweet tweet)
+        private EmbedBuilder sendTwitterNotification(ITweet tweet)
         {
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0x6441A4);
@@ -84,19 +98,26 @@ namespace MopsBot.Data.Session
 
             e.Description = tweet.FullText;
 
-            foreach(var channel in ChannelIds)
-            {
-                ((SocketTextChannel)Program.client.GetChannel(channel)).SendMessageAsync("~ Tweet Tweet ~", false, e);
-            }
+            return e;
         }
 
-        public void Dispose()
+        public override string[] GetInitArray(){
+            string[] informationArray = new string[2 + ChannelIds.Count];
+            informationArray[0] = Name;
+            informationArray[1] = lastMessage.ToString();
+            informationArray[2] = "{" + string.Join(";", ChannelIds) + "}";
+
+            return informationArray;
+        }
+
+
+        public override void Dispose()
         { 
             Dispose(true);
             GC.SuppressFinalize(this);           
         }
 
-        protected virtual void Dispose(bool disposing)
+        protected override void Dispose(bool disposing)
         {
             if (disposed)
                 return; 

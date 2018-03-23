@@ -118,7 +118,7 @@ public class AudioService
         else 
             DownloadURL(url);
 
-        var dir = new DirectoryInfo("data//");
+        var dir = new DirectoryInfo("mopsdata//");
         var file = dir.GetFiles().Where(x => x.Extension.ToLower().Equals(".mp3")).First();
         
         return Process.Start(new ProcessStartInfo
@@ -138,7 +138,7 @@ public class AudioService
     {
         var prc = new Process();
         prc.StartInfo.FileName = "youtube-dl";
-        prc.StartInfo.Arguments = $"--extract-audio --audio-format mp3 -o \"data//%(title)s.%(ext)s\" \"{(url.Contains("://") ? url : $"ytsearch:{url}")}\"";
+        prc.StartInfo.Arguments = $"--extract-audio --audio-format mp3 -o \"mopsdata//%(title)s.%(ext)s\" \"{(url.Contains("://") ? url : $"ytsearch:{url}")}\"";
         prc.StartInfo.UseShellExecute = false;
         prc.StartInfo.RedirectStandardOutput = true;
 
@@ -188,7 +188,7 @@ public class AudioService
     /// </summary>
     private void DeleteFiles()
     {
-        var dir = new DirectoryInfo("data//");
+        var dir = new DirectoryInfo("mopsdata//");
         var files = dir.GetFiles().Where(x => x.Extension.ToLower().Equals(".mp3"));
         foreach(var f in files)
             f.Delete();

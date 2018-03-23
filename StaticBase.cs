@@ -7,6 +7,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using MopsBot.Data;
+using MopsBot.Data.Session;
+using Tweetinvi;
 
 namespace MopsBot
 {
@@ -14,37 +17,57 @@ namespace MopsBot
     {
         public static Data.Statistics stats = new Data.Statistics();
         public static Data.UserScore people = new Data.UserScore();
-        public static Data.MeetUps meetups = new Data.MeetUps();
         public static Random ran = new Random();
         public static List<Data.Session.IdleDungeon> dungeonCrawler = new List<Data.Session.IdleDungeon>();
         public static List<ulong> BotManager = new List<ulong>();
         public static List<string> playlist = new List<string>();
+        public static Dictionary<ulong, string> guildPrefix;
         public static Data.Session.Poll poll;
         public static Data.Session.Blackjack blackjack;
+        public static Data.Session.Crosswords crosswords;
         public static Data.ClipTracker ClipTracker;
-        public static Data.OsuTracker osuTracker;
-        public static Data.StreamerList streamTracks;
-        public static Data.TwitterList twitterTracks;
-        public static Data.OverwatchList OverwatchTracks;
-        
+        //public static Data.OsuTracker osuTracker;
+        public static TrackerHandler<TwitchTracker> streamTracks;
+        public static TrackerHandler<TwitterTracker> twitterTracks;
+        public static TrackerHandler<OverwatchTracker> OverwatchTracks;
+
         public static bool init = false;
 
         /// <summary>
         /// Initialises the Twitch, Twitter and Overwatch trackers
         /// </summary>
         public static void initTracking()
-        {   if(!init){
-                streamTracks = new Data.StreamerList();
-                twitterTracks = new Data.TwitterList();
+        {
+            if (!init)
+            {
+                Auth.SetUserCredentials(Program.twitterAuth[0], Program.twitterAuth[1], Program.twitterAuth[2], Program.twitterAuth[3]);
+                TweetinviConfig.CurrentThreadSettings.TweetMode = TweetMode.Extended;
+                TweetinviConfig.ApplicationSettings.TweetMode = TweetMode.Extended;
+
+                streamTracks = new TrackerHandler<TwitchTracker>();
+                twitterTracks = new TrackerHandler<TwitterTracker>();
+                OverwatchTracks = new TrackerHandler<OverwatchTracker>(20000);
                 ClipTracker = new Data.ClipTracker();
-                OverwatchTracks = new Data.OverwatchList();
                 //osuTracker = new Data.OsuTracker();        
 
                 init = true;
             }
         }
 
-        public static void disconnected(){
+        public static void savePrefix()
+        {
+            using (StreamWriter write = new StreamWriter(new FileStream("mopsdata//guildprefixes.txt", FileMode.Create)))
+            {
+                write.AutoFlush = true;
+                foreach (var kv in guildPrefix)
+                {
+                    write.WriteLine($"{kv.Key}|{kv.Value}");
+                }
+            }
+        }
+
+        public static void disconnected()
+        {
             /*
             if(init){
                 streamTracks.Dispose();
