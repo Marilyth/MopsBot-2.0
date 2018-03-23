@@ -127,14 +127,14 @@ namespace MopsBot.Data.Session
 
                 if (!series.ContainsKey(CurGame))
                     gameChange(CurGame);
-                series[CurGame].Last().Points.Add(new DataPoint(columnCount, 100));
+                series[CurGame].Last().Points.Add(new DataPoint(columnCount, StreamerStatus.stream.viewers));
 
                 if (CurGame.CompareTo(StreamerStatus.stream.game) != 0)
                 {
                     CurGame = StreamerStatus.stream.game;
                     gameChange();
 
-                    series[CurGame].Last().Points.Add(new DataPoint(columnCount, 100));
+                    series[CurGame].Last().Points.Add(new DataPoint(columnCount, StreamerStatus.stream.viewers));
 
                     foreach (ulong channel in ChannelMessages.Keys)
                         OnMinorChangeTracked(channel, $"{Name} switched games to **{CurGame}**");
