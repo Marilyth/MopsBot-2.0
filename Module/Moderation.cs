@@ -109,7 +109,6 @@ namespace MopsBot.Module
 
             [Command("GetTracks")]
             [Summary("Returns the twitters that are tracked in the current channel.")]
-            [RequireUserPermission(ChannelPermission.ManageChannel)]
             public async Task getTracks()
             {
                 await ReplyAsync("Following twitters are currently being tracked:\n``" + StaticBase.twitterTracks.getTracker(Context.Channel.Id) + "``");
@@ -140,7 +139,6 @@ namespace MopsBot.Module
 
             [Command("GetTracks")]
             [Summary("Returns the streamers that are tracked in the current channel.")]
-            [RequireUserPermission(ChannelPermission.ManageChannel)]
             public async Task getTracks()
             {
                 await ReplyAsync("Following streamers are currently being tracked:\n``" + StaticBase.streamTracks.getTracker(Context.Channel.Id) + "``");
@@ -151,6 +149,7 @@ namespace MopsBot.Module
         {
             [Command("Track")]
             [Summary("Keeps track of the specified Overwatch player, in the Channel you are calling this command right now.\nParameter: Username-Battletag")]
+            [RequireUserPermission(ChannelPermission.ManageChannel)]
             public async Task trackOW(string owUser)
             {
                 OverwatchTracks.addTracker(owUser, Context.Channel.Id);
@@ -160,6 +159,7 @@ namespace MopsBot.Module
 
             [Command("UnTrack")]
             [Summary("Stops keeping track of the specified Overwatch player, in the Channel you are calling this command right now.\nParameter: Username-Battletag")]
+            [RequireUserPermission(ChannelPermission.ManageChannel)]
             public async Task unTrackOW(string owUser)
             {
                 OverwatchTracks.removeTracker(owUser, Context.Channel.Id);
@@ -176,7 +176,6 @@ namespace MopsBot.Module
 
             [Command("GetTracks")]
             [Summary("Returns the players that are tracked in the current channel.")]
-            [RequireUserPermission(ChannelPermission.ManageChannel)]
             public async Task getTracks()
             {
                 await ReplyAsync("Following players are currently being tracked:\n``" + StaticBase.OverwatchTracks.getTracker(Context.Channel.Id) + "``");
