@@ -184,7 +184,7 @@ namespace MopsBot.Data.Session
             e.ThumbnailUrl = $"{StreamerStatus.stream.preview.medium}?rand={StaticBase.ran.Next(0, 99999999)}";
             e.ImageUrl = $"http://5.45.104.29/StreamCharts/{Name}plot.png?rand={StaticBase.ran.Next(0, 99999999)}";
 
-            e.AddInlineField("Game", streamer.game);
+            e.AddInlineField("Game", CurGame);
             e.AddInlineField("Viewers", StreamerStatus.stream.viewers);
 
             return e;
