@@ -22,6 +22,7 @@ namespace MopsBot
         public static List<ulong> BotManager = new List<ulong>();
         public static List<string> playlist = new List<string>();
         public static Dictionary<ulong, string> guildPrefix;
+        public static Dictionary<string, HashSet<ulong>> GiveAways = new Dictionary<string, HashSet<ulong>>();
         public static Data.Session.Poll poll;
         public static Data.Session.Blackjack blackjack;
         public static Data.Session.Crosswords crosswords;
