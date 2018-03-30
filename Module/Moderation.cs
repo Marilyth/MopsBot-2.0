@@ -84,6 +84,59 @@ namespace MopsBot.Module
 
             poll = null;
         }
+
+        [Group("Giveaway")]
+        public class Giveaway : ModuleBase
+        {
+            [Command("create")]
+            [Summary(".")]
+            public async Task create(string game)
+            {
+                game = game.ToLower();
+                if(!GiveAways.ContainsKey(game)){
+                    GiveAways.Add(game, new HashSet<ulong>());
+                    GiveAways[game].Add(Context.User.Id);
+                    await ReplyAsync($"Giveaway for {game} created.\nPlease join by using `!Giveaway join {game}`");
+                }
+                    
+                else 
+                    await ReplyAsync($"Giveaway with that name already exists. Please choose another name.");
+            }
+
+            [Command("join")]
+            [Summary(".")]
+            public async Task join(string game)
+            {
+                game = game.ToLower();
+                if(GiveAways.ContainsKey(game))
+                    if(!GiveAways[game].Contains(Context.User.Id)){
+                        GiveAways[game].Add(Context.User.Id);
+                        await ReplyAsync($"{Context.User.Username} entered for {game}");
+                    }
+                    else
+                        await ReplyAsync($"You cannot enter multiple times.");
+                else
+                    await ReplyAsync($"Giveaway not found");
+            }
+
+            [Command("draw")]
+            [Summary(".")]
+            public async Task draw(string game)
+            {
+                game = game.ToLower();
+                if(GiveAways.ContainsKey(game))
+                    if(GiveAways[game].First().Equals(Context.User.Id))
+                        if(GiveAways[game].Count > 1){
+                            await ReplyAsync($"{GiveAways[game].Select(x => Program.client.GetUser(x).Mention).ToList()[StaticBase.ran.Next(1, GiveAways[game].Count)]} won {game}.");
+                            GiveAways.Remove(game);
+                        }
+                    else
+                        await ReplyAsync("Only the creator can draw.");
+                else 
+                    await ReplyAsync($"Giveaway not found");
+            }
+        }
+
         [Group("Twitter")]
         public class Twitter : ModuleBase
         {
