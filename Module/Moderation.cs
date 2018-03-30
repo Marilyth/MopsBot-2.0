@@ -90,7 +90,7 @@ namespace MopsBot.Module
         {
             [Command("create")]
             [Summary("Creates giveaway.")]
-            public async Task create(string game)
+            public async Task create([Remainder]string game)
             {
                 game = game.ToLower();
                 if(!GiveAways.ContainsKey(game)){
@@ -105,7 +105,7 @@ namespace MopsBot.Module
 
             [Command("join")]
             [Summary("Joins giveaway.")]
-            public async Task join(string game)
+            public async Task join([Remainder]string game)
             {
                 game = game.ToLower();
                 if(GiveAways.ContainsKey(game))
@@ -121,7 +121,7 @@ namespace MopsBot.Module
 
             [Command("draw")]
             [Summary("Draws a winner.")]
-            public async Task draw(string game)
+            public async Task draw([Remainder]string game)
             {
                 game = game.ToLower();
                 if(GiveAways.ContainsKey(game))
