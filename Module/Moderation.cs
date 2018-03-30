@@ -89,7 +89,7 @@ namespace MopsBot.Module
         public class Giveaway : ModuleBase
         {
             [Command("create")]
-            [Summary(".")]
+            [Summary("Creates giveaway.")]
             public async Task create(string game)
             {
                 game = game.ToLower();
@@ -104,7 +104,7 @@ namespace MopsBot.Module
             }
 
             [Command("join")]
-            [Summary(".")]
+            [Summary("Joins giveaway.")]
             public async Task join(string game)
             {
                 game = game.ToLower();
@@ -120,7 +120,7 @@ namespace MopsBot.Module
             }
 
             [Command("draw")]
-            [Summary(".")]
+            [Summary("Draws a winner.")]
             public async Task draw(string game)
             {
                 game = game.ToLower();
@@ -130,6 +130,8 @@ namespace MopsBot.Module
                             await ReplyAsync($"{GiveAways[game].Select(x => Program.client.GetUser(x).Mention).ToList()[StaticBase.ran.Next(1, GiveAways[game].Count)]} won {game}.");
                             GiveAways.Remove(game);
                         }
+                        else
+                            await ReplyAsync("There is nobody to draw.");
                     else
                         await ReplyAsync("Only the creator can draw.");
                 else 
