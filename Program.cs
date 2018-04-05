@@ -19,6 +19,7 @@ namespace MopsBot
         public static DiscordSocketClient client;
         public static string twitchId;
         public static string[] twitterAuth;
+        public static string youtubeKey;
         private CommandHandler handler;
 
         public async Task Start()
@@ -33,6 +34,7 @@ namespace MopsBot
             var token = sr.ReadLine();
             twitchId = sr.ReadLine();
             twitterAuth = sr.ReadLine().Split(",");
+            youtubeKey = sr.ReadLine();
 
             await client.LoginAsync(TokenType.Bot, token);
             await client.StartAsync();

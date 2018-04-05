@@ -31,6 +31,7 @@ namespace MopsBot
         public static TrackerHandler<TwitchTracker> streamTracks;
         public static TrackerHandler<TwitterTracker> twitterTracks;
         public static TrackerHandler<OverwatchTracker> OverwatchTracks;
+        public static TrackerHandler<YoutubeTracker> YoutubeTracks;
 
         public static bool init = false;
 
@@ -49,6 +50,7 @@ namespace MopsBot
                 twitterTracks = new TrackerHandler<TwitterTracker>();
                 OverwatchTracks = new TrackerHandler<OverwatchTracker>(20000);
                 ClipTracker = new Data.ClipTracker();
+                YoutubeTracks = new TrackerHandler<YoutubeTracker>();
                 //osuTracker = new Data.OsuTracker();        
 
                 init = true;
