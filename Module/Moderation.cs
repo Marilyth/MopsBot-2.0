@@ -84,6 +84,61 @@ namespace MopsBot.Module
 
             poll = null;
         }
+
+        [Group("Giveaway")]
+        public class Giveaway : ModuleBase
+        {
+            [Command("create")]
+            [Summary("Creates giveaway.")]
+            public async Task create([Remainder]string game)
+            {
+                game = game.ToLower();
+                if(!GiveAways.ContainsKey(game)){
+                    GiveAways.Add(game, new HashSet<ulong>());
+                    GiveAways[game].Add(Context.User.Id);
+                    await ReplyAsync($"Giveaway for {game} created.\nPlease join by using `!Giveaway join {game}`");
+                }
+                    
+                else 
+                    await ReplyAsync($"Giveaway with that name already exists. Please choose another name.");
+            }
+
+            [Command("join")]
+            [Summary("Joins giveaway.")]
+            public async Task join([Remainder]string game)
+            {
+                game = game.ToLower();
+                if(GiveAways.ContainsKey(game))
+                    if(!GiveAways[game].Contains(Context.User.Id)){
+                        GiveAways[game].Add(Context.User.Id);
+                        await ReplyAsync($"{Context.User.Username} entered for {game}");
+                    }
+                    else
+                        await ReplyAsync($"You cannot enter multiple times.");
+                else
+                    await ReplyAsync($"Giveaway not found");
+            }
+
+            [Command("draw")]
+            [Summary("Draws a winner.")]
+            public async Task draw([Remainder]string game)
+            {
+                game = game.ToLower();
+                if(GiveAways.ContainsKey(game))
+                    if(GiveAways[game].First().Equals(Context.User.Id))
+                        if(GiveAways[game].Count > 1){
+                            await ReplyAsync($"{GiveAways[game].Select(x => Program.client.GetUser(x).Mention).ToList()[StaticBase.ran.Next(1, GiveAways[game].Count)]} won {game}.");
+                            GiveAways.Remove(game);
+                        }
+                        else
+                            await ReplyAsync("There is nobody to draw.");
+                    else
+                        await ReplyAsync("Only the creator can draw.");
+                else 
+                    await ReplyAsync($"Giveaway not found");
+            }
+        }
+
         [Group("Twitter")]
         public class Twitter : ModuleBase
         {
@@ -105,6 +160,13 @@ namespace MopsBot.Module
                 twitterTracks.removeTracker(twitterUser, Context.Channel.Id);
 
                 await ReplyAsync("Stopped keeping track of " + twitterUser + "'s tweets!");
+            }
+
+            [Command("GetTracks")]
+            [Summary("Returns the twitters that are tracked in the current channel.")]
+            public async Task getTracks()
+            {
+                await ReplyAsync("Following twitters are currently being tracked:\n``" + StaticBase.twitterTracks.getTracker(Context.Channel.Id) + "``");
             }
         }
         [Group("Twitch")]
@@ -129,12 +191,20 @@ namespace MopsBot.Module
 
                 await ReplyAsync("Stopped tracking " + streamerName + "'s streams!");
             }
+
+            [Command("GetTracks")]
+            [Summary("Returns the streamers that are tracked in the current channel.")]
+            public async Task getTracks()
+            {
+                await ReplyAsync("Following streamers are currently being tracked:\n``" + StaticBase.streamTracks.getTracker(Context.Channel.Id) + "``");
+            }
         }
         [Group("Overwatch")]
         public class Overwatch : ModuleBase
         {
             [Command("Track")]
             [Summary("Keeps track of the specified Overwatch player, in the Channel you are calling this command right now.\nParameter: Username-Battletag")]
+            [RequireUserPermission(ChannelPermission.ManageChannel)]
             public async Task trackOW(string owUser)
             {
                 OverwatchTracks.addTracker(owUser, Context.Channel.Id);
@@ -144,6 +214,7 @@ namespace MopsBot.Module
 
             [Command("UnTrack")]
             [Summary("Stops keeping track of the specified Overwatch player, in the Channel you are calling this command right now.\nParameter: Username-Battletag")]
+            [RequireUserPermission(ChannelPermission.ManageChannel)]
             public async Task unTrackOW(string owUser)
             {
                 OverwatchTracks.removeTracker(owUser, Context.Channel.Id);
@@ -156,6 +227,13 @@ namespace MopsBot.Module
             public async Task GetStats(string owUser)
             {
                 await ReplyAsync("Stats fetched:", false, (Embed)Data.Session.OverwatchTracker.overwatchInformation(owUser));
+            }
+
+            [Command("GetTracks")]
+            [Summary("Returns the players that are tracked in the current channel.")]
+            public async Task getTracks()
+            {
+                await ReplyAsync("Following players are currently being tracked:\n``" + StaticBase.OverwatchTracks.getTracker(Context.Channel.Id) + "``");
             }
         }
 
