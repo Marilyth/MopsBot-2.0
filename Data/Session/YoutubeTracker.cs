@@ -17,25 +17,17 @@ namespace MopsBot.Data.Session
 {
     public class YoutubeTracker : ITracker
     {
-        bool disposed = false;
-        SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
-        private System.Threading.Timer checkForChange;
         private string id;
         private string lastTime;
 
-        public YoutubeTracker(string channelId)
+        public YoutubeTracker(string channelId) : base(300000)
         {
             id = channelId;
             lastTime = XmlConvert.ToString(DateTime.Now, XmlDateTimeSerializationMode.Utc);
-            ChannelIds = new HashSet<ulong>();
-
-            checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false), StaticBase.ran.Next(6, 59) * 1000, 300000);
         }
 
-        public YoutubeTracker(string[] initArray)
+        public YoutubeTracker(string[] initArray) : base(300000)
         {
-            ChannelIds = new HashSet<ulong>();
-
             id = initArray[0];
             lastTime = initArray[1];
             foreach (string channel in initArray[2].Split(new char[] { '{', '}', ';' }))
@@ -43,8 +35,6 @@ namespace MopsBot.Data.Session
                 if (channel != "")
                     ChannelIds.Add(ulong.Parse(channel));
             }
-
-            checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false), StaticBase.ran.Next(6, 59) * 1000, 300000);
         }
 
         private YoutubeResult fetchVideos()
@@ -67,16 +57,13 @@ namespace MopsBot.Data.Session
 
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {
-                NullValueHandling = NullValueHandling.Ignore,
-                Error = HandleDeserializationError
+                NullValueHandling = NullValueHandling.Ignore
             };
 
             YoutubeChannelResult tmpResult = JsonConvert.DeserializeObject<YoutubeChannelResult>(query, _jsonWriter);
 
             return tmpResult;
         }
-
-        public void HandleDeserializationError(object sender, EventArgs errorArgs){}
 
         protected override void CheckForChange_Elapsed(object stateinfo)
         {
@@ -97,19 +84,19 @@ namespace MopsBot.Data.Session
                     {
                         foreach (ulong channel in ChannelIds)
                         {
-                            OnMajorChangeTracked(channel, createYoutubeEmbed(video), "New Video");
+                            OnMajorChangeTracked(channel, createEmbed(video), "New Video");
                             System.Threading.Thread.Sleep(2000);
                         }
                     }
                 }
             }
-            catch
+            catch(Exception e)
             {
-                return;
+                Console.WriteLine(e.Message);
             }
         }
 
-        private EmbedBuilder createYoutubeEmbed(Item result)
+        private EmbedBuilder createEmbed(Item result)
         {
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0xFF0000);
@@ -143,27 +130,6 @@ namespace MopsBot.Data.Session
             informationArray[2] = "{" + string.Join(";", ChannelIds) + "}";
 
             return informationArray;
-        }
-
-
-        public override void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposed)
-                return;
-
-            if (disposing)
-            {
-                handle.Dispose();
-                checkForChange.Dispose();
-            }
-
-            disposed = true;
         }
     }
 }

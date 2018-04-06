@@ -18,9 +18,6 @@ namespace MopsBot.Data.Session
     /// </summary>
     public class OverwatchTracker : ITracker
     {
-        bool disposed = false;
-        SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
-        private System.Threading.Timer checkForChange;
         public string Name;
         private OStatsResult information;
 
@@ -28,18 +25,16 @@ namespace MopsBot.Data.Session
         /// Initialises the tracker by setting attributes and setting up a Timer with a 10 minutes interval
         /// </summary>
         /// <param Name="OWName"> The Name-Battletag combination of the player to track </param>
-        public OverwatchTracker(string OWName)
+        public OverwatchTracker(string OWName) : base(600000)
         {
-            ChannelIds = new HashSet<ulong>();
             Name = OWName;
 
             checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false), 0, 600000);
             Console.WriteLine(DateTime.Now + " OW Tracker started for " + Name);
         }
 
-        public OverwatchTracker(string[] initArray)
+        public OverwatchTracker(string[] initArray) : base(600000)
         {
-            ChannelIds = new HashSet<ulong>();
             Name = initArray[0];
 
             foreach(string channel in initArray[1].Split(new char[]{'{','}',';'})){
@@ -73,13 +68,13 @@ namespace MopsBot.Data.Session
                 if (changedStats.Count != 0)
                 {
                     foreach(ulong channel in ChannelIds)
-                        OnMajorChangeTracked(channel, sendNotification(newInformation, changedStats, getSessionMostPlayed(information.eu.heroes.playtime, newInformation.eu.heroes.playtime)));
+                        OnMajorChangeTracked(channel, createEmbed(newInformation, changedStats, getSessionMostPlayed(information.eu.heroes.playtime, newInformation.eu.heroes.playtime)));
                     information = newInformation;
                 }
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                Console.WriteLine(DateTime.Now + " " + e.Message);
             }
         }
 
@@ -170,7 +165,7 @@ namespace MopsBot.Data.Session
         /// <param Name="overwatchInformation">All fetched stats of the user </param>
         /// <param Name="changedStats">All changed stats of the user, together with a string presenting them </param>
         /// <param Name="mostPlayed">The most played Hero of the session, together with a string presenting them </param>
-        private EmbedBuilder sendNotification(OStatsResult overwatchInformation, Dictionary<string, string> changedStats, Tuple<string, string> mostPlayed)
+        private EmbedBuilder createEmbed(OStatsResult overwatchInformation, Dictionary<string, string> changedStats, Tuple<string, string> mostPlayed)
         {
             OverallStats stats = overwatchInformation.eu.stats.quickplay.overall_stats;
 
@@ -309,26 +304,6 @@ namespace MopsBot.Data.Session
             informationArray[1] = "{" + string.Join(";", ChannelIds) + "}";
 
             return informationArray;
-        }
-
-        public override void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposed)
-                return;
-
-            if (disposing)
-            {
-                handle.Dispose();
-                checkForChange.Dispose();
-            }
-
-            disposed = true;
         }
     }
 }
