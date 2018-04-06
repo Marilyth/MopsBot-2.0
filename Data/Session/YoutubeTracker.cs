@@ -91,7 +91,7 @@ namespace MopsBot.Data.Session
             }
             catch(Exception e)
             {
-                Console.WriteLine(e.Message);
+                Console.WriteLine(DateTime.Now + " " + e.Message + "\n" + e.StackTrace);
             }
         }
 
