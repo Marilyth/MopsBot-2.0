@@ -36,6 +36,7 @@ namespace MopsBot.Data.Session
             try
             {
                 APIResults.OsuResult userInformation = fetchUser();
+                if(userInformation == null) return;
                 if(pp == 0) {
                     pp = double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture);
                     return;
@@ -56,7 +57,7 @@ namespace MopsBot.Data.Session
             }
             catch (Exception e)
             {
-                Console.WriteLine(DateTime.Now + " " + e.Message + "\n" + e.StackTrace);
+                Console.WriteLine($"[ERROR] by {Username} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
             }
         }
 
