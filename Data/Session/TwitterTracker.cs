@@ -16,39 +16,27 @@ namespace MopsBot.Data.Session
 {
     public class TwitterTracker : ITracker
     {
-        bool disposed = false;
-        SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
-        
-        private System.Threading.Timer checkForChange;
         public string Name;
         private IUserIdentifier ident;
         private long lastMessage;
         private Task<IEnumerable<ITweet>> fetchTweets;
 
-        public TwitterTracker(string twitterName)
+        public TwitterTracker(string twitterName) : base(300000)
         {
             Name = twitterName;
-            ChannelIds = new HashSet<ulong>();
-
-            checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false), StaticBase.ran.Next(6,59)*1000, 300000);
         }
 
-        public TwitterTracker(string[] initArray)
+        public TwitterTracker(string[] initArray) : base(300000)
         {
-            ChannelIds = new HashSet<ulong>();
-
             Name = initArray[0];
             lastMessage = long.Parse(initArray[1]);
             foreach(string channel in initArray[2].Split(new char[]{'{','}',';'})){
                 if(channel != "")
                     ChannelIds.Add(ulong.Parse(channel));
             }
-            
-
-            checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false), StaticBase.ran.Next(6,59)*1000, 300000);
         }
 
-        protected override void CheckForChange_Elapsed(object stateinfo)
+        protected async override void CheckForChange_Elapsed(object stateinfo)
         {
             Tweetinvi.Parameters.IUserTimelineParameters parameters = Timeline.CreateUserTimelineParameter();
             if(lastMessage != 0) parameters.SinceId = lastMessage;
@@ -63,16 +51,17 @@ namespace MopsBot.Data.Session
             
                 foreach(ITweet newTweet in newTweets){
                     foreach(ulong channel in ChannelIds)
-                        OnMajorChangeTracked(channel, sendTwitterNotification(newTweet), "~Tweet Tweet~");
+                        await OnMajorChangeTracked(channel, createEmbed(newTweet), "~Tweet Tweet~");
                     
                     System.Threading.Thread.Sleep(5000);
                 }
-            }catch{
-                return;
+            }catch (Exception e)
+            {
+                Console.WriteLine($"[ERROR] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
             }
         }
     
-        private EmbedBuilder sendTwitterNotification(ITweet tweet)
+        private EmbedBuilder createEmbed(ITweet tweet)
         {
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0x6441A4);
@@ -108,26 +97,6 @@ namespace MopsBot.Data.Session
             informationArray[2] = "{" + string.Join(";", ChannelIds) + "}";
 
             return informationArray;
-        }
-
-
-        public override void Dispose()
-        { 
-            Dispose(true);
-            GC.SuppressFinalize(this);           
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposed)
-                return; 
-      
-            if (disposing) {
-                handle.Dispose();
-                checkForChange.Dispose();
-            }
-      
-            disposed = true;
         }
     }
 }

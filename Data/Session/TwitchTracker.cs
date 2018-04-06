@@ -15,9 +15,6 @@ namespace MopsBot.Data.Session
 {
     public class TwitchTracker : ITracker
     {
-        bool disposed = false;
-        SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
-        private System.Threading.Timer checkForChange;
         private PlotModel viewerChart;
         private Dictionary<string, List<OxyPlot.Series.LineSeries>> series;
         private int columnCount;
@@ -27,26 +24,22 @@ namespace MopsBot.Data.Session
         public Dictionary<ulong, string> ChannelMessages;
         public APIResults.TwitchResult StreamerStatus;
 
-        public TwitchTracker(string streamerName)
+        public TwitchTracker(string streamerName) : base(60000)
         {
             initViewerChart();
 
             Console.Out.WriteLine($"{DateTime.Now} Started Twitchtracker for {streamerName}");
             ToUpdate = new Dictionary<ulong, Discord.IUserMessage>();
             ChannelMessages = new Dictionary<ulong, string>();
-            ChannelIds = new HashSet<ulong>();
             Name = streamerName;
             IsOnline = false;
-
-            checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false), StaticBase.ran.Next(6, 59) * 1000, 60000);
         }
 
-        public TwitchTracker(string[] initArray)
+        public TwitchTracker(string[] initArray) : base(60000)
         {
             initViewerChart();
             ToUpdate = new Dictionary<ulong, Discord.IUserMessage>();
             ChannelMessages = new Dictionary<ulong, string>();
-            ChannelIds = new HashSet<ulong>();
 
             Name = initArray[0];
             IsOnline = Boolean.Parse(initArray[1]);
@@ -75,21 +68,17 @@ namespace MopsBot.Data.Session
                 CurGame = streamerInformation().stream.game;
                 readPlotPoints();
             }
-
-            Console.Out.WriteLine($"{DateTime.Now} Started Twitchtracker for {Name} per array");
-
-            checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false), StaticBase.ran.Next(6, 59) * 1000, 60000);
         }
 
-        protected override void CheckForChange_Elapsed(object stateinfo)
+        protected async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
             {
                 StreamerStatus = streamerInformation();
             }
-            catch
+            catch (Exception e)
             {
-                return;
+                Console.WriteLine(DateTime.Now + " " + e.Message);
             }
 
             Boolean isStreaming = StreamerStatus.stream.channel != null;
@@ -106,7 +95,7 @@ namespace MopsBot.Data.Session
                     initViewerChart();
 
                     foreach (ulong channel in ChannelMessages.Keys)
-                        OnMinorChangeTracked(channel, $"{Name} went Offline!");
+                        await OnMinorChangeTracked(channel, $"{Name} went Offline!");
                     StaticBase.streamTracks.writeList();
                 }
                 else
@@ -117,7 +106,7 @@ namespace MopsBot.Data.Session
                     gameChange();
 
                     foreach (ulong channel in ChannelMessages.Keys)
-                        OnMinorChangeTracked(channel, ChannelMessages[channel]);
+                        await OnMinorChangeTracked(channel, ChannelMessages[channel]);
                 }
             }
 
@@ -137,11 +126,11 @@ namespace MopsBot.Data.Session
                     series[CurGame].Last().Points.Add(new DataPoint(columnCount, StreamerStatus.stream.viewers));
 
                     foreach (ulong channel in ChannelMessages.Keys)
-                        OnMinorChangeTracked(channel, $"{Name} switched games to **{CurGame}**");
+                        await OnMinorChangeTracked(channel, $"{Name} switched games to **{CurGame}**");
                 }
                 updateChart();
                 foreach (ulong channel in ChannelIds)
-                    OnMajorChangeTracked(channel, createEmbed());
+                    await OnMajorChangeTracked(channel, createEmbed());
             }
         }
 
@@ -330,26 +319,6 @@ namespace MopsBot.Data.Session
             informationArray[3] = "{" + string.Join(";", ToUpdate.Select(x => x.Key + "=" + x.Value.Id)) + "}";
 
             return informationArray;
-        }
-
-        public override void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposed)
-                return;
-
-            if (disposing)
-            {
-                handle.Dispose();
-                checkForChange.Dispose();
-            }
-
-            disposed = true;
         }
     }
 }

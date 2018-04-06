@@ -169,6 +169,68 @@ namespace MopsBot.Module
                 await ReplyAsync("Following twitters are currently being tracked:\n``" + StaticBase.twitterTracks.getTracker(Context.Channel.Id) + "``");
             }
         }
+
+        [Group("Osu")]
+        public class Osu : ModuleBase
+        {
+            [Command("Track")]
+            [Summary("Keeps track of the specified Osu player, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
+            [RequireUserPermission(ChannelPermission.ManageChannel)]
+            public async Task trackOsu(string OsuUser)
+            {
+                osuTracker.addTracker(OsuUser, Context.Channel.Id);
+
+                await ReplyAsync("Keeping track of " + OsuUser + "'s plays, from now on!");
+            }
+
+            [Command("UnTrack")]
+            [Summary("Stops keeping track of the specified Osu player, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
+            [RequireUserPermission(ChannelPermission.ManageChannel)]
+            public async Task unTrackOsu(string OsuUser)
+            {
+                osuTracker.removeTracker(OsuUser, Context.Channel.Id);
+
+                await ReplyAsync("Stopped keeping track of " + OsuUser + "'s plays!");
+            }
+
+            [Command("GetTracks")]
+            [Summary("Returns the Osu players that are tracked in the current channel.")]
+            public async Task getTracks()
+            {
+                await ReplyAsync("Following Osu players are currently being tracked:\n``" + StaticBase.osuTracker.getTracker(Context.Channel.Id) + "``");
+            }
+        }
+
+        [Group("Youtube")]
+        public class Youtube : ModuleBase
+        {
+            [Command("Track")]
+            [Summary("Keeps track of the specified Youtuber, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
+            [RequireUserPermission(ChannelPermission.ManageChannel)]
+            public async Task trackTwitter(string channelID)
+            {
+                YoutubeTracks.addTracker(channelID, Context.Channel.Id);
+
+                await ReplyAsync("Keeping track of " + channelID + "'s videos, from now on!");
+            }
+
+            [Command("UnTrack")]
+            [Summary("Stops keeping track of the specified Youtuber, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
+            [RequireUserPermission(ChannelPermission.ManageChannel)]
+            public async Task unTrackYoutube(string channelID)
+            {
+                twitterTracks.removeTracker(channelID, Context.Channel.Id);
+
+                await ReplyAsync("Stopped keeping track of " + channelID + "'s tweets!");
+            }
+
+            [Command("GetTracks")]
+            [Summary("Returns the Youtubers that are tracked in the current channel.")]
+            public async Task getTracks()
+            {
+                await ReplyAsync("Following Youtubers are currently being tracked:\n``" + StaticBase.YoutubeTracks.getTracker(Context.Channel.Id) + "``");
+            }
+        }
         [Group("Twitch")]
         public class Twitch : ModuleBase
         {

@@ -18,9 +18,6 @@ namespace MopsBot.Data.Session
     /// </summary>
     public class OverwatchTracker : ITracker
     {
-        bool disposed = false;
-        SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
-        private System.Threading.Timer checkForChange;
         public string Name;
         private OStatsResult information;
 
@@ -28,34 +25,26 @@ namespace MopsBot.Data.Session
         /// Initialises the tracker by setting attributes and setting up a Timer with a 10 minutes interval
         /// </summary>
         /// <param Name="OWName"> The Name-Battletag combination of the player to track </param>
-        public OverwatchTracker(string OWName)
+        public OverwatchTracker(string OWName) : base(600000)
         {
-            ChannelIds = new HashSet<ulong>();
             Name = OWName;
-
-            checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false), 0, 600000);
-            Console.WriteLine(DateTime.Now + " OW Tracker started for " + Name);
         }
 
-        public OverwatchTracker(string[] initArray)
+        public OverwatchTracker(string[] initArray) : base(600000)
         {
-            ChannelIds = new HashSet<ulong>();
             Name = initArray[0];
 
             foreach(string channel in initArray[1].Split(new char[]{'{','}',';'})){
                 if(channel != "")
                     ChannelIds.Add(ulong.Parse(channel));
             }
-
-            checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false), 0, 600000);
-            Console.WriteLine(DateTime.Now + " OW Tracker started for " + Name);
         }
 
         /// <summary>
         /// Event for the Timer, to check for changed stats
         /// </summary>
         /// <param Name="stateinfo"></param>
-        protected override void CheckForChange_Elapsed(object stateinfo)
+        protected async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
             {
@@ -73,13 +62,13 @@ namespace MopsBot.Data.Session
                 if (changedStats.Count != 0)
                 {
                     foreach(ulong channel in ChannelIds)
-                        OnMajorChangeTracked(channel, sendNotification(newInformation, changedStats, getSessionMostPlayed(information.eu.heroes.playtime, newInformation.eu.heroes.playtime)));
+                        await OnMajorChangeTracked(channel, createEmbed(newInformation, changedStats, getSessionMostPlayed(information.getNotNull().heroes.playtime, newInformation.getNotNull().heroes.playtime)));
                     information = newInformation;
                 }
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                Console.WriteLine($"[ERROR] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
             }
         }
 
@@ -110,8 +99,8 @@ namespace MopsBot.Data.Session
             };
 
             OStatsResult info = JsonConvert.DeserializeObject<OStatsResult>(query, _jsonWriter);
-            Quickplay stats = info.eu.stats.quickplay;
-            var mostPlayed = getMostPlayed(info.eu.heroes.playtime);
+            Quickplay stats = info.getNotNull().stats.quickplay;
+            var mostPlayed = getMostPlayed(info.getNotNull().heroes.playtime);
             
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0x6441A4);
@@ -121,7 +110,7 @@ namespace MopsBot.Data.Session
             EmbedAuthorBuilder author = new EmbedAuthorBuilder();
             author.Name = owName.Split("-")[0];
             author.Url = $"https://playoverwatch.com/en-us/career/pc/eu/{owName}";
-            author.IconUrl = info.eu.stats.competitive.overall_stats.tier_image;
+            author.IconUrl = info.getNotNull().stats.competitive.overall_stats.tier_image;
             e.Author = author;
 
             EmbedFooterBuilder footer = new EmbedFooterBuilder();
@@ -152,9 +141,9 @@ namespace MopsBot.Data.Session
                             $"\nLevel: {stats.overall_stats.level + (100 * stats.overall_stats.prestige)}"+
                             $"\nWon Games: {stats.overall_stats.wins}");
 
-            e.AddInlineField("Competitive", $"Time played: {info.eu.stats.competitive.game_stats.time_played}hrs"+
-                            $"\nWin Rate: {info.eu.stats.competitive.overall_stats.win_rate}%"+
-                            $"\nRank: {info.eu.stats.competitive.overall_stats.comprank}");
+            e.AddInlineField("Competitive", $"Time played: {info.getNotNull().stats.competitive.game_stats.time_played}hrs"+
+                            $"\nWin Rate: {info.getNotNull().stats.competitive.overall_stats.win_rate}%"+
+                            $"\nRank: {info.getNotNull().stats.competitive.overall_stats.comprank}");
 
             e.AddField("Most Played", mostPlayed.Item2);
 
@@ -170,9 +159,9 @@ namespace MopsBot.Data.Session
         /// <param Name="overwatchInformation">All fetched stats of the user </param>
         /// <param Name="changedStats">All changed stats of the user, together with a string presenting them </param>
         /// <param Name="mostPlayed">The most played Hero of the session, together with a string presenting them </param>
-        private EmbedBuilder sendNotification(OStatsResult overwatchInformation, Dictionary<string, string> changedStats, Tuple<string, string> mostPlayed)
+        private EmbedBuilder createEmbed(OStatsResult overwatchInformation, Dictionary<string, string> changedStats, Tuple<string, string> mostPlayed)
         {
-            OverallStats stats = overwatchInformation.eu.stats.quickplay.overall_stats;
+            OverallStats stats = overwatchInformation.getNotNull().stats.quickplay.overall_stats;
 
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0x6441A4);
@@ -218,8 +207,8 @@ namespace MopsBot.Data.Session
         {
             Dictionary<string, string> changedStats = new Dictionary<string, string>();
 
-            OverallStats quickNew = newStats.eu.stats.quickplay.overall_stats;
-            OverallStats quickOld = oldStats.eu.stats.quickplay.overall_stats;
+            OverallStats quickNew = newStats.getNotNull().stats.quickplay.overall_stats;
+            OverallStats quickOld = oldStats.getNotNull().stats.quickplay.overall_stats;
 
             if ((quickNew.level + (quickNew.prestige * 100)) > (quickOld.level + (quickOld.prestige * 100)))
             {
@@ -233,10 +222,10 @@ namespace MopsBot.Data.Session
                                 $" (+{quickNew.wins - quickOld.wins})");
             }
 
-            if (oldStats.eu.stats.competitive != null)
+            if (oldStats.getNotNull().stats.competitive != null)
             {
-                OverallStats compNew = newStats.eu.stats.competitive.overall_stats;
-                OverallStats compOld = oldStats.eu.stats.competitive.overall_stats;
+                OverallStats compNew = newStats.getNotNull().stats.competitive.overall_stats;
+                OverallStats compOld = oldStats.getNotNull().stats.competitive.overall_stats;
 
                 if (compNew.comprank != compOld.comprank)
                 {
@@ -309,26 +298,6 @@ namespace MopsBot.Data.Session
             informationArray[1] = "{" + string.Join(";", ChannelIds) + "}";
 
             return informationArray;
-        }
-
-        public override void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposed)
-                return;
-
-            if (disposing)
-            {
-                handle.Dispose();
-                checkForChange.Dispose();
-            }
-
-            disposed = true;
         }
     }
 }
