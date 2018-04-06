@@ -32,11 +32,11 @@ namespace MopsBot.Data.Session
 
         protected abstract void CheckForChange_Elapsed(object stateinfo);
 
-        protected async void OnMajorChangeTracked(ulong channelID, EmbedBuilder embed, string notificationText=""){
+        protected async Task OnMajorChangeTracked(ulong channelID, EmbedBuilder embed, string notificationText=""){
             if(OnMajorEventFired != null)
                await OnMajorEventFired(channelID, embed, this, notificationText);
         }
-        protected async void OnMinorChangeTracked(ulong channelID, string notificationText){
+        protected async Task OnMinorChangeTracked(ulong channelID, string notificationText){
             if(OnMinorEventFired != null)
                await OnMinorEventFired(channelID, this, notificationText);
         }

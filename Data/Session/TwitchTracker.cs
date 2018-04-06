@@ -70,7 +70,7 @@ namespace MopsBot.Data.Session
             }
         }
 
-        protected override void CheckForChange_Elapsed(object stateinfo)
+        protected async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
             {
@@ -95,7 +95,7 @@ namespace MopsBot.Data.Session
                     initViewerChart();
 
                     foreach (ulong channel in ChannelMessages.Keys)
-                        OnMinorChangeTracked(channel, $"{Name} went Offline!");
+                        await OnMinorChangeTracked(channel, $"{Name} went Offline!");
                     StaticBase.streamTracks.writeList();
                 }
                 else
@@ -106,7 +106,7 @@ namespace MopsBot.Data.Session
                     gameChange();
 
                     foreach (ulong channel in ChannelMessages.Keys)
-                        OnMinorChangeTracked(channel, ChannelMessages[channel]);
+                        await OnMinorChangeTracked(channel, ChannelMessages[channel]);
                 }
             }
 
@@ -126,11 +126,11 @@ namespace MopsBot.Data.Session
                     series[CurGame].Last().Points.Add(new DataPoint(columnCount, StreamerStatus.stream.viewers));
 
                     foreach (ulong channel in ChannelMessages.Keys)
-                        OnMinorChangeTracked(channel, $"{Name} switched games to **{CurGame}**");
+                        await OnMinorChangeTracked(channel, $"{Name} switched games to **{CurGame}**");
                 }
                 updateChart();
                 foreach (ulong channel in ChannelIds)
-                    OnMajorChangeTracked(channel, createEmbed());
+                    await OnMajorChangeTracked(channel, createEmbed());
             }
         }
 
