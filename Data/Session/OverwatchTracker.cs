@@ -68,7 +68,7 @@ namespace MopsBot.Data.Session
             }
             catch (Exception e)
             {
-                Console.WriteLine(DateTime.Now + " " + e.Message + "\n" + e.StackTrace);
+                Console.WriteLine($"[ERROR] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
             }
         }
 
