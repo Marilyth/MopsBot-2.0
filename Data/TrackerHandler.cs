@@ -59,8 +59,10 @@ namespace MopsBot.Data
                         (trackers[name] as Session.TwitchTracker).ChannelMessages.Remove(channelID);
                     }
                 }
-                else
+                else{
+                    trackers[name].Dispose();
                     trackers.Remove(name);
+                }
                 
                 writeList();
             }
