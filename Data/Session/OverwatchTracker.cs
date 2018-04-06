@@ -44,7 +44,7 @@ namespace MopsBot.Data.Session
         /// Event for the Timer, to check for changed stats
         /// </summary>
         /// <param Name="stateinfo"></param>
-        protected override void CheckForChange_Elapsed(object stateinfo)
+        protected async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
             {
@@ -62,7 +62,7 @@ namespace MopsBot.Data.Session
                 if (changedStats.Count != 0)
                 {
                     foreach(ulong channel in ChannelIds)
-                        OnMajorChangeTracked(channel, createEmbed(newInformation, changedStats, getSessionMostPlayed(information.eu.heroes.playtime, newInformation.eu.heroes.playtime)));
+                        await OnMajorChangeTracked(channel, createEmbed(newInformation, changedStats, getSessionMostPlayed(information.getNotNull().heroes.playtime, newInformation.getNotNull().heroes.playtime)));
                     information = newInformation;
                 }
             }
@@ -99,8 +99,8 @@ namespace MopsBot.Data.Session
             };
 
             OStatsResult info = JsonConvert.DeserializeObject<OStatsResult>(query, _jsonWriter);
-            Quickplay stats = info.eu.stats.quickplay;
-            var mostPlayed = getMostPlayed(info.eu.heroes.playtime);
+            Quickplay stats = info.getNotNull().stats.quickplay;
+            var mostPlayed = getMostPlayed(info.getNotNull().heroes.playtime);
             
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0x6441A4);
@@ -110,7 +110,7 @@ namespace MopsBot.Data.Session
             EmbedAuthorBuilder author = new EmbedAuthorBuilder();
             author.Name = owName.Split("-")[0];
             author.Url = $"https://playoverwatch.com/en-us/career/pc/eu/{owName}";
-            author.IconUrl = info.eu.stats.competitive.overall_stats.tier_image;
+            author.IconUrl = info.getNotNull().stats.competitive.overall_stats.tier_image;
             e.Author = author;
 
             EmbedFooterBuilder footer = new EmbedFooterBuilder();
@@ -141,9 +141,9 @@ namespace MopsBot.Data.Session
                             $"\nLevel: {stats.overall_stats.level + (100 * stats.overall_stats.prestige)}"+
                             $"\nWon Games: {stats.overall_stats.wins}");
 
-            e.AddInlineField("Competitive", $"Time played: {info.eu.stats.competitive.game_stats.time_played}hrs"+
-                            $"\nWin Rate: {info.eu.stats.competitive.overall_stats.win_rate}%"+
-                            $"\nRank: {info.eu.stats.competitive.overall_stats.comprank}");
+            e.AddInlineField("Competitive", $"Time played: {info.getNotNull().stats.competitive.game_stats.time_played}hrs"+
+                            $"\nWin Rate: {info.getNotNull().stats.competitive.overall_stats.win_rate}%"+
+                            $"\nRank: {info.getNotNull().stats.competitive.overall_stats.comprank}");
 
             e.AddField("Most Played", mostPlayed.Item2);
 
@@ -161,7 +161,7 @@ namespace MopsBot.Data.Session
         /// <param Name="mostPlayed">The most played Hero of the session, together with a string presenting them </param>
         private EmbedBuilder createEmbed(OStatsResult overwatchInformation, Dictionary<string, string> changedStats, Tuple<string, string> mostPlayed)
         {
-            OverallStats stats = overwatchInformation.eu.stats.quickplay.overall_stats;
+            OverallStats stats = overwatchInformation.getNotNull().stats.quickplay.overall_stats;
 
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0x6441A4);
@@ -207,8 +207,8 @@ namespace MopsBot.Data.Session
         {
             Dictionary<string, string> changedStats = new Dictionary<string, string>();
 
-            OverallStats quickNew = newStats.eu.stats.quickplay.overall_stats;
-            OverallStats quickOld = oldStats.eu.stats.quickplay.overall_stats;
+            OverallStats quickNew = newStats.getNotNull().stats.quickplay.overall_stats;
+            OverallStats quickOld = oldStats.getNotNull().stats.quickplay.overall_stats;
 
             if ((quickNew.level + (quickNew.prestige * 100)) > (quickOld.level + (quickOld.prestige * 100)))
             {
@@ -222,10 +222,10 @@ namespace MopsBot.Data.Session
                                 $" (+{quickNew.wins - quickOld.wins})");
             }
 
-            if (oldStats.eu.stats.competitive != null)
+            if (oldStats.getNotNull().stats.competitive != null)
             {
-                OverallStats compNew = newStats.eu.stats.competitive.overall_stats;
-                OverallStats compOld = oldStats.eu.stats.competitive.overall_stats;
+                OverallStats compNew = newStats.getNotNull().stats.competitive.overall_stats;
+                OverallStats compOld = oldStats.getNotNull().stats.competitive.overall_stats;
 
                 if (compNew.comprank != compOld.comprank)
                 {
