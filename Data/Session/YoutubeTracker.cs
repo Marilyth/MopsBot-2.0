@@ -65,7 +65,7 @@ namespace MopsBot.Data.Session
             return tmpResult;
         }
 
-        protected override void CheckForChange_Elapsed(object stateinfo)
+        protected async override void CheckForChange_Elapsed(object stateinfo)
         {
             YoutubeResult curStats = fetchVideos();
             try
@@ -84,8 +84,7 @@ namespace MopsBot.Data.Session
                     {
                         foreach (ulong channel in ChannelIds)
                         {
-                            OnMajorChangeTracked(channel, createEmbed(video), "New Video");
-                            System.Threading.Thread.Sleep(2000);
+                            await OnMajorChangeTracked(channel, createEmbed(video), "New Video");
                         }
                     }
                 }

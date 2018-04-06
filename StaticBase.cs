@@ -27,7 +27,7 @@ namespace MopsBot
         public static Data.Session.Blackjack blackjack;
         public static Data.Session.Crosswords crosswords;
         public static Data.ClipTracker ClipTracker;
-        //public static Data.OsuTracker osuTracker;
+        public static TrackerHandler<OsuTracker> osuTracker;
         public static TrackerHandler<TwitchTracker> streamTracks;
         public static TrackerHandler<TwitterTracker> twitterTracks;
         public static TrackerHandler<OverwatchTracker> OverwatchTracks;
@@ -51,7 +51,7 @@ namespace MopsBot
                 OverwatchTracks = new TrackerHandler<OverwatchTracker>(20000);
                 ClipTracker = new Data.ClipTracker();
                 YoutubeTracks = new TrackerHandler<YoutubeTracker>();
-                //osuTracker = new Data.OsuTracker();        
+                osuTracker = new TrackerHandler<OsuTracker>();        
 
                 init = true;
             }

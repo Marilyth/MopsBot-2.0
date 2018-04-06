@@ -36,7 +36,7 @@ namespace MopsBot.Data.Session
             }
         }
 
-        protected override void CheckForChange_Elapsed(object stateinfo)
+        protected async override void CheckForChange_Elapsed(object stateinfo)
         {
             Tweetinvi.Parameters.IUserTimelineParameters parameters = Timeline.CreateUserTimelineParameter();
             if(lastMessage != 0) parameters.SinceId = lastMessage;
@@ -51,7 +51,7 @@ namespace MopsBot.Data.Session
             
                 foreach(ITweet newTweet in newTweets){
                     foreach(ulong channel in ChannelIds)
-                        OnMajorChangeTracked(channel, createEmbed(newTweet), "~Tweet Tweet~");
+                        await OnMajorChangeTracked(channel, createEmbed(newTweet), "~Tweet Tweet~");
                     
                     System.Threading.Thread.Sleep(5000);
                 }

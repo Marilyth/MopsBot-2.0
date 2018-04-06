@@ -28,9 +28,6 @@ namespace MopsBot.Data.Session
         public OverwatchTracker(string OWName) : base(600000)
         {
             Name = OWName;
-
-            checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false), 0, 600000);
-            Console.WriteLine(DateTime.Now + " OW Tracker started for " + Name);
         }
 
         public OverwatchTracker(string[] initArray) : base(600000)
@@ -41,9 +38,6 @@ namespace MopsBot.Data.Session
                 if(channel != "")
                     ChannelIds.Add(ulong.Parse(channel));
             }
-
-            checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false), 0, 600000);
-            Console.WriteLine(DateTime.Now + " OW Tracker started for " + Name);
         }
 
         /// <summary>
