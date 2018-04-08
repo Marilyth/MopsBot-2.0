@@ -24,9 +24,10 @@ namespace MopsBot.Data.Session
         public delegate Task MainEventHandler(ulong channelID, EmbedBuilder embed, ITracker self, string notificationText="");
         public HashSet<ulong> ChannelIds;
         
-        public ITracker(int interval){
+        public ITracker(int interval, bool ran = true){
             ChannelIds = new HashSet<ulong>();
-            checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false), StaticBase.ran.Next(6,59)*1000, interval);
+            checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false),
+                                                                                ran ? StaticBase.ran.Next(6,59)*1000 : 0, interval);
             Console.Out.WriteLine($"{DateTime.Now} Started a {this.GetType().Name}");
         }
 
