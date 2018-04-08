@@ -31,22 +31,34 @@ namespace MopsBot.Module
         [Summary("Searches dictionaries for a definition of the specified word or expression")]
         public async Task define([Remainder] string text)
         {
-            string query = Task.Run(() => readURL($"http://api.wordnik.com:80/v4/word.json/{text}/definitions?limit=1&includeRelated=false&sourceDictionaries=all&useCanonical=true&includeTags=false&api_key=a2a73e7b926c924fad7001ca3111acd55af2ffabf50eb4ae5")).Result;
+            try{
 
-            dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
+                string query = Task.Run(() => readURL($"http://api.wordnik.com:80/v4/word.json/{text}/definitions?limit=1&includeRelated=false&sourceDictionaries=all&useCanonical=true&includeTags=false&api_key=a2a73e7b926c924fad7001ca3111acd55af2ffabf50eb4ae5")).Result;
 
-            tempDict = tempDict[0];
-            await ReplyAsync($"__**{tempDict["word"]}**__\n\n``{tempDict["text"]}``");
+                dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
+
+                tempDict = tempDict[0];
+                await ReplyAsync($"__**{tempDict["word"]}**__\n\n``{tempDict["text"]}``");
+
+            } catch(Exception e){
+                Console.WriteLine($"[ERROR] by define at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+            }
         }
 
         [Command("translate")]
         [Summary("Translates your text from srcLanguage to tgtLanguage.")]
         public async Task translate(string srcLanguage, string tgtLanguage, [Remainder] string text)
         {
-            string query = Task.Run(() => readURL($"https://translate.googleapis.com/translate_a/single?client=gtx&sl={srcLanguage}&tl={tgtLanguage}&dt=t&q={text}")).Result;
-            dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
+            try{
 
-            await ReplyAsync(tempDict[0][0][0].ToString());
+                string query = Task.Run(() => readURL($"https://translate.googleapis.com/translate_a/single?client=gtx&sl={srcLanguage}&tl={tgtLanguage}&dt=t&q={text}")).Result;
+                dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
+                await ReplyAsync(tempDict[0][0][0].ToString());
+
+            } catch(Exception e){
+                Console.WriteLine($"[ERROR] by translate at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+                await ReplyAsync("Error happened");
+            }
         }
 
         [Command("dayDiagram")]
@@ -72,29 +84,28 @@ namespace MopsBot.Module
 
         public static dynamic getRandomWord()
         {
-            string query = readURL("http://api.wordnik.com:80/v4/words.json/randomWord?hasDictionaryDef=true&excludePartOfSpeech=given-name&minCorpusCount=10000&maxCorpusCount=-1&minDictionaryCount=4&maxDictionaryCount=-1&minLength=3&maxLength=13&api_key=a2a73e7b926c924fad7001ca3111acd55af2ffabf50eb4ae5");
+            try{
 
-            dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
-            return tempDict["word"];
+                string query = readURL("http://api.wordnik.com:80/v4/words.json/randomWord?hasDictionaryDef=true&excludePartOfSpeech=given-name&minCorpusCount=10000&maxCorpusCount=-1&minDictionaryCount=4&maxDictionaryCount=-1&minLength=3&maxLength=13&api_key=a2a73e7b926c924fad7001ca3111acd55af2ffabf50eb4ae5");
+                dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
+                return tempDict["word"];
+
+            } catch(Exception e){
+                Console.WriteLine($"[ERROR] by getRandomWord at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+            }
+                return null;
         }
 
         public static string readURL(string URL)
         {
             string s = "";
-            try
+            var request = (System.Net.HttpWebRequest)System.Net.WebRequest.Create(URL);
+            request.UserAgent = "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)";
+            using (var response = request.GetResponseAsync().Result)
+            using (var content = response.GetResponseStream())
+            using (var reader = new System.IO.StreamReader(content))
             {
-                var request = (System.Net.HttpWebRequest)System.Net.WebRequest.Create(URL);
-                request.UserAgent = "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)";
-                using (var response = request.GetResponseAsync().Result)
-                using (var content = response.GetResponseStream())
-                using (var reader = new System.IO.StreamReader(content))
-                {
-                    s = reader.ReadToEnd();
-                }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.Message);
+                s = reader.ReadToEnd();
             }
             return s;
         }
