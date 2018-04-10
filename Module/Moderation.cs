@@ -219,9 +219,9 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannel)]
             public async Task unTrackYoutube(string channelID)
             {
-                twitterTracks.removeTracker(channelID, Context.Channel.Id);
+                YoutubeTracks.removeTracker(channelID, Context.Channel.Id);
 
-                await ReplyAsync("Stopped keeping track of " + channelID + "'s tweets!");
+                await ReplyAsync("Stopped keeping track of " + channelID + "'s videos!");
             }
 
             [Command("GetTracks")]
