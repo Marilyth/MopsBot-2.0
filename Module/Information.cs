@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Diagnostics;
 using System.Linq;
 using Newtonsoft.Json;
+using System.Net.NetworkInformation;
 
 namespace MopsBot.Module
 {
@@ -65,7 +66,9 @@ namespace MopsBot.Module
         [Summary("Returns the total characters send for the past limit days")]
         public async Task dayDiagram(int limit)
         {
-            await ReplyAsync(StaticBase.stats.DrawDiagram(limit));
+            EmbedBuilder e = new EmbedBuilder();
+            e.ImageUrl = StaticBase.stats.DrawDiagram(limit);
+            await ReplyAsync("", embed:e);
         }
 
         [Command("getStats")]
