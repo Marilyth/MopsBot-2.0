@@ -74,9 +74,9 @@ namespace MopsBot.Data
         public string DrawDiagram(int count)
         {
             var tempDays = (from entry in Days orderby DateTime.ParseExact(entry.Key, "dd/MM/yyyy", null) descending select entry).Take(count).ToArray();
-            Plot tempPlot = new Plot("Statistics", "Date", "Characters sent", false);
+            Plot tempPlot = new Plot("Statistics", "Days from now", "Characters sent", false);
+            tempPlot.SwitchTitle("Dates");
             foreach(var day in tempDays){
-                tempPlot.SwitchTitle(day.Key);
                 tempPlot.AddValue(day.Value);
             }
 
