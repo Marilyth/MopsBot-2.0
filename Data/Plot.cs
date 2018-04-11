@@ -16,6 +16,7 @@ namespace MopsBot.Data
         private PlotModel viewerChart;
         private Dictionary<string, List<OxyPlot.Series.LineSeries>> series;
         public int columnCount;
+        public double lastValue;
         public string ID, xAxis, yAxis;
 
         public Plot(string name, string xName = "x", string yName = "y", bool keepTrack = false)
@@ -140,6 +141,7 @@ namespace MopsBot.Data
         {
             columnCount++;
             series.Last().Value.Last().Points.Add(new DataPoint(columnCount, value));
+            lastValue = value;
             writePlotPoints();
         }
 
@@ -157,16 +159,16 @@ namespace MopsBot.Data
                 series[newTitle].Add(new OxyPlot.Series.LineSeries());
                 series[newTitle].Last().Color = OxyColor.FromRgb((byte)StaticBase.ran.Next(30, 220), (byte)StaticBase.ran.Next(30, 220), (byte)StaticBase.ran.Next(30, 220));
                 series[newTitle].Last().Title = newTitle;
-                series[newTitle].Last().StrokeThickness = 3;
-                viewerChart.Series.Add(series[newTitle].Last());
             }
             else
             {
                 series[newTitle].Add(new OxyPlot.Series.LineSeries());
                 series[newTitle].Last().Color = series[newTitle].First().Color;
-                series[newTitle].Last().StrokeThickness = 3;
-                viewerChart.Series.Add(series[newTitle].Last());
             }
+
+            series[newTitle].Last().StrokeThickness = 3;
+            viewerChart.Series.Add(series[newTitle].Last());
+            series[newTitle].Last().Points.Add(new DataPoint(columnCount, lastValue));
         }
 
         /// <summary>

@@ -107,8 +107,6 @@ namespace MopsBot.Data.Session
 
             if (IsOnline)
             {
-                viewerGraph.AddValue(StreamerStatus.stream.viewers);
-
                 if (CurGame.CompareTo(StreamerStatus.stream.game) != 0)
                 {
                     CurGame = StreamerStatus.stream.game;

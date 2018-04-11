@@ -75,12 +75,9 @@ namespace MopsBot.Data
         {
             var tempDays = (from entry in Days orderby DateTime.ParseExact(entry.Key, "dd/MM/yyyy", null) descending select entry).Take(count).ToArray();
             Plot tempPlot = new Plot("Statistics", "Date", "Characters sent", false);
-            int previousDay = 0;
             foreach(var day in tempDays){
-                tempPlot.AddValue(previousDay);
                 tempPlot.SwitchTitle(day.Key);
                 tempPlot.AddValue(day.Value);
-                previousDay = day.Value;
             }
 
             return tempPlot.DrawPlot();
