@@ -24,9 +24,10 @@ namespace MopsBot.Data.Session
         {
             viewerChart = new PlotModel();
             viewerChart.Title = question;
+            viewerChart.TitleFontSize = 30;
             viewerChart.TextColor = OxyColor.FromRgb(175, 175, 175);
-            viewerChart.LegendFontSize = 30;
-            viewerChart.LegendPosition = LegendPosition.BottomCenter;
+            viewerChart.Subtitle = "PieChart";
+            viewerChart.SubtitleFontSize = 30;
 
             series = new OxyPlot.Series.PieSeries(){StrokeThickness = 2.0, InsideLabelPosition = 0.8, AngleSpan = 360, StartAngle = 0 };
             series.FontSize = 30;
@@ -68,7 +69,7 @@ namespace MopsBot.Data.Session
         public void AddValue(string name, double value)
         {
             if(series.Slices.Where(x => x.Label.Equals(name)).Count() == 0)
-                series.Slices.Add(new OxyPlot.Series.PieSlice(name, value));
+                series.Slices.Add(new OxyPlot.Series.PieSlice(name, value){IsExploded = true});
             else{
                 var toRemove = series.Slices.First(x => x.Label.Equals(name));
                 var toAdd = new OxyPlot.Series.PieSlice(name, toRemove.Value + value);
