@@ -69,6 +69,7 @@ namespace MopsBot
         private Task onClientReady()
         {
             Task.Run(() => StaticBase.initTracking());
+            client.SetGameAsync("Functioning");
             return Task.CompletedTask;
         }
 

@@ -37,9 +37,9 @@ namespace MopsBot
 
             guildPrefix = new Dictionary<ulong, string>();
             fillPrefix();
+            client.MessageReceived += Client_MessageReceived;
             client.MessageReceived += HandleCommand;
             client.UserJoined += Client_UserJoined;
-            client.MessageReceived += Client_MessageReceived;
         }
 
         /// <summary>
@@ -51,15 +51,14 @@ namespace MopsBot
         private async Task Client_MessageReceived(SocketMessage arg)
         {
             //Poll
-            if (arg.Channel.Name.Contains((arg.Author.Username)) && StaticBase.poll != null)
+            if (arg.Channel is Discord.IDMChannel && StaticBase.poll != null)
             {
-                if (StaticBase.poll.participants.ToList().Select(x => x.Id).ToArray().Contains(arg.Author.Id))
+                if (StaticBase.poll.participants.ToList().Select(x => x.Id).Contains(arg.Author.Id))
                 {
-                    StaticBase.poll.results[int.Parse(arg.Content) - 1]++;
+                    StaticBase.poll.AddValue(StaticBase.poll.answers[int.Parse(arg.Content) - 1], 1);
                     await arg.Channel.SendMessageAsync("Vote accepted!");
                     StaticBase.poll.participants.RemoveAll(x => x.Id == arg.Author.Id);
                 }
-
             }
 
             //Daily Statistics & User Experience
@@ -100,7 +99,9 @@ namespace MopsBot
             int argPos = 0;
 
             //Determines if the Guild has set a special prefix, if not, ! is used
-            var id = ((SocketGuildChannel)message.Channel).Guild.Id;
+            ulong id = 0;
+            if(message.Channel is Discord.IDMChannel) id = message.Channel.Id;
+            else id = ((SocketGuildChannel)message.Channel).Guild.Id;
             var prefix = guildPrefix.ContainsKey(id) ? guildPrefix[id] : "!";
 
             // Determine if the message has a valid prefix, adjust argPos 

@@ -74,7 +74,7 @@ namespace MopsBot.Module
             if (!Context.Guild.GetUserAsync(Context.User.Id).Result.GuildPermissions.Administrator)
                 return;
 
-            await ReplyAsync(poll.pollToText());
+            await ReplyAsync("", embed: new EmbedBuilder(){ImageUrl = poll.DrawPlot()});
 
             foreach (IGuildUser part in poll.participants)
             {
