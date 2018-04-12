@@ -25,12 +25,11 @@ namespace MopsBot.Data.Session
             viewerChart = new PlotModel();
             viewerChart.Title = question;
             viewerChart.TextColor = OxyColor.FromRgb(175, 175, 175);
-            viewerChart.LegendFontSize = 24;
+            viewerChart.LegendFontSize = 30;
             viewerChart.LegendPosition = LegendPosition.BottomCenter;
 
-            series = new OxyPlot.Series.PieSeries();
-            series.Title = question;
-            series.FontSize = 24;
+            series = new OxyPlot.Series.PieSeries(){StrokeThickness = 2.0, InsideLabelPosition = 0.8, AngleSpan = 360, StartAngle = 0 };
+            series.FontSize = 30;
             viewerChart.Series.Add(series);
         }
 
@@ -42,7 +41,7 @@ namespace MopsBot.Data.Session
         {
             using (var stream = File.Create($"mopsdata//{ID}plot.pdf"))
             {
-                var pdfExporter = new PdfExporter { Width = 800, Height = 400 };
+                var pdfExporter = new PdfExporter { Width = 1000, Height = 800 };
                 pdfExporter.Export(viewerChart, stream);
             }
 
@@ -55,10 +54,10 @@ namespace MopsBot.Data.Session
             prc.WaitForExit();
 
             var dir = new DirectoryInfo("mopsdata//");
-            var files = dir.GetFiles().Where(x => x.Extension.ToLower().Equals($"{ID}.pdf"));
+            var files = dir.GetFiles().Where(x => x.Extension.ToLower().Equals($"pdf"));
             foreach (var f in files)
                 f.Delete();
-            
+
             return $"http://5.45.104.29/StreamCharts/{ID}plot.png?rand={StaticBase.ran.Next(0,999999999)}";
         }
 
@@ -80,9 +79,9 @@ namespace MopsBot.Data.Session
 
         public Poll(string q, string[] a, IGuildUser[] p)
         {
-            initPlot();
             question = q;
             answers = a;
+            initPlot();
             ID = question.Replace(" ", "_");
             foreach(string answer in answers){
                 AddValue(answer, 0);
