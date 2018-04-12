@@ -114,7 +114,6 @@ namespace MopsBot.Data
 
         private void readPlotPoints()
         {
-
             using (StreamReader read = new StreamReader(new FileStream($"mopsdata//plots//{ID}plot.txt", FileMode.OpenOrCreate)))
             {
                 columnCount = int.Parse(read.ReadLine());

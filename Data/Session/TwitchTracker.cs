@@ -111,11 +111,13 @@ namespace MopsBot.Data.Session
                 {
                     CurGame = StreamerStatus.stream.game;
                     viewerGraph.SwitchTitle(CurGame);
-                    viewerGraph.AddValue(StreamerStatus.stream.viewers);
 
                     foreach (ulong channel in ChannelMessages.Keys)
                         await OnMinorChangeTracked(channel, $"{Name} switched games to **{CurGame}**");
                 }
+                else
+                    viewerGraph.AddValue(StreamerStatus.stream.viewers);
+                    
                 foreach (ulong channel in ChannelIds)
                     await OnMajorChangeTracked(channel, createEmbed());
             }
