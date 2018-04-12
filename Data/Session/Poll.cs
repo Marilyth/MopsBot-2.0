@@ -29,6 +29,8 @@ namespace MopsBot.Data.Session
             viewerChart.LegendPosition = LegendPosition.BottomCenter;
 
             series = new OxyPlot.Series.PieSeries();
+            series.Title = question;
+            series.FontSize = 24;
             viewerChart.Series.Add(series);
         }
 
@@ -56,7 +58,7 @@ namespace MopsBot.Data.Session
             var files = dir.GetFiles().Where(x => x.Extension.ToLower().Equals($"{ID}.pdf"));
             foreach (var f in files)
                 f.Delete();
-
+            
             return $"http://5.45.104.29/StreamCharts/{ID}plot.png?rand={StaticBase.ran.Next(0,999999999)}";
         }
 
