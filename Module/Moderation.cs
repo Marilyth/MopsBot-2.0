@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using MopsBot.Module.Preconditions;
+using System.Text.RegularExpressions;
 using static MopsBot.StaticBase;
 
 namespace MopsBot.Module
@@ -40,16 +41,16 @@ namespace MopsBot.Module
             }
         }
 
-        [Command("poll"), Summary("Creates a poll\nExample: !poll Am I sexy?;Yes:No;@Panda @Demon @Snail")]
+        [Command("poll"), Summary("Creates a poll\nExample: !poll (Am I sexy?) (Yes, No) (@Panda @Demon @Snail)")]
         public async Task Poll([Remainder] string Poll)
         {
             if (!Context.Guild.GetUserAsync(Context.User.Id).Result.GuildPermissions.Administrator)
                 return;
 
-            string[] pollSegments = Poll.Split(';');
+            MatchCollection match = Regex.Matches(Poll, @"(?<=\().+?(?=\))");
             List<IGuildUser> participants = getMentionedUsers((CommandContext)Context);
 
-            poll = new Data.Session.Poll(pollSegments[0], pollSegments[1].Split(':'), participants.ToArray());
+            poll = new Data.Session.Poll(match[0].Value, match[1].Value.Split(","), participants.ToArray());
 
             foreach (IGuildUser part in participants)
             {
