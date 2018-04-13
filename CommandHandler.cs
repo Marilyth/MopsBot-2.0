@@ -55,7 +55,7 @@ namespace MopsBot
             {
                 if (StaticBase.poll.participants.ToList().Select(x => x.Id).Contains(arg.Author.Id))
                 {
-                    StaticBase.poll.AddValue(StaticBase.poll.answers[int.Parse(arg.Content) - 1], 1);
+                    StaticBase.poll.AddValue(StaticBase.poll.answers[int.Parse(arg.Content) - 1], arg.Author.Id);
                     await arg.Channel.SendMessageAsync("Vote accepted!");
                     StaticBase.poll.participants.RemoveAll(x => x.Id == arg.Author.Id);
                 }
