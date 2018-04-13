@@ -183,5 +183,32 @@ namespace MopsBot.Data
             foreach (var f in files)
                 f.Delete();
         }
+
+        public static string CreateBarDiagram<T>(int count, Func<T, int> stat, Func<T, string> id, List<T> toSort)
+        {
+            var sortedList = (from entry in toSort orderby stat(entry) descending select entry).Take(count).ToArray();
+
+            int maximum = 0;
+            string[] lines = new string[count];
+
+            maximum = stat(sortedList[0]);
+
+            for (int i = 0; i < count; i++)
+            {
+                T cur = sortedList[i];
+                lines[i] = (i + 1).ToString().Length < 2 ? $"#{i + 1} |" : $"#{i + 1}|";
+                double relPercent = stat(cur) / ((double)maximum / 10);
+                for (int j = 0; j < relPercent; j++)
+                {
+                    lines[i] += "■";
+                }
+                lines[i] += $"  ({stat(cur)} / {id(sortedList[i])})";
+            }
+
+
+            string output = "```" + string.Join("\n", lines) + "```";
+
+            return output;
+        }
     }
 }

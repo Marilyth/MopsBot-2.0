@@ -17,7 +17,7 @@ namespace MopsBot.Data
     /// </summary>
     public class TrackerHandler<T> where T : Session.ITracker
     {
-        private Dictionary<string, T> trackers;
+        private Dictionary<String, T> trackers;
         public TrackerHandler(int sleepTime=0)
         {
             trackers = new Dictionary<string, T>();
@@ -121,7 +121,6 @@ namespace MopsBot.Data
                     writeList();
                 }
             }
-            
             else
                 await ((Discord.WebSocket.SocketTextChannel)Program.client.GetChannel(channelID)).SendMessageAsync(notification, embed:embed);
         }

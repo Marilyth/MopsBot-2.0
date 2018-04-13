@@ -70,12 +70,12 @@ namespace MopsBot.Module
         }
 
         [Command("pollEnd"), Summary("Ends the poll and returns the results.")]
-        public async Task PollEnd()
+        public async Task PollEnd(bool isPrivate = true)
         {
             if (!Context.Guild.GetUserAsync(Context.User.Id).Result.GuildPermissions.Administrator)
                 return;
-
-            await ReplyAsync("", embed: new EmbedBuilder(){ImageUrl = poll.DrawPlot()});
+            poll.isPrivate = isPrivate;
+            await ReplyAsync(poll.DrawPlot());
 
             foreach (IGuildUser part in poll.participants)
             {
