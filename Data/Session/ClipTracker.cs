@@ -10,13 +10,14 @@ using Newtonsoft.Json;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 
-namespace MopsBot.Data
+namespace MopsBot.Data.Session
 {
     /// <summary>
     /// Class that handles and contains Twitch Clip tracking
     /// (Unfinished I think)
     /// </summary>
-    public class ClipTracker : IDisposable
+    //TODO: Make it a member of ITracker
+    public class ClipTracker// : ITracker
     {
         bool disposed = false;
         SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);

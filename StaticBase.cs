@@ -51,7 +51,7 @@ namespace MopsBot
                 OverwatchTracks = new TrackerHandler<OverwatchTracker>(20000);
                 ClipTracker = new Data.ClipTracker();
                 YoutubeTracks = new TrackerHandler<YoutubeTracker>();
-                osuTracker = new TrackerHandler<OsuTracker>();        
+                osuTracker = new TrackerHandler<OsuTracker>();
 
                 init = true;
             }

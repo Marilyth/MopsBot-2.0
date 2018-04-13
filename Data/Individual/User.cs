@@ -31,9 +31,8 @@ namespace MopsBot.Data.Individual
         {
             Score = userScore;
         }
-
-        private delegate int del(int i);
-        private del levelCalc = x => (200 * (x * x));
+        
+        private Func<int, int> levelCalc = x => (200 * (x * x));
 
         public int calcLevel()
         {

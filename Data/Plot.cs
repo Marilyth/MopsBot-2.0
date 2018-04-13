@@ -105,7 +105,7 @@ namespace MopsBot.Data
             prc.WaitForExit();
 
             var dir = new DirectoryInfo("mopsdata//");
-            var files = dir.GetFiles().Where(x => x.Extension.ToLower().Equals($"{ID}.pdf"));
+            var files = dir.GetFiles().Where(x => x.Extension.ToLower().Equals($".pdf"));
             foreach (var f in files)
                 f.Delete();
 
