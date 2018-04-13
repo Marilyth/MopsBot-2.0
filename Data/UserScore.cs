@@ -21,7 +21,6 @@ namespace MopsBot.Data
         public UserScore()
         {
             StreamReader read = new StreamReader(new FileStream("mopsdata//scores.txt", FileMode.OpenOrCreate));
-
             string fs = "";
             while ((fs = read.ReadLine()) != null)
             {
@@ -85,29 +84,30 @@ namespace MopsBot.Data
         }
 
         /// <summary>
-        /// Creates an ASCII leaderboard of the Users sorted by experience
+        /// Creates an ASCII leaderboard of the Users sorted by an Attribute specified by stat
         /// </summary>
         /// <param name="count">How many Users should be shown</param>
+        /// <param name="stat">A function to return the stat to sort after</param>
         /// <returns>A string representing the leaderboard</returns>
-        public string DrawDiagram(int count)
+        public string DrawDiagram(int count, Func<Individual.User, int> stat)
         {
-            var sortedDict = (from entry in Users orderby entry.Value.Experience descending select entry).Take(count).ToArray();
+            var sortedDict = (from entry in Users orderby stat(entry.Value) descending select entry).Take(count).ToArray();
 
             int maximum = 0;
             string[] lines = new string[count];
 
-            maximum = sortedDict[0].Value.calcLevel();
+            maximum = stat(sortedDict[0].Value);
 
             for (int i = 0; i < count; i++)
             {
                 Individual.User user = sortedDict[i].Value;
                 lines[i] = (i + 1).ToString().Length < 2 ? $"#{i + 1} |" : $"#{i + 1}|";
-                double relPercent = user.calcLevel() / ((double)maximum / 10);
+                double relPercent = stat(user) / ((double)maximum / 10);
                 for (int j = 0; j < relPercent; j++)
                 {
                     lines[i] += "■";
                 }
-                lines[i] += $"  ({user.calcLevel()} / {(Program.client.GetUser(sortedDict[i].Key) == null ? "" + sortedDict[i].Key : Program.client.GetUser(sortedDict[i].Key).Username)})";
+                lines[i] += $"  ({stat(user)} / {(Program.client.GetUser(sortedDict[i].Key) == null ? "" + sortedDict[i].Key : Program.client.GetUser(sortedDict[i].Key).Username)})";
             }
 
 
