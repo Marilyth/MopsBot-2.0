@@ -16,7 +16,7 @@ namespace MopsBot
         public static void Main(string[] args) =>
             new Program().Start().GetAwaiter().GetResult();
 
-        public static DiscordSocketClient client;//Test
+        public static DiscordSocketClient client;
         public static string twitchId;
         public static string[] twitterAuth;
         public static string youtubeKey;
