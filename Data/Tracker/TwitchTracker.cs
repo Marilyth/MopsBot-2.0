@@ -107,16 +107,16 @@ namespace MopsBot.Data.Tracker
 
             if (IsOnline)
             {
+                viewerGraph.AddValue(StreamerStatus.stream.viewers);
                 if (CurGame.CompareTo(StreamerStatus.stream.game) != 0)
                 {
                     CurGame = StreamerStatus.stream.game;
                     viewerGraph.SwitchTitle(CurGame);
+                    viewerGraph.AddValue(StreamerStatus.stream.viewers);
 
                     foreach (ulong channel in ChannelMessages.Keys)
                         await OnMinorChangeTracked(channel, $"{Name} switched games to **{CurGame}**");
                 }
-                else
-                    viewerGraph.AddValue(StreamerStatus.stream.viewers);
                     
                 foreach (ulong channel in ChannelIds)
                     await OnMajorChangeTracked(channel, createEmbed());
