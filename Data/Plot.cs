@@ -126,8 +126,10 @@ namespace MopsBot.Data
                         currentGame = s.Split("=")[1];
                         SwitchTitle(currentGame);
                     }
-                    else
+                    else{
                         series[currentGame].Last().Points.Add(new DataPoint(double.Parse(s.Split(":")[0]), double.Parse(s.Split(":")[1])));
+                        lastValue = double.Parse(s.Split(":")[1]);
+                    }
                 }
                 CurTitle = currentGame;
             }
@@ -152,7 +154,6 @@ namespace MopsBot.Data
         /// <param name="newTitle">The Title to switch to</param>
         public void SwitchTitle(string newTitle, bool backToZero = false)
         {
-            if(backToZero) columnCount = 0;
             if (!series.ContainsKey(newTitle))
             {
                 series.Add(newTitle, new List<OxyPlot.Series.LineSeries>());
@@ -168,7 +169,6 @@ namespace MopsBot.Data
 
             series[newTitle].Last().StrokeThickness = 3;
             viewerChart.Series.Add(series[newTitle].Last());
-            series[newTitle].Last().Points.Add(new DataPoint(columnCount, lastValue));
             CurTitle = newTitle;
         }
 
