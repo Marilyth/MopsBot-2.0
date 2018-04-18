@@ -20,7 +20,7 @@ namespace MopsBot.Module
                 if(lengthInMinutes > 0){
                     Discord.IUserMessage updateMessage = await Context.Channel.SendMessageAsync("Generating dungeon.");
 
-                    Data.Session.IdleDungeon test = new Data.Session.IdleDungeon(updateMessage, Context.User.Id, (int)lengthInMinutes);
+                    Data.Updater.IdleDungeon test = new Data.Updater.IdleDungeon(updateMessage, Context.User.Id, (int)lengthInMinutes);
                     StaticBase.dungeonCrawler.Add(test);
                 }
                 else
@@ -62,7 +62,7 @@ namespace MopsBot.Module
             public async Task start([Remainder] string words)
             {
                 string[] wordArray = words.Split(" ");
-                StaticBase.crosswords = new MopsBot.Data.Session.Crosswords(wordArray);
+                StaticBase.crosswords = new MopsBot.Data.Updater.Crosswords(wordArray);
                 StaticBase.crosswords.setToUpdate(await ReplyAsync(StaticBase.crosswords.drawMap()));
             }
             [Command("guess")]
@@ -83,7 +83,7 @@ namespace MopsBot.Module
             {
                 if (StaticBase.blackjack == null || !StaticBase.blackjack.active)
                 {
-                    StaticBase.blackjack = new Data.Session.Blackjack(Context.Client.CurrentUser);
+                    StaticBase.blackjack = new Data.Updater.Blackjack(Context.Client.CurrentUser);
                     StaticBase.blackjack.toEdit = await ReplyAsync("Table set up. Woof");
                 }
 

@@ -9,7 +9,7 @@ using System.Text;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace MopsBot.Data.Session
+namespace MopsBot.Data.Tracker
 {
     public class OsuTracker : ITracker
     {

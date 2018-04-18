@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
-namespace MopsBot.Data.Session.APIResults
+namespace MopsBot.Data.Tracker.APIResults
 {
     public class Event
     {

@@ -12,7 +12,7 @@ using Newtonsoft.Json;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 
-namespace MopsBot.Data.Session
+namespace MopsBot.Data.Tracker
 {
     public class TwitterTracker : ITracker
     {

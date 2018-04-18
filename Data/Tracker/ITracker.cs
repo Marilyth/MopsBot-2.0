@@ -5,13 +5,13 @@ using Discord;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using MopsBot.Data.Session.APIResults;
+using MopsBot.Data.Tracker.APIResults;
 using OxyPlot;
 using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 
-namespace MopsBot.Data.Session
+namespace MopsBot.Data.Tracker
 {
     public abstract class ITracker : IDisposable
     {

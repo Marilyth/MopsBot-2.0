@@ -50,7 +50,7 @@ namespace MopsBot.Module
             MatchCollection match = Regex.Matches(Poll, @"(?<=\().+?(?=\))");
             List<IGuildUser> participants = getMentionedUsers((CommandContext)Context);
 
-            poll = new Data.Session.Poll(match[0].Value, match[1].Value.Split(","), participants.ToArray());
+            poll = new Data.Updater.Poll(match[0].Value, match[1].Value.Split(","), participants.ToArray());
 
             foreach (IGuildUser part in participants)
             {
@@ -289,7 +289,7 @@ namespace MopsBot.Module
             [Summary("Returns an embed representating the stats of the specified Overwatch player")]
             public async Task GetStats(string owUser)
             {
-                await ReplyAsync("Stats fetched:", false, (Embed)Data.Session.OverwatchTracker.overwatchInformation(owUser));
+                await ReplyAsync("Stats fetched:", false, (Embed)Data.Tracker.OverwatchTracker.overwatchInformation(owUser));
             }
 
             [Command("GetTracks")]

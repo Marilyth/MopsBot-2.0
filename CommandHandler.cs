@@ -40,6 +40,7 @@ namespace MopsBot
             client.MessageReceived += Client_MessageReceived;
             client.MessageReceived += HandleCommand;
             client.UserJoined += Client_UserJoined;
+            client.UserLeft += Client_UserLeft;
         }
 
         /// <summary>
@@ -82,6 +83,12 @@ namespace MopsBot
                 $"\n\nBevor Du vollen Zugriff auf den Server hast, möchten wir Dich auf die Regeln des Servers hinweisen, die Du hier findest:" +
                 $" {User.Guild.GetTextChannel(305443033296535552).Mention}\nSobald Du fertig bist, kannst Du Dich an einen unserer Moderatoren zu Deiner" +
                 $" rechten wenden, die Dich alsbald zum Mitglied ernennen.\n\nHave a very mopsig day\nDein heimlicher Verehrer Mops");
+            await StaticBase.UpdateGameAsync();
+        }
+
+        private async Task Client_UserLeft(SocketGuildUser User)
+        {
+            await StaticBase.UpdateGameAsync();
         }
 
         /// <summary>

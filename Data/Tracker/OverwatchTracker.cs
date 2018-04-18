@@ -7,11 +7,11 @@ using Discord.Commands;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using MopsBot.Data.Session.APIResults;
+using MopsBot.Data.Tracker.APIResults;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 
-namespace MopsBot.Data.Session
+namespace MopsBot.Data.Tracker
 {
     /// <summary>
     /// A tracker which keeps track of an Overwatch players stats
