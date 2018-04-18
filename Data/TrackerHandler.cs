@@ -90,6 +90,10 @@ namespace MopsBot.Data
             return string.Join(", ", trackers.Where(x => x.Value.ChannelIds.Contains(channelID)).Select(x => x.Key));
         }
 
+        public Type getTrackerType(){
+            return typeof(T);
+        }
+
 
         /// <summary>
         /// Event that is called when the Tracker fetches new data containing no Embed
