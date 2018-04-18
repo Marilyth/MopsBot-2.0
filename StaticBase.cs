@@ -21,6 +21,7 @@ namespace MopsBot
         public static List<Data.Session.IdleDungeon> dungeonCrawler = new List<Data.Session.IdleDungeon>();
         public static List<ulong> BotManager = new List<ulong>();
         public static List<string> playlist = new List<string>();
+        public static HashSet<ulong> MemberSet;
         public static Dictionary<ulong, string> guildPrefix;
         public static Dictionary<string, HashSet<ulong>> GiveAways = new Dictionary<string, HashSet<ulong>>();
         public static Data.Session.Poll poll;
@@ -103,6 +104,17 @@ namespace MopsBot
                 user.AddRange(Context.Guild.GetUsersAsync().Result.Where(u => u.Status.Equals(UserStatus.Online)));
             }
             return new List<IGuildUser>(user.Distinct());
+        }
+
+        public static async Task UpdateGameAsync(){
+            MemberSet = new HashSet<ulong>();
+            await Program.client.DownloadUsersAsync(Program.client.Guilds);
+            foreach(SocketGuild curGuild in Program.client.Guilds){
+                foreach(SocketGuildUser curUser in curGuild.Users){
+                    MemberSet.Add(curUser.Id);
+                }
+            }
+            await Program.client.SetGameAsync($"with {MemberSet.Count} people");
         }
     }
 }

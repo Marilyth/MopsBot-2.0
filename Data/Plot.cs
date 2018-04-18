@@ -17,7 +17,7 @@ namespace MopsBot.Data
         private Dictionary<string, List<OxyPlot.Series.LineSeries>> series;
         public int columnCount;
         public double lastValue;
-        public string ID, xAxis, yAxis;
+        public string ID, xAxis, yAxis, CurTitle;
 
         public Plot(string name, string xName = "x", string yName = "y", bool keepTrack = false)
         {
@@ -129,6 +129,7 @@ namespace MopsBot.Data
                     else
                         series[currentGame].Last().Points.Add(new DataPoint(double.Parse(s.Split(":")[0]), double.Parse(s.Split(":")[1])));
                 }
+                CurTitle = currentGame;
             }
         }
 
@@ -139,7 +140,7 @@ namespace MopsBot.Data
         public void AddValue(double value)
         {
             columnCount++;
-            series.Last().Value.Last().Points.Add(new DataPoint(columnCount, value));
+            series[CurTitle].Last().Points.Add(new DataPoint(columnCount, value));
             lastValue = value;
             writePlotPoints();
         }
@@ -168,6 +169,7 @@ namespace MopsBot.Data
             series[newTitle].Last().StrokeThickness = 3;
             viewerChart.Series.Add(series[newTitle].Last());
             series[newTitle].Last().Points.Add(new DataPoint(columnCount, lastValue));
+            CurTitle = newTitle;
         }
 
         /// <summary>
