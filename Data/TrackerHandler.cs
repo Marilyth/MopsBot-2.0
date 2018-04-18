@@ -15,7 +15,7 @@ namespace MopsBot.Data
     /// <summary>
     /// A class containing all Trackers
     /// </summary>
-    public class TrackerHandler<T> where T : Session.ITracker
+    public class TrackerHandler<T> where T : Tracker.ITracker
     {
         private Dictionary<String, T> trackers;
         public TrackerHandler(int sleepTime=0)
@@ -55,8 +55,8 @@ namespace MopsBot.Data
             if(trackers.ContainsKey(name) && trackers[name].ChannelIds.Contains(channelID)){
                 if(trackers[name].ChannelIds.Count > 1){
                     trackers[name].ChannelIds.Remove(channelID);
-                    if(trackers.First().Value.GetType() == typeof(Session.TwitchTracker)){
-                        (trackers[name] as Session.TwitchTracker).ChannelMessages.Remove(channelID);
+                    if(trackers.First().Value.GetType() == typeof(Tracker.TwitchTracker)){
+                        (trackers[name] as Tracker.TwitchTracker).ChannelMessages.Remove(channelID);
                     }
                 }
                 else{
@@ -79,8 +79,8 @@ namespace MopsBot.Data
                 trackers[name].OnMajorEventFired += OnMajorEvent;
                 trackers[name].OnMinorEventFired += OnMinorEvent;
             }
-            if(trackers.First().Value.GetType() == typeof(Session.TwitchTracker)){
-                (trackers[name] as Session.TwitchTracker).ChannelMessages.Add(channelID, notification);
+            if(trackers.First().Value.GetType() == typeof(Tracker.TwitchTracker)){
+                (trackers[name] as Tracker.TwitchTracker).ChannelMessages.Add(channelID, notification);
             }
 
             writeList();
@@ -95,7 +95,7 @@ namespace MopsBot.Data
         /// Event that is called when the Tracker fetches new data containing no Embed
         /// </summary>
         /// <returns>A Task that can be awaited</returns>
-        private async Task OnMinorEvent(ulong channelID, Session.ITracker parent, string notification)
+        private async Task OnMinorEvent(ulong channelID, Tracker.ITracker parent, string notification)
         {
             await ((Discord.WebSocket.SocketTextChannel)Program.client.GetChannel(channelID)).SendMessageAsync(notification);
         }
@@ -105,10 +105,10 @@ namespace MopsBot.Data
         /// Updates or creates the notification message with it
         /// </summary>
         /// <returns>A Task that can be awaited</returns>
-        private async Task OnMajorEvent(ulong channelID, EmbedBuilder embed, Session.ITracker parent, string notification)
+        private async Task OnMajorEvent(ulong channelID, EmbedBuilder embed, Tracker.ITracker parent, string notification)
         {
-            if(parent is Session.TwitchTracker){
-                Session.TwitchTracker parentHandle = parent as Session.TwitchTracker;
+            if(parent is Tracker.TwitchTracker){
+                Tracker.TwitchTracker parentHandle = parent as Tracker.TwitchTracker;
 
                 if(parentHandle.ToUpdate.ContainsKey(channelID))
                     await parentHandle.ToUpdate[channelID].ModifyAsync(x => {

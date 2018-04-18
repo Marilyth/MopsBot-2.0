@@ -1,13 +1,12 @@
 ﻿using System;
 using Discord;
-using Discord.WebSocket;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MopsBot.Data.Session
+namespace MopsBot.Data.Updater
 {
     public class Poll
     {

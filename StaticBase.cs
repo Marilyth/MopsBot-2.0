@@ -8,7 +8,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using MopsBot.Data;
-using MopsBot.Data.Session;
+using MopsBot.Data.Tracker;
+using MopsBot.Data.Updater;
 using Tweetinvi;
 
 namespace MopsBot
@@ -18,16 +19,16 @@ namespace MopsBot
         public static Data.Statistics stats = new Data.Statistics();
         public static Data.UserScore people = new Data.UserScore();
         public static Random ran = new Random();
-        public static List<Data.Session.IdleDungeon> dungeonCrawler = new List<Data.Session.IdleDungeon>();
+        public static List<IdleDungeon> dungeonCrawler = new List<IdleDungeon>();
         public static List<ulong> BotManager = new List<ulong>();
         public static List<string> playlist = new List<string>();
         public static HashSet<ulong> MemberSet;
         public static Dictionary<ulong, string> guildPrefix;
         public static Dictionary<string, HashSet<ulong>> GiveAways = new Dictionary<string, HashSet<ulong>>();
-        public static Data.Session.Poll poll;
-        public static Data.Session.Blackjack blackjack;
-        public static Data.Session.Crosswords crosswords;
-        public static Data.Session.ClipTracker ClipTracker;
+        public static Poll poll;
+        public static Blackjack blackjack;
+        public static Crosswords crosswords;
+        public static ClipTracker ClipTracker;
         public static TrackerHandler<OsuTracker> osuTracker;
         public static TrackerHandler<TwitchTracker> streamTracks;
         public static TrackerHandler<TwitterTracker> twitterTracks;
@@ -50,7 +51,7 @@ namespace MopsBot
                 streamTracks = new TrackerHandler<TwitchTracker>();
                 twitterTracks = new TrackerHandler<TwitterTracker>();
                 OverwatchTracks = new TrackerHandler<OverwatchTracker>(20000);
-                ClipTracker = new Data.Session.ClipTracker();
+                ClipTracker = new ClipTracker();
                 YoutubeTracks = new TrackerHandler<YoutubeTracker>();
                 osuTracker = new TrackerHandler<OsuTracker>();
 

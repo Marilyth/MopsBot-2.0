@@ -10,10 +10,10 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
-using MopsBot.Data.Session.APIResults;
+using MopsBot.Data.Tracker.APIResults;
 using System.Xml;
 
-namespace MopsBot.Data.Session
+namespace MopsBot.Data.Tracker
 {
     public class YoutubeTracker : ITracker
     {
