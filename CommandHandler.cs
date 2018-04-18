@@ -131,8 +131,9 @@ namespace MopsBot
             var result = await commands.ExecuteAsync(context, argPos, _provider);
 
             // If the command failed, notify the user
-            if (!result.IsSuccess)
+            if (!result.IsSuccess && !result.ErrorReason.Contains("Unknown command")){
                 await message.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}");
+            }
         }
 
         /// <summary>
