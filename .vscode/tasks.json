@@ -7,7 +7,7 @@
         {
             "taskName": "build",
             "args": [
-                "${workspaceRoot}/MopsBotWeb.csproj"
+                "${workspaceRoot}/MopsBot.csproj"
             ],
             "isBuildCommand": true,
             "problemMatcher": "$msCompile"
