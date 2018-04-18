@@ -1,21 +1,29 @@
 ﻿using System;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Text;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Discord;
 using Discord.WebSocket;
 using Discord.Commands;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace MopsBot
 {
     public class Program
     {
-        public static void Main(string[] args) =>
+        public static void Main(string[] args)
+        {
+            Task.Run(() => BuildWebHost(args).Run());
             new Program().Start().GetAwaiter().GetResult();
 
+        }
         public static DiscordSocketClient client;
         public static string twitchId;
         public static string[] twitterAuth;
@@ -69,6 +77,7 @@ namespace MopsBot
         private Task onClientReady()
         {
             Task.Run(() => StaticBase.initTracking());
+            Task.Run(() => StaticBase.UpdateGameAsync());
             return Task.CompletedTask;
         }
 
@@ -76,5 +85,10 @@ namespace MopsBot
         {
             await Task.Run(() => StaticBase.disconnected());
         }
+
+        public static IWebHost BuildWebHost(string[] args) =>
+            WebHost.CreateDefaultBuilder(args)
+                .UseStartup<Startup>()
+                .Build();
     }
 }
