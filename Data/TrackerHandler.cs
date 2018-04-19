@@ -30,8 +30,11 @@ namespace MopsBot.Data
                     Console.WriteLine(e.Message + e.StackTrace);
                 }
             }
-            foreach(KeyValuePair<string, T> cur in trackers)
+            foreach(KeyValuePair<string, T> cur in trackers){
                 cur.Value.PostInitialisation();
+                cur.Value.OnMinorEventFired += OnMinorEvent;
+                cur.Value.OnMajorEventFired += OnMajorEvent;
+            }
         }
 
         public void SaveJson()
