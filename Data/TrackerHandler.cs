@@ -24,6 +24,7 @@ namespace MopsBot.Data
             trackers = new Dictionary<string, T>();
             using (StreamReader read = new StreamReader(new FileStream($"mopsdata//{typeof(T).Name}.txt", FileMode.OpenOrCreate)))
             {
+                //trackers = JsonConvert.DeserializeObject<Dictionary<string, T>>(read.ReadToEnd());
                 string s = "";
                 while ((s = read.ReadLine()) != null)
                 {
@@ -40,15 +41,16 @@ namespace MopsBot.Data
                     }
                 }
             }
+            /*foreach(KeyValuePair<string, T> cur in trackers)
+                cur.Value.PostInitialisation();*/
+            SaveJson();
         }
 
-        public void writeList()
+        public void SaveJson()
         {
-            using (StreamWriter write = new StreamWriter(new FileStream($"mopsdata//{typeof(T).Name}.txt", FileMode.Create)))
-                foreach (T tr in trackers.Values)
-                {
-                    write.WriteLine(string.Join("|", tr.GetInitArray()));
-                }
+            string dictAsJson = JsonConvert.SerializeObject(trackers, Formatting.Indented);
+            using (StreamWriter write = new StreamWriter(new FileStream($"mopsdata//{typeof(T).Name}.json", FileMode.Create)))
+                write.Write(dictAsJson);
         }
 
         public void removeTracker(string name, ulong channelID){
@@ -64,7 +66,7 @@ namespace MopsBot.Data
                     trackers.Remove(name);
                 }
                 
-                writeList();
+                SaveJson();
             }
         }
 
@@ -83,7 +85,7 @@ namespace MopsBot.Data
                 (trackers[name] as Tracker.TwitchTracker).ChannelMessages.Add(channelID, notification);
             }
 
-            writeList();
+            SaveJson();
         }
 
         public string getTracker(ulong channelID){
@@ -122,7 +124,7 @@ namespace MopsBot.Data
 
                 else{
                     parentHandle.ToUpdate.Add(channelID, ((Discord.WebSocket.SocketTextChannel)Program.client.GetChannel(channelID)).SendMessageAsync(notification, embed:embed).Result.Id);
-                    writeList();
+                    SaveJson();
                 }
             }
             else

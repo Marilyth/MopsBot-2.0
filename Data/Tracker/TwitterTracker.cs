@@ -17,9 +17,12 @@ namespace MopsBot.Data.Tracker
     public class TwitterTracker : ITracker
     {
         public string Name;
-        private IUserIdentifier ident;
-        private long lastMessage;
+        public long lastMessage;
         private Task<IEnumerable<ITweet>> fetchTweets;
+
+        public TwitterTracker() : base(300000)
+        {
+        }
 
         public TwitterTracker(string twitterName) : base(300000, 0)
         {
@@ -46,7 +49,7 @@ namespace MopsBot.Data.Tracker
             
                 if(newTweets.Length != 0){
                  lastMessage = newTweets[newTweets.Length -1].Id;
-                 StaticBase.twitterTracks.writeList();
+                 StaticBase.twitterTracks.SaveJson();
                 }
             
                 foreach(ITweet newTweet in newTweets){

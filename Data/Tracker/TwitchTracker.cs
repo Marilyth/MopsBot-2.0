@@ -15,17 +15,17 @@ namespace MopsBot.Data.Tracker
     public class TwitchTracker : ITracker
     {
         private Plot viewerGraph;
+        private APIResults.TwitchResult StreamerStatus;
         public Dictionary<ulong, ulong> ToUpdate;
         public Boolean IsOnline;
         public string Name, CurGame;
         public Dictionary<ulong, string> ChannelMessages;
-        public APIResults.TwitchResult StreamerStatus;
 
         public TwitchTracker() : base(60000)
         {
         }
 
-        public void CreatePlot()
+        public override void PostInitialisation()
         {
             viewerGraph = new Plot(Name, "Time In Minutes","Viewers", IsOnline);
         }
@@ -100,7 +100,6 @@ namespace MopsBot.Data.Tracker
 
                     foreach (ulong channel in ChannelMessages.Keys)
                         await OnMinorChangeTracked(channel, $"{Name} went Offline!");
-                    StaticBase.streamTracks.writeList();
                 }
                 else
                 {
@@ -112,6 +111,7 @@ namespace MopsBot.Data.Tracker
                     foreach (ulong channel in ChannelMessages.Keys)
                         await OnMinorChangeTracked(channel, ChannelMessages[channel]);
                 }
+                StaticBase.streamTracks.SaveJson();
             }
 
             if (IsOnline)
@@ -125,6 +125,7 @@ namespace MopsBot.Data.Tracker
 
                     foreach (ulong channel in ChannelMessages.Keys)
                         await OnMinorChangeTracked(channel, $"{Name} switched games to **{CurGame}**");
+                    StaticBase.streamTracks.SaveJson();
                 }
                     
                 foreach (ulong channel in ChannelIds)

@@ -34,6 +34,9 @@ namespace MopsBot.Data.Tracker
             Console.Out.WriteLine($"{DateTime.Now} Started a {this.GetType().Name}");
         }
 
+        public virtual void PostInitialisation(){
+        }
+
         protected abstract void CheckForChange_Elapsed(object stateinfo);
 
         protected async Task OnMajorChangeTracked(ulong channelID, EmbedBuilder embed, string notificationText=""){

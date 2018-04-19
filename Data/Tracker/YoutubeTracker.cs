@@ -17,8 +17,12 @@ namespace MopsBot.Data.Tracker
 {
     public class YoutubeTracker : ITracker
     {
-        private string id;
-        private string lastTime;
+        public string id;
+        public string lastTime;
+
+        public YoutubeTracker() : base(300000)
+        {
+        }
 
         public YoutubeTracker(string channelId) : base(300000, 0)
         {
@@ -75,7 +79,7 @@ namespace MopsBot.Data.Tracker
                 if (newVideos.Length > 1)
                 {
                     lastTime = XmlConvert.ToString(newVideos[0].snippet.publishedAt, XmlDateTimeSerializationMode.Utc);
-                    StaticBase.YoutubeTracks.writeList();
+                    StaticBase.YoutubeTracks.SaveJson();
                 }
 
                 foreach (APIResults.Item video in newVideos)
