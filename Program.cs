@@ -13,6 +13,7 @@ using Discord.WebSocket;
 using Discord.Commands;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Net;
 
 namespace MopsBot
 {
@@ -88,7 +89,12 @@ namespace MopsBot
 
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
+                .UseUrls("http://0.0.0.0:5000/")
+                .UseKestrel()
+                .UseContentRoot(Directory.GetCurrentDirectory())
+                .UseIISIntegration()
                 .UseStartup<Startup>()
                 .Build();
+
     }
 }
