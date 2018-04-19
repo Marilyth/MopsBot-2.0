@@ -19,18 +19,22 @@ namespace MopsBot.Data.Tracker
     public class OverwatchTracker : ITracker
     {
         public string Name;
-        private OStatsResult information;
+        public OStatsResult information;
 
         /// <summary>
         /// Initialises the tracker by setting attributes and setting up a Timer with a 10 minutes interval
         /// </summary>
         /// <param Name="OWName"> The Name-Battletag combination of the player to track </param>
-        public OverwatchTracker(string OWName) : base(600000, false)
+        public OverwatchTracker() : base(600000, 20000)
+        {
+        }
+
+        public OverwatchTracker(string OWName) : base(600000, 0)
         {
             Name = OWName;
         }
 
-        public OverwatchTracker(string[] initArray) : base(600000, false)
+        public OverwatchTracker(string[] initArray) : base(600000, 20000)
         {
             Name = initArray[0];
 

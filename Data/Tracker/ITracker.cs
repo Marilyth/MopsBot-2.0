@@ -15,6 +15,8 @@ namespace MopsBot.Data.Tracker
 {
     public abstract class ITracker : IDisposable
     {
+        //Avoid ratelimit by placing a gap between all trackers.
+        public static int ExistingTrackers = 0;
         private bool disposed = false;
         private SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
         protected System.Threading.Timer checkForChange;
@@ -24,10 +26,11 @@ namespace MopsBot.Data.Tracker
         public delegate Task MainEventHandler(ulong channelID, EmbedBuilder embed, ITracker self, string notificationText="");
         public HashSet<ulong> ChannelIds;
         
-        public ITracker(int interval, bool ran = true){
+        public ITracker(int interval, int gap = 2000){
+            ExistingTrackers++;
             ChannelIds = new HashSet<ulong>();
             checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false),
-                                                                                ran ? StaticBase.ran.Next(6,59)*1000 : 0, interval);
+                                                                                ExistingTrackers * gap, interval);
             Console.Out.WriteLine($"{DateTime.Now} Started a {this.GetType().Name}");
         }
 

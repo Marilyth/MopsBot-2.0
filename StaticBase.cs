@@ -48,12 +48,12 @@ namespace MopsBot
                 TweetinviConfig.CurrentThreadSettings.TweetMode = TweetMode.Extended;
                 TweetinviConfig.ApplicationSettings.TweetMode = TweetMode.Extended;
 
+                OverwatchTracks = new TrackerHandler<OverwatchTracker>();
                 streamTracks = new TrackerHandler<TwitchTracker>();
                 twitterTracks = new TrackerHandler<TwitterTracker>();
-                OverwatchTracks = new TrackerHandler<OverwatchTracker>(20000);
-                ClipTracker = new ClipTracker();
                 YoutubeTracks = new TrackerHandler<YoutubeTracker>();
                 osuTracker = new TrackerHandler<OsuTracker>();
+                ClipTracker = new ClipTracker();
 
                 init = true;
             }

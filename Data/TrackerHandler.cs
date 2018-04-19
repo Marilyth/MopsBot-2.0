@@ -8,6 +8,7 @@ using Discord;
 using Discord.WebSocket;
 using Microsoft.Win32.SafeHandles;
 using System.Runtime.InteropServices;
+using Newtonsoft.Json;
 
 namespace MopsBot.Data
 {
@@ -17,8 +18,8 @@ namespace MopsBot.Data
     /// </summary>
     public class TrackerHandler<T> where T : Tracker.ITracker
     {
-        private Dictionary<String, T> trackers;
-        public TrackerHandler(int sleepTime=0)
+        private Dictionary<string, T> trackers;
+        public TrackerHandler()
         {
             trackers = new Dictionary<string, T>();
             using (StreamReader read = new StreamReader(new FileStream($"mopsdata//{typeof(T).Name}.txt", FileMode.OpenOrCreate)))
@@ -32,7 +33,6 @@ namespace MopsBot.Data
                         trackers.Add(trackerInformation[0], (T)Activator.CreateInstance(typeof(T), new object[] { trackerInformation }));
                         trackers[trackerInformation[0]].OnMajorEventFired += OnMajorEvent;
                         trackers[trackerInformation[0]].OnMinorEventFired += OnMinorEvent;
-                        System.Threading.Thread.Sleep(sleepTime);
                     }
                     catch (Exception e)
                     {
@@ -115,13 +115,13 @@ namespace MopsBot.Data
                 Tracker.TwitchTracker parentHandle = parent as Tracker.TwitchTracker;
 
                 if(parentHandle.ToUpdate.ContainsKey(channelID))
-                    await parentHandle.ToUpdate[channelID].ModifyAsync(x => {
+                    await ((IUserMessage)((ITextChannel)Program.client.GetChannel(channelID)).GetMessageAsync(parentHandle.ToUpdate[channelID]).Result).ModifyAsync(x => {
                         x.Content = notification;
                         x.Embed = (Embed)embed;
                     });
 
                 else{
-                    parentHandle.ToUpdate.Add(channelID, await ((Discord.WebSocket.SocketTextChannel)Program.client.GetChannel(channelID)).SendMessageAsync(notification, embed:embed));
+                    parentHandle.ToUpdate.Add(channelID, ((Discord.WebSocket.SocketTextChannel)Program.client.GetChannel(channelID)).SendMessageAsync(notification, embed:embed).Result.Id);
                     writeList();
                 }
             }

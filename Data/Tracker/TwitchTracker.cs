@@ -15,18 +15,27 @@ namespace MopsBot.Data.Tracker
     public class TwitchTracker : ITracker
     {
         private Plot viewerGraph;
-        public Dictionary<ulong, Discord.IUserMessage> ToUpdate;
+        public Dictionary<ulong, ulong> ToUpdate;
         public Boolean IsOnline;
         public string Name, CurGame;
         public Dictionary<ulong, string> ChannelMessages;
         public APIResults.TwitchResult StreamerStatus;
 
-        public TwitchTracker(string streamerName) : base(60000)
+        public TwitchTracker() : base(60000)
+        {
+        }
+
+        public void CreatePlot()
+        {
+            viewerGraph = new Plot(Name, "Time In Minutes","Viewers", IsOnline);
+        }
+
+        public TwitchTracker(string streamerName) : base(60000, 0)
         {
             viewerGraph = new Plot(streamerName, "Time In Minutes","Viewers", false);
 
             Console.Out.WriteLine($"{DateTime.Now} Started Twitchtracker for {streamerName}");
-            ToUpdate = new Dictionary<ulong, Discord.IUserMessage>();
+            ToUpdate = new Dictionary<ulong, ulong>();
             ChannelMessages = new Dictionary<ulong, string>();
             Name = streamerName;
             IsOnline = false;
@@ -34,7 +43,7 @@ namespace MopsBot.Data.Tracker
 
         public TwitchTracker(string[] initArray) : base(60000)
         {
-            ToUpdate = new Dictionary<ulong, Discord.IUserMessage>();
+            ToUpdate = new Dictionary<ulong, ulong>();
             ChannelMessages = new Dictionary<ulong, string>();
 
             Name = initArray[0];
@@ -59,8 +68,8 @@ namespace MopsBot.Data.Tracker
                     {
                         string[] messageInformation = message.Split("=");
                         var channel = Program.client.GetChannel(ulong.Parse(messageInformation[0]));
-                        var discordMessage = ((Discord.ITextChannel)channel).GetMessageAsync(ulong.Parse(messageInformation[1])).Result;
-                        ToUpdate.Add(ulong.Parse(messageInformation[0]), (Discord.IUserMessage)discordMessage);
+                        var discordMessage = ulong.Parse(messageInformation[1]);
+                        ToUpdate.Add(ulong.Parse(messageInformation[0]), discordMessage);
                     }
                 }
                 CurGame = streamerInformation().stream.game;
@@ -96,7 +105,7 @@ namespace MopsBot.Data.Tracker
                 else
                 {
                     IsOnline = true;
-                    ToUpdate = new Dictionary<ulong, Discord.IUserMessage>();
+                    ToUpdate = new Dictionary<ulong, ulong>();
                     CurGame = StreamerStatus.stream.game;
                     viewerGraph.SwitchTitle(CurGame);
 
@@ -174,7 +183,7 @@ namespace MopsBot.Data.Tracker
             informationArray[0] = Name;
             informationArray[1] = IsOnline.ToString();
             informationArray[2] = "{" + string.Join(";", ChannelMessages.Select(x => x.Key + "=" + x.Value)) + "}";
-            informationArray[3] = "{" + string.Join(";", ToUpdate.Select(x => x.Key + "=" + x.Value.Id)) + "}";
+            informationArray[3] = "{" + string.Join(";", ToUpdate.Select(x => x.Key + "=" + x.Value)) + "}";
 
             return informationArray;
         }

@@ -15,7 +15,12 @@ namespace MopsBot.Data.Tracker
     {
         public string Username, CurMode;
         public double pp;
-        public OsuTracker(string name) : base(60000)
+
+        public OsuTracker() : base(60000)
+        {
+        }
+
+        public OsuTracker(string name) : base(60000, 0)
         {
             Username = name;
         }
