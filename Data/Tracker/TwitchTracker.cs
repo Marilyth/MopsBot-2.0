@@ -41,41 +41,6 @@ namespace MopsBot.Data.Tracker
             IsOnline = false;
         }
 
-        public TwitchTracker(string[] initArray) : base(60000)
-        {
-            ToUpdate = new Dictionary<ulong, ulong>();
-            ChannelMessages = new Dictionary<ulong, string>();
-
-            Name = initArray[0];
-            IsOnline = Boolean.Parse(initArray[1]);
-            viewerGraph = new Plot(Name, "Time In Minutes","Viewers", IsOnline);
-
-            foreach (string channel in initArray[2].Split(new char[] { '{', '}', ';' }))
-            {
-                if (channel != "")
-                {
-                    string[] channelText = channel.Split("=");
-                    ChannelMessages.Add(ulong.Parse(channelText[0]), channelText[1]);
-                    ChannelIds.Add(ulong.Parse(channelText[0]));
-                }
-            }
-
-            if (IsOnline)
-            {
-                foreach (string message in initArray[3].Split(new char[] { '{', '}', ';' }))
-                {
-                    if (message != "")
-                    {
-                        string[] messageInformation = message.Split("=");
-                        var channel = Program.client.GetChannel(ulong.Parse(messageInformation[0]));
-                        var discordMessage = ulong.Parse(messageInformation[1]);
-                        ToUpdate.Add(ulong.Parse(messageInformation[0]), discordMessage);
-                    }
-                }
-                CurGame = streamerInformation().stream.game;
-            }
-        }
-
         protected async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
@@ -176,17 +141,6 @@ namespace MopsBot.Data.Tracker
             e.AddInlineField("Viewers", StreamerStatus.stream.viewers);
 
             return e;
-        }
-
-        public override string[] GetInitArray()
-        {
-            string[] informationArray = new string[4];
-            informationArray[0] = Name;
-            informationArray[1] = IsOnline.ToString();
-            informationArray[2] = "{" + string.Join(";", ChannelMessages.Select(x => x.Key + "=" + x.Value)) + "}";
-            informationArray[3] = "{" + string.Join(";", ToUpdate.Select(x => x.Key + "=" + x.Value)) + "}";
-
-            return informationArray;
         }
     }
 }

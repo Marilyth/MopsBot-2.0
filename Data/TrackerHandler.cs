@@ -22,28 +22,16 @@ namespace MopsBot.Data
         public TrackerHandler()
         {
             trackers = new Dictionary<string, T>();
-            using (StreamReader read = new StreamReader(new FileStream($"mopsdata//{typeof(T).Name}.txt", FileMode.OpenOrCreate)))
+            using (StreamReader read = new StreamReader(new FileStream($"mopsdata//{typeof(T).Name}.json", FileMode.OpenOrCreate)))
             {
-                //trackers = JsonConvert.DeserializeObject<Dictionary<string, T>>(read.ReadToEnd());
-                string s = "";
-                while ((s = read.ReadLine()) != null)
-                {
-                    try
-                    {
-                        var trackerInformation = s.Split('|');
-                        trackers.Add(trackerInformation[0], (T)Activator.CreateInstance(typeof(T), new object[] { trackerInformation }));
-                        trackers[trackerInformation[0]].OnMajorEventFired += OnMajorEvent;
-                        trackers[trackerInformation[0]].OnMinorEventFired += OnMinorEvent;
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e.Message);
-                    }
+                try{
+                    trackers = JsonConvert.DeserializeObject<Dictionary<string, T>>(read.ReadToEnd());
+                } catch(Exception e){
+                    Console.WriteLine(e.Message + e.StackTrace);
                 }
             }
-            /*foreach(KeyValuePair<string, T> cur in trackers)
-                cur.Value.PostInitialisation();*/
-            SaveJson();
+            foreach(KeyValuePair<string, T> cur in trackers)
+                cur.Value.PostInitialisation();
         }
 
         public void SaveJson()

@@ -48,8 +48,6 @@ namespace MopsBot.Data.Tracker
                await OnMinorEventFired(channelID, this, notificationText);
         }
 
-        public abstract string[] GetInitArray();
-
         public void Dispose()
         { 
             Dispose(true);

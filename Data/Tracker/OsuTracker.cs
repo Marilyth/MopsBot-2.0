@@ -25,17 +25,6 @@ namespace MopsBot.Data.Tracker
             Username = name;
         }
 
-        public OsuTracker(string[] initArray) : base(60000)
-        {
-            Username = initArray[0];
-
-            foreach (string channel in initArray[1].Split(new char[] { '{', '}', ';' }))
-            {
-                if (channel != "")
-                    ChannelIds.Add(ulong.Parse(channel));
-            }
-        }
-
         protected async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
@@ -148,15 +137,6 @@ namespace MopsBot.Data.Tracker
                     return Math.Round(accuracy * 100, 2);
             }
             return 0;
-        }
-
-        public override string[] GetInitArray()
-        {
-            string[] informationArray = new string[2];
-            informationArray[0] = Username;
-            informationArray[1] = "{" + string.Join(";", ChannelIds) + "}";
-
-            return informationArray;
         }
     }
 }

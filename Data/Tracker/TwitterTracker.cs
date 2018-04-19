@@ -29,16 +29,6 @@ namespace MopsBot.Data.Tracker
             Name = twitterName;
         }
 
-        public TwitterTracker(string[] initArray) : base(300000)
-        {
-            Name = initArray[0];
-            lastMessage = long.Parse(initArray[1]);
-            foreach(string channel in initArray[2].Split(new char[]{'{','}',';'})){
-                if(channel != "")
-                    ChannelIds.Add(ulong.Parse(channel));
-            }
-        }
-
         protected async override void CheckForChange_Elapsed(object stateinfo)
         {
             Tweetinvi.Parameters.IUserTimelineParameters parameters = Timeline.CreateUserTimelineParameter();
@@ -91,15 +81,6 @@ namespace MopsBot.Data.Tracker
             e.Description = tweet.FullText;
 
             return e;
-        }
-
-        public override string[] GetInitArray(){
-            string[] informationArray = new string[2 + ChannelIds.Count];
-            informationArray[0] = Name;
-            informationArray[1] = lastMessage.ToString();
-            informationArray[2] = "{" + string.Join(";", ChannelIds) + "}";
-
-            return informationArray;
         }
     }
 }

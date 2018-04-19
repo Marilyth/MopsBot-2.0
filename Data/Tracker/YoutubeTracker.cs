@@ -30,17 +30,6 @@ namespace MopsBot.Data.Tracker
             lastTime = XmlConvert.ToString(DateTime.Now, XmlDateTimeSerializationMode.Utc);
         }
 
-        public YoutubeTracker(string[] initArray) : base(300000)
-        {
-            id = initArray[0];
-            lastTime = initArray[1];
-            foreach (string channel in initArray[2].Split(new char[] { '{', '}', ';' }))
-            {
-                if (channel != "")
-                    ChannelIds.Add(ulong.Parse(channel));
-            }
-        }
-
         private YoutubeResult fetchVideos()
         {
             string query = MopsBot.Module.Information.readURL($"https://www.googleapis.com/youtube/v3/search?key={Program.youtubeKey}&channelId={id}&part=snippet,id&order=date&maxResults=20&publishedAfter={lastTime}");
@@ -123,16 +112,6 @@ namespace MopsBot.Data.Tracker
             e.Description = result.snippet.description;
 
             return e;
-        }
-
-        public override string[] GetInitArray()
-        {
-            string[] informationArray = new string[2 + ChannelIds.Count];
-            informationArray[0] = id;
-            informationArray[1] = lastTime;
-            informationArray[2] = "{" + string.Join(";", ChannelIds) + "}";
-
-            return informationArray;
         }
     }
 }

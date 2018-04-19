@@ -34,16 +34,6 @@ namespace MopsBot.Data.Tracker
             Name = OWName;
         }
 
-        public OverwatchTracker(string[] initArray) : base(600000, 20000)
-        {
-            Name = initArray[0];
-
-            foreach(string channel in initArray[1].Split(new char[]{'{','}',';'})){
-                if(channel != "")
-                    ChannelIds.Add(ulong.Parse(channel));
-            }
-        }
-
         /// <summary>
         /// Event for the Timer, to check for changed stats
         /// </summary>
@@ -294,14 +284,6 @@ namespace MopsBot.Data.Tracker
                 return Tuple.Create(sortedList[0].Key, leaderboard);
 
             return Tuple.Create("CannotFetchArcade", "CannotFetchArcade");
-        }
-
-        public override string[] GetInitArray(){
-            string[] informationArray = new string[2];
-            informationArray[0] = Name;
-            informationArray[1] = "{" + string.Join(";", ChannelIds) + "}";
-
-            return informationArray;
         }
     }
 }
