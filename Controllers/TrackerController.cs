@@ -57,18 +57,18 @@ namespace MopsBot.Api.Controllers
             bool allChannels = !parameters.ContainsKey("channel");
 
             Dictionary<string, TrackerWrapper> allTrackers = StaticBase.trackers;
-            Dictionary<string, ITracker> allResults = new Dictionary<string, ITracker>();
+            HashSet<ITracker> allResults = new HashSet<ITracker>();
 
             allTrackers = allTrackers.
                 Where(x => allTypes || parameters["type"].Contains(x.Key)).ToDictionary(x => x.Key, x => x.Value);
 
             foreach(var key in allTrackers.Keys)
-                allResults = allResults.Concat(allTrackers[key].getTracker().
+                allResults = allResults.Concat(allTrackers[key].getTrackerSet().
                     Where(x => allChannels || 
-                    parameters["channel"].Any(y => x.Value.ChannelIds.Contains(ulong.Parse(y)))))
-                    .ToDictionary(x => x.Key, x => x.Value);
+                    parameters["channel"].Any(y => x.ChannelIds.Contains(ulong.Parse(y)))))
+                    .ToHashSet();
 
-            var result = allResults.GroupBy(x => x.Value.GetType(), x=> x.Value).ToDictionary( x => x.Key.Name, 
+            var result = allResults.GroupBy(x => x.GetType()).ToDictionary(x => x.Key.Name, 
                 x => x.ToDictionary(y => y.Name, y => y.ChannelIds.
                 Where(z => allChannels || parameters["channel"].Contains(z.ToString()))));
 
