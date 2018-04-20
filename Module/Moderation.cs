@@ -289,7 +289,7 @@ namespace MopsBot.Module
             [Summary("Returns an embed representating the stats of the specified Overwatch player")]
             public async Task GetStats(string owUser)
             {
-                await ReplyAsync("Stats fetched:", false, (Embed)Data.Tracker.OverwatchTracker.overwatchInformation(owUser));
+                await ReplyAsync("Stats fetched:", false, await Data.Tracker.OverwatchTracker.overwatchInformation(owUser));
             }
 
             [Command("GetTracks")]

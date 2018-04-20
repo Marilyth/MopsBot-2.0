@@ -42,7 +42,7 @@ namespace MopsBot.Data.Tracker
         {
             try
             {
-                OStatsResult newInformation = overwatchInformation();
+                OStatsResult newInformation = await overwatchInformation();
 
                 if (information == null)
                 {
@@ -71,9 +71,9 @@ namespace MopsBot.Data.Tracker
         /// Then converts it into OStatsResult
         /// </summary>
         /// <returns>An OStatsResult representing the fetched JSON as an object</returns>
-        private OStatsResult overwatchInformation()
+        private async Task<OStatsResult> overwatchInformation()
         {
-            string query = MopsBot.Module.Information.readURL($"http://localhost:4444/api/v3/u/{Name}/blob");
+            string query = await MopsBot.Module.Information.ReadURLAsync($"http://localhost:4444/api/v3/u/{Name}/blob");
 
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {
@@ -83,9 +83,9 @@ namespace MopsBot.Data.Tracker
             return JsonConvert.DeserializeObject<OStatsResult>(query, _jsonWriter);
         }
 
-        public static EmbedBuilder overwatchInformation(string owName)
+        public static async Task<EmbedBuilder> overwatchInformation(string owName)
         {
-            string query = MopsBot.Module.Information.readURL($"http://localhost:4444/api/v3/u/{owName}/blob");
+            string query = await MopsBot.Module.Information.ReadURLAsync($"http://localhost:4444/api/v3/u/{owName}/blob");
 
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {

@@ -29,7 +29,7 @@ namespace MopsBot.Data.Tracker
         {
             try
             {
-                APIResults.OsuResult userInformation = fetchUser();
+                APIResults.OsuResult userInformation = await fetchUser();
                 if(userInformation == null) return;
                 if(pp == 0) {
                     pp = double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture);
@@ -39,9 +39,9 @@ namespace MopsBot.Data.Tracker
                 if (pp + 0.5 <= double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture))
                 {
                     CurMode = userInformation.events[0].getMode();
-                    APIResults.Score scoreInformation = fetchScore(userInformation.events[0].beatmap_id);
+                    APIResults.Score scoreInformation = await fetchScore(userInformation.events[0].beatmap_id);
 
-                    APIResults.Beatmap beatmapInformation = fetchBeatmap(userInformation.events[0].beatmap_id);
+                    APIResults.Beatmap beatmapInformation = await fetchBeatmap(userInformation.events[0].beatmap_id);
 
                     foreach(ulong channel in ChannelIds)
                         await OnMajorChangeTracked(channel, createEmbed(userInformation, beatmapInformation, scoreInformation, double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture) - pp));
@@ -56,23 +56,23 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public APIResults.OsuResult fetchUser()
+        public async Task<APIResults.OsuResult> fetchUser()
         {
-            string query = MopsBot.Module.Information.readURL($"https://osu.ppy.sh/api/get_user?u={Username}&k=8ad11f6daf7b439f96eee1c256d474cd9925d4d8");
+            string query = await MopsBot.Module.Information.ReadURLAsync($"https://osu.ppy.sh/api/get_user?u={Username}&k=8ad11f6daf7b439f96eee1c256d474cd9925d4d8");
 
             return JsonConvert.DeserializeObject<APIResults.OsuResult>(query.Substring(1, query.Length-2));
         }
 
-        public APIResults.Score fetchScore(string beatmapID)
+        public async Task<APIResults.Score> fetchScore(string beatmapID)
         {
-            string query = MopsBot.Module.Information.readURL($"https://osu.ppy.sh/api/get_scores?b={beatmapID}&{CurMode}&u={Username}&limit=1&k=8ad11f6daf7b439f96eee1c256d474cd9925d4d8");
+            string query = await MopsBot.Module.Information.ReadURLAsync($"https://osu.ppy.sh/api/get_scores?b={beatmapID}&{CurMode}&u={Username}&limit=1&k=8ad11f6daf7b439f96eee1c256d474cd9925d4d8");
 
             return JsonConvert.DeserializeObject<APIResults.Score>(query.Substring(1, query.Length-2));;
         }
 
-        public APIResults.Beatmap fetchBeatmap(string beatmapID)
+        public async Task<APIResults.Beatmap> fetchBeatmap(string beatmapID)
         {
-            string query = MopsBot.Module.Information.readURL($"https://osu.ppy.sh/api/get_beatmaps?b={beatmapID}&{CurMode}&a=1&k=8ad11f6daf7b439f96eee1c256d474cd9925d4d8");
+            string query = await MopsBot.Module.Information.ReadURLAsync($"https://osu.ppy.sh/api/get_beatmaps?b={beatmapID}&{CurMode}&a=1&k=8ad11f6daf7b439f96eee1c256d474cd9925d4d8");
 
             return JsonConvert.DeserializeObject<APIResults.Beatmap>(query.Substring(1, query.Length-2));;
         }

@@ -30,9 +30,9 @@ namespace MopsBot.Data.Tracker
             lastTime = XmlConvert.ToString(DateTime.Now, XmlDateTimeSerializationMode.Utc);
         }
 
-        private YoutubeResult fetchVideos()
+        private async Task<YoutubeResult> fetchVideos()
         {
-            string query = MopsBot.Module.Information.readURL($"https://www.googleapis.com/youtube/v3/search?key={Program.youtubeKey}&channelId={id}&part=snippet,id&order=date&maxResults=20&publishedAfter={lastTime}");
+            string query = await MopsBot.Module.Information.ReadURLAsync($"https://www.googleapis.com/youtube/v3/search?key={Program.youtubeKey}&channelId={id}&part=snippet,id&order=date&maxResults=20&publishedAfter={lastTime}");
 
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {
@@ -44,9 +44,9 @@ namespace MopsBot.Data.Tracker
             return tmpResult;
         }
 
-        private YoutubeChannelResult fetchChannel()
+        private async Task<YoutubeChannelResult> fetchChannel()
         {
-            string query = MopsBot.Module.Information.readURL($"https://www.googleapis.com/youtube/v3/channels?part=snippet&id={id}&key={Program.youtubeKey}");
+            string query = await MopsBot.Module.Information.ReadURLAsync($"https://www.googleapis.com/youtube/v3/channels?part=snippet&id={id}&key={Program.youtubeKey}");
 
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {
@@ -60,7 +60,7 @@ namespace MopsBot.Data.Tracker
 
         protected async override void CheckForChange_Elapsed(object stateinfo)
         {
-            YoutubeResult curStats = fetchVideos();
+            YoutubeResult curStats = await fetchVideos();
             try
             {
                 APIResults.Item[] newVideos = curStats.items.ToArray();
@@ -77,7 +77,7 @@ namespace MopsBot.Data.Tracker
                     {
                         foreach (ulong channel in ChannelIds)
                         {
-                            await OnMajorChangeTracked(channel, createEmbed(video), "New Video");
+                            await OnMajorChangeTracked(channel, await createEmbed(video), "New Video");
                         }
                     }
                 }
@@ -88,7 +88,7 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        private EmbedBuilder createEmbed(Item result)
+        private async Task<EmbedBuilder> createEmbed(Item result)
         {
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0xFF0000);
@@ -104,10 +104,11 @@ namespace MopsBot.Data.Tracker
             EmbedAuthorBuilder author = new EmbedAuthorBuilder();
             author.Name = result.snippet.channelTitle;
             author.Url = $"https://www.youtube.com/channel/{result.snippet.channelId}";
-            author.IconUrl = fetchChannel().items[0].snippet.thumbnails.medium.url;
+            var channelInformation = await fetchChannel();
+            author.IconUrl = channelInformation.items[0].snippet.thumbnails.medium.url;
             e.Author = author;
 
-            e.ThumbnailUrl = fetchChannel().items[0].snippet.thumbnails.medium.url;
+            e.ThumbnailUrl = channelInformation.items[0].snippet.thumbnails.medium.url;
             e.ImageUrl = result.snippet.thumbnails.high.url;
             e.Description = result.snippet.description;
 

@@ -45,7 +45,7 @@ namespace MopsBot.Data.Tracker
         {
             try
             {
-                StreamerStatus = streamerInformation();
+                StreamerStatus = await streamerInformation();
             }
             catch (Exception e)
             {
@@ -98,9 +98,9 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        private TwitchResult streamerInformation()
+        private async Task<TwitchResult> streamerInformation()
         {
-            string query = MopsBot.Module.Information.readURL($"https://api.twitch.tv/kraken/streams/{Name}?client_id={Program.twitchId}");
+            string query = await MopsBot.Module.Information.ReadURLAsync($"https://api.twitch.tv/kraken/streams/{Name}?client_id={Program.twitchId}");
 
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {
