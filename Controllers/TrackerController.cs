@@ -4,6 +4,7 @@ using System.Linq;
 using MopsBot.Data.Individual;
 using MopsBot.Data;
 using MopsBot.Data.Tracker;
+using Newtonsoft.Json;
 using System;
 
 namespace MopsBot.Api.Controllers
@@ -52,61 +53,26 @@ namespace MopsBot.Api.Controllers
         public IActionResult GetTracks()
         {
             Dictionary<string, string[]> parameters = HttpContext.Request.Query.ToDictionary(x => x.Key, x => x.Value.ToArray());
-            string[] type = new string[0];
-            string[] channel = new string[0];
-            bool alltypes = false;
-            bool allchannels = false;
-            if (parameters.Any(x => x.Key == "type"))
-                type = parameters["type"];
-            else
-                alltypes = true;
-            if (parameters.Any(x => x.Key == "channel"))
-                channel = parameters["channel"];
-            else
-                allchannels = true;
-            Results.TrackerResult.RootObject result = new Results.TrackerResult.RootObject();
-            if (type.Length.Equals(0))
-                alltypes = true;
-            if (channel.Length.Equals(0))
-                allchannels = true;
-            foreach (var pair in StaticBase.trackers)
-            {
-                Dictionary<string, ITracker> dict = new Dictionary<string, ITracker>();
-                if (!alltypes && !type.Any(x => pair.Key.Equals(x)))
-                    continue;
-                Results.TrackerResult.Type handler = new Results.TrackerResult.Type(pair.Key);
-                if (allchannels)
-                    dict = pair.Value.getTracker();
-                else if (!(channel.Length == 0))
-                {
-                    var whichIds = new HashSet<string>();
-                    channel.ToList().ForEach(c =>
-                    {
-                        whichIds.Concat(pair.Value.getTracker(ulong.Parse(c)).Split(','));
-                    });
-                    foreach (string id in whichIds)
-                        dict.Concat(pair.Value.getTracker().Where(x=> x.Key.Equals(id)).ToDictionary(x=> x.Key,x=> x.Value));
-                }
-                else
-                    return BadRequest();
-                if (!dict.Any())
-                    continue;
-                foreach (var key in dict.Keys)
-                {
-                    Results.TrackerResult.Id id = new Results.TrackerResult.Id(key);
-                    if (!allchannels)
-                    {
-                        handler.ids.Add(id);
-                        continue;
-                    }
-                    var value = dict[key];
-                    HashSet<ulong> channels = value.ChannelIds;
-                    channels.ToList().ForEach(x => id.channels.Add(new Results.TrackerResult.Channel(x)));
-                    handler.ids.Add(id);
-                }
-                result.types.Add(handler);
-            }
-            return new ObjectResult(result);
+            bool allTypes = !parameters.ContainsKey("type");
+            bool allChannels = !parameters.ContainsKey("channel");
+
+            Dictionary<string, TrackerWrapper> allTrackers = StaticBase.trackers;
+            Dictionary<string, ITracker> allResults = new Dictionary<string, ITracker>();
+
+            allTrackers = allTrackers.
+                Where(x => allTypes || parameters["type"].Contains(x.Key)).ToDictionary(x => x.Key, x => x.Value);
+
+            foreach(var key in allTrackers.Keys)
+                allResults = allResults.Concat(allTrackers[key].getTracker().
+                    Where(x => allChannels || 
+                    parameters["channel"].Any(y => x.Value.ChannelIds.Contains(ulong.Parse(y)))))
+                    .ToDictionary(x => x.Key, x => x.Value);
+
+            var result = allResults.GroupBy(x => x.Value.GetType(), x=> x.Value).ToDictionary( x => x.Key.Name, 
+                x => x.ToDictionary(y => y.Name, y => y.ChannelIds.
+                Where(z => allChannels || parameters["channel"].Contains(z.ToString()))));
+
+            return new ObjectResult(JsonConvert.SerializeObject(result, Formatting.Indented));
         }
 
         [HttpGet("{channel}/{type}")]

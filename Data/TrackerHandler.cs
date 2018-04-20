@@ -13,8 +13,7 @@ using MopsBot.Data.Tracker;
 
 namespace MopsBot.Data
 {
-    public abstract class TrackerHandler {
-
+    public abstract class TrackerWrapper {
         public abstract void SaveJson();
         public abstract void removeTracker(string name, ulong channelID);
         public abstract void addTracker(string name, ulong channelID, string notification="");
@@ -27,7 +26,7 @@ namespace MopsBot.Data
     /// <summary>
     /// A class containing all Trackers
     /// </summary>
-    public class TrackerHandler<T> : TrackerHandler where T : Tracker.ITracker
+    public class TrackerHandler<T> : TrackerWrapper where T : Tracker.ITracker
     {
         public Dictionary<string, T> trackers;
         public TrackerHandler()
@@ -41,6 +40,7 @@ namespace MopsBot.Data
                     Console.WriteLine(e.Message + e.StackTrace);
                 }
             }
+            trackers = (trackers == null ? new Dictionary<string, T>() : trackers);
             foreach(KeyValuePair<string, T> cur in trackers){
                 cur.Value.PostInitialisation();
                 cur.Value.OnMinorEventFired += OnMinorEvent;

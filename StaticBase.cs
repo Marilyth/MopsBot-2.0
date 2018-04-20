@@ -35,7 +35,7 @@ namespace MopsBot
         public static TrackerHandler<OverwatchTracker> OverwatchTracks;
         public static TrackerHandler<YoutubeTracker> YoutubeTracks;
 */
-        public static Dictionary<string, TrackerHandler> trackers;
+        public static Dictionary<string, TrackerWrapper> trackers;
 
         public static bool init = false;
 
@@ -58,7 +58,7 @@ namespace MopsBot
                 osuTracker = new TrackerHandler<OsuTracker>(); */
                 ClipTracker = new ClipTracker();
                 
-                trackers = new Dictionary<string, TrackerHandler>();
+                trackers = new Dictionary<string, Data.TrackerWrapper>();
                 trackers["osu"] = new TrackerHandler<OsuTracker>();
                 trackers["overwatch"] = new TrackerHandler<OverwatchTracker>();
                 trackers["twitch"] = new TrackerHandler<TwitchTracker>();

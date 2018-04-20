@@ -66,7 +66,7 @@ namespace MopsBot.Data.Tracker
 
                 if (newVideos.Length > 1)
                 {
-                    lastTime = XmlConvert.ToString(newVideos[0].snippet.publishedAt, XmlDateTimeSerializationMode.Utc);
+                    LastTime = XmlConvert.ToString(newVideos[0].snippet.publishedAt, XmlDateTimeSerializationMode.Utc);
                     StaticBase.trackers["youtube"].SaveJson();
                 }
 
