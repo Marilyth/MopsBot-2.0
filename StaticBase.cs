@@ -28,12 +28,14 @@ namespace MopsBot
         public static Poll poll;
         public static Blackjack blackjack;
         public static Crosswords crosswords;
-        public static ClipTracker ClipTracker;
+        public static ClipTracker ClipTracker;/*
         public static TrackerHandler<OsuTracker> osuTracker;
         public static TrackerHandler<TwitchTracker> streamTracks;
         public static TrackerHandler<TwitterTracker> twitterTracks;
         public static TrackerHandler<OverwatchTracker> OverwatchTracks;
         public static TrackerHandler<YoutubeTracker> YoutubeTracks;
+*/
+        public static Dictionary<string, TrackerHandler> trackers;
 
         public static bool init = false;
 
@@ -48,14 +50,23 @@ namespace MopsBot
                 TweetinviConfig.CurrentThreadSettings.TweetMode = TweetMode.Extended;
                 TweetinviConfig.ApplicationSettings.TweetMode = TweetMode.Extended;
 
+/*
                 OverwatchTracks = new TrackerHandler<OverwatchTracker>();
                 streamTracks = new TrackerHandler<TwitchTracker>();
                 twitterTracks = new TrackerHandler<TwitterTracker>();
                 YoutubeTracks = new TrackerHandler<YoutubeTracker>();
-                osuTracker = new TrackerHandler<OsuTracker>();
+                osuTracker = new TrackerHandler<OsuTracker>(); */
                 ClipTracker = new ClipTracker();
+                
+                trackers = new Dictionary<string, TrackerHandler>();
+                trackers["osu"] = new TrackerHandler<OsuTracker>();
+                trackers["overwatch"] = new TrackerHandler<OverwatchTracker>();
+                trackers["twitch"] = new TrackerHandler<TwitchTracker>();
+                trackers["twitter"] = new TrackerHandler<TwitterTracker>();
+                trackers["youtube"] = new TrackerHandler<YoutubeTracker>();
 
                 init = true;
+
             }
         }
 
