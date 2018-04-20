@@ -73,7 +73,7 @@ namespace MopsBot.Data.Tracker
         /// <returns>An OStatsResult representing the fetched JSON as an object</returns>
         private OStatsResult overwatchInformation()
         {
-            string query = MopsBot.Module.Information.readURL($"https://owapi.net/api/v3/u/{Name}/blob");
+            string query = MopsBot.Module.Information.readURL($"localhost:4444/api/v3/u/{Name}/blob");
 
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {
@@ -85,7 +85,7 @@ namespace MopsBot.Data.Tracker
 
         public static EmbedBuilder overwatchInformation(string owName)
         {
-            string query = MopsBot.Module.Information.readURL($"https://owapi.net/api/v3/u/{owName}/blob");
+            string query = MopsBot.Module.Information.readURL($"localhost:4444/api/v3/u/{owName}/blob");
 
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {
