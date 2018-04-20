@@ -38,7 +38,7 @@ namespace MopsBot.Data.Tracker
             
                 if(newTweets.Length != 0){
                  lastMessage = newTweets[newTweets.Length -1].Id;
-                 StaticBase.twitterTracks.SaveJson();
+                 StaticBase.trackers["twitter"].SaveJson();
                 }
             
                 foreach(ITweet newTweet in newTweets){

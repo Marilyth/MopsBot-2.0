@@ -76,7 +76,7 @@ namespace MopsBot.Data.Tracker
                     foreach (ulong channel in ChannelMessages.Keys)
                         await OnMinorChangeTracked(channel, ChannelMessages[channel]);
                 }
-                StaticBase.streamTracks.SaveJson();
+                StaticBase.trackers["twitch"].SaveJson();
             }
 
             if (IsOnline)
@@ -90,7 +90,7 @@ namespace MopsBot.Data.Tracker
 
                     foreach (ulong channel in ChannelMessages.Keys)
                         await OnMinorChangeTracked(channel, $"{Name} switched games to **{CurGame}**");
-                    StaticBase.streamTracks.SaveJson();
+                    StaticBase.trackers["twitch"].SaveJson();
                 }
                     
                 foreach (ulong channel in ChannelIds)
