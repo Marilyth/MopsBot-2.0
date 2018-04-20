@@ -18,7 +18,7 @@ namespace MopsBot.Data.Tracker
         private APIResults.TwitchResult StreamerStatus;
         public Dictionary<ulong, ulong> ToUpdate;
         public Boolean IsOnline;
-        public string Name, CurGame;
+        public string CurGame;
         public Dictionary<ulong, string> ChannelMessages;
 
         public TwitchTracker() : base(60000)

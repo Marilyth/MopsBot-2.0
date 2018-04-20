@@ -25,6 +25,7 @@ namespace MopsBot.Data.Tracker
         public delegate Task MinorEventHandler(ulong channelID, ITracker self, string notificationText);
         public delegate Task MainEventHandler(ulong channelID, EmbedBuilder embed, ITracker self, string notificationText="");
         public HashSet<ulong> ChannelIds;
+        public string Name;
         
         public ITracker(int interval, int gap = 2000){
             ExistingTrackers++;

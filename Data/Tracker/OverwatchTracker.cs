@@ -18,7 +18,6 @@ namespace MopsBot.Data.Tracker
     /// </summary>
     public class OverwatchTracker : ITracker
     {
-        public string Name;
         private OStatsResult information;
 
         /// <summary>
