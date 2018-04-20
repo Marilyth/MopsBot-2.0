@@ -26,7 +26,7 @@ namespace MopsBot.Data.Updater
 
             for (int i = 0; i < words.Length; i++)
             {
-                if (words[i].ToLower().Equals("random")) words[i] = MopsBot.Module.Information.getRandomWord();
+                if (words[i].ToLower().Equals("random")) words[i] = MopsBot.Module.Information.GetRandomWordAsync().Result;
                 if (words[i].Length + 3 > fieldSize) fieldSize = words[i].Length + 3;
             }
 

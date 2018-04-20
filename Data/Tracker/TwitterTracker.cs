@@ -16,7 +16,6 @@ namespace MopsBot.Data.Tracker
 {
     public class TwitterTracker : ITracker
     {
-        public string Name;
         public long lastMessage;
         private Task<IEnumerable<ITweet>> fetchTweets;
 
