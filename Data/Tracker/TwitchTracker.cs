@@ -62,6 +62,7 @@ namespace MopsBot.Data.Tracker
                     Console.Out.WriteLine($"{DateTime.Now} {Name} went Offline");
                     viewerGraph.RemovePlot();
                     viewerGraph = new Plot(Name, "Time In Minutes", "Viewers", false);
+                    ToUpdate = new Dictionary<ulong, ulong>();
 
                     foreach (ulong channel in ChannelMessages.Keys)
                         await OnMinorChangeTracked(channel, $"{Name} went Offline!");
@@ -69,7 +70,6 @@ namespace MopsBot.Data.Tracker
                 else
                 {
                     IsOnline = true;
-                    ToUpdate = new Dictionary<ulong, ulong>();
                     CurGame = StreamerStatus.stream.game;
                     viewerGraph.SwitchTitle(CurGame);
 
