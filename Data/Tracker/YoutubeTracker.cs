@@ -27,6 +27,15 @@ namespace MopsBot.Data.Tracker
         {
             Name = channelId;
             LastTime = XmlConvert.ToString(DateTime.Now, XmlDateTimeSerializationMode.Utc);
+
+            //Check if person exists by forcing Exceptions if not.
+            try{
+                var checkExists = fetchChannel().Result;
+                var test = checkExists.etag;
+            } catch(Exception e){
+                Dispose();
+                throw new Exception($"Person `{Name}` could not be found on Youtube!");
+            }
         }
 
         private async Task<YoutubeResult> fetchVideos()

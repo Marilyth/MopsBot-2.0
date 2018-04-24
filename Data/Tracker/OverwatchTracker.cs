@@ -28,9 +28,18 @@ namespace MopsBot.Data.Tracker
         {
         }
 
-        public OverwatchTracker(string OWName) : base(600000, 0)
+        public OverwatchTracker(string OWName) : base(60000, 0)
         {
             Name = OWName;
+
+            //Check if person exists by forcing Exceptions if not.
+            try{
+                var checkExists = overwatchInformation().Result;
+                var test = checkExists.eu;
+            } catch(Exception e){
+                Dispose();
+                throw new Exception($"Person `{Name}` could not be found on Overwatch!");
+            }
         }
 
         /// <summary>

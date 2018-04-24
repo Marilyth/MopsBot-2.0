@@ -23,6 +23,15 @@ namespace MopsBot.Data.Tracker
         public OsuTracker(string name) : base(60000, 0)
         {
             Name = name;
+
+            //Check if person exists by forcing Exceptions if not.
+            try{
+                var checkExists = fetchUser().Result;
+                var test = checkExists.username;
+            } catch(Exception e){
+                Dispose();
+                throw new Exception($"Person `{Name}` could not be found on Osu!");
+            }
         }
 
         protected async override void CheckForChange_Elapsed(object stateinfo)
