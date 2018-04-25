@@ -336,12 +336,12 @@ namespace MopsBot.Module
         }
 
         [Command("kill")]
-        [Summary("Kills Mops to adapt to any new changes in code.")]
+        [Summary("Stops Mops to adapt to any new changes in code.")]
         [RequireBotManage()]
         [Hide()]
         public Task kill()
         {
-            Process.GetCurrentProcess().Kill();
+            Environment.Exit(0);
             return Task.CompletedTask;
         }
 

@@ -60,7 +60,7 @@ namespace MopsBot.Data.Tracker
             {
                 StreamerStatus = await streamerInformation();
 
-                Boolean isStreaming = StreamerStatus.stream.channel != null;
+                Boolean isStreaming = StreamerStatus.stream != null;
 
                 if (IsOnline != isStreaming)
                 {
@@ -107,7 +107,7 @@ namespace MopsBot.Data.Tracker
             }
             catch (Exception e)
             {
-                Console.WriteLine(DateTime.Now + " " + e.Message);
+                Console.WriteLine($"[Error] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
             }
         }
 
@@ -121,8 +121,9 @@ namespace MopsBot.Data.Tracker
             };
 
             TwitchResult tmpResult = JsonConvert.DeserializeObject<TwitchResult>(query, _jsonWriter);
-            if (tmpResult.stream == null) tmpResult.stream = new APIResults.Stream();
-            if (tmpResult.stream.game == "" || tmpResult.stream.game == null) tmpResult.stream.game = "Nothing";
+
+            if(tmpResult.stream != null && tmpResult.stream.game == null)
+                tmpResult.stream.game = "Nothing";
 
             return tmpResult;
         }

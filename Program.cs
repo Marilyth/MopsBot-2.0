@@ -11,7 +11,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Discord;
 using Discord.WebSocket;
 using Discord.Commands;
-using System.Threading.Tasks;
 using System.Threading;
 using System.Net;
 
@@ -52,7 +51,10 @@ namespace MopsBot
             client.Ready += onClientReady;
             client.Disconnected += onClientDC;
 
-            var map = new ServiceCollection().AddSingleton(client).AddSingleton(new AudioService());
+            var map = new ServiceCollection().AddSingleton(client)
+                .AddSingleton(new AudioService())
+                .AddSingleton(new ReliabilityService(client, Client_Log));
+
             var provider = map.BuildServiceProvider();
 
             handler = new CommandHandler();
@@ -95,6 +97,5 @@ namespace MopsBot
                 .UseIISIntegration()
                 .UseStartup<Startup>()
                 .Build();
-
     }
 }
