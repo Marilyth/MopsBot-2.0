@@ -191,9 +191,15 @@ namespace MopsBot
                     output += $"\n\n**Usage**: `{prefix}{(curCommand.Module.IsSubmodule ? curCommand.Module.Name + " " + curCommand.Name : curCommand.Name)}";
                     foreach (Discord.Commands.ParameterInfo p in curCommand.Parameters)
                     {
-                        output += $" <{p.Name}>";
+                        output += $" {(p.IsOptional?$"[Optional: {p.Name}]":$"<{p.Name}>")}";
                     }
                     output += "`";
+                    // if(curCommand.Parameters.Any(x=> x.IsOptional)){
+                    //     output +="\n\n**Default Values**:";
+                    //     foreach(var p in curCommand.Parameters.Where(x=>x.IsOptional))
+                    //         output+=$"\n    {p.Name}: {p.DefaultValue}";
+                    // }
+                    
                 }
                 else
                 {
