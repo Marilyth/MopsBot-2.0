@@ -16,7 +16,6 @@ namespace MopsBot.Data.Tracker
 {
     public class TwitterTracker : ITracker
     {
-        public string Name;
         public long lastMessage;
         private Task<IEnumerable<ITweet>> fetchTweets;
 
@@ -27,19 +26,24 @@ namespace MopsBot.Data.Tracker
         public TwitterTracker(string twitterName) : base(300000, 0)
         {
             Name = twitterName;
+
+            //Check if person exists by forcing Exceptions if not.
+            try{
+                var checkExists = getNewTweets();
+            } catch(Exception e){
+                Dispose();
+                throw new Exception($"Person `{Name}` could not be found on Twitter!");
+            }
         }
 
         protected async override void CheckForChange_Elapsed(object stateinfo)
         {
-            Tweetinvi.Parameters.IUserTimelineParameters parameters = Timeline.CreateUserTimelineParameter();
-            if(lastMessage != 0) parameters.SinceId = lastMessage;
-            parameters.MaximumNumberOfTweetsToRetrieve = 5;
             try{
-                ITweet[] newTweets = Timeline.GetUserTimeline(Name, parameters).Reverse().ToArray();
-            
+                ITweet[] newTweets = getNewTweets();
+
                 if(newTweets.Length != 0){
                  lastMessage = newTweets[newTweets.Length -1].Id;
-                 StaticBase.twitterTracks.SaveJson();
+                 StaticBase.trackers["twitter"].SaveJson();
                 }
             
                 foreach(ITweet newTweet in newTweets){
@@ -52,6 +56,14 @@ namespace MopsBot.Data.Tracker
             {
                 Console.WriteLine($"[ERROR] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
             }
+        }
+
+        private ITweet[] getNewTweets(){
+            Tweetinvi.Parameters.IUserTimelineParameters parameters = Timeline.CreateUserTimelineParameter();
+            if(lastMessage != 0) parameters.SinceId = lastMessage;
+            parameters.MaximumNumberOfTweetsToRetrieve = 5;
+
+            return Timeline.GetUserTimeline(Name, parameters).Reverse().ToArray();
         }
     
         private EmbedBuilder createEmbed(ITweet tweet)

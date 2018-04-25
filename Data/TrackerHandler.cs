@@ -9,16 +9,27 @@ using Discord.WebSocket;
 using Microsoft.Win32.SafeHandles;
 using System.Runtime.InteropServices;
 using Newtonsoft.Json;
+using MopsBot.Data.Tracker;
 
 namespace MopsBot.Data
 {
+    public abstract class TrackerWrapper {
+        public abstract void SaveJson();
+        public abstract void removeTracker(string name, ulong channelID);
+        public abstract void addTracker(string name, ulong channelID, string notification="");
+        public abstract Dictionary<string, Tracker.ITracker> getTracker();
+        public abstract HashSet<Tracker.ITracker> getTrackerSet();
+        public abstract string getTracker(ulong channelID);
+        public abstract Type getTrackerType();
+
+    }
 
     /// <summary>
     /// A class containing all Trackers
     /// </summary>
-    public class TrackerHandler<T> where T : Tracker.ITracker
+    public class TrackerHandler<T> : TrackerWrapper where T : Tracker.ITracker
     {
-        private Dictionary<string, T> trackers;
+        public Dictionary<string, T> trackers;
         public TrackerHandler()
         {
             trackers = new Dictionary<string, T>();
@@ -30,18 +41,22 @@ namespace MopsBot.Data
                     Console.WriteLine(e.Message + e.StackTrace);
                 }
             }
-            foreach(KeyValuePair<string, T> cur in trackers)
+            trackers = (trackers == null ? new Dictionary<string, T>() : trackers);
+            foreach(KeyValuePair<string, T> cur in trackers){
                 cur.Value.PostInitialisation();
+                cur.Value.OnMinorEventFired += OnMinorEvent;
+                cur.Value.OnMajorEventFired += OnMajorEvent;
+            }
         }
 
-        public void SaveJson()
+        public override void SaveJson()
         {
             string dictAsJson = JsonConvert.SerializeObject(trackers, Formatting.Indented);
             using (StreamWriter write = new StreamWriter(new FileStream($"mopsdata//{typeof(T).Name}.json", FileMode.Create)))
                 write.Write(dictAsJson);
         }
 
-        public void removeTracker(string name, ulong channelID){
+        public override void removeTracker(string name, ulong channelID){
             if(trackers.ContainsKey(name) && trackers[name].ChannelIds.Contains(channelID)){
                 if(trackers[name].ChannelIds.Count > 1){
                     trackers[name].ChannelIds.Remove(channelID);
@@ -58,7 +73,7 @@ namespace MopsBot.Data
             }
         }
 
-        public void addTracker(string name, ulong channelID, string notification=""){
+        public override void addTracker(string name, ulong channelID, string notification=""){
             if(trackers.ContainsKey(name)){
                 if(!trackers[name].ChannelIds.Contains(channelID))
                     trackers[name].ChannelIds.Add(channelID);
@@ -76,11 +91,20 @@ namespace MopsBot.Data
             SaveJson();
         }
 
-        public string getTracker(ulong channelID){
+        public override string getTracker(ulong channelID){
             return string.Join(", ", trackers.Where(x => x.Value.ChannelIds.Contains(channelID)).Select(x => x.Key));
         }
+        public override Dictionary<string, ITracker> getTracker()
+        {
+            return trackers.Select(x=> new KeyValuePair<string, ITracker>(x.Key, (ITracker)x.Value)).ToDictionary(x=>x.Key, x=>x.Value);
+        }
 
-        public Type getTrackerType(){
+        public override HashSet<ITracker> getTrackerSet()
+        {
+            return trackers.Values.Select(x => (ITracker)x).ToHashSet();
+        }
+
+        public override Type getTrackerType(){
             return typeof(T);
         }
 
@@ -118,5 +142,7 @@ namespace MopsBot.Data
             else
                 await ((Discord.WebSocket.SocketTextChannel)Program.client.GetChannel(channelID)).SendMessageAsync(notification, embed:embed);
         }
+
+
     }
 }

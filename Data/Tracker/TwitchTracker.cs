@@ -18,7 +18,7 @@ namespace MopsBot.Data.Tracker
         private APIResults.TwitchResult StreamerStatus;
         public Dictionary<ulong, ulong> ToUpdate;
         public Boolean IsOnline;
-        public string Name, CurGame;
+        public string CurGame;
         public Dictionary<ulong, string> ChannelMessages;
 
         public TwitchTracker() : base(60000)
@@ -27,80 +27,110 @@ namespace MopsBot.Data.Tracker
 
         public override void PostInitialisation()
         {
-            viewerGraph = new Plot(Name, "Time In Minutes","Viewers", IsOnline);
+            viewerGraph = new Plot(Name, "Time In Minutes", "Viewers", IsOnline);
         }
 
         public TwitchTracker(string streamerName) : base(60000, 0)
         {
-            viewerGraph = new Plot(streamerName, "Time In Minutes","Viewers", false);
+            viewerGraph = new Plot(streamerName, "Time In Minutes", "Viewers", false);
 
             Console.Out.WriteLine($"{DateTime.Now} Started Twitchtracker for {streamerName}");
             ToUpdate = new Dictionary<ulong, ulong>();
             ChannelMessages = new Dictionary<ulong, string>();
             Name = streamerName;
             IsOnline = false;
+
+            //Check if person exists by forcing Exceptions if not.
+            try
+            {
+                string query = MopsBot.Module.Information.ReadURLAsync($"https://api.twitch.tv/kraken/channels/{Name}?client_id={Program.twitchId}").Result;
+                Channel checkExists = JsonConvert.DeserializeObject<Channel>(query);
+                var test = checkExists.broadcaster_language;
+            }
+            catch (Exception e)
+            {
+                Dispose();
+                throw new Exception($"Person `{Name}` could not be found on Twitch!");
+            }
         }
 
         protected async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
             {
-                StreamerStatus = streamerInformation();
+                StreamerStatus = await streamerInformation();
+
+                Boolean isStreaming = StreamerStatus.stream != null;
+
+                if (IsOnline != isStreaming)
+                {
+                    if (IsOnline)
+                    {
+                        IsOnline = false;
+                        Console.Out.WriteLine($"{DateTime.Now} {Name} went Offline");
+                        viewerGraph.RemovePlot();
+                        viewerGraph = new Plot(Name, "Time In Minutes", "Viewers", false);
+                        ToUpdate = new Dictionary<ulong, ulong>();
+
+                        foreach (ulong channel in ChannelMessages.Keys)
+                            await OnMinorChangeTracked(channel, $"{Name} went Offline!");
+                    }
+                    else
+                    {
+                        IsOnline = true;
+                        CurGame = StreamerStatus.stream.game;
+                        viewerGraph.SwitchTitle(CurGame);
+
+                        foreach (ulong channel in ChannelMessages.Keys)
+                            await OnMinorChangeTracked(channel, ChannelMessages[channel]);
+                    }
+                    StaticBase.trackers["twitch"].SaveJson();
+                }
+
+                if (IsOnline)
+                {
+                    viewerGraph.AddValue(StreamerStatus.stream.viewers);
+                    if (CurGame.CompareTo(StreamerStatus.stream.game) != 0)
+                    {
+                        CurGame = StreamerStatus.stream.game;
+                        viewerGraph.SwitchTitle(CurGame);
+                        viewerGraph.AddValue(StreamerStatus.stream.viewers);
+
+                        foreach (ulong channel in ChannelMessages.Keys)
+                            await OnMinorChangeTracked(channel, $"{Name} switched games to **{CurGame}**");
+                        StaticBase.trackers["twitch"].SaveJson();
+                    }
+
+                    foreach (ulong channel in ChannelIds)
+                        await OnMajorChangeTracked(channel, createEmbed());
+                }
             }
             catch (Exception e)
             {
-                Console.WriteLine(DateTime.Now + " " + e.Message);
-            }
-
-            Boolean isStreaming = StreamerStatus.stream.channel != null;
-
-            if (IsOnline != isStreaming)
-            {
-                if (IsOnline)
-                {
-                    IsOnline = false;
-                    Console.Out.WriteLine($"{DateTime.Now} {Name} went Offline");
-                    viewerGraph.RemovePlot();
-                    viewerGraph = new Plot(Name, "Time In Minutes", "Viewers", false);
-
-                    foreach (ulong channel in ChannelMessages.Keys)
-                        await OnMinorChangeTracked(channel, $"{Name} went Offline!");
-                }
-                else
-                {
-                    IsOnline = true;
-                    ToUpdate = new Dictionary<ulong, ulong>();
-                    CurGame = StreamerStatus.stream.game;
-                    viewerGraph.SwitchTitle(CurGame);
-
-                    foreach (ulong channel in ChannelMessages.Keys)
-                        await OnMinorChangeTracked(channel, ChannelMessages[channel]);
-                }
-                StaticBase.streamTracks.SaveJson();
-            }
-
-            if (IsOnline)
-            {
-                viewerGraph.AddValue(StreamerStatus.stream.viewers);
-                if (CurGame.CompareTo(StreamerStatus.stream.game) != 0)
-                {
-                    CurGame = StreamerStatus.stream.game;
-                    viewerGraph.SwitchTitle(CurGame);
-                    viewerGraph.AddValue(StreamerStatus.stream.viewers);
-
-                    foreach (ulong channel in ChannelMessages.Keys)
-                        await OnMinorChangeTracked(channel, $"{Name} switched games to **{CurGame}**");
-                    StaticBase.streamTracks.SaveJson();
-                }
-                    
-                foreach (ulong channel in ChannelIds)
-                    await OnMajorChangeTracked(channel, createEmbed());
+                Console.WriteLine($"[Error] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
             }
         }
 
-        private TwitchResult streamerInformation()
+        private async Task<TwitchResult> streamerInformation()
         {
-            string query = MopsBot.Module.Information.readURL($"https://api.twitch.tv/kraken/streams/{Name}?client_id={Program.twitchId}");
+            string query = await MopsBot.Module.Information.ReadURLAsync($"https://api.twitch.tv/kraken/streams/{Name}?client_id={Program.twitchId}");
+
+            JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
+            {
+                NullValueHandling = NullValueHandling.Ignore
+            };
+
+            TwitchResult tmpResult = JsonConvert.DeserializeObject<TwitchResult>(query, _jsonWriter);
+
+            if(tmpResult.stream != null && tmpResult.stream.game == null)
+                tmpResult.stream.game = "Nothing";
+
+            return tmpResult;
+        }
+
+        private async static Task<TwitchResult> streamerInformation(string name)
+        {
+            string query = await MopsBot.Module.Information.ReadURLAsync($"https://api.twitch.tv/kraken/streams/{name}?client_id={Program.twitchId}");
 
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {

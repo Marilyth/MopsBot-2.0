@@ -34,7 +34,7 @@ namespace MopsBot.Module
         {
             try{
 
-                string query = Task.Run(() => readURL($"http://api.wordnik.com:80/v4/word.json/{text}/definitions?limit=1&includeRelated=false&sourceDictionaries=all&useCanonical=true&includeTags=false&api_key=a2a73e7b926c924fad7001ca3111acd55af2ffabf50eb4ae5")).Result;
+                string query = Task.Run(() => ReadURLAsync($"http://api.wordnik.com:80/v4/word.json/{text}/definitions?limit=1&includeRelated=false&sourceDictionaries=all&useCanonical=true&includeTags=false&api_key=a2a73e7b926c924fad7001ca3111acd55af2ffabf50eb4ae5")).Result;
 
                 dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
 
@@ -52,7 +52,7 @@ namespace MopsBot.Module
         {
             try{
 
-                string query = Task.Run(() => readURL($"https://translate.googleapis.com/translate_a/single?client=gtx&sl={srcLanguage}&tl={tgtLanguage}&dt=t&q={text}")).Result;
+                string query = Task.Run(() => ReadURLAsync($"https://translate.googleapis.com/translate_a/single?client=gtx&sl={srcLanguage}&tl={tgtLanguage}&dt=t&q={text}")).Result;
                 dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
                 await ReplyAsync(tempDict[0][0][0].ToString());
 
@@ -103,26 +103,26 @@ namespace MopsBot.Module
             await ReplyAsync(StaticBase.people.DrawDiagram(limit, sortParameter));
         }
 
-        public static dynamic getRandomWord()
+        public async static Task<dynamic> GetRandomWordAsync()
         {
             try{
 
-                string query = readURL("http://api.wordnik.com:80/v4/words.json/randomWord?hasDictionaryDef=true&excludePartOfSpeech=given-name&minCorpusCount=10000&maxCorpusCount=-1&minDictionaryCount=4&maxDictionaryCount=-1&minLength=3&maxLength=13&api_key=a2a73e7b926c924fad7001ca3111acd55af2ffabf50eb4ae5");
+                string query = await ReadURLAsync("http://api.wordnik.com:80/v4/words.json/randomWord?hasDictionaryDef=true&excludePartOfSpeech=given-name&minCorpusCount=10000&maxCorpusCount=-1&minDictionaryCount=4&maxDictionaryCount=-1&minLength=3&maxLength=13&api_key=a2a73e7b926c924fad7001ca3111acd55af2ffabf50eb4ae5");
                 dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
                 return tempDict["word"];
 
             } catch(Exception e){
-                Console.WriteLine($"[ERROR] by getRandomWord at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+                Console.WriteLine($"[ERROR] by GetRandomWordAsync at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
             }
                 return null;
         }
 
-        public static string readURL(string URL)
+        public static async Task<string> ReadURLAsync(string URL)
         {
             string s = "";
             var request = (System.Net.HttpWebRequest)System.Net.WebRequest.Create(URL);
             request.UserAgent = "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)";
-            using (var response = request.GetResponseAsync().Result)
+            using (var response = await request.GetResponseAsync())
             using (var content = response.GetResponseStream())
             using (var reader = new System.IO.StreamReader(content))
             {

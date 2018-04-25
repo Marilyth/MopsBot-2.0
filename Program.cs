@@ -11,8 +11,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Discord;
 using Discord.WebSocket;
 using Discord.Commands;
-using System.Threading.Tasks;
 using System.Threading;
+using System.Net;
 
 namespace MopsBot
 {
@@ -51,7 +51,10 @@ namespace MopsBot
             client.Ready += onClientReady;
             client.Disconnected += onClientDC;
 
-            var map = new ServiceCollection().AddSingleton(client).AddSingleton(new AudioService());
+            var map = new ServiceCollection().AddSingleton(client)
+                .AddSingleton(new AudioService())
+                .AddSingleton(new ReliabilityService(client, Client_Log));
+
             var provider = map.BuildServiceProvider();
 
             handler = new CommandHandler();
@@ -88,6 +91,10 @@ namespace MopsBot
 
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
+                .UseUrls("http://0.0.0.0:5000/")
+                .UseKestrel()
+                .UseContentRoot(Directory.GetCurrentDirectory())
+                .UseIISIntegration()
                 .UseStartup<Startup>()
                 .Build();
     }

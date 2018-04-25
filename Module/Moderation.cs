@@ -148,7 +148,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannel)]
             public async Task trackTwitter(string twitterUser)
             {
-                twitterTracks.addTracker(twitterUser, Context.Channel.Id);
+                trackers["twitter"].addTracker(twitterUser, Context.Channel.Id);
 
                 await ReplyAsync("Keeping track of " + twitterUser + "'s tweets, from now on!");
             }
@@ -158,7 +158,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannel)]
             public async Task unTrackTwitter(string twitterUser)
             {
-                twitterTracks.removeTracker(twitterUser, Context.Channel.Id);
+                trackers["twitter"].removeTracker(twitterUser, Context.Channel.Id);
 
                 await ReplyAsync("Stopped keeping track of " + twitterUser + "'s tweets!");
             }
@@ -167,7 +167,7 @@ namespace MopsBot.Module
             [Summary("Returns the twitters that are tracked in the current channel.")]
             public async Task getTracks()
             {
-                await ReplyAsync("Following twitters are currently being tracked:\n``" + StaticBase.twitterTracks.getTracker(Context.Channel.Id) + "``");
+                await ReplyAsync("Following twitters are currently being tracked:\n``" + StaticBase.trackers["twitter"].getTracker(Context.Channel.Id) + "``");
             }
         }
 
@@ -179,7 +179,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannel)]
             public async Task trackOsu(string OsuUser)
             {
-                osuTracker.addTracker(OsuUser, Context.Channel.Id);
+                trackers["osu"].addTracker(OsuUser, Context.Channel.Id);
 
                 await ReplyAsync("Keeping track of " + OsuUser + "'s plays, from now on!");
             }
@@ -189,7 +189,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannel)]
             public async Task unTrackOsu(string OsuUser)
             {
-                osuTracker.removeTracker(OsuUser, Context.Channel.Id);
+                trackers["osu"].removeTracker(OsuUser, Context.Channel.Id);
 
                 await ReplyAsync("Stopped keeping track of " + OsuUser + "'s plays!");
             }
@@ -198,7 +198,7 @@ namespace MopsBot.Module
             [Summary("Returns the Osu players that are tracked in the current channel.")]
             public async Task getTracks()
             {
-                await ReplyAsync("Following Osu players are currently being tracked:\n``" + StaticBase.osuTracker.getTracker(Context.Channel.Id) + "``");
+                await ReplyAsync("Following Osu players are currently being tracked:\n``" + StaticBase.trackers["osu"].getTracker(Context.Channel.Id) + "``");
             }
         }
 
@@ -210,7 +210,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannel)]
             public async Task trackTwitter(string channelID)
             {
-                YoutubeTracks.addTracker(channelID, Context.Channel.Id);
+                trackers["youtube"].addTracker(channelID, Context.Channel.Id);
 
                 await ReplyAsync("Keeping track of " + channelID + "'s videos, from now on!");
             }
@@ -220,7 +220,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannel)]
             public async Task unTrackYoutube(string channelID)
             {
-                YoutubeTracks.removeTracker(channelID, Context.Channel.Id);
+                trackers["youtube"].removeTracker(channelID, Context.Channel.Id);
 
                 await ReplyAsync("Stopped keeping track of " + channelID + "'s videos!");
             }
@@ -229,7 +229,7 @@ namespace MopsBot.Module
             [Summary("Returns the Youtubers that are tracked in the current channel.")]
             public async Task getTracks()
             {
-                await ReplyAsync("Following Youtubers are currently being tracked:\n``" + StaticBase.YoutubeTracks.getTracker(Context.Channel.Id) + "``");
+                await ReplyAsync("Following Youtubers are currently being tracked:\n``" + StaticBase.trackers["youtube"].getTracker(Context.Channel.Id) + "``");
             }
         }
         [Group("Twitch")]
@@ -240,7 +240,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannel)]
             public async Task trackStreamer(string streamerName, [Remainder]string notificationMessage="Stream went live!")
             {
-                streamTracks.addTracker(streamerName, Context.Channel.Id, notificationMessage);
+                trackers["twitch"].addTracker(streamerName, Context.Channel.Id, notificationMessage);
 
                 await ReplyAsync("Keeping track of " + streamerName + "'s streams, from now on!");
             }
@@ -250,7 +250,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannel)]
             public async Task unTrackStreamer(string streamerName)
             {
-                streamTracks.removeTracker(streamerName, Context.Channel.Id);
+                trackers["twitch"].removeTracker(streamerName, Context.Channel.Id);
 
                 await ReplyAsync("Stopped tracking " + streamerName + "'s streams!");
             }
@@ -259,7 +259,7 @@ namespace MopsBot.Module
             [Summary("Returns the streamers that are tracked in the current channel.")]
             public async Task getTracks()
             {
-                await ReplyAsync("Following streamers are currently being tracked:\n``" + StaticBase.streamTracks.getTracker(Context.Channel.Id) + "``");
+                await ReplyAsync("Following streamers are currently being tracked:\n``" + StaticBase.trackers["twitch"].getTracker(Context.Channel.Id) + "``");
             }
         }
         [Group("Overwatch")]
@@ -270,7 +270,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannel)]
             public async Task trackOW(string owUser)
             {
-                OverwatchTracks.addTracker(owUser, Context.Channel.Id);
+                trackers["overwatch"].addTracker(owUser, Context.Channel.Id);
 
                 await ReplyAsync("Keeping track of " + owUser + "'s stats, from now on!");
             }
@@ -280,7 +280,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannel)]
             public async Task unTrackOW(string owUser)
             {
-                OverwatchTracks.removeTracker(owUser, Context.Channel.Id);
+                trackers["overwatch"].removeTracker(owUser, Context.Channel.Id);
 
                 await ReplyAsync("Stopped keeping track of " + owUser + "'s stats!");
             }
@@ -289,14 +289,14 @@ namespace MopsBot.Module
             [Summary("Returns an embed representating the stats of the specified Overwatch player")]
             public async Task GetStats(string owUser)
             {
-                await ReplyAsync("Stats fetched:", false, (Embed)Data.Tracker.OverwatchTracker.overwatchInformation(owUser));
+                await ReplyAsync("Stats fetched:", false, await Data.Tracker.OverwatchTracker.overwatchInformation(owUser));
             }
 
             [Command("GetTracks")]
             [Summary("Returns the players that are tracked in the current channel.")]
             public async Task getTracks()
             {
-                await ReplyAsync("Following players are currently being tracked:\n``" + StaticBase.OverwatchTracks.getTracker(Context.Channel.Id) + "``");
+                await ReplyAsync("Following players are currently being tracked:\n``" + StaticBase.trackers["overwatch"].getTracker(Context.Channel.Id) + "``");
             }
         }
 
@@ -336,12 +336,12 @@ namespace MopsBot.Module
         }
 
         [Command("kill")]
-        [Summary("Kills Mops to adapt to any new changes in code.")]
+        [Summary("Stops Mops to adapt to any new changes in code.")]
         [RequireBotManage()]
         [Hide()]
         public Task kill()
         {
-            Process.GetCurrentProcess().Kill();
+            Environment.Exit(0);
             return Task.CompletedTask;
         }
 
