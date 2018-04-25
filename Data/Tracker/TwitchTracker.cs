@@ -122,8 +122,8 @@ namespace MopsBot.Data.Tracker
 
             TwitchResult tmpResult = JsonConvert.DeserializeObject<TwitchResult>(query, _jsonWriter);
 
-            if(tmpResult.stream != null && tmpResult.stream.game == null)
-                tmpResult.stream.game = "Nothing";
+            if (tmpResult.stream == null) tmpResult.stream = new APIResults.Stream();
+            if (tmpResult.stream.game == "" || tmpResult.stream.game == null) tmpResult.stream.game = "Nothing";
 
             return tmpResult;
         }
