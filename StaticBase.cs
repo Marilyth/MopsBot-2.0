@@ -126,7 +126,7 @@ namespace MopsBot
                     MemberSet.Add(curUser.Id);
                 }
             }
-            await Program.client.SetGameAsync($"with {MemberSet.Count} people");
+            await Program.client.SetGameAsync($"{MemberSet.Count} people", null, StreamType.NotStreaming + 2);
         }
     }
 }
