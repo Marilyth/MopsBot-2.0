@@ -60,7 +60,7 @@ namespace MopsBot.Data.Tracker
             {
                 StreamerStatus = await streamerInformation();
 
-                Boolean isStreaming = StreamerStatus.stream != null;
+                Boolean isStreaming = StreamerStatus.stream.channel != null;
 
                 if (IsOnline != isStreaming)
                 {
