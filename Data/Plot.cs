@@ -170,6 +170,7 @@ namespace MopsBot.Data
             series[newTitle].Last().StrokeThickness = 3;
             viewerChart.Series.Add(series[newTitle].Last());
             CurTitle = newTitle;
+            columnCount--;
         }
 
         /// <summary>
