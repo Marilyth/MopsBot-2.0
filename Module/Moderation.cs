@@ -272,7 +272,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannel)]
             public async Task trackSubreddit(string subreddit, string query=null)
             {
-                trackers["reddit"].addTracker(String.Join(" ", new string[]{subreddit, query}), Context.Channel.Id);
+                trackers["reddit"].addTracker(String.Join(" ", new string[]{subreddit, query}.Where(x => x != null)), Context.Channel.Id);
 
                 await ReplyAsync("Keeping track of " + subreddit + $"'s posts, from now on, using {query}!");
             }
@@ -280,9 +280,9 @@ namespace MopsBot.Module
             [Command("UnTrack")]
             [Summary("Stops tracking the specified Subreddit.\nRequires Manage channel permissions.")]
             [RequireUserPermission(ChannelPermission.ManageChannel)]
-            public async Task unTrackSubreddit(string subreddit)
+            public async Task unTrackSubreddit(string subreddit, string query=null)
             {
-                trackers["reddit"].removeTracker(subreddit, Context.Channel.Id);
+                trackers["reddit"].removeTracker(String.Join(" ", new string[]{subreddit, query}.Where(x => x != null)), Context.Channel.Id);
 
                 await ReplyAsync("Stopped tracking " + subreddit + "'s posts!");
             }

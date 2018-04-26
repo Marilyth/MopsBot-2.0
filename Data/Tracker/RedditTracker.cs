@@ -67,7 +67,7 @@ namespace MopsBot.Data.Tracker
         }
 
         private async Task<RedditResult> fetchPosts(){
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://www.reddit.com/r/{Name.Split(" ")[0]}/search.json?sort=new&q={Name.Split(" ")[1]}&limit=4");
+            string query = await MopsBot.Module.Information.ReadURLAsync($"https://www.reddit.com/r/{Name.Split(" ")[0]}/search.json?sort=new{(Name.Split(" ").Length > 1 ? "&q=" + Name.Split(" ")[1]:"")}&limit=4");
 
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {
