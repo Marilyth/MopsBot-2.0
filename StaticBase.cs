@@ -64,6 +64,7 @@ namespace MopsBot
                 trackers["twitch"] = new TrackerHandler<TwitchTracker>();
                 trackers["twitter"] = new TrackerHandler<TwitterTracker>();
                 trackers["youtube"] = new TrackerHandler<YoutubeTracker>();
+                trackers["reddit"] = new TrackerHandler<RedditTracker>();
 
                 init = true;
 

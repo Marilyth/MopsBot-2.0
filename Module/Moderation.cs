@@ -262,6 +262,39 @@ namespace MopsBot.Module
                 await ReplyAsync("Following streamers are currently being tracked:\n``" + StaticBase.trackers["twitch"].getTracker(Context.Channel.Id) + "``");
             }
         }
+
+        [Group("Reddit")]
+        public class Reddit : ModuleBase
+        {
+            [Command("Track")]
+            [Summary("Keeps track of the specified Subreddit, in the Channel you are calling this command right now.\nRequires Manage channel permissions."
+            +"\n queries MUST look something like this: `title:mei+title:hanzo`")]
+            [RequireUserPermission(ChannelPermission.ManageChannel)]
+            public async Task trackSubreddit(string subreddit, string query=null)
+            {
+                trackers["reddit"].addTracker(String.Join(" ", new string[]{subreddit, query}), Context.Channel.Id);
+
+                await ReplyAsync("Keeping track of " + subreddit + $"'s posts, from now on, using {query}!");
+            }
+
+            [Command("UnTrack")]
+            [Summary("Stops tracking the specified Subreddit.\nRequires Manage channel permissions.")]
+            [RequireUserPermission(ChannelPermission.ManageChannel)]
+            public async Task unTrackSubreddit(string subreddit)
+            {
+                trackers["reddit"].removeTracker(subreddit, Context.Channel.Id);
+
+                await ReplyAsync("Stopped tracking " + subreddit + "'s posts!");
+            }
+
+            [Command("GetTracks")]
+            [Summary("Returns the subreddits that are tracked in the current channel.")]
+            public async Task getTracks()
+            {
+                await ReplyAsync("Following subreddits are currently being tracked:\n``" + StaticBase.trackers["reddit"].getTracker(Context.Channel.Id) + "``");
+            }
+        }
+
         [Group("Overwatch")]
         public class Overwatch : ModuleBase
         {
@@ -344,6 +377,5 @@ namespace MopsBot.Module
             Environment.Exit(0);
             return Task.CompletedTask;
         }
-
     }
 }
