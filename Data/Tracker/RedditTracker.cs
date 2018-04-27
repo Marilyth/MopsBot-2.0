@@ -32,6 +32,17 @@ namespace MopsBot.Data.Tracker
         public RedditTracker(string name) : base(60000, 0)
         {
             Name = name;
+
+            try{
+                var test = fetchPosts().Result;
+                if(test.data.children.Count == 0) 
+                    throw new Exception("");
+            } catch(Exception e){
+                Dispose();
+                Console.WriteLine("");
+                throw new Exception($"No results were found for Subreddit `{Name.Split(" ")[0]}`"+
+                                    $"{(Name.Split(" ").Length > 1 ? $" with restriction(s) `{Name.Split(" ")[1]}`." : ".")}");
+            }
         }
 
         /// <summary>
