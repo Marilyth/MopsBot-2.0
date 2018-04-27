@@ -18,7 +18,7 @@ namespace MopsBot.Data.Tracker
     /// </summary>
     public class RedditTracker : ITracker
     {
-        public string lastPost = "";
+        public double lastCheck;
 
         /// <summary>
         /// Initialises the tracker by setting attributes and setting up a Timer with a 10 minutes interval
@@ -30,6 +30,7 @@ namespace MopsBot.Data.Tracker
 
         public RedditTracker(string name) : base(60000, 0)
         {
+            lastCheck = (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
             Name = name;
 
             try{
@@ -53,21 +54,13 @@ namespace MopsBot.Data.Tracker
             try
             {
                 var allThings = await fetchPosts();
-                var allPosts = allThings.data.children;
+                var newPosts = allThings.data.children.TakeWhile(x => x.data.created_utc > lastCheck).ToArray();
 
-                if(lastPost == ""){
-                    lastPost = allPosts.FirstOrDefault().data.title;
-                    StaticBase.trackers["reddit"].SaveJson();
-                    return;
-                }
-
-                var newPosts = allPosts.TakeWhile(x => x.data.title != lastPost).ToArray();
+                lastCheck = (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
+                StaticBase.trackers["reddit"].SaveJson();
 
                 if (newPosts.Length > 0)
                 {
-                    lastPost = newPosts[0].data.title;
-                    StaticBase.trackers["reddit"].SaveJson();
-
                     newPosts = newPosts.Reverse().ToArray();
                     foreach(var post in newPosts)
                         foreach(ulong channel in ChannelIds)

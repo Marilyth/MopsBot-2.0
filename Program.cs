@@ -77,10 +77,11 @@ namespace MopsBot
             return Task.CompletedTask;
         }
 
-        private async Task onClientReady()
+        private Task onClientReady()
         {
-            await Task.Run(() => StaticBase.initTracking());
-            await Task.Run(() => StaticBase.UpdateGameAsync());
+            Task.Run(() => StaticBase.initTracking());
+            Task.Run(() => StaticBase.UpdateGameAsync());
+            return Task.CompletedTask;
         }
 
         private async Task onClientDC(Exception e)
