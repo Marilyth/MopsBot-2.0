@@ -119,6 +119,8 @@ namespace MopsBot.Data.Tracker
 
             if(redditPost.media_embed != null && redditPost.media_embed.media_domain_url != null)
                 e.ImageUrl = (await Module.Information.ConvertToGifAsync(redditPost.media_embed.media_domain_url)).Max5MbGif;
+            else if(redditPost.media != null && redditPost.media.reddit_video != null)
+                e.ImageUrl = (await Module.Information.ConvertToGifAsync(redditPost.media.reddit_video.fallback_url)).Max5MbGif;
 
             return e;
         }

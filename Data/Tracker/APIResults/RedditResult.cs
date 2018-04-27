@@ -134,25 +134,23 @@ namespace MopsBot.Data.Tracker.APIResults.RedditResult
         public int height { get; set; }
     }
 
-    public class Oembed2
+    public class RedditVideo
     {
-        public string provider_url { get; set; }
-        public string description { get; set; }
-        public string title { get; set; }
-        public string type { get; set; }
-        public int thumbnail_width { get; set; }
+        public string fallback_url { get; set; }
         public int height { get; set; }
         public int width { get; set; }
-        public string html { get; set; }
-        public string version { get; set; }
-        public string provider_name { get; set; }
-        public string thumbnail_url { get; set; }
-        public int thumbnail_height { get; set; }
+        public string scrubber_media_url { get; set; }
+        public string dash_url { get; set; }
+        public int duration { get; set; }
+        public string hls_url { get; set; }
+        public bool is_gif { get; set; }
+        public string transcoding_status { get; set; }
     }
 
     public class Media
     {
-        public Oembed2 oembed { get; set; }
+        public RedditVideo reddit_video { get; set; }
+        public Oembed oembed { get; set; }
         public string type { get; set; }
     }
 
