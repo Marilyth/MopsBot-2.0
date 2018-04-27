@@ -20,6 +20,7 @@ namespace MopsBot
         public static Data.UserScore people = new Data.UserScore();
         public static Random ran = new Random();
         public static List<IdleDungeon> dungeonCrawler = new List<IdleDungeon>();
+        public static Gfycat.GfycatClient gfy;
         public static List<ulong> BotManager = new List<ulong>();
         public static List<string> playlist = new List<string>();
         public static HashSet<ulong> MemberSet;
@@ -49,6 +50,7 @@ namespace MopsBot
                 Auth.SetUserCredentials(Program.twitterAuth[0], Program.twitterAuth[1], Program.twitterAuth[2], Program.twitterAuth[3]);
                 TweetinviConfig.CurrentThreadSettings.TweetMode = TweetMode.Extended;
                 TweetinviConfig.ApplicationSettings.TweetMode = TweetMode.Extended;
+                StaticBase.gfy = new Gfycat.GfycatClient(Program.gfyAuth[0], Program.gfyAuth[1]);
 
 /*
                 OverwatchTracks = new TrackerHandler<OverwatchTracker>();

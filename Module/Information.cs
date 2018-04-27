@@ -4,10 +4,12 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using System.Runtime.InteropServices;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Newtonsoft.Json;
 using System.Net.NetworkInformation;
+using System.Net.Http;
 
 namespace MopsBot.Module
 {
@@ -32,7 +34,8 @@ namespace MopsBot.Module
         [Summary("Searches dictionaries for a definition of the specified word or expression")]
         public async Task define([Remainder] string text)
         {
-            try{
+            try
+            {
 
                 string query = Task.Run(() => ReadURLAsync($"http://api.wordnik.com:80/v4/word.json/{text}/definitions?limit=1&includeRelated=false&sourceDictionaries=all&useCanonical=true&includeTags=false&api_key=a2a73e7b926c924fad7001ca3111acd55af2ffabf50eb4ae5")).Result;
 
@@ -41,7 +44,9 @@ namespace MopsBot.Module
                 tempDict = tempDict[0];
                 await ReplyAsync($"__**{tempDict["word"]}**__\n\n``{tempDict["text"]}``");
 
-            } catch(Exception e){
+            }
+            catch (Exception e)
+            {
                 Console.WriteLine($"[ERROR] by define at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
             }
         }
@@ -50,13 +55,16 @@ namespace MopsBot.Module
         [Summary("Translates your text from srcLanguage to tgtLanguage.")]
         public async Task translate(string srcLanguage, string tgtLanguage, [Remainder] string text)
         {
-            try{
+            try
+            {
 
                 string query = Task.Run(() => ReadURLAsync($"https://translate.googleapis.com/translate_a/single?client=gtx&sl={srcLanguage}&tl={tgtLanguage}&dt=t&q={text}")).Result;
                 dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
                 await ReplyAsync(tempDict[0][0][0].ToString());
 
-            } catch(Exception e){
+            }
+            catch (Exception e)
+            {
                 Console.WriteLine($"[ERROR] by translate at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
                 await ReplyAsync("Error happened");
             }
@@ -68,7 +76,7 @@ namespace MopsBot.Module
         {
             EmbedBuilder e = new EmbedBuilder();
             e.ImageUrl = StaticBase.stats.DrawDiagram(limit);
-            await ReplyAsync("", embed:e);
+            await ReplyAsync("", embed: e);
         }
 
         [Command("getStats")]
@@ -83,7 +91,8 @@ namespace MopsBot.Module
         public async Task ranking(int limit, string stat = "level")
         {
             Func<MopsBot.Data.Individual.User, int> sortParameter = x => x.calcLevel();
-            switch(stat.ToLower()){
+            switch (stat.ToLower())
+            {
                 case "experience":
                     sortParameter = x => x.Experience;
                     break;
@@ -105,16 +114,19 @@ namespace MopsBot.Module
 
         public async static Task<dynamic> GetRandomWordAsync()
         {
-            try{
+            try
+            {
 
                 string query = await ReadURLAsync("http://api.wordnik.com:80/v4/words.json/randomWord?hasDictionaryDef=true&excludePartOfSpeech=given-name&minCorpusCount=10000&maxCorpusCount=-1&minDictionaryCount=4&maxDictionaryCount=-1&minLength=3&maxLength=13&api_key=a2a73e7b926c924fad7001ca3111acd55af2ffabf50eb4ae5");
                 dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
                 return tempDict["word"];
 
-            } catch(Exception e){
+            }
+            catch (Exception e)
+            {
                 Console.WriteLine($"[ERROR] by GetRandomWordAsync at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
             }
-                return null;
+            return null;
         }
 
         public static async Task<string> ReadURLAsync(string URL)
@@ -129,6 +141,12 @@ namespace MopsBot.Module
                 s = reader.ReadToEnd();
             }
             return s;
+        }
+
+        public static async Task<Gfycat.Gfy> ConvertToGifAsync(string url)
+        {
+            var status = await StaticBase.gfy.CreateGfyAsync(url);
+            return await status.GetGfyWhenCompleteAsync();
         }
     }
 }

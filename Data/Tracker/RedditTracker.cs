@@ -7,7 +7,7 @@ using Discord.Commands;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using MopsBot.Data.Tracker.APIResults;
+using MopsBot.Data.Tracker.APIResults.RedditResult;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 
@@ -18,7 +18,6 @@ namespace MopsBot.Data.Tracker
     /// </summary>
     public class RedditTracker : ITracker
     {
-        private OStatsResult information;
         public string lastPost = "";
 
         /// <summary>
@@ -53,24 +52,26 @@ namespace MopsBot.Data.Tracker
         {
             try
             {
-                var allPosts = await fetchPosts();
-                var allSubredditPosts = allPosts.data.children.Where(x => x.data.subreddit.ToLower().Equals(Name.Split(" ")[0].ToLower())).ToArray();
+                var allThings = await fetchPosts();
+                var allPosts = allThings.data.children;
 
                 if(lastPost == ""){
-                    lastPost = allSubredditPosts.FirstOrDefault().data.title;
+                    lastPost = allPosts.FirstOrDefault().data.title;
                     StaticBase.trackers["reddit"].SaveJson();
                     return;
                 }
 
-                var newPosts = allSubredditPosts.TakeWhile(x => x.data.title != lastPost).ToArray();
+                var newPosts = allPosts.TakeWhile(x => x.data.title != lastPost).ToArray();
 
                 if (newPosts.Length > 0)
                 {
                     lastPost = newPosts[0].data.title;
+                    StaticBase.trackers["reddit"].SaveJson();
+
+                    newPosts = newPosts.Reverse().ToArray();
                     foreach(var post in newPosts)
                         foreach(ulong channel in ChannelIds)
-                            await OnMajorChangeTracked(channel, createEmbed(post.data), "");
-                    StaticBase.trackers["reddit"].SaveJson();
+                            await OnMajorChangeTracked(channel, await createEmbed(post.data), "");
                 }
             }
             catch (Exception e)
@@ -81,7 +82,7 @@ namespace MopsBot.Data.Tracker
 
         private async Task<RedditResult> fetchPosts(){
             string query = await MopsBot.Module.Information.ReadURLAsync($"https://www.reddit.com/r/{Name.Split(" ")[0]}/"+
-                                                                        $"{(Name.Split(" ").Length > 1 ? $"search.json?sort=new&q={Name.Split(" ")[1]}" : "new.json")}");
+                                                                        $"{(Name.Split(" ").Length > 1 ? $"search.json?sort=new&restrict_sr=on&q={Name.Split(" ")[1]}" : "new.json?restrict_sr=on")}");
 
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {
@@ -95,7 +96,7 @@ namespace MopsBot.Data.Tracker
         /// <param Name="RedditInformation">All fetched stats of the user </param>
         /// <param Name="changedStats">All changed stats of the user, together with a string presenting them </param>
         /// <param Name="mostPlayed">The most played Hero of the session, together with a string presenting them </param>
-        private EmbedBuilder createEmbed(Data2 redditPost)
+        private async Task<EmbedBuilder> createEmbed(Data2 redditPost)
         {
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0x6441A4);
@@ -113,13 +114,11 @@ namespace MopsBot.Data.Tracker
             footer.Text = "Reddit";
             e.Timestamp = DateTimeOffset.FromUnixTimeSeconds((long)redditPost.created_utc).DateTime;
             e.Footer = footer;
-            e.ThumbnailUrl = !redditPost.thumbnail.Equals("self") ? redditPost.thumbnail : null;
-            if(redditPost.url.EndsWith(".gif", StringComparison.CurrentCultureIgnoreCase))
-                e.ImageUrl = redditPost.url;
-            if(redditPost.url.ToLower().Contains("gfycat.com"))
-                e.ImageUrl = redditPost.url.Replace("gfycat.com", "thumbs.gfycat.com") + "-size_restricted.gif";
-
+            e.ThumbnailUrl = !redditPost.thumbnail.Equals("self") && !redditPost.thumbnail.Equals("default") ? redditPost.thumbnail : null;
             e.AddInlineField("Score", redditPost.score);
+
+            if(redditPost.media_embed != null && redditPost.media_embed.media_domain_url != null)
+                e.ImageUrl = (await Module.Information.ConvertToGifAsync(redditPost.media_embed.media_domain_url)).Max5MbGif;
 
             return e;
         }

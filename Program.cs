@@ -25,9 +25,8 @@ namespace MopsBot
 
         }
         public static DiscordSocketClient client;
-        public static string twitchId;
-        public static string[] twitterAuth;
-        public static string youtubeKey;
+        public static string twitchId, youtubeKey;
+        public static string[] twitterAuth, gfyAuth;
         private CommandHandler handler;
 
         public async Task Start()
@@ -43,6 +42,7 @@ namespace MopsBot
             twitchId = sr.ReadLine();
             twitterAuth = sr.ReadLine().Split(",");
             youtubeKey = sr.ReadLine();
+            gfyAuth = sr.ReadLine().Split(",");
 
             await client.LoginAsync(TokenType.Bot, token);
             await client.StartAsync();
@@ -77,11 +77,10 @@ namespace MopsBot
             return Task.CompletedTask;
         }
 
-        private Task onClientReady()
+        private async Task onClientReady()
         {
-            Task.Run(() => StaticBase.initTracking());
-            Task.Run(() => StaticBase.UpdateGameAsync());
-            return Task.CompletedTask;
+            await Task.Run(() => StaticBase.initTracking());
+            await Task.Run(() => StaticBase.UpdateGameAsync());
         }
 
         private async Task onClientDC(Exception e)
