@@ -56,11 +56,11 @@ namespace MopsBot.Data.Tracker
                 var allThings = await fetchPosts();
                 var newPosts = allThings.data.children.TakeWhile(x => x.data.created_utc > lastCheck).ToArray();
 
-                lastCheck = (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
-                StaticBase.trackers["reddit"].SaveJson();
-
                 if (newPosts.Length > 0)
                 {
+                    lastCheck = newPosts.Max(x => x.data.created_utc);
+                    StaticBase.trackers["reddit"].SaveJson();
+
                     newPosts = newPosts.Reverse().ToArray();
                     foreach(var post in newPosts)
                         foreach(ulong channel in ChannelIds)
