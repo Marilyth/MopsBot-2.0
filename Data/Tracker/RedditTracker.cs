@@ -43,13 +43,15 @@ namespace MopsBot.Data.Tracker
             try
             {
                 var allPosts = await fetchPosts();
+                var allSubredditPosts = allPosts.data.children.Where(x => x.data.subreddit.ToLower().Equals(Name.Split(" ")[0].ToLower())).ToArray();
+
                 if(lastPost == ""){
-                    lastPost = allPosts.data.children[0].data.title;
+                    lastPost = allSubredditPosts.FirstOrDefault().data.title;
                     StaticBase.trackers["reddit"].SaveJson();
                     return;
                 }
 
-                var newPosts = allPosts.data.children.TakeWhile(x => x.data.title != lastPost).ToArray();
+                var newPosts = allSubredditPosts.TakeWhile(x => x.data.title != lastPost).ToArray();
 
                 if (newPosts.Length > 0)
                 {
@@ -67,7 +69,8 @@ namespace MopsBot.Data.Tracker
         }
 
         private async Task<RedditResult> fetchPosts(){
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://www.reddit.com/r/{Name.Split(" ")[0]}/search.json?sort=new{(Name.Split(" ").Length > 1 ? "&q=" + Name.Split(" ")[1]:"")}&limit=4");
+            string query = await MopsBot.Module.Information.ReadURLAsync($"https://www.reddit.com/r/{Name.Split(" ")[0]}/"+
+                                                                        $"{(Name.Split(" ").Length > 1 ? $"search.json?sort=new&q={Name.Split(" ")[1]}" : "new.json")}");
 
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {
@@ -85,9 +88,9 @@ namespace MopsBot.Data.Tracker
         {
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0x6441A4);
-            e.Title = redditPost.title;
+            e.Title = redditPost.title.Length > 256 ? redditPost.title.Substring(0, 251) + "[...]" : redditPost.title;
             e.Url = "https://www.reddit.com" + redditPost.permalink;
-            e.Description = redditPost.selftext;
+            e.Description = redditPost.selftext.Length > 2048 ? redditPost.selftext.Substring(0, 2043) + "[...]" : redditPost.selftext;
 
             EmbedAuthorBuilder author = new EmbedAuthorBuilder();
             author.Name = redditPost.author;
@@ -99,7 +102,11 @@ namespace MopsBot.Data.Tracker
             footer.Text = "Reddit";
             e.Timestamp = DateTimeOffset.FromUnixTimeSeconds((long)redditPost.created_utc).DateTime;
             e.Footer = footer;
-            e.ImageUrl = redditPost.thumbnail;
+            e.ThumbnailUrl = !redditPost.thumbnail.Equals("self") ? redditPost.thumbnail : null;
+            if(redditPost.url.EndsWith(".gif", StringComparison.CurrentCultureIgnoreCase))
+                e.ImageUrl = redditPost.url;
+            if(redditPost.url.ToLower().Contains("gfycat.com"))
+                e.ImageUrl = redditPost.url.Replace("gfycat.com", "thumbs.gfycat.com") + "-size_restricted.gif";
 
             e.AddInlineField("Score", redditPost.score);
 
