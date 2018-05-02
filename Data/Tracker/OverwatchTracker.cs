@@ -91,7 +91,7 @@ namespace MopsBot.Data.Tracker
             return JsonConvert.DeserializeObject<OStatsResult>(query, _jsonWriter);
         }
 
-        public static async Task<EmbedBuilder> overwatchInformation(string owName)
+        public static async Task<Embed> overwatchInformation(string owName)
         {
             string query = await MopsBot.Module.Information.ReadURLAsync($"http://localhost:4444/api/v3/u/{owName}/blob");
 
@@ -123,29 +123,29 @@ namespace MopsBot.Data.Tracker
 
             e.ThumbnailUrl = stats.overall_stats.avatar;
 
-            e.AddInlineField("Damage", $"Total: {stats.game_stats.all_damage_done}"+
+            e.AddField("Damage", $"Total: {stats.game_stats.all_damage_done}"+
                             $"\nBest: {stats.game_stats.all_damage_done_most_in_game}"+
-                            $"\nAverage: {stats.rolling_average_stats.all_damage_done * 1000}");
+                            $"\nAverage: {stats.rolling_average_stats.all_damage_done * 1000}", true);
 
-            e.AddInlineField("Eliminations", $"Total: {stats.game_stats.eliminations}"+
+            e.AddField("Eliminations", $"Total: {stats.game_stats.eliminations}"+
                             $"\nKPD Best: {stats.game_stats.kill_streak_best}"+
-                            $"\nKPD Average: {stats.game_stats.kpd}");
+                            $"\nKPD Average: {stats.game_stats.kpd}", true);
 
-            e.AddInlineField("Healing", $"Total: {stats.game_stats.healing_done}"+
+            e.AddField("Healing", $"Total: {stats.game_stats.healing_done}"+
                             $"\nBest: {stats.game_stats.healing_done_most_in_game}"+
-                            $"\nAverage: {stats.rolling_average_stats.healing_done * 1000}");
+                            $"\nAverage: {stats.rolling_average_stats.healing_done * 1000}", true);
 
-            e.AddInlineField("Medals", $"Bronze: {stats.game_stats.medals_bronze}"+
+            e.AddField("Medals", $"Bronze: {stats.game_stats.medals_bronze}"+
                             $"\nSilver: {stats.game_stats.medals_silver}"+
-                            $"\nGold: {stats.game_stats.medals_gold}");
+                            $"\nGold: {stats.game_stats.medals_gold}", true);
 
-            e.AddInlineField("General", $"Time played: {stats.game_stats.time_played}hrs"+
+            e.AddField("General", $"Time played: {stats.game_stats.time_played}hrs"+
                             $"\nLevel: {stats.overall_stats.level + (100 * stats.overall_stats.prestige)}"+
-                            $"\nWon Games: {stats.overall_stats.wins}");
+                            $"\nWon Games: {stats.overall_stats.wins}", true);
 
-            e.AddInlineField("Competitive", $"Time played: {info.getNotNull().stats.competitive.game_stats.time_played}hrs"+
+            e.AddField("Competitive", $"Time played: {info.getNotNull().stats.competitive.game_stats.time_played}hrs"+
                             $"\nWin Rate: {info.getNotNull().stats.competitive.overall_stats.win_rate}%"+
-                            $"\nRank: {info.getNotNull().stats.competitive.overall_stats.comprank}");
+                            $"\nRank: {info.getNotNull().stats.competitive.overall_stats.comprank}", true);
 
             e.AddField("Most Played", mostPlayed.Item2);
 
@@ -154,14 +154,14 @@ namespace MopsBot.Data.Tracker
             else
                 e.ImageUrl = $"https://blzgdapipro-a.akamaihd.net/media/thumbnail/{mostPlayed.Item1.ToLower()}-gameplay.jpg";
 
-            return e;
+            return e.Build();
         }
 
         ///<summary>Builds an embed out of the changed stats, and sends it as a Discord message </summary>
         /// <param Name="overwatchInformation">All fetched stats of the user </param>
         /// <param Name="changedStats">All changed stats of the user, together with a string presenting them </param>
         /// <param Name="mostPlayed">The most played Hero of the session, together with a string presenting them </param>
-        private EmbedBuilder createEmbed(OStatsResult overwatchInformation, Dictionary<string, string> changedStats, Tuple<string, string> mostPlayed)
+        private Embed createEmbed(OStatsResult overwatchInformation, Dictionary<string, string> changedStats, Tuple<string, string> mostPlayed)
         {
             OverallStats stats = overwatchInformation.getNotNull().stats.quickplay.overall_stats;
 
@@ -186,7 +186,7 @@ namespace MopsBot.Data.Tracker
 
             foreach (var kvPair in changedStats)
             {
-                e.AddInlineField(kvPair.Key, kvPair.Value);
+                e.AddField(kvPair.Key, kvPair.Value, true);
             }
 
             e.AddField("Sessions most played Hero", $"{mostPlayed.Item2}");
@@ -195,7 +195,7 @@ namespace MopsBot.Data.Tracker
             else
                 e.ImageUrl = $"https://blzgdapipro-a.akamaihd.net/media/thumbnail/{mostPlayed.Item1.ToLower()}-gameplay.jpg";
 
-            return e;
+            return e.Build();
         }
 
         /// <summary>

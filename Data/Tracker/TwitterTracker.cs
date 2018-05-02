@@ -66,7 +66,7 @@ namespace MopsBot.Data.Tracker
             return Timeline.GetUserTimeline(Name, parameters).Reverse().ToArray();
         }
     
-        private EmbedBuilder createEmbed(ITweet tweet)
+        private Embed createEmbed(ITweet tweet)
         {
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0x6441A4);
@@ -92,7 +92,7 @@ namespace MopsBot.Data.Tracker
 
             e.Description = tweet.FullText;
 
-            return e;
+            return e.Build();
         }
     }
 }

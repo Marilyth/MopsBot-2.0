@@ -86,7 +86,7 @@ namespace MopsBot.Data.Tracker
             return JsonConvert.DeserializeObject<APIResults.Beatmap>(query.Substring(1, query.Length-2));;
         }
 
-        private EmbedBuilder createEmbed(APIResults.OsuResult userInformation, APIResults.Beatmap beatmapInformation,
+        private Embed createEmbed(APIResults.OsuResult userInformation, APIResults.Beatmap beatmapInformation,
                                         APIResults.Score scoreInformation, double ppChange)
         {
             EmbedBuilder e = new EmbedBuilder();
@@ -104,12 +104,12 @@ namespace MopsBot.Data.Tracker
             e.ThumbnailUrl = $"https://a.ppy.sh/{userInformation.user_id}_0.png";
             e.ImageUrl = $"https://b.ppy.sh/thumb/{beatmapInformation.beatmapset_id}l.jpg";
 
-            e.AddInlineField("Score", scoreInformation.score + $" ({scoreInformation.maxcombo}x)");
-            e.AddInlineField("Acc", calcAcc(scoreInformation, int.Parse(beatmapInformation.mode)) + $"% {scoreInformation.rank}");
-            e.AddInlineField("PP for play", Math.Round(double.Parse(scoreInformation.pp, CultureInfo.InvariantCulture), 2) + $" (+{ppChange})");
-            e.AddInlineField("Rank", userInformation.pp_rank);
+            e.AddField("Score", scoreInformation.score + $" ({scoreInformation.maxcombo}x)", true);
+            e.AddField("Acc", calcAcc(scoreInformation, int.Parse(beatmapInformation.mode)) + $"% {scoreInformation.rank}", true);
+            e.AddField("PP for play", Math.Round(double.Parse(scoreInformation.pp, CultureInfo.InvariantCulture), 2) + $" (+{ppChange})", true);
+            e.AddField("Rank", userInformation.pp_rank, true);
 
-            return e;
+            return e.Build();
         }
 
         private double calcAcc(APIResults.Score scoreInformation, int mode)

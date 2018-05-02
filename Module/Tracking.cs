@@ -20,7 +20,7 @@ namespace MopsBot.Module
         {
             [Command("Track")]
             [Summary("Keeps track of the specified TwitterUser, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
-            [RequireUserPermission(ChannelPermission.ManageChannel)]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task trackTwitter(string twitterUser)
             {
                 trackers["twitter"].addTracker(twitterUser, Context.Channel.Id);
@@ -30,7 +30,7 @@ namespace MopsBot.Module
 
             [Command("UnTrack")]
             [Summary("Stops keeping track of the specified TwitterUser, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
-            [RequireUserPermission(ChannelPermission.ManageChannel)]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task unTrackTwitter(string twitterUser)
             {
                 trackers["twitter"].removeTracker(twitterUser, Context.Channel.Id);
@@ -51,7 +51,7 @@ namespace MopsBot.Module
         {
             [Command("Track")]
             [Summary("Keeps track of the specified Osu player, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
-            [RequireUserPermission(ChannelPermission.ManageChannel)]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task trackOsu(string OsuUser)
             {
                 trackers["osu"].addTracker(OsuUser, Context.Channel.Id);
@@ -61,7 +61,7 @@ namespace MopsBot.Module
 
             [Command("UnTrack")]
             [Summary("Stops keeping track of the specified Osu player, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
-            [RequireUserPermission(ChannelPermission.ManageChannel)]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task unTrackOsu(string OsuUser)
             {
                 trackers["osu"].removeTracker(OsuUser, Context.Channel.Id);
@@ -82,7 +82,7 @@ namespace MopsBot.Module
         {
             [Command("Track")]
             [Summary("Keeps track of the specified Youtuber, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
-            [RequireUserPermission(ChannelPermission.ManageChannel)]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task trackTwitter(string channelID)
             {
                 trackers["youtube"].addTracker(channelID, Context.Channel.Id);
@@ -92,7 +92,7 @@ namespace MopsBot.Module
 
             [Command("UnTrack")]
             [Summary("Stops keeping track of the specified Youtuber, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
-            [RequireUserPermission(ChannelPermission.ManageChannel)]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task unTrackYoutube(string channelID)
             {
                 trackers["youtube"].removeTracker(channelID, Context.Channel.Id);
@@ -112,7 +112,7 @@ namespace MopsBot.Module
         {
             [Command("Track")]
             [Summary("Keeps track of the specified Streamer, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
-            [RequireUserPermission(ChannelPermission.ManageChannel)]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task trackStreamer(string streamerName, [Remainder]string notificationMessage = "Stream went live!")
             {
                 trackers["twitch"].addTracker(streamerName, Context.Channel.Id, notificationMessage);
@@ -122,7 +122,7 @@ namespace MopsBot.Module
 
             [Command("UnTrack")]
             [Summary("Stops tracking the specified streamer.\nRequires Manage channel permissions.")]
-            [RequireUserPermission(ChannelPermission.ManageChannel)]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task unTrackStreamer(string streamerName)
             {
                 trackers["twitch"].removeTracker(streamerName, Context.Channel.Id);
@@ -144,7 +144,8 @@ namespace MopsBot.Module
             [Command("Track")]
             [Summary("Keeps track of the specified Subreddit, in the Channel you are calling this command right now.\nRequires Manage channel permissions."
             + "\n queries MUST look something like this: `title:mei+title:hanzo`")]
-            [RequireUserPermission(ChannelPermission.ManageChannel)]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [Hide]
             public async Task trackSubreddit(string subreddit, string query = null)
             {
                 trackers["reddit"].addTracker(String.Join(" ", new string[] { subreddit, query }.Where(x => x != null)), Context.Channel.Id);
@@ -154,7 +155,7 @@ namespace MopsBot.Module
 
             [Command("UnTrack")]
             [Summary("Stops tracking the specified Subreddit.\nRequires Manage channel permissions.")]
-            [RequireUserPermission(ChannelPermission.ManageChannel)]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task unTrackSubreddit(string subreddit, string query = null)
             {
                 trackers["reddit"].removeTracker(String.Join(" ", new string[] { subreddit, query }.Where(x => x != null)), Context.Channel.Id);
@@ -175,7 +176,7 @@ namespace MopsBot.Module
         {
             [Command("Track")]
             [Summary("Keeps track of the specified Overwatch player, in the Channel you are calling this command right now.\nParameter: Username-Battletag")]
-            [RequireUserPermission(ChannelPermission.ManageChannel)]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task trackOW(string owUser)
             {
                 trackers["overwatch"].addTracker(owUser, Context.Channel.Id);
@@ -185,7 +186,7 @@ namespace MopsBot.Module
 
             [Command("UnTrack")]
             [Summary("Stops keeping track of the specified Overwatch player, in the Channel you are calling this command right now.\nParameter: Username-Battletag")]
-            [RequireUserPermission(ChannelPermission.ManageChannel)]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task unTrackOW(string owUser)
             {
                 trackers["overwatch"].removeTracker(owUser, Context.Channel.Id);
@@ -211,7 +212,7 @@ namespace MopsBot.Module
         
         [Command("trackClips")]
         [Summary("Keeps track of clips from streams of the specified Streamer, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
-        [RequireUserPermission(ChannelPermission.ManageChannel)]
+        [RequireUserPermission(ChannelPermission.ManageChannels)]
         public async Task trackClips(string streamerName)
         {
             ClipTracker.addTracker(streamerName, Context.Channel.Id);

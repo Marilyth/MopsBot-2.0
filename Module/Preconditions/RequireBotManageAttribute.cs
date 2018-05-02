@@ -7,7 +7,7 @@ namespace MopsBot.Module.Preconditions{
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
     public class RequireBotManageAttribute : PreconditionAttribute
     {
-        public async override Task<PreconditionResult> CheckPermissions(ICommandContext context, CommandInfo command, IServiceProvider services)
+        public async override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services)
         {
             if(StaticBase.BotManager.Contains(context.User.Id)||context.User.Id.Equals((await Program.client.GetApplicationInfoAsync()).Owner.Id))
                 return PreconditionResult.FromSuccess();

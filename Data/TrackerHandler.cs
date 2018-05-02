@@ -122,7 +122,7 @@ namespace MopsBot.Data
         /// Updates or creates the notification message with it
         /// </summary>
         /// <returns>A Task that can be awaited</returns>
-        private async Task OnMajorEvent(ulong channelID, EmbedBuilder embed, Tracker.ITracker parent, string notification)
+        private async Task OnMajorEvent(ulong channelID, Embed embed, Tracker.ITracker parent, string notification)
         {
             if(parent is Tracker.TwitchTracker){
                 Tracker.TwitchTracker parentHandle = parent as Tracker.TwitchTracker;
@@ -130,7 +130,7 @@ namespace MopsBot.Data
                 if(parentHandle.ToUpdate.ContainsKey(channelID))
                     await ((IUserMessage)((ITextChannel)Program.client.GetChannel(channelID)).GetMessageAsync(parentHandle.ToUpdate[channelID]).Result).ModifyAsync(x => {
                         x.Content = notification;
-                        x.Embed = (Embed)embed;
+                        x.Embed = embed;
                     });
 
                 else{

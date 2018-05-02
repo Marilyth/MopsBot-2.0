@@ -96,7 +96,7 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        private async Task<EmbedBuilder> createEmbed(Item result)
+        private async Task<Embed> createEmbed(Item result)
         {
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0xFF0000);
@@ -120,7 +120,7 @@ namespace MopsBot.Data.Tracker
             e.ImageUrl = result.snippet.thumbnails.high.url;
             e.Description = result.snippet.description;
 
-            return e;
+            return e.Build();
         }
     }
 }

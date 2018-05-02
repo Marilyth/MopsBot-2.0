@@ -20,6 +20,7 @@ namespace MopsBot.Module
         {
             [Command("join")]
             [Summary("Joins the specified role")]
+            [RequireBotPermission(GuildPermission.ManageRoles)]
             public async Task joinRole([Remainder]string role)
             {
                 SocketRole pRole = (SocketRole)Context.Guild.Roles.First(x => x.Name.ToLower().Equals(role.ToLower()));
@@ -31,6 +32,7 @@ namespace MopsBot.Module
 
             [Command("leave")]
             [Summary("Leaves the specified role")]
+            [RequireBotPermission(GuildPermission.ManageRoles)]
             public async Task leaveRole([Remainder]string role)
             {
                 SocketRole pRole = (SocketRole)Context.Guild.Roles.First(x => x.Name.ToLower().Equals(role.ToLower()));
@@ -119,7 +121,7 @@ namespace MopsBot.Module
 
         [Command("setPrefix")]
         [Summary("Changes the prefix of Mops in the current Guild")]
-        [RequireUserPermission(ChannelPermission.ManageChannel)]
+        [RequireUserPermission(ChannelPermission.ManageChannels)]
         public async Task setPrefix([Remainder]string prefix)
         {
             string oldPrefix;
@@ -144,7 +146,7 @@ namespace MopsBot.Module
         [Command("kill")]
         [Summary("Stops Mops to adapt to any new changes in code.")]
         [RequireBotManage()]
-        [Hide()]
+        [Hide]
         public Task kill()
         {
             Environment.Exit(0);

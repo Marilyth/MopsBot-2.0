@@ -76,7 +76,7 @@ namespace MopsBot.Module
         {
             EmbedBuilder e = new EmbedBuilder();
             e.ImageUrl = StaticBase.stats.DrawDiagram(limit);
-            await ReplyAsync("", embed: e);
+            await ReplyAsync("", embed: e.Build());
         }
 
         [Command("getStats")]

@@ -144,7 +144,7 @@ namespace MopsBot.Data.Tracker
             return tmpResult;
         }
 
-        public EmbedBuilder createEmbed()
+        public Embed createEmbed()
         {
             Channel streamer = StreamerStatus.stream.channel;
 
@@ -167,10 +167,10 @@ namespace MopsBot.Data.Tracker
             e.ThumbnailUrl = $"{StreamerStatus.stream.preview.medium}?rand={StaticBase.ran.Next(0, 99999999)}";
             e.ImageUrl = $"{viewerGraph.DrawPlot()}";
 
-            e.AddInlineField("Game", CurGame);
-            e.AddInlineField("Viewers", StreamerStatus.stream.viewers);
+            e.AddField("Game", CurGame, true);
+            e.AddField("Viewers", StreamerStatus.stream.viewers, true);
 
-            return e;
+            return e.Build();
         }
     }
 }

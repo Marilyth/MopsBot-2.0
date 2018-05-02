@@ -23,7 +23,7 @@ namespace MopsBot.Data.Tracker
         public event MainEventHandler OnMajorEventFired;
         public event MinorEventHandler OnMinorEventFired;
         public delegate Task MinorEventHandler(ulong channelID, ITracker self, string notificationText);
-        public delegate Task MainEventHandler(ulong channelID, EmbedBuilder embed, ITracker self, string notificationText="");
+        public delegate Task MainEventHandler(ulong channelID, Embed embed, ITracker self, string notificationText="");
         public HashSet<ulong> ChannelIds;
         public string Name;
         
@@ -40,7 +40,7 @@ namespace MopsBot.Data.Tracker
 
         protected abstract void CheckForChange_Elapsed(object stateinfo);
 
-        protected async Task OnMajorChangeTracked(ulong channelID, EmbedBuilder embed, string notificationText=""){
+        protected async Task OnMajorChangeTracked(ulong channelID, Embed embed, string notificationText=""){
             if(OnMajorEventFired != null)
                await OnMajorEventFired(channelID, embed, this, notificationText);
         }

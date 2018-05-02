@@ -89,7 +89,7 @@ namespace MopsBot.Data.Tracker
         /// <param Name="RedditInformation">All fetched stats of the user </param>
         /// <param Name="changedStats">All changed stats of the user, together with a string presenting them </param>
         /// <param Name="mostPlayed">The most played Hero of the session, together with a string presenting them </param>
-        private async Task<EmbedBuilder> createEmbed(Data2 redditPost)
+        private async Task<Embed> createEmbed(Data2 redditPost)
         {
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0x6441A4);
@@ -108,14 +108,14 @@ namespace MopsBot.Data.Tracker
             e.Timestamp = DateTimeOffset.FromUnixTimeSeconds((long)redditPost.created_utc).DateTime;
             e.Footer = footer;
             e.ThumbnailUrl = !redditPost.thumbnail.Equals("self") && !redditPost.thumbnail.Equals("default") ? redditPost.thumbnail : null;
-            e.AddInlineField("Score", redditPost.score);
+            e.AddField("Score", redditPost.score, true);
 
             if(redditPost.media_embed != null && redditPost.media_embed.media_domain_url != null)
                 e.ImageUrl = (await Module.Information.ConvertToGifAsync(redditPost.media_embed.media_domain_url)).Max5MbGif;
             else if(redditPost.media != null && redditPost.media.reddit_video != null)
                 e.ImageUrl = (await Module.Information.ConvertToGifAsync(redditPost.media.reddit_video.fallback_url)).Max5MbGif;
 
-            return e;
+            return e.Build();
         }
     }
 }
