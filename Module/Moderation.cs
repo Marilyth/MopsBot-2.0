@@ -95,8 +95,8 @@ namespace MopsBot.Module
             [Summary("Creates giveaway.")]
             public async Task create([Remainder]string game)
             {
-                Giveaways.AddGiveaway(game);
-                Giveaways.JoinGiveaway(game, Context.User.Id);
+                Giveaways.AddGiveaway(game.ToLower());
+                Giveaways.JoinGiveaway(game.ToLower(), Context.User.Id);
                 await ReplyAsync($"Giveaway for {game} created.\nPlease join by using `!Giveaway join {game}`");
             }
 
@@ -104,7 +104,7 @@ namespace MopsBot.Module
             [Summary("Joins giveaway.")]
             public async Task join([Remainder]string game)
             {
-                Giveaways.JoinGiveaway(game, Context.User.Id);
+                Giveaways.JoinGiveaway(game.ToLower(), Context.User.Id);
                 await ReplyAsync($"**{Context.User.Username}** joined the Giveaway **{game}**.");
             }
 
