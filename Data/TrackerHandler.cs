@@ -32,7 +32,6 @@ namespace MopsBot.Data
         public Dictionary<string, T> trackers;
         public TrackerHandler()
         {
-            trackers = new Dictionary<string, T>();
             using (StreamReader read = new StreamReader(new FileStream($"mopsdata//{typeof(T).Name}.json", FileMode.OpenOrCreate)))
             {
                 try{

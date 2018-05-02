@@ -93,50 +93,27 @@ namespace MopsBot.Module
             [Summary("Creates giveaway.")]
             public async Task create([Remainder]string game)
             {
-                game = game.ToLower();
-                if(!GiveAways.ContainsKey(game)){
-                    GiveAways.Add(game, new HashSet<ulong>());
-                    GiveAways[game].Add(Context.User.Id);
-                    await ReplyAsync($"Giveaway for {game} created.\nPlease join by using `!Giveaway join {game}`");
-                }
-                    
-                else 
-                    await ReplyAsync($"Giveaway with that name already exists. Please choose another name.");
+                Giveaways.AddGiveaway(game);
+                Giveaways.JoinGiveaway(game, Context.User.Id);
+                await ReplyAsync($"Giveaway for {game} created.\nPlease join by using `!Giveaway join {game}`");
             }
 
             [Command("join")]
             [Summary("Joins giveaway.")]
             public async Task join([Remainder]string game)
             {
-                game = game.ToLower();
-                if(GiveAways.ContainsKey(game))
-                    if(!GiveAways[game].Contains(Context.User.Id)){
-                        GiveAways[game].Add(Context.User.Id);
-                        await ReplyAsync($"{Context.User.Username} entered for {game}");
-                    }
-                    else
-                        await ReplyAsync($"You cannot enter multiple times.");
-                else
-                    await ReplyAsync($"Giveaway not found");
+                Giveaways.JoinGiveaway(game, Context.User.Id);
+                await ReplyAsync($"**{Context.User.Username}** joined the Giveaway **{game}**.");
             }
 
             [Command("draw")]
             [Summary("Draws a winner.")]
             public async Task draw([Remainder]string game)
             {
-                game = game.ToLower();
-                if(GiveAways.ContainsKey(game))
-                    if(GiveAways[game].First().Equals(Context.User.Id))
-                        if(GiveAways[game].Count > 1){
-                            await ReplyAsync($"{GiveAways[game].Select(x => Program.client.GetUser(x).Mention).ToList()[StaticBase.ran.Next(1, GiveAways[game].Count)]} won {game}.");
-                            GiveAways.Remove(game);
-                        }
-                        else
-                            await ReplyAsync("There is nobody to draw.");
-                    else
-                        await ReplyAsync("Only the creator can draw.");
-                else 
-                    await ReplyAsync($"Giveaway not found");
+                if(Giveaways.Giveaways[game.ToLower()].First().Equals(Context.User.Id))
+                    await ReplyAsync($"{Program.client.GetUser(Giveaways.DrawGiveaway(game)).Mention} won {game}.");
+                else
+                    await ReplyAsync("Only the creator can draw.");
             }
         }
 
