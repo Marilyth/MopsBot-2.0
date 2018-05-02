@@ -129,7 +129,7 @@ namespace MopsBot
                     MemberSet.Add(curUser.Id);
                 }
             }
-            await Program.client.SetActivityAsync(new Game($"to {MemberSet.Count} people", ActivityType.Listening));
+            await Program.client.SetActivityAsync(new Game($"{MemberSet.Count} people", ActivityType.Listening));
         }
     }
 }
