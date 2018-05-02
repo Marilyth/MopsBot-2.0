@@ -21,7 +21,6 @@ namespace MopsBot
         public static Random ran = new Random();
         public static List<IdleDungeon> dungeonCrawler = new List<IdleDungeon>();
         public static Gfycat.GfycatClient gfy;
-        public static List<ulong> BotManager = new List<ulong>();
         public static List<string> playlist = new List<string>();
         public static HashSet<ulong> MemberSet;
         public static Dictionary<ulong, string> guildPrefix;
@@ -29,15 +28,8 @@ namespace MopsBot
         public static Poll poll;
         public static Blackjack blackjack;
         public static Crosswords crosswords;
-        public static ClipTracker ClipTracker;/*
-        public static TrackerHandler<OsuTracker> osuTracker;
-        public static TrackerHandler<TwitchTracker> streamTracks;
-        public static TrackerHandler<TwitterTracker> twitterTracks;
-        public static TrackerHandler<OverwatchTracker> OverwatchTracks;
-        public static TrackerHandler<YoutubeTracker> YoutubeTracks;
-*/
+        public static ClipTracker ClipTracker;
         public static Dictionary<string, TrackerWrapper> trackers;
-
         public static bool init = false;
 
         /// <summary>
@@ -47,17 +39,12 @@ namespace MopsBot
         {
             if (!init)
             {
-                Auth.SetUserCredentials(Program.twitterAuth[0], Program.twitterAuth[1], Program.twitterAuth[2], Program.twitterAuth[3]);
+                Auth.SetUserCredentials(Program.Config["TwitterKey"], Program.Config["TwitterSecret"], 
+                                        Program.Config["TwitterToken"], Program.Config["TwitterAccessSecret"]);
                 TweetinviConfig.CurrentThreadSettings.TweetMode = TweetMode.Extended;
                 TweetinviConfig.ApplicationSettings.TweetMode = TweetMode.Extended;
-                StaticBase.gfy = new Gfycat.GfycatClient(Program.gfyAuth[0], Program.gfyAuth[1]);
+                gfy = new Gfycat.GfycatClient(Program.Config["GfyID"], Program.Config["GfySecret"]);
 
-/*
-                OverwatchTracks = new TrackerHandler<OverwatchTracker>();
-                streamTracks = new TrackerHandler<TwitchTracker>();
-                twitterTracks = new TrackerHandler<TwitterTracker>();
-                YoutubeTracks = new TrackerHandler<YoutubeTracker>();
-                osuTracker = new TrackerHandler<OsuTracker>(); */
                 ClipTracker = new ClipTracker();
                 
                 trackers = new Dictionary<string, Data.TrackerWrapper>();

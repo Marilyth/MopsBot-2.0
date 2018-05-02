@@ -13,6 +13,7 @@ using Discord.WebSocket;
 using Discord.Commands;
 using System.Threading;
 using System.Net;
+using Newtonsoft.Json;
 
 namespace MopsBot
 {
@@ -25,8 +26,7 @@ namespace MopsBot
 
         }
         public static DiscordSocketClient client;
-        public static string twitchId, youtubeKey;
-        public static string[] twitterAuth, gfyAuth;
+        public static Dictionary<string, string> Config;
         private CommandHandler handler;
 
         public async Task Start()
@@ -36,15 +36,10 @@ namespace MopsBot
                 LogLevel = LogSeverity.Info,
             });
 
-            StreamReader sr = new StreamReader(new FileStream("mopsdata//config.txt", FileMode.Open));
+            using(StreamReader sr = new StreamReader(new FileStream("mopsdata//Config.json", FileMode.Open)))
+                Config = JsonConvert.DeserializeObject<Dictionary<string, string>>(sr.ReadToEnd());
 
-            var token = sr.ReadLine();
-            twitchId = sr.ReadLine();
-            twitterAuth = sr.ReadLine().Split(",");
-            youtubeKey = sr.ReadLine();
-            gfyAuth = sr.ReadLine().Split(",");
-
-            await client.LoginAsync(TokenType.Bot, token);
+            await client.LoginAsync(TokenType.Bot, Config["Discord"]);
             await client.StartAsync();
 
             client.Log += Client_Log;
@@ -59,14 +54,6 @@ namespace MopsBot
 
             handler = new CommandHandler();
             await handler.Install(provider);
-
-            var ids = sr.ReadLine();
-            foreach (var id in ids.Split(':'))
-            {
-                StaticBase.BotManager.Add(ulong.Parse(id));
-            }
-
-            sr.Dispose();
 
             await Task.Delay(-1);
         }

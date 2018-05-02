@@ -43,7 +43,7 @@ namespace MopsBot.Data.Tracker
             //Check if person exists by forcing Exceptions if not.
             try
             {
-                string query = MopsBot.Module.Information.ReadURLAsync($"https://api.twitch.tv/kraken/channels/{Name}?client_id={Program.twitchId}").Result;
+                string query = MopsBot.Module.Information.ReadURLAsync($"https://api.twitch.tv/kraken/channels/{Name}?client_id={Program.Config["Twitch"]}").Result;
                 Channel checkExists = JsonConvert.DeserializeObject<Channel>(query);
                 var test = checkExists.broadcaster_language;
             }
@@ -113,7 +113,7 @@ namespace MopsBot.Data.Tracker
 
         private async Task<TwitchResult> streamerInformation()
         {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://api.twitch.tv/kraken/streams/{Name}?client_id={Program.twitchId}");
+            string query = await MopsBot.Module.Information.ReadURLAsync($"https://api.twitch.tv/kraken/streams/{Name}?client_id={Program.Config["Twitch"]}");
 
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {
@@ -130,7 +130,7 @@ namespace MopsBot.Data.Tracker
 
         private async static Task<TwitchResult> streamerInformation(string name)
         {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://api.twitch.tv/kraken/streams/{name}?client_id={Program.twitchId}");
+            string query = await MopsBot.Module.Information.ReadURLAsync($"https://api.twitch.tv/kraken/streams/{name}?client_id={Program.Config["Twitch"]}");
 
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {

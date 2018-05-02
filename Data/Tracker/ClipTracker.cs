@@ -115,7 +115,7 @@ namespace MopsBot.Data.Tracker
             {
                 var request = (System.Net.HttpWebRequest)System.Net.WebRequest.Create($"https://api.twitch.tv/kraken/clips/top?channel={channel}&period=day&limit=100" + ((cursor != "") ? $"&cursor={cursor}" : ""));
                 request.Headers["Accept"] = "application/vnd.twitchtv.v5+json";
-                request.Headers["Client-ID"] = Program.twitchId;
+                request.Headers["Client-ID"] = Program.Config["Twitch"];
                 using (var response = request.GetResponseAsync().Result)
                 using (var content = response.GetResponseStream())
                 using (var reader = new System.IO.StreamReader(content))

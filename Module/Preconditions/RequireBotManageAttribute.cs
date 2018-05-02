@@ -1,6 +1,7 @@
 using Discord.Commands;
 using Discord.WebSocket;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using System;
 
 namespace MopsBot.Module.Preconditions{
@@ -9,7 +10,7 @@ namespace MopsBot.Module.Preconditions{
     {
         public async override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services)
         {
-            if(StaticBase.BotManager.Contains(context.User.Id)||context.User.Id.Equals((await Program.client.GetApplicationInfoAsync()).Owner.Id))
+            if(new List<string>(Program.Config["BotManager"].Split(":")).Contains(context.User.Id.ToString())||context.User.Id.Equals((await Program.client.GetApplicationInfoAsync()).Owner.Id))
                 return PreconditionResult.FromSuccess();
             return PreconditionResult.FromError("you need to develope the bot to use this command");
         }

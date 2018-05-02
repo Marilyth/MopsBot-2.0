@@ -40,7 +40,7 @@ namespace MopsBot.Data.Tracker
 
         private async Task<YoutubeResult> fetchVideos()
         {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://www.googleapis.com/youtube/v3/search?key={Program.youtubeKey}&channelId={Name}&part=snippet,id&order=date&maxResults=20&publishedAfter={LastTime}");
+            string query = await MopsBot.Module.Information.ReadURLAsync($"https://www.googleapis.com/youtube/v3/search?key={Program.Config["Youtube"]}&channelId={Name}&part=snippet,id&order=date&maxResults=20&publishedAfter={LastTime}");
 
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {
@@ -54,7 +54,7 @@ namespace MopsBot.Data.Tracker
 
         private async Task<YoutubeChannelResult> fetchChannel()
         {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://www.googleapis.com/youtube/v3/channels?part=snippet&id={Name}&key={Program.youtubeKey}");
+            string query = await MopsBot.Module.Information.ReadURLAsync($"https://www.googleapis.com/youtube/v3/channels?part=snippet&id={Name}&key={Program.Config["Youtube"]}");
 
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {
