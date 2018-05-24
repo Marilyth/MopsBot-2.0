@@ -27,9 +27,10 @@ namespace MopsBot.Module
         [Summary("Provides link to make me join your Server")]
         public async Task joinServer()
         {
-            await ReplyAsync($"https://discordapp.com/oauth2/authorize?client_id={Context.Client.CurrentUser.Id}&scope=bot");
+            await ReplyAsync($"https://discordapp.com/oauth2/authorize?client_id={Context.Client.CurrentUser.Id}&permissions=271707136&scope=bot");
         }
 
+/*
         [Command("define")]
         [Summary("Searches dictionaries for a definition of the specified word or expression")]
         public async Task define([Remainder] string text)
@@ -50,6 +51,7 @@ namespace MopsBot.Module
                 Console.WriteLine($"[ERROR] by define at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
             }
         }
+*/
 
         [Command("translate")]
         [Summary("Translates your text from srcLanguage to tgtLanguage.")]
