@@ -28,6 +28,7 @@ namespace MopsBot
         public static DiscordSocketClient client;
         public static Dictionary<string, string> Config;
         private CommandHandler handler;
+        private ReactionHandler reactionHandler;
 
         public async Task Start()
         {
@@ -54,6 +55,9 @@ namespace MopsBot
 
             handler = new CommandHandler();
             await handler.Install(provider);
+
+            reactionHandler = new ReactionHandler();
+            await reactionHandler.Install(provider);
 
             await Task.Delay(-1);
         }
