@@ -58,7 +58,8 @@ namespace MopsBot{
             else   
                 messageFunctions.Add(message, new Dictionary<IEmote, Func<ReactionHandlerContext, Task>>{{emote, function}});
             // await populate(message);
-            await message.AddReactionAsync(emote);
+            if(!emote.Equals(defaultEmote))
+                await message.AddReactionAsync(emote);
         }
 
         public async void addHandler(IUserMessage message, Dictionary<IEmote, Func<ReactionHandlerContext, Task>> functions, bool clear=false){

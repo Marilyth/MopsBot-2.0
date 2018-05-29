@@ -158,7 +158,7 @@ namespace MopsBot.Module
         public async Task test()
         {
             var message = ReplyAsync("test").Result;
-            Program.reactionHandler.addHandler(message, x => (x.message.ModifyAsync(y=>y.Content = x.emote.Name)));
+            Program.reactionHandler.addHandler(message, x => (x.message.ModifyAsync(y=>y.Content = x.emote.ToString())));
         }
         [Command("test2")]
         [Hide]
