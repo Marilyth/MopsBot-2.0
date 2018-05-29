@@ -105,9 +105,9 @@ namespace MopsBot.Data
                     foreach(var channel in Giveaways){
                         foreach(var message in channel.Value){
                             var textmessage = (IUserMessage)((ITextChannel)Program.client.GetChannel(channel.Key)).GetMessageAsync(message.Key).Result;
-                            Program.reactionHandler.addHandler(textmessage, new Emoji("➕"), JoinGiveaway).RunSynchronously();
-                            Program.reactionHandler.addHandler(textmessage, new Emoji("➖"), LeaveGiveaway).RunSynchronously();
-                            Program.reactionHandler.addHandler(textmessage, new Emoji("🎁"), DrawGiveaway).RunSynchronously();
+                            Program.reactionHandler.addHandler(textmessage, new Emoji("➕"), JoinGiveaway).Wait();
+                            Program.reactionHandler.addHandler(textmessage, new Emoji("➖"), LeaveGiveaway).Wait();
+                            Program.reactionHandler.addHandler(textmessage, new Emoji("🎁"), DrawGiveaway).Wait();
                         }
                     }
                 }
@@ -190,8 +190,8 @@ namespace MopsBot.Data
                 await context.channel.SendMessageAsync($"{context.channel.GetUserAsync(winner).Result.Mention} won the "
                                                       + $"`{context.message.Embeds.First().Title}`");
 
-                Giveaways[context.channel.Id].Remove(context.message.Id);
-
+                if(Giveaways[context.channel.Id].Count == 1) Giveaways.Remove(context.channel.Id);
+                else Giveaways[context.channel.Id].Remove(context.message.Id);
                 SaveJson();
             }
         }
