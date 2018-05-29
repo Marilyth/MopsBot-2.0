@@ -95,27 +95,7 @@ namespace MopsBot.Module
             [Summary("Creates giveaway.")]
             public async Task create([Remainder]string game)
             {
-                Giveaways.AddGiveaway(game.ToLower());
-                Giveaways.JoinGiveaway(game.ToLower(), Context.User.Id);
-                await ReplyAsync($"Giveaway for {game} created.\nPlease join by using `!Giveaway join {game}`");
-            }
-
-            [Command("join")]
-            [Summary("Joins giveaway.")]
-            public async Task join([Remainder]string game)
-            {
-                Giveaways.JoinGiveaway(game.ToLower(), Context.User.Id);
-                await ReplyAsync($"**{Context.User.Username}** joined the Giveaway **{game}**.");
-            }
-
-            [Command("draw")]
-            [Summary("Draws a winner.")]
-            public async Task draw([Remainder]string game)
-            {
-                if(Giveaways.Giveaways[game.ToLower()].First().Equals(Context.User.Id))
-                    await ReplyAsync($"{Program.client.GetUser(Giveaways.DrawGiveaway(game)).Mention} won {game}.");
-                else
-                    await ReplyAsync("Only the creator can draw.");
+                await ReactGiveaways.AddGiveaway(Context.Channel, game, Context.User);
             }
         }
 

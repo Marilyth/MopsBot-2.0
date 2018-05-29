@@ -13,6 +13,7 @@ namespace MopsBot{
         public IUserMessage cachedMessage {get {return messageCache.GetOrDownloadAsync().Result;}}
         public IUserMessage message {get {return messageCache.DownloadAsync().Result;}}
         public IEmote emote;
+        public SocketReaction reaction;
     }
     public class ReactionHandler{
         private DiscordSocketClient client;
@@ -35,9 +36,10 @@ namespace MopsBot{
             
             IUserMessage message = messageCache.DownloadAsync().Result;
             ReactionHandlerContext context = new ReactionHandlerContext();
-            context.channel=channel;
-            context.messageCache=messageCache;
-            context.emote=reaction.Emote;
+            context.channel = channel;
+            context.messageCache = messageCache;
+            context.emote = reaction.Emote;
+            context.reaction = reaction;
 
             if(messageFunctions.Any(x => x.Key.Id.Equals(message.Id))){
                 if(messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.ContainsKey(reaction.Emote))
@@ -48,13 +50,13 @@ namespace MopsBot{
             }
         }
 
-        public void addHandler(IUserMessage message, Func<ReactionHandlerContext, Task> function, bool clear=false){
-            addHandler(message, defaultEmote, function, clear);
+        public async Task addHandler(IUserMessage message, Func<ReactionHandlerContext, Task> function, bool clear=false){
+            await addHandler(message, defaultEmote, function, clear);
         }
 
-        public async void addHandler(IUserMessage message, IEmote emote, Func<ReactionHandlerContext, Task> function, bool clear=false){
+        public async Task addHandler(IUserMessage message, IEmote emote, Func<ReactionHandlerContext, Task> function, bool clear=false){
             if(clear)
-                clearHandler(message);
+                await clearHandler(message);
             if(messageFunctions.Any(x => x.Key.Id.Equals(message.Id)))
                 messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value[emote]=function;
             else   
@@ -64,9 +66,9 @@ namespace MopsBot{
                 await message.AddReactionAsync(emote);
         }
 
-        public async void addHandler(IUserMessage message, Dictionary<IEmote, Func<ReactionHandlerContext, Task>> functions, bool clear=false){
+        public async Task addHandler(IUserMessage message, Dictionary<IEmote, Func<ReactionHandlerContext, Task>> functions, bool clear=false){
             if(clear)
-                clearHandler(message);
+                await clearHandler(message);
             if(messageFunctions.Any(x => x.Key.Id.Equals(message.Id)))
                 foreach(var pair in functions)
                     messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value[pair.Key]=pair.Value;
@@ -78,17 +80,18 @@ namespace MopsBot{
             }
         }
 
-        public void clearHandler(IUserMessage message){
-            messageFunctions.Remove(message);
-            message.RemoveAllReactionsAsync();
+        public async Task clearHandler(IUserMessage message){
+            if(messageFunctions.Any(x => x.Key.Id.Equals(message.Id)))
+                messageFunctions.Remove(messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Key);
+            await message.RemoveAllReactionsAsync();
         }
 
-        public void removeHandler(IUserMessage message, IEmote emote){
+        public async Task removeHandler(IUserMessage message, IEmote emote){
             if(messageFunctions.Any(x => x.Key.Id.Equals(message.Id))){
                 messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.Remove(emote);
                 if(!messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.Any())
                     messageFunctions.Remove(message);
-                message.RemoveReactionAsync(emote, client.CurrentUser);
+                await message.RemoveReactionAsync(emote, client.CurrentUser);
             }
         }
 

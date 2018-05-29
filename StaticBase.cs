@@ -25,6 +25,7 @@ namespace MopsBot
         public static HashSet<ulong> MemberSet;
         public static Dictionary<ulong, string> guildPrefix;
         public static Giveaway Giveaways = new Giveaway();
+        public static ReactionGiveaway ReactGiveaways = new ReactionGiveaway();
         public static Poll poll;
         public static Blackjack blackjack;
         public static Crosswords crosswords;
