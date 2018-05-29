@@ -27,8 +27,8 @@ namespace MopsBot
         }
         public static DiscordSocketClient client;
         public static Dictionary<string, string> Config;
-        private CommandHandler handler;
-        public static ReactionHandler reactionHandler;
+        public static CommandHandler handler {get; private set;}
+        public static ReactionHandler reactionHandler {get; private set;}
 
         public async Task Start()
         {

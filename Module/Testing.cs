@@ -11,16 +11,21 @@ namespace MopsBot.Module{
     public class Testing : ModuleBase{
 
         [Command("test")]
-        public async Task test()
+        public async Task test(){
+            Program.handler.commands.Commands.Where(x => x.Module.Name.Equals("Testing") && !x.Name.Equals("test")).ToList().ForEach(async x => {;
+                await Program.handler.execCommand(x, Context, "");
+            });
+        }
+
+        [Command("test1")]
+        public async Task test1()
         {
-            var message = ReplyAsync("test").Result;
-            Program.reactionHandler.addHandler(message, x => (x.cachedMessage.ModifyAsync(y=>y.Content = x.emote.ToString())));
+            Program.reactionHandler.addHandler(await ReplyAsync("test"), x => (x.cachedMessage.ModifyAsync(y=>y.Content = x.emote.ToString())));
         }
         [Command("test2")]
         public async Task test2()
         {
-            var message = ReplyAsync("💧").Result;
-            Program.reactionHandler.addHandler(message, new Emoji("🔥"), test2Funciton);
+            Program.reactionHandler.addHandler(await ReplyAsync("💧"), new Emoji("🔥"), test2Funciton);
         }
 
         private async Task test2Funciton(ReactionHandlerContext context){
@@ -36,8 +41,7 @@ namespace MopsBot.Module{
 
         [Command("test3")]
         public async Task test3(){
-            var message = ReplyAsync("a").Result;
-            Program.reactionHandler.addHandler(message, new Emoji("🔁"), test3Funciton);
+            Program.reactionHandler.addHandler(await ReplyAsync("a"), new Emoji("🔁"), test3Funciton);
         }
 
         private async Task test3Funciton(ReactionHandlerContext context){
@@ -52,8 +56,7 @@ namespace MopsBot.Module{
 
         [Command("test4")]
         public async Task test4(){
-            var message = ReplyAsync("🇦").Result;
-            Program.reactionHandler.addHandler(message, new Dictionary<IEmote, Func<ReactionHandlerContext, Task>>
+            Program.reactionHandler.addHandler(await ReplyAsync("🇦"), new Dictionary<IEmote, Func<ReactionHandlerContext, Task>>
             {
                 { new Emoji("🇦"), test4A},
                 { new Emoji("🇧"), test4B}
@@ -71,10 +74,7 @@ namespace MopsBot.Module{
 
         [Command("test5")]
         public async Task test5(){
-            Program.reactionHandler.addHandler(ReplyAsync("a").Result, new Dictionary<IEmote, Func<ReactionHandlerContext, Task>>
-            {
-                { new Emoji("⏯"), test5Function},
-            });
+            Program.reactionHandler.addHandler(await ReplyAsync("a"), new Emoji("⏯"), test5Function);
         }
 
         private async Task test5Function(ReactionHandlerContext context){
