@@ -23,72 +23,89 @@ namespace MopsBot{
             client = _provider.GetService<DiscordSocketClient>();
             
             client.ReactionAdded +=Client_ReactionAdded;
+
+            messageFunctions = new Dictionary<IUserMessage, Dictionary<IEmote, Func<ReactionHandlerContext, Task>>>();
         }
 
         private async Task Client_ReactionAdded(Cacheable<IUserMessage, ulong> messageCache, ISocketMessageChannel channel, SocketReaction reaction){
-            if(!messageCache.HasValue)
-                await messageCache.DownloadAsync();
-
-            IUserMessage message = messageCache.Value;
+            if(reaction.UserId.Equals(client.CurrentUser.Id))
+                return;
+            
+            IUserMessage message = messageCache.DownloadAsync().Result;
             ReactionHandlerContext context = new ReactionHandlerContext();
             context.channel=channel;
             context.message=message;
             context.emote=reaction.Emote;
 
-            if(messageFunctions.ContainsKey(message))
-                if(messageFunctions[message].ContainsKey(reaction.Emote))
-                    await messageFunctions[message][reaction.Emote](context);
-                else if(messageFunctions[message].ContainsKey(defaultEmote))
-                    await messageFunctions[message][defaultEmote](context);
-
-            await message.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
+            if(messageFunctions.Any(x => x.Key.Id.Equals(message.Id))){
+                if(messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.ContainsKey(reaction.Emote))
+                    await messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value[reaction.Emote](context);
+                else if(messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.ContainsKey(defaultEmote))
+                    await messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value[defaultEmote](context);
+                await message.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
+            }
         }
 
         public void addHandler(IUserMessage message, Func<ReactionHandlerContext, Task> function, bool clear=false){
-            if(clear)
-                clearHandler(message);
-            if(messageFunctions.ContainsKey(message))
-                messageFunctions[message][defaultEmote]=function;
-            else   
-                messageFunctions[message]=new Dictionary<IEmote, Func<ReactionHandlerContext, Task>>{{defaultEmote, function}};
-            populate(message);
+            addHandler(message, defaultEmote, function, clear);
         }
 
-        public void addHandler(IUserMessage message, Dictionary<IEmote, Func<ReactionHandlerContext, Task>> functions, bool clear=false){
+        public async void addHandler(IUserMessage message, IEmote emote, Func<ReactionHandlerContext, Task> function, bool clear=false){
             if(clear)
                 clearHandler(message);
-            if(messageFunctions.ContainsKey(message))
-                foreach(var pair in functions)
-                    messageFunctions[message][pair.Key]=pair.Value;
+            if(messageFunctions.Any(x => x.Key.Id.Equals(message.Id)))
+                messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value[emote]=function;
             else   
-                messageFunctions[message]=functions;
-            populate(message);
+                messageFunctions.Add(message, new Dictionary<IEmote, Func<ReactionHandlerContext, Task>>{{emote, function}});
+            // await populate(message);
+            await message.AddReactionAsync(emote);
+        }
+
+        public async void addHandler(IUserMessage message, Dictionary<IEmote, Func<ReactionHandlerContext, Task>> functions, bool clear=false){
+            if(clear)
+                clearHandler(message);
+            if(messageFunctions.Any(x => x.Key.Id.Equals(message.Id)))
+                foreach(var pair in functions)
+                    messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value[pair.Key]=pair.Value;
+            else   
+                messageFunctions.Add(message, functions);
+            // await populate(message);
+            foreach(var pair in functions){
+                await message.AddReactionAsync(pair.Key);
+            }
         }
 
         public void clearHandler(IUserMessage message){
             messageFunctions.Remove(message);
-            populate(message);
+            message.RemoveAllReactionsAsync();
         }
 
-        public void removeHander(IUserMessage message, IEmote emote){
-            if(messageFunctions.ContainsKey(message)){
-                messageFunctions[message].Remove(emote);
-                if(!messageFunctions[message].Any())
+        public void removeHandler(IUserMessage message, IEmote emote){
+            if(messageFunctions.Any(x => x.Key.Id.Equals(message.Id))){
+                messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.Remove(emote);
+                if(!messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.Any())
                     messageFunctions.Remove(message);
+                message.RemoveReactionAsync(emote, client.CurrentUser);
             }
-            populate(message);
         }
 
         public Dictionary<IEmote, Func<ReactionHandlerContext, Task>> getHandler(IUserMessage message){
-            return messageFunctions[message];
+            return messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value;
         }
 
         public async Task populate(IUserMessage message){
-            if(messageFunctions.ContainsKey(message)){
-                await message.RemoveAllReactionsAsync();
-                foreach(var pair in messageFunctions[message].Where(x => x.Key!=defaultEmote)){
-                    await message.AddReactionAsync(pair.Key);
+            if(messageFunctions.Any(x => x.Key.Id.Equals(message.Id))){
+                IEnumerable<IEmote> remove = message.Reactions.Where(x => messageFunctions.First(w => w.Key.Id.Equals(message.Id)).Value.Any(y => x.Key.Name == y.Key.Name)).Select(z=>z.Key);
+                IEnumerable<IEmote> add = messageFunctions.First(w => w.Key.Id.Equals(message.Id)).Value.Where(x => message.Reactions.Any(y => x.Key.Name == y.Key.Name)).Select(z=>z.Key);
+
+                foreach(var item in remove){
+                    await message.RemoveReactionAsync(item, client.CurrentUser);
                 }
+
+                foreach(var item in add){
+                    await message.AddReactionAsync(item);
+                }
+            }
         }
     }
 }

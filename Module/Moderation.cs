@@ -152,5 +152,68 @@ namespace MopsBot.Module
             Environment.Exit(0);
             return Task.CompletedTask;
         }
+
+        [Command("test")]
+        [Hide]
+        public async Task test()
+        {
+            var message = ReplyAsync("test").Result;
+            Program.reactionHandler.addHandler(message, x => (x.message.ModifyAsync(y=>y.Content = x.emote.Name)));
+        }
+        [Command("test2")]
+        [Hide]
+        public async Task test2()
+        {
+            var message = ReplyAsync("💧").Result;
+            Program.reactionHandler.addHandler(message, new Emoji("🔥"), test2Funciton);
+        }
+
+        private async Task test2Funciton(ReactionHandlerContext context){
+            switch (context.emote.Name){
+                case "🔥":await context.message.ModifyAsync(x=> x.Content = "🔥");
+                            Program.reactionHandler.addHandler(context.message, new Emoji("💧"), test2Funciton, true);
+                            break;
+                case "💧": await context.message.ModifyAsync(x=> x.Content = "💧");
+                            Program.reactionHandler.addHandler(context.message, new Emoji("🔥"), test2Funciton, true);
+                            break;
+            }
+        } 
+
+        [Command("test3")]
+        [Hide]
+        public async Task test3(){
+            var message = ReplyAsync("a").Result;
+            Program.reactionHandler.addHandler(message, new Emoji("🔁"), test3Funciton);
+        }
+
+        private async Task test3Funciton(ReactionHandlerContext context){
+            switch( context.message.Content){
+                case "a": await context.message.ModifyAsync(x => x.Content = "b");
+                            Program.reactionHandler.addHandler(context.message, new Emoji("🔁"), test3Funciton);
+                            break;
+                case "b": await context.message.ModifyAsync(x => x.Content= "a");
+                            break;
+            }
+        }
+
+        [Command("test4")]
+        [Hide]
+        public async Task test4(){
+            var message = ReplyAsync("🇦").Result;
+            Program.reactionHandler.addHandler(message, new Dictionary<IEmote, Func<ReactionHandlerContext, Task>>
+            {
+                { new Emoji("🇦"), test4A},
+                { new Emoji("🇧"), test4B}
+            });
+        }
+
+        private  async Task test4A(ReactionHandlerContext context){
+            if(!context.message.Content.Equals("🇦"))
+                await context.message.ModifyAsync(x => x.Content = "🇦");
+        }
+        private async Task test4B(ReactionHandlerContext context){
+            if(!context.message.Content.Equals("🇧"))
+                await context.message.ModifyAsync(x => x.Content = "🇧");
+        }
     }
 }
