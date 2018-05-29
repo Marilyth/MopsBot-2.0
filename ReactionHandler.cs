@@ -9,7 +9,9 @@ using System.Linq;
 namespace MopsBot{
     public class ReactionHandlerContext{
         public ISocketMessageChannel channel;
-        public IUserMessage message;
+        public Cacheable<IUserMessage, ulong> messageCache;
+        public IUserMessage cachedMessage {get {return messageCache.GetOrDownloadAsync().Result;}}
+        public IUserMessage message {get {return messageCache.DownloadAsync().Result;}}
         public IEmote emote;
     }
     public class ReactionHandler{
@@ -34,7 +36,7 @@ namespace MopsBot{
             IUserMessage message = messageCache.DownloadAsync().Result;
             ReactionHandlerContext context = new ReactionHandlerContext();
             context.channel=channel;
-            context.message=message;
+            context.messageCache=messageCache;
             context.emote=reaction.Emote;
 
             if(messageFunctions.Any(x => x.Key.Id.Equals(message.Id))){
