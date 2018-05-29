@@ -25,7 +25,7 @@ namespace MopsBot
         public static HashSet<ulong> MemberSet;
         public static Dictionary<ulong, string> guildPrefix;
         public static Giveaway Giveaways = new Giveaway();
-        public static ReactionGiveaway ReactGiveaways = new ReactionGiveaway();
+        public static ReactionGiveaway ReactGiveaways;
         public static Poll poll;
         public static Blackjack blackjack;
         public static Crosswords crosswords;
@@ -40,6 +40,8 @@ namespace MopsBot
         {
             if (!init)
             {
+                ReactGiveaways = new ReactionGiveaway();
+                
                 Auth.SetUserCredentials(Program.Config["TwitterKey"], Program.Config["TwitterSecret"], 
                                         Program.Config["TwitterToken"], Program.Config["TwitterAccessSecret"]);
                 TweetinviConfig.CurrentThreadSettings.TweetMode = TweetMode.Extended;
