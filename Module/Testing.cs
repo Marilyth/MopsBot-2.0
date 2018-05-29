@@ -4,8 +4,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using MopsBot.Module.Preconditions;
 
 namespace MopsBot.Module{
+    [Hide]
     public class Testing : ModuleBase{
 
         [Command("test")]

@@ -149,9 +149,9 @@ namespace MopsBot
             {
                 output += "For more information regarding a specific command, please use ?<command>";
 
-                foreach (var module in commands.Modules)
+                foreach (var module in commands.Modules.Where(x=> !x.Preconditions.OfType<HideAttribute>().Any()))
                 {
-                    if (module.IsSubmodule)
+                    if (module.IsSubmodule && !module.Preconditions.OfType<HideAttribute>().Any())
                     {
                         output += $"`{module.Name}*` ";
                     }
