@@ -187,6 +187,15 @@ namespace MopsBot.Data
                 f.Delete();
         }
 
+        public void Recolour(){
+            foreach(var game in series){
+                OxyColor newColour = OxyColor.FromRgb((byte)StaticBase.ran.Next(30, 220), (byte)StaticBase.ran.Next(30, 220), (byte)StaticBase.ran.Next(30, 220));
+                foreach(var gameReoccurence in game.Value){
+                    gameReoccurence.Color = newColour;
+                }
+            }
+        }
+
         public static string CreateBarDiagram<T>(int count, Func<T, int> stat, Func<T, string> id, List<T> toSort)
         {
             var sortedList = (from entry in toSort orderby stat(entry) descending select entry).Take(count).ToArray();

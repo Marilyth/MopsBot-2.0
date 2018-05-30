@@ -25,9 +25,17 @@ namespace MopsBot.Data.Tracker
         {
         }
 
-        public override void PostInitialisation()
+        public async override void PostInitialisation()
         {
             viewerGraph = new Plot(Name, "Time In Minutes", "Viewers", IsOnline);
+            foreach(var channelMessage in ToUpdate){
+                await setReaction((IUserMessage)((ITextChannel)Program.client.GetChannel(channelMessage.Key)).GetMessageAsync(channelMessage.Value).Result);
+            }
+        }
+
+        public async Task setReaction(IUserMessage message){
+            await message.RemoveAllReactionsAsync();
+            await Program.reactionHandler.addHandler(message, new Emoji("🖌"), recolour);
         }
 
         public TwitchTracker(string streamerName) : base(60000, 0)
@@ -171,6 +179,13 @@ namespace MopsBot.Data.Tracker
             e.AddField("Viewers", StreamerStatus.stream.viewers, true);
 
             return e.Build();
+        }
+
+        private async Task recolour(ReactionHandlerContext context){
+            viewerGraph.Recolour();
+
+            foreach (ulong channel in ChannelIds)
+                await OnMajorChangeTracked(channel, createEmbed());
         }
     }
 }

@@ -134,7 +134,9 @@ namespace MopsBot.Data
                     });
 
                 else{
-                    parentHandle.ToUpdate.Add(channelID, ((Discord.WebSocket.SocketTextChannel)Program.client.GetChannel(channelID)).SendMessageAsync(notification, embed:embed).Result.Id);
+                    var message = await ((Discord.WebSocket.SocketTextChannel)Program.client.GetChannel(channelID)).SendMessageAsync(notification, embed:embed);
+                    parentHandle.ToUpdate.Add(channelID, message.Id);
+                    await parentHandle.setReaction((IUserMessage)message);
                     SaveJson();
                 }
             }
