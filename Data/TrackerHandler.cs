@@ -57,12 +57,17 @@ namespace MopsBot.Data
 
         public override void removeTracker(string name, ulong channelID){
             if(trackers.ContainsKey(name) && trackers[name].ChannelIds.Contains(channelID)){
+                if(trackers.First().Value.GetType() == typeof(Tracker.TwitchTracker))
+                        foreach(var channel in (trackers[name] as Tracker.TwitchTracker).ToUpdate.Where(x => x.Key.Equals(channelID)))
+                            Program.reactionHandler.clearHandler((IUserMessage)((ITextChannel)Program.client.GetChannel(channelID)).GetMessageAsync(channel.Value).Result).Wait();
+
                 if(trackers[name].ChannelIds.Count > 1){
                     trackers[name].ChannelIds.Remove(channelID);
                     if(trackers.First().Value.GetType() == typeof(Tracker.TwitchTracker)){
                         (trackers[name] as Tracker.TwitchTracker).ChannelMessages.Remove(channelID);
                     }
                 }
+
                 else{
                     trackers[name].Dispose();
                     trackers.Remove(name);
