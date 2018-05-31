@@ -17,7 +17,7 @@ namespace MopsBot
     {
         public CommandService commands{get; private set;}
         private DiscordSocketClient client;
-        private IServiceProvider _provider;
+        public IServiceProvider _provider{get; private set;}
 
         /// <summary>
         /// Add command/module Service and create Events
@@ -240,16 +240,5 @@ namespace MopsBot
                 }
             }
         }
-
-        public async Task execCommand(CommandInfo command, ICommandContext context, string args){
-            var preconditionResult = await command.CheckPreconditionsAsync(context, _provider).ConfigureAwait(false);
-            var commandMatch = new CommandMatch(command, "");
-            if(!preconditionResult.IsSuccess)   
-                return;
-            var parseResult = await commandMatch.ParseAsync(context, SearchResult.FromSuccess(args, new List<CommandMatch>{new CommandMatch(command, "")}) ,preconditionResult, _provider).ConfigureAwait(false);
-            await command.ExecuteAsync(context, parseResult, _provider);
-        }
-
-        
     }
 }

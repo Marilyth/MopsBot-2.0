@@ -12,8 +12,13 @@ namespace MopsBot.Module{
 
         [Command("test")]
         public async Task test(){
-            Program.handler.commands.Commands.Where(x => x.Module.Name.Equals("Testing") && !x.Name.Equals("test")).ToList().ForEach(async x => {;
-                await Program.handler.execCommand(x, Context, "");
+            Program.handler.commands.Commands.Where(x => x.Module.Name.Equals("Testing") && !x.Name.Equals("test")).ToList().ForEach(async command => {;
+                var preconditionResult = await command.CheckPreconditionsAsync(Context, Program.handler._provider).ConfigureAwait(false);
+                var commandMatch = new CommandMatch(command, "");
+                if(!preconditionResult.IsSuccess)   
+                    return;
+                var parseResult = await commandMatch.ParseAsync(Context, SearchResult.FromSuccess("", new List<CommandMatch>{new CommandMatch(command, "")}) ,preconditionResult, Program.handler._provider).ConfigureAwait(false);
+                await command.ExecuteAsync(Context, parseResult, Program.handler._provider);
             });
         }
 
