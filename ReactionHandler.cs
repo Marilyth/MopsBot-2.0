@@ -99,19 +99,19 @@ namespace MopsBot{
             return messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value;
         }
 
-        public async Task populate(IUserMessage message){
-            if(messageFunctions.Any(x => x.Key.Id.Equals(message.Id))){
-                IEnumerable<IEmote> remove = message.Reactions.Where(x => messageFunctions.First(w => w.Key.Id.Equals(message.Id)).Value.Any(y => x.Key.Name == y.Key.Name)).Select(z=>z.Key);
-                IEnumerable<IEmote> add = messageFunctions.First(w => w.Key.Id.Equals(message.Id)).Value.Where(x => message.Reactions.Any(y => x.Key.Name == y.Key.Name)).Select(z=>z.Key);
+        // public async Task populate(IUserMessage message){
+        //     if(messageFunctions.Any(x => x.Key.Id.Equals(message.Id))){
+        //         IEnumerable<IEmote> remove = message.Reactions.Where(x => messageFunctions.First(w => w.Key.Id.Equals(message.Id)).Value.Any(y => x.Key.Name == y.Key.Name)).Select(z=>z.Key);
+        //         IEnumerable<IEmote> add = messageFunctions.First(w => w.Key.Id.Equals(message.Id)).Value.Where(x => message.Reactions.Any(y => x.Key.Name == y.Key.Name)).Select(z=>z.Key);
 
-                foreach(var item in remove){
-                    await message.RemoveReactionAsync(item, client.CurrentUser);
-                }
+        //         foreach(var item in remove){
+        //             await message.RemoveReactionAsync(item, client.CurrentUser);
+        //         }
 
-                foreach(var item in add){
-                    await message.AddReactionAsync(item);
-                }
-            }
-        }
+        //         foreach(var item in add){
+        //             await message.AddReactionAsync(item);
+        //         }
+        //     }
+        // }
     }
 }

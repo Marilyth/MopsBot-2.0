@@ -35,7 +35,7 @@ namespace MopsBot.Data.Tracker
         }
 
         public async Task setReaction(IUserMessage message){
-            await message.RemoveAllReactionsAsync();
+            //await message.RemoveAllReactionsAsync();
             await Program.reactionHandler.addHandler(message, new Emoji("🖌"), recolour);
             await Program.reactionHandler.addHandler(message, new Emoji("🔄"), switchThumbnail);
         }
