@@ -16,6 +16,7 @@ namespace MopsBot.Module
     public class Tracking : ModuleBase
     {
         [Group("Twitter")]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
         public class Twitter : ModuleBase
         {
             [Command("Track")]
@@ -47,6 +48,7 @@ namespace MopsBot.Module
         }
 
         [Group("Osu")]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
         public class Osu : ModuleBase
         {
             [Command("Track")]
@@ -78,6 +80,7 @@ namespace MopsBot.Module
         }
 
         [Group("Youtube")]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
         public class Youtube : ModuleBase
         {
             [Command("Track")]
@@ -108,6 +111,10 @@ namespace MopsBot.Module
             }
         }
         [Group("Twitch")]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
+        [RequireBotPermission(ChannelPermission.ReadMessageHistory)]
+        [RequireBotPermission(ChannelPermission.AddReactions)]
+        [RequireBotPermission(ChannelPermission.ManageMessages)]
         public class Twitch : ModuleBase
         {
             [Command("Track")]
@@ -139,6 +146,7 @@ namespace MopsBot.Module
         }
 
         [Group("Reddit")]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
         public class Reddit : ModuleBase
         {
             [Command("Track")]
@@ -172,6 +180,7 @@ namespace MopsBot.Module
         }
 
         [Group("Overwatch")]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
         public class Overwatch : ModuleBase
         {
             [Command("Track")]

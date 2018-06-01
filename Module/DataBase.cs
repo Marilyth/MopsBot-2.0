@@ -13,6 +13,7 @@ namespace MopsBot.Module
     {
         [Command("hug")]
         [Summary("Hugs the specified person")]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
         public async Task hug(string person)
         {
             IGuildUser mentioned = Context.Guild.GetUserAsync(Context.Message.MentionedUserIds.ElementAt(0)).Result;
@@ -29,6 +30,7 @@ namespace MopsBot.Module
 
         [Command("kiss")]
         [Summary("Smooches the specified person")]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
         public async Task kiss(string person)
         {
             IGuildUser mentioned = Context.Guild.GetUserAsync(Context.Message.MentionedUserIds.ElementAt(0)).Result;
@@ -45,6 +47,7 @@ namespace MopsBot.Module
 
         [Command("punch")]
         [Summary("Fucks the specified person up")]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
         public async Task punch(string person)
         {
             IGuildUser mentioned = Context.Guild.GetUserAsync(Context.Message.MentionedUserIds.ElementAt(0)).Result;

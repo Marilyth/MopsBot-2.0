@@ -1,6 +1,7 @@
 ﻿using System;
 using Discord.Commands;
 using Discord.WebSocket;
+using Discord;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,6 +12,7 @@ namespace MopsBot.Module
     public class Game : ModuleBase
     {
         [Group("dungeon")]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
         public class Dungeon : ModuleBase
         {
             [Command("start")]
@@ -55,6 +57,8 @@ namespace MopsBot.Module
         }
 
         [Group("salad")]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
+        [RequireBotPermission(ChannelPermission.ManageMessages)]
         public class Salad : ModuleBase
         {
             [Command("create")]
@@ -75,6 +79,9 @@ namespace MopsBot.Module
         }
         
         [Group("Blackjack")]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
+        [RequireBotPermission(ChannelPermission.ReadMessageHistory)]
+        [RequireBotPermission(ChannelPermission.ManageMessages)]
         public class Blackjack : ModuleBase
         {
             [Command("join")]

@@ -16,11 +16,12 @@ namespace MopsBot.Module
     public class Moderation : ModuleBase
     {
         [Group("Role")]
+        [RequireBotPermission(ChannelPermission.ManageRoles)]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
         public class Role : ModuleBase
         {
             [Command("join")]
             [Summary("Joins the specified role")]
-            [RequireBotPermission(GuildPermission.ManageRoles)]
             public async Task joinRole([Remainder]string role)
             {
                 SocketRole pRole = (SocketRole)Context.Guild.Roles.First(x => x.Name.ToLower().Equals(role.ToLower()));
@@ -89,6 +90,10 @@ namespace MopsBot.Module
         }
 
         [Group("Giveaway")]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
+        [RequireBotPermission(ChannelPermission.AddReactions)]
+        [RequireBotPermission(ChannelPermission.ManageMessages)]   
+        [RequireBotPermission(ChannelPermission.ReadMessageHistory)]
         public class Giveaway : ModuleBase
         {
             [Command("create")]

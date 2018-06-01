@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using Discord.Commands;
 using Discord.Audio;
+using Discord;
 
 namespace MopsBot.Module
 {
@@ -16,6 +17,8 @@ public class AudioModule : ModuleBase<ICommandContext>
 
     [Command("join", RunMode = RunMode.Async)]
     [Summary("Joins the Voice Channel you are in currently.")]
+    [RequireBotPermission(GuildPermission.Speak)]
+    [RequireBotPermission(GuildPermission.Connect)]
     public async Task JoinCmd()
     {
         await _service.JoinAudio(Context.Guild, (Context.User as Discord.IVoiceState).VoiceChannel);
@@ -30,6 +33,7 @@ public class AudioModule : ModuleBase<ICommandContext>
 
     [Command("skip", RunMode = RunMode.Async)]
     [Summary("Skips the song currently at #1")]
+    [RequireBotPermission(ChannelPermission.SendMessages)]
     public async Task SkipCmd()
     {
         await _service.LeaveAudio(Context.Guild);
@@ -40,6 +44,7 @@ public class AudioModule : ModuleBase<ICommandContext>
 
     [Command("queue", RunMode = RunMode.Async)]
     [Summary("Returns the 5 closest entries in the queue.")]
+    [RequireBotPermission(ChannelPermission.SendMessages)]
     public async Task QueueCmd()
     {
         string output = "";
@@ -58,6 +63,7 @@ public class AudioModule : ModuleBase<ICommandContext>
     
     [Command("add", RunMode = RunMode.Async)]
     [Summary("Appends an entry into the Queue.")]
+    [RequireBotPermission(ChannelPermission.SendMessages)]
     public async Task AddCmd([Remainder] string song)
     {
         StaticBase.playlist.Add(song);

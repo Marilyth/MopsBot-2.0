@@ -18,6 +18,7 @@ namespace MopsBot.Module
 
         [Command("howLong")]
         [Summary("Returns the date you joined the Guild")]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
         public async Task howLong()
         {
             await ReplyAsync(((SocketGuildUser)Context.User).JoinedAt.Value.Date.ToString("d"));
@@ -25,6 +26,7 @@ namespace MopsBot.Module
 
         [Command("joinServer")]
         [Summary("Provides link to make me join your Server")]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
         public async Task joinServer()
         {
             await ReplyAsync($"https://discordapp.com/oauth2/authorize?client_id={Context.Client.CurrentUser.Id}&permissions=271707136&scope=bot");
@@ -55,6 +57,7 @@ namespace MopsBot.Module
 
         [Command("translate")]
         [Summary("Translates your text from srcLanguage to tgtLanguage.")]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
         public async Task translate(string srcLanguage, string tgtLanguage, [Remainder] string text)
         {
             try
@@ -74,6 +77,7 @@ namespace MopsBot.Module
 
         [Command("dayDiagram")]
         [Summary("Returns the total characters send for the past limit days")]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
         public async Task dayDiagram(int limit)
         {
             EmbedBuilder e = new EmbedBuilder();
@@ -83,6 +87,7 @@ namespace MopsBot.Module
 
         [Command("getStats")]
         [Summary("Returns your experience and all that stuff")]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
         public async Task getStats()
         {
             await ReplyAsync(StaticBase.people.Users[Context.User.Id].statsToString());
@@ -90,6 +95,7 @@ namespace MopsBot.Module
 
         [Command("ranking")]
         [Summary("Returns the top limit ranks of level\nOr if specified {experience, money, hug, punch, kiss}")]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
         public async Task ranking(int limit, string stat = "level")
         {
             Func<MopsBot.Data.Individual.User, int> sortParameter = x => x.calcLevel();
