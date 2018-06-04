@@ -23,48 +23,53 @@ namespace MopsBot.Data.Tracker
         public event MainEventHandler OnMajorEventFired;
         public event MinorEventHandler OnMinorEventFired;
         public delegate Task MinorEventHandler(ulong channelID, ITracker self, string notificationText);
-        public delegate Task MainEventHandler(ulong channelID, Embed embed, ITracker self, string notificationText="");
+        public delegate Task MainEventHandler(ulong channelID, Embed embed, ITracker self, string notificationText = "");
         public HashSet<ulong> ChannelIds;
         public string Name;
-        
-        public ITracker(int interval, int gap = 2000){
+
+        public ITracker(int interval, int gap = 5000)
+        {
             ExistingTrackers++;
             ChannelIds = new HashSet<ulong>();
             checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false),
-                                                                                ExistingTrackers * gap, interval);
+                                                                                gap, interval);
             Console.Out.WriteLine($"{DateTime.Now} Started a {this.GetType().Name}");
         }
 
-        public virtual void PostInitialisation(){
+        public virtual void PostInitialisation()
+        {
         }
 
         protected abstract void CheckForChange_Elapsed(object stateinfo);
 
-        protected async Task OnMajorChangeTracked(ulong channelID, Embed embed, string notificationText=""){
-            if(OnMajorEventFired != null)
-               await OnMajorEventFired(channelID, embed, this, notificationText);
+        protected async Task OnMajorChangeTracked(ulong channelID, Embed embed, string notificationText = "")
+        {
+            if (OnMajorEventFired != null)
+                await OnMajorEventFired(channelID, embed, this, notificationText);
         }
-        protected async Task OnMinorChangeTracked(ulong channelID, string notificationText){
-            if(OnMinorEventFired != null)
-               await OnMinorEventFired(channelID, this, notificationText);
+        protected async Task OnMinorChangeTracked(ulong channelID, string notificationText)
+        {
+            if (OnMinorEventFired != null)
+                await OnMinorEventFired(channelID, this, notificationText);
         }
 
         public void Dispose()
-        { 
+        {
             Dispose(true);
-            GC.SuppressFinalize(this);           
+            GC.SuppressFinalize(this);
         }
 
         protected void Dispose(bool disposing)
         {
             if (disposed)
-                return; 
-      
-            if (disposing) {
+                return;
+
+            if (disposing)
+            {
                 handle.Dispose();
                 checkForChange.Dispose();
             }
-      
+
             disposed = true;
         }
     }

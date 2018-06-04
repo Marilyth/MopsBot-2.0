@@ -91,6 +91,9 @@ namespace MopsBot.Data
             if(trackers.First().Value.GetType() == typeof(Tracker.TwitchTracker)){
                 (trackers[name] as Tracker.TwitchTracker).ChannelMessages.Add(channelID, notification);
             }
+            else if(trackers.First().Value.GetType() == typeof(Tracker.TwitterTracker)){
+                (trackers[name] as Tracker.TwitterTracker).SetNotification(channelID, notification.Split("|")[0], notification.Split("|")[1]);
+            }
 
             SaveJson();
         }

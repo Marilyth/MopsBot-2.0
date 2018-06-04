@@ -20,11 +20,12 @@ namespace MopsBot.Module
         public class Twitter : ModuleBase
         {
             [Command("Track")]
-            [Summary("Keeps track of the specified TwitterUser, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
+            [Summary("Keeps track of the specified TwitterUser, in the Channel you are calling this command right now.\nRequires Manage channel permissions.\n"+
+                      "You can specify the tweet notification like so: Normal tweet notification|Retweet or answer notification")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task trackTwitter(string twitterUser)
+            public async Task trackTwitter(string twitterUser, [Remainder]string tweetNotification = "~Tweet Tweet~|~Tweet Tweet~")
             {
-                trackers["twitter"].addTracker(twitterUser, Context.Channel.Id);
+                trackers["twitter"].addTracker(twitterUser, Context.Channel.Id, tweetNotification.Contains('|') ? tweetNotification : tweetNotification + "|~Tweet Tweet~");
 
                 await ReplyAsync("Keeping track of " + twitterUser + "'s tweets, from now on!");
             }

@@ -22,7 +22,7 @@ namespace MopsBot.Data.Tracker
         public bool isThumbnailLarge;
         public Dictionary<ulong, string> ChannelMessages;
 
-        public TwitchTracker() : base(60000)
+        public TwitchTracker() : base(60000, ExistingTrackers * 2000)
         {
         }
 
@@ -40,7 +40,7 @@ namespace MopsBot.Data.Tracker
             await Program.reactionHandler.addHandler(message, new Emoji("🔄"), switchThumbnail);
         }
 
-        public TwitchTracker(string streamerName) : base(60000, 0)
+        public TwitchTracker(string streamerName) : base(60000)
         {
             viewerGraph = new Plot(streamerName, "Time In Minutes", "Viewers", false);
 

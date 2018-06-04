@@ -16,11 +16,11 @@ namespace MopsBot.Data.Tracker
         public string CurMode;
         public double pp;
 
-        public OsuTracker() : base(60000)
+        public OsuTracker() : base(60000, ExistingTrackers * 2000)
         {
         }
 
-        public OsuTracker(string name) : base(60000, 0)
+        public OsuTracker(string name) : base(60000)
         {
             Name = name;
 
