@@ -32,7 +32,6 @@ namespace MopsBot.Module
             await ReplyAsync($"https://discordapp.com/oauth2/authorize?client_id={Context.Client.CurrentUser.Id}&permissions=271707136&scope=bot");
         }
 
-/*
         [Command("define")]
         [Summary("Searches dictionaries for a definition of the specified word or expression")]
         public async Task define([Remainder] string text)
@@ -40,7 +39,7 @@ namespace MopsBot.Module
             try
             {
 
-                string query = Task.Run(() => ReadURLAsync($"http://api.wordnik.com:80/v4/word.json/{text}/definitions?limit=1&includeRelated=false&sourceDictionaries=all&useCanonical=true&includeTags=false&api_key=a2a73e7b926c924fad7001ca3111acd55af2ffabf50eb4ae5")).Result;
+                string query = Task.Run(() => ReadURLAsync($"http://api.wordnik.com:80/v4/word.json/{text}/definitions?limit=1&includeRelated=false&sourceDictionaries=all&useCanonical=true&includeTags=false&api_key=5d5e7c17ad1704367f00b043b4e0c0c2c2f4133c4348ce180")).Result;
 
                 dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
 
@@ -53,7 +52,6 @@ namespace MopsBot.Module
                 Console.WriteLine($"[ERROR] by define at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
             }
         }
-*/
 
         [Command("translate")]
         [Summary("Translates your text from srcLanguage to tgtLanguage.")]
@@ -125,7 +123,7 @@ namespace MopsBot.Module
             try
             {
 
-                string query = await ReadURLAsync("http://api.wordnik.com:80/v4/words.json/randomWord?hasDictionaryDef=true&excludePartOfSpeech=given-name&minCorpusCount=10000&maxCorpusCount=-1&minDictionaryCount=4&maxDictionaryCount=-1&minLength=3&maxLength=13&api_key=a2a73e7b926c924fad7001ca3111acd55af2ffabf50eb4ae5");
+                string query = await ReadURLAsync("http://api.wordnik.com:80/v4/words.json/randomWord?hasDictionaryDef=true&excludePartOfSpeech=given-name&minCorpusCount=10000&maxCorpusCount=-1&minDictionaryCount=4&maxDictionaryCount=-1&minLength=3&maxLength=13&api_key=5d5e7c17ad1704367f00b043b4e0c0c2c2f4133c4348ce180");
                 dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
                 return tempDict["word"];
 
