@@ -29,7 +29,7 @@ namespace MopsBot.Module
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public async Task joinServer()
         {
-            await ReplyAsync($"https://discordapp.com/oauth2/authorize?client_id={Context.Client.CurrentUser.Id}&permissions=305398845389406209&scope=bot");
+            await ReplyAsync($"https://discordapp.com/oauth2/authorize?client_id={Context.Client.CurrentUser.Id}&permissions=271969344&scope=bot");
         }
 
         [Command("define")]
