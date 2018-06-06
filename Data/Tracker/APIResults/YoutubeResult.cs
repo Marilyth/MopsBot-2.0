@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace MopsBot.Data.Session.APIResults
+namespace MopsBot.Data.Tracker.APIResults
 {
     public class PageInfo
     {

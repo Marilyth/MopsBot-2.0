@@ -1,6 +1,7 @@
 ﻿using System;
 using Discord.Commands;
 using Discord.WebSocket;
+using Discord;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,6 +12,7 @@ namespace MopsBot.Module
     public class Game : ModuleBase
     {
         [Group("dungeon")]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
         public class Dungeon : ModuleBase
         {
             [Command("start")]
@@ -20,7 +22,7 @@ namespace MopsBot.Module
                 if(lengthInMinutes > 0){
                     Discord.IUserMessage updateMessage = await Context.Channel.SendMessageAsync("Generating dungeon.");
 
-                    Data.Session.IdleDungeon test = new Data.Session.IdleDungeon(updateMessage, Context.User.Id, (int)lengthInMinutes);
+                    Data.Updater.IdleDungeon test = new Data.Updater.IdleDungeon(updateMessage, Context.User.Id, (int)lengthInMinutes);
                     StaticBase.dungeonCrawler.Add(test);
                 }
                 else
@@ -55,6 +57,8 @@ namespace MopsBot.Module
         }
 
         [Group("salad")]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
+        [RequireBotPermission(ChannelPermission.ManageMessages)]
         public class Salad : ModuleBase
         {
             [Command("create")]
@@ -62,7 +66,7 @@ namespace MopsBot.Module
             public async Task start([Remainder] string words)
             {
                 string[] wordArray = words.Split(" ");
-                StaticBase.crosswords = new MopsBot.Data.Session.Crosswords(wordArray);
+                StaticBase.crosswords = new MopsBot.Data.Updater.Crosswords(wordArray);
                 StaticBase.crosswords.setToUpdate(await ReplyAsync(StaticBase.crosswords.drawMap()));
             }
             [Command("guess")]
@@ -75,6 +79,9 @@ namespace MopsBot.Module
         }
         
         [Group("Blackjack")]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
+        [RequireBotPermission(ChannelPermission.ReadMessageHistory)]
+        [RequireBotPermission(ChannelPermission.ManageMessages)]
         public class Blackjack : ModuleBase
         {
             [Command("join")]
@@ -83,7 +90,7 @@ namespace MopsBot.Module
             {
                 if (StaticBase.blackjack == null || !StaticBase.blackjack.active)
                 {
-                    StaticBase.blackjack = new Data.Session.Blackjack(Context.Client.CurrentUser);
+                    StaticBase.blackjack = new Data.Updater.Blackjack(Context.Client.CurrentUser);
                     StaticBase.blackjack.toEdit = await ReplyAsync("Table set up. Woof");
                 }
 

@@ -20,9 +20,9 @@ namespace MopsBot.Data
         /// </summary>
         public Statistics()
         {
-            
+
             StreamReader read = new StreamReader(new FileStream("mopsdata//statistics.txt", FileMode.OpenOrCreate));
-            
+
             string s = "";
 
             while ((s = read.ReadLine()) != null)
@@ -30,7 +30,7 @@ namespace MopsBot.Data
                 string[] data = s.Split(':');
                 Days.Add(data[0], int.Parse(data[1]));
             }
-            
+
             read.Dispose();
         }
 
@@ -56,14 +56,14 @@ namespace MopsBot.Data
         private void saveData()
         {
             StreamWriter write = new StreamWriter(new FileStream("mopsdata//statistics.txt", FileMode.Create));
-            write.AutoFlush=true;
-            foreach(string cur in Days.Keys)
+            write.AutoFlush = true;
+            foreach (string cur in Days.Keys)
             {
                 write.WriteLine($"{cur}:{Days[cur]}");
             }
 
             write.Dispose();
-            
+
         }
 
         /// <summary>
@@ -74,24 +74,13 @@ namespace MopsBot.Data
         public string DrawDiagram(int count)
         {
             var tempDays = (from entry in Days orderby DateTime.ParseExact(entry.Key, "dd/MM/yyyy", null) descending select entry).Take(count).ToArray();
-            int maximum = (from entry in tempDays orderby entry.Value descending select entry).ToArray()[0].Value;
-
-            string[] lines = new string[count];
-
-            for(int i = 0; i < count; i++)
-            {
-                lines[i] = $"{tempDays[i].Key}|";
-                double relPercent = tempDays[i].Value / ((double)maximum / 10);
-                for(int j = 0; j < relPercent; j++)
-                {
-                    lines[i] += "■";
-                }
-                lines[i] += $" {tempDays[i].Value}";
+            Plot tempPlot = new Plot("Statistics", "Days from now", "Characters sent", false);
+            tempPlot.SwitchTitle("Dates");
+            foreach(var day in tempDays){
+                tempPlot.AddValue(day.Value);
             }
 
-            string output = "```coq\n" + string.Join("\n", lines) + "```";
-
-            return output;
+            return tempPlot.DrawPlot();
         }
     }
 }

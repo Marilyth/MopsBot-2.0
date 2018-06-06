@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using MopsBot.Module.Preconditions;
+using System.Text.RegularExpressions;
 using static MopsBot.StaticBase;
 
 namespace MopsBot.Module
@@ -15,6 +16,8 @@ namespace MopsBot.Module
     public class Moderation : ModuleBase
     {
         [Group("Role")]
+        [RequireBotPermission(ChannelPermission.ManageRoles)]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
         public class Role : ModuleBase
         {
             [Command("join")]
@@ -30,6 +33,7 @@ namespace MopsBot.Module
 
             [Command("leave")]
             [Summary("Leaves the specified role")]
+            [RequireBotPermission(GuildPermission.ManageRoles)]
             public async Task leaveRole([Remainder]string role)
             {
                 SocketRole pRole = (SocketRole)Context.Guild.Roles.First(x => x.Name.ToLower().Equals(role.ToLower()));
@@ -40,16 +44,16 @@ namespace MopsBot.Module
             }
         }
 
-        [Command("poll"), Summary("Creates a poll\nExample: !poll Am I sexy?;Yes:No;@Panda @Demon @Snail")]
+        [Command("poll"), Summary("Creates a poll\nExample: !poll (Am I sexy?) (Yes, No) @Panda @Demon @Snail")]
         public async Task Poll([Remainder] string Poll)
         {
             if (!Context.Guild.GetUserAsync(Context.User.Id).Result.GuildPermissions.Administrator)
                 return;
 
-            string[] pollSegments = Poll.Split(';');
+            MatchCollection match = Regex.Matches(Poll, @"(?<=\().+?(?=\))");
             List<IGuildUser> participants = getMentionedUsers((CommandContext)Context);
 
-            poll = new Data.Session.Poll(pollSegments[0], pollSegments[1].Split(':'), participants.ToArray());
+            poll = new Data.Updater.Poll(match[0].Value, match[1].Value.Split(","), participants.ToArray());
 
             foreach (IGuildUser part in participants)
             {
@@ -69,12 +73,12 @@ namespace MopsBot.Module
         }
 
         [Command("pollEnd"), Summary("Ends the poll and returns the results.")]
-        public async Task PollEnd()
+        public async Task PollEnd(bool isPrivate = true)
         {
             if (!Context.Guild.GetUserAsync(Context.User.Id).Result.GuildPermissions.Administrator)
                 return;
-
-            await ReplyAsync(poll.pollToText());
+            poll.isPrivate = isPrivate;
+            await ReplyAsync(poll.DrawPlot());
 
             foreach (IGuildUser part in poll.participants)
             {
@@ -86,233 +90,23 @@ namespace MopsBot.Module
         }
 
         [Group("Giveaway")]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
+        [RequireBotPermission(ChannelPermission.AddReactions)]
+        [RequireBotPermission(ChannelPermission.ManageMessages)]   
+        [RequireBotPermission(ChannelPermission.ReadMessageHistory)]
         public class Giveaway : ModuleBase
         {
             [Command("create")]
             [Summary("Creates giveaway.")]
             public async Task create([Remainder]string game)
             {
-                game = game.ToLower();
-                if(!GiveAways.ContainsKey(game)){
-                    GiveAways.Add(game, new HashSet<ulong>());
-                    GiveAways[game].Add(Context.User.Id);
-                    await ReplyAsync($"Giveaway for {game} created.\nPlease join by using `!Giveaway join {game}`");
-                }
-                    
-                else 
-                    await ReplyAsync($"Giveaway with that name already exists. Please choose another name.");
-            }
-
-            [Command("join")]
-            [Summary("Joins giveaway.")]
-            public async Task join([Remainder]string game)
-            {
-                game = game.ToLower();
-                if(GiveAways.ContainsKey(game))
-                    if(!GiveAways[game].Contains(Context.User.Id)){
-                        GiveAways[game].Add(Context.User.Id);
-                        await ReplyAsync($"{Context.User.Username} entered for {game}");
-                    }
-                    else
-                        await ReplyAsync($"You cannot enter multiple times.");
-                else
-                    await ReplyAsync($"Giveaway not found");
-            }
-
-            [Command("draw")]
-            [Summary("Draws a winner.")]
-            public async Task draw([Remainder]string game)
-            {
-                game = game.ToLower();
-                if(GiveAways.ContainsKey(game))
-                    if(GiveAways[game].First().Equals(Context.User.Id))
-                        if(GiveAways[game].Count > 1){
-                            await ReplyAsync($"{GiveAways[game].Select(x => Program.client.GetUser(x).Mention).ToList()[StaticBase.ran.Next(1, GiveAways[game].Count)]} won {game}.");
-                            GiveAways.Remove(game);
-                        }
-                        else
-                            await ReplyAsync("There is nobody to draw.");
-                    else
-                        await ReplyAsync("Only the creator can draw.");
-                else 
-                    await ReplyAsync($"Giveaway not found");
+                await ReactGiveaways.AddGiveaway(Context.Channel, game, Context.User);
             }
         }
-
-        [Group("Twitter")]
-        public class Twitter : ModuleBase
-        {
-            [Command("Track")]
-            [Summary("Keeps track of the specified TwitterUser, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
-            [RequireUserPermission(ChannelPermission.ManageChannel)]
-            public async Task trackTwitter(string twitterUser)
-            {
-                twitterTracks.addTracker(twitterUser, Context.Channel.Id);
-
-                await ReplyAsync("Keeping track of " + twitterUser + "'s tweets, from now on!");
-            }
-
-            [Command("UnTrack")]
-            [Summary("Stops keeping track of the specified TwitterUser, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
-            [RequireUserPermission(ChannelPermission.ManageChannel)]
-            public async Task unTrackTwitter(string twitterUser)
-            {
-                twitterTracks.removeTracker(twitterUser, Context.Channel.Id);
-
-                await ReplyAsync("Stopped keeping track of " + twitterUser + "'s tweets!");
-            }
-
-            [Command("GetTracks")]
-            [Summary("Returns the twitters that are tracked in the current channel.")]
-            public async Task getTracks()
-            {
-                await ReplyAsync("Following twitters are currently being tracked:\n``" + StaticBase.twitterTracks.getTracker(Context.Channel.Id) + "``");
-            }
-        }
-
-        [Group("Osu")]
-        public class Osu : ModuleBase
-        {
-            [Command("Track")]
-            [Summary("Keeps track of the specified Osu player, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
-            [RequireUserPermission(ChannelPermission.ManageChannel)]
-            public async Task trackOsu(string OsuUser)
-            {
-                osuTracker.addTracker(OsuUser, Context.Channel.Id);
-
-                await ReplyAsync("Keeping track of " + OsuUser + "'s plays, from now on!");
-            }
-
-            [Command("UnTrack")]
-            [Summary("Stops keeping track of the specified Osu player, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
-            [RequireUserPermission(ChannelPermission.ManageChannel)]
-            public async Task unTrackOsu(string OsuUser)
-            {
-                osuTracker.removeTracker(OsuUser, Context.Channel.Id);
-
-                await ReplyAsync("Stopped keeping track of " + OsuUser + "'s plays!");
-            }
-
-            [Command("GetTracks")]
-            [Summary("Returns the Osu players that are tracked in the current channel.")]
-            public async Task getTracks()
-            {
-                await ReplyAsync("Following Osu players are currently being tracked:\n``" + StaticBase.osuTracker.getTracker(Context.Channel.Id) + "``");
-            }
-        }
-
-        [Group("Youtube")]
-        public class Youtube : ModuleBase
-        {
-            [Command("Track")]
-            [Summary("Keeps track of the specified Youtuber, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
-            [RequireUserPermission(ChannelPermission.ManageChannel)]
-            public async Task trackTwitter(string channelID)
-            {
-                YoutubeTracks.addTracker(channelID, Context.Channel.Id);
-
-                await ReplyAsync("Keeping track of " + channelID + "'s videos, from now on!");
-            }
-
-            [Command("UnTrack")]
-            [Summary("Stops keeping track of the specified Youtuber, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
-            [RequireUserPermission(ChannelPermission.ManageChannel)]
-            public async Task unTrackYoutube(string channelID)
-            {
-                twitterTracks.removeTracker(channelID, Context.Channel.Id);
-
-                await ReplyAsync("Stopped keeping track of " + channelID + "'s tweets!");
-            }
-
-            [Command("GetTracks")]
-            [Summary("Returns the Youtubers that are tracked in the current channel.")]
-            public async Task getTracks()
-            {
-                await ReplyAsync("Following Youtubers are currently being tracked:\n``" + StaticBase.YoutubeTracks.getTracker(Context.Channel.Id) + "``");
-            }
-        }
-        [Group("Twitch")]
-        public class Twitch : ModuleBase
-        {
-            [Command("Track")]
-            [Summary("Keeps track of the specified Streamer, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
-            [RequireUserPermission(ChannelPermission.ManageChannel)]
-            public async Task trackStreamer(string streamerName, [Remainder]string notificationMessage="Stream went live!")
-            {
-                streamTracks.addTracker(streamerName, Context.Channel.Id, notificationMessage);
-
-                await ReplyAsync("Keeping track of " + streamerName + "'s streams, from now on!");
-            }
-
-            [Command("UnTrack")]
-            [Summary("Stops tracking the specified streamer.\nRequires Manage channel permissions.")]
-            [RequireUserPermission(ChannelPermission.ManageChannel)]
-            public async Task unTrackStreamer(string streamerName)
-            {
-                streamTracks.removeTracker(streamerName, Context.Channel.Id);
-
-                await ReplyAsync("Stopped tracking " + streamerName + "'s streams!");
-            }
-
-            [Command("GetTracks")]
-            [Summary("Returns the streamers that are tracked in the current channel.")]
-            public async Task getTracks()
-            {
-                await ReplyAsync("Following streamers are currently being tracked:\n``" + StaticBase.streamTracks.getTracker(Context.Channel.Id) + "``");
-            }
-        }
-        [Group("Overwatch")]
-        public class Overwatch : ModuleBase
-        {
-            [Command("Track")]
-            [Summary("Keeps track of the specified Overwatch player, in the Channel you are calling this command right now.\nParameter: Username-Battletag")]
-            [RequireUserPermission(ChannelPermission.ManageChannel)]
-            public async Task trackOW(string owUser)
-            {
-                OverwatchTracks.addTracker(owUser, Context.Channel.Id);
-
-                await ReplyAsync("Keeping track of " + owUser + "'s stats, from now on!");
-            }
-
-            [Command("UnTrack")]
-            [Summary("Stops keeping track of the specified Overwatch player, in the Channel you are calling this command right now.\nParameter: Username-Battletag")]
-            [RequireUserPermission(ChannelPermission.ManageChannel)]
-            public async Task unTrackOW(string owUser)
-            {
-                OverwatchTracks.removeTracker(owUser, Context.Channel.Id);
-
-                await ReplyAsync("Stopped keeping track of " + owUser + "'s stats!");
-            }
-
-            [Command("GetStats")]
-            [Summary("Returns an embed representating the stats of the specified Overwatch player")]
-            public async Task GetStats(string owUser)
-            {
-                await ReplyAsync("Stats fetched:", false, (Embed)Data.Session.OverwatchTracker.overwatchInformation(owUser));
-            }
-
-            [Command("GetTracks")]
-            [Summary("Returns the players that are tracked in the current channel.")]
-            public async Task getTracks()
-            {
-                await ReplyAsync("Following players are currently being tracked:\n``" + StaticBase.OverwatchTracks.getTracker(Context.Channel.Id) + "``");
-            }
-        }
-
-        [Command("trackClips")]
-        [Summary("Keeps track of clips from streams of the specified Streamer, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
-        [RequireUserPermission(ChannelPermission.ManageChannel)]
-        public async Task trackClips(string streamerName)
-        {
-            ClipTracker.addTracker(streamerName, Context.Channel.Id);
-
-            await ReplyAsync("Keeping track of clips of " + streamerName + "'s streams, from now on!");
-        }
-
 
         [Command("setPrefix")]
         [Summary("Changes the prefix of Mops in the current Guild")]
-        [RequireUserPermission(ChannelPermission.ManageChannel)]
+        [RequireUserPermission(ChannelPermission.ManageChannels)]
         public async Task setPrefix([Remainder]string prefix)
         {
             string oldPrefix;
@@ -335,14 +129,13 @@ namespace MopsBot.Module
         }
 
         [Command("kill")]
-        [Summary("Kills Mops to adapt to any new changes in code.")]
+        [Summary("Stops Mops to adapt to any new changes in code.")]
         [RequireBotManage()]
-        [Hide()]
+        [Hide]
         public Task kill()
         {
-            Process.GetCurrentProcess().Kill();
+            Environment.Exit(0);
             return Task.CompletedTask;
         }
-
     }
 }

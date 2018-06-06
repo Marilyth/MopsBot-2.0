@@ -10,13 +10,14 @@ using Newtonsoft.Json;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 
-namespace MopsBot.Data
+namespace MopsBot.Data.Tracker
 {
     /// <summary>
     /// Class that handles and contains Twitch Clip tracking
     /// (Unfinished I think)
     /// </summary>
-    public class ClipTracker : IDisposable
+    //TODO: Make it a member of ITracker
+    public class ClipTracker// : ITracker
     {
         bool disposed = false;
         SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
@@ -114,7 +115,7 @@ namespace MopsBot.Data
             {
                 var request = (System.Net.HttpWebRequest)System.Net.WebRequest.Create($"https://api.twitch.tv/kraken/clips/top?channel={channel}&period=day&limit=100" + ((cursor != "") ? $"&cursor={cursor}" : ""));
                 request.Headers["Accept"] = "application/vnd.twitchtv.v5+json";
-                request.Headers["Client-ID"] = Program.twitchId;
+                request.Headers["Client-ID"] = Program.Config["Twitch"];
                 using (var response = request.GetResponseAsync().Result)
                 using (var content = response.GetResponseStream())
                 using (var reader = new System.IO.StreamReader(content))

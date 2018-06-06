@@ -10,36 +10,37 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
-using MopsBot.Data.Session.APIResults;
+using MopsBot.Data.Tracker.APIResults;
 using System.Xml;
 
-namespace MopsBot.Data.Session
+namespace MopsBot.Data.Tracker
 {
     public class YoutubeTracker : ITracker
     {
-        private string id;
-        private string lastTime;
+        public string LastTime;
+
+        public YoutubeTracker() : base(300000, ExistingTrackers * 2000)
+        {
+        }
 
         public YoutubeTracker(string channelId) : base(300000)
         {
-            id = channelId;
-            lastTime = XmlConvert.ToString(DateTime.Now, XmlDateTimeSerializationMode.Utc);
-        }
+            Name = channelId;
+            LastTime = XmlConvert.ToString(DateTime.Now, XmlDateTimeSerializationMode.Utc);
 
-        public YoutubeTracker(string[] initArray) : base(300000)
-        {
-            id = initArray[0];
-            lastTime = initArray[1];
-            foreach (string channel in initArray[2].Split(new char[] { '{', '}', ';' }))
-            {
-                if (channel != "")
-                    ChannelIds.Add(ulong.Parse(channel));
+            //Check if person exists by forcing Exceptions if not.
+            try{
+                var checkExists = fetchChannel().Result;
+                var test = checkExists.etag;
+            } catch(Exception e){
+                Dispose();
+                throw new Exception($"Person `{Name}` could not be found on Youtube!");
             }
         }
 
-        private YoutubeResult fetchVideos()
+        private async Task<YoutubeResult> fetchVideos()
         {
-            string query = MopsBot.Module.Information.readURL($"https://www.googleapis.com/youtube/v3/search?key={Program.youtubeKey}&channelId={id}&part=snippet,id&order=date&maxResults=20&publishedAfter={lastTime}");
+            string query = await MopsBot.Module.Information.ReadURLAsync($"https://www.googleapis.com/youtube/v3/search?key={Program.Config["Youtube"]}&channelId={Name}&part=snippet,id&order=date&maxResults=20&publishedAfter={LastTime}");
 
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {
@@ -51,9 +52,9 @@ namespace MopsBot.Data.Session
             return tmpResult;
         }
 
-        private YoutubeChannelResult fetchChannel()
+        private async Task<YoutubeChannelResult> fetchChannel()
         {
-            string query = MopsBot.Module.Information.readURL($"https://www.googleapis.com/youtube/v3/channels?part=snippet&id={id}&key={Program.youtubeKey}");
+            string query = await MopsBot.Module.Information.ReadURLAsync($"https://www.googleapis.com/youtube/v3/channels?part=snippet&id={Name}&key={Program.Config["Youtube"]}");
 
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {
@@ -67,15 +68,15 @@ namespace MopsBot.Data.Session
 
         protected async override void CheckForChange_Elapsed(object stateinfo)
         {
-            YoutubeResult curStats = fetchVideos();
             try
             {
+                YoutubeResult curStats = await fetchVideos();
                 APIResults.Item[] newVideos = curStats.items.ToArray();
 
                 if (newVideos.Length > 1)
                 {
-                    lastTime = XmlConvert.ToString(newVideos[0].snippet.publishedAt, XmlDateTimeSerializationMode.Utc);
-                    StaticBase.YoutubeTracks.writeList();
+                    LastTime = XmlConvert.ToString(newVideos[0].snippet.publishedAt, XmlDateTimeSerializationMode.Utc);
+                    StaticBase.trackers["youtube"].SaveJson();
                 }
 
                 foreach (APIResults.Item video in newVideos)
@@ -84,18 +85,18 @@ namespace MopsBot.Data.Session
                     {
                         foreach (ulong channel in ChannelIds)
                         {
-                            await OnMajorChangeTracked(channel, createEmbed(video), "New Video");
+                            await OnMajorChangeTracked(channel, await createEmbed(video), "New Video");
                         }
                     }
                 }
             }
             catch(Exception e)
             {
-                Console.WriteLine($"[ERROR] by {id} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+                Console.WriteLine($"[ERROR] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
             }
         }
 
-        private EmbedBuilder createEmbed(Item result)
+        private async Task<Embed> createEmbed(Item result)
         {
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0xFF0000);
@@ -111,24 +112,15 @@ namespace MopsBot.Data.Session
             EmbedAuthorBuilder author = new EmbedAuthorBuilder();
             author.Name = result.snippet.channelTitle;
             author.Url = $"https://www.youtube.com/channel/{result.snippet.channelId}";
-            author.IconUrl = fetchChannel().items[0].snippet.thumbnails.medium.url;
+            var channelInformation = await fetchChannel();
+            author.IconUrl = channelInformation.items[0].snippet.thumbnails.medium.url;
             e.Author = author;
 
-            e.ThumbnailUrl = fetchChannel().items[0].snippet.thumbnails.medium.url;
+            e.ThumbnailUrl = channelInformation.items[0].snippet.thumbnails.medium.url;
             e.ImageUrl = result.snippet.thumbnails.high.url;
             e.Description = result.snippet.description;
 
-            return e;
-        }
-
-        public override string[] GetInitArray()
-        {
-            string[] informationArray = new string[2 + ChannelIds.Count];
-            informationArray[0] = id;
-            informationArray[1] = lastTime;
-            informationArray[2] = "{" + string.Join(";", ChannelIds) + "}";
-
-            return informationArray;
+            return e.Build();
         }
     }
 }

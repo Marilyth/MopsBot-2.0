@@ -7,36 +7,38 @@ using Discord.Commands;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using MopsBot.Data.Session.APIResults;
+using MopsBot.Data.Tracker.APIResults;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 
-namespace MopsBot.Data.Session
+namespace MopsBot.Data.Tracker
 {
     /// <summary>
     /// A tracker which keeps track of an Overwatch players stats
     /// </summary>
     public class OverwatchTracker : ITracker
     {
-        public string Name;
         private OStatsResult information;
 
         /// <summary>
         /// Initialises the tracker by setting attributes and setting up a Timer with a 10 minutes interval
         /// </summary>
         /// <param Name="OWName"> The Name-Battletag combination of the player to track </param>
-        public OverwatchTracker(string OWName) : base(600000)
+        public OverwatchTracker() : base(600000, ExistingTrackers * 20000)
         {
-            Name = OWName;
         }
 
-        public OverwatchTracker(string[] initArray) : base(600000)
+        public OverwatchTracker(string OWName) : base(60000)
         {
-            Name = initArray[0];
+            Name = OWName;
 
-            foreach(string channel in initArray[1].Split(new char[]{'{','}',';'})){
-                if(channel != "")
-                    ChannelIds.Add(ulong.Parse(channel));
+            //Check if person exists by forcing Exceptions if not.
+            try{
+                var checkExists = overwatchInformation().Result;
+                var test = checkExists.eu;
+            } catch(Exception e){
+                Dispose();
+                throw new Exception($"Person `{Name}` could not be found on Overwatch!");
             }
         }
 
@@ -48,7 +50,7 @@ namespace MopsBot.Data.Session
         {
             try
             {
-                OStatsResult newInformation = overwatchInformation();
+                OStatsResult newInformation = await overwatchInformation();
 
                 if (information == null)
                 {
@@ -77,9 +79,9 @@ namespace MopsBot.Data.Session
         /// Then converts it into OStatsResult
         /// </summary>
         /// <returns>An OStatsResult representing the fetched JSON as an object</returns>
-        private OStatsResult overwatchInformation()
+        private async Task<OStatsResult> overwatchInformation()
         {
-            string query = MopsBot.Module.Information.readURL($"https://owapi.net/api/v3/u/{Name}/blob");
+            string query = await MopsBot.Module.Information.ReadURLAsync($"http://localhost:4444/api/v3/u/{Name}/blob");
 
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {
@@ -89,9 +91,9 @@ namespace MopsBot.Data.Session
             return JsonConvert.DeserializeObject<OStatsResult>(query, _jsonWriter);
         }
 
-        public static EmbedBuilder overwatchInformation(string owName)
+        public static async Task<Embed> overwatchInformation(string owName)
         {
-            string query = MopsBot.Module.Information.readURL($"https://owapi.net/api/v3/u/{owName}/blob");
+            string query = await MopsBot.Module.Information.ReadURLAsync($"http://localhost:4444/api/v3/u/{owName}/blob");
 
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {
@@ -121,29 +123,29 @@ namespace MopsBot.Data.Session
 
             e.ThumbnailUrl = stats.overall_stats.avatar;
 
-            e.AddInlineField("Damage", $"Total: {stats.game_stats.all_damage_done}"+
+            e.AddField("Damage", $"Total: {stats.game_stats.all_damage_done}"+
                             $"\nBest: {stats.game_stats.all_damage_done_most_in_game}"+
-                            $"\nAverage: {stats.rolling_average_stats.all_damage_done * 1000}");
+                            $"\nAverage: {stats.rolling_average_stats.all_damage_done * 1000}", true);
 
-            e.AddInlineField("Eliminations", $"Total: {stats.game_stats.eliminations}"+
+            e.AddField("Eliminations", $"Total: {stats.game_stats.eliminations}"+
                             $"\nKPD Best: {stats.game_stats.kill_streak_best}"+
-                            $"\nKPD Average: {stats.game_stats.kpd}");
+                            $"\nKPD Average: {stats.game_stats.kpd}", true);
 
-            e.AddInlineField("Healing", $"Total: {stats.game_stats.healing_done}"+
+            e.AddField("Healing", $"Total: {stats.game_stats.healing_done}"+
                             $"\nBest: {stats.game_stats.healing_done_most_in_game}"+
-                            $"\nAverage: {stats.rolling_average_stats.healing_done * 1000}");
+                            $"\nAverage: {stats.rolling_average_stats.healing_done * 1000}", true);
 
-            e.AddInlineField("Medals", $"Bronze: {stats.game_stats.medals_bronze}"+
+            e.AddField("Medals", $"Bronze: {stats.game_stats.medals_bronze}"+
                             $"\nSilver: {stats.game_stats.medals_silver}"+
-                            $"\nGold: {stats.game_stats.medals_gold}");
+                            $"\nGold: {stats.game_stats.medals_gold}", true);
 
-            e.AddInlineField("General", $"Time played: {stats.game_stats.time_played}hrs"+
+            e.AddField("General", $"Time played: {stats.game_stats.time_played}hrs"+
                             $"\nLevel: {stats.overall_stats.level + (100 * stats.overall_stats.prestige)}"+
-                            $"\nWon Games: {stats.overall_stats.wins}");
+                            $"\nWon Games: {stats.overall_stats.wins}", true);
 
-            e.AddInlineField("Competitive", $"Time played: {info.getNotNull().stats.competitive.game_stats.time_played}hrs"+
+            e.AddField("Competitive", $"Time played: {info.getNotNull().stats.competitive.game_stats.time_played}hrs"+
                             $"\nWin Rate: {info.getNotNull().stats.competitive.overall_stats.win_rate}%"+
-                            $"\nRank: {info.getNotNull().stats.competitive.overall_stats.comprank}");
+                            $"\nRank: {info.getNotNull().stats.competitive.overall_stats.comprank}", true);
 
             e.AddField("Most Played", mostPlayed.Item2);
 
@@ -152,14 +154,14 @@ namespace MopsBot.Data.Session
             else
                 e.ImageUrl = $"https://blzgdapipro-a.akamaihd.net/media/thumbnail/{mostPlayed.Item1.ToLower()}-gameplay.jpg";
 
-            return e;
+            return e.Build();
         }
 
         ///<summary>Builds an embed out of the changed stats, and sends it as a Discord message </summary>
         /// <param Name="overwatchInformation">All fetched stats of the user </param>
         /// <param Name="changedStats">All changed stats of the user, together with a string presenting them </param>
         /// <param Name="mostPlayed">The most played Hero of the session, together with a string presenting them </param>
-        private EmbedBuilder createEmbed(OStatsResult overwatchInformation, Dictionary<string, string> changedStats, Tuple<string, string> mostPlayed)
+        private Embed createEmbed(OStatsResult overwatchInformation, Dictionary<string, string> changedStats, Tuple<string, string> mostPlayed)
         {
             OverallStats stats = overwatchInformation.getNotNull().stats.quickplay.overall_stats;
 
@@ -184,7 +186,7 @@ namespace MopsBot.Data.Session
 
             foreach (var kvPair in changedStats)
             {
-                e.AddInlineField(kvPair.Key, kvPair.Value);
+                e.AddField(kvPair.Key, kvPair.Value, true);
             }
 
             e.AddField("Sessions most played Hero", $"{mostPlayed.Item2}");
@@ -193,7 +195,7 @@ namespace MopsBot.Data.Session
             else
                 e.ImageUrl = $"https://blzgdapipro-a.akamaihd.net/media/thumbnail/{mostPlayed.Item1.ToLower()}-gameplay.jpg";
 
-            return e;
+            return e.Build();
         }
 
         /// <summary>
@@ -290,14 +292,6 @@ namespace MopsBot.Data.Session
                 return Tuple.Create(sortedList[0].Key, leaderboard);
 
             return Tuple.Create("CannotFetchArcade", "CannotFetchArcade");
-        }
-
-        public override string[] GetInitArray(){
-            string[] informationArray = new string[2];
-            informationArray[0] = Name;
-            informationArray[1] = "{" + string.Join(";", ChannelIds) + "}";
-
-            return informationArray;
         }
     }
 }

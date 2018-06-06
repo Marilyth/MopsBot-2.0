@@ -8,7 +8,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using MopsBot.Data;
-using MopsBot.Data.Session;
+using MopsBot.Data.Tracker;
+using MopsBot.Data.Updater;
 using Tweetinvi;
 
 namespace MopsBot
@@ -18,21 +19,18 @@ namespace MopsBot
         public static Data.Statistics stats = new Data.Statistics();
         public static Data.UserScore people = new Data.UserScore();
         public static Random ran = new Random();
-        public static List<Data.Session.IdleDungeon> dungeonCrawler = new List<Data.Session.IdleDungeon>();
-        public static List<ulong> BotManager = new List<ulong>();
+        public static List<IdleDungeon> dungeonCrawler = new List<IdleDungeon>();
+        public static Gfycat.GfycatClient gfy;
         public static List<string> playlist = new List<string>();
+        public static HashSet<ulong> MemberSet;
         public static Dictionary<ulong, string> guildPrefix;
-        public static Dictionary<string, HashSet<ulong>> GiveAways = new Dictionary<string, HashSet<ulong>>();
-        public static Data.Session.Poll poll;
-        public static Data.Session.Blackjack blackjack;
-        public static Data.Session.Crosswords crosswords;
-        public static Data.ClipTracker ClipTracker;
-        public static TrackerHandler<OsuTracker> osuTracker;
-        public static TrackerHandler<TwitchTracker> streamTracks;
-        public static TrackerHandler<TwitterTracker> twitterTracks;
-        public static TrackerHandler<OverwatchTracker> OverwatchTracks;
-        public static TrackerHandler<YoutubeTracker> YoutubeTracks;
-
+        public static Giveaway Giveaways = new Giveaway();
+        public static ReactionGiveaway ReactGiveaways;
+        public static Poll poll;
+        public static Blackjack blackjack;
+        public static Crosswords crosswords;
+        public static ClipTracker ClipTracker;
+        public static Dictionary<string, TrackerWrapper> trackers;
         public static bool init = false;
 
         /// <summary>
@@ -42,18 +40,26 @@ namespace MopsBot
         {
             if (!init)
             {
-                Auth.SetUserCredentials(Program.twitterAuth[0], Program.twitterAuth[1], Program.twitterAuth[2], Program.twitterAuth[3]);
+                ReactGiveaways = new ReactionGiveaway();
+                
+                Auth.SetUserCredentials(Program.Config["TwitterKey"], Program.Config["TwitterSecret"], 
+                                        Program.Config["TwitterToken"], Program.Config["TwitterAccessSecret"]);
                 TweetinviConfig.CurrentThreadSettings.TweetMode = TweetMode.Extended;
                 TweetinviConfig.ApplicationSettings.TweetMode = TweetMode.Extended;
+                gfy = new Gfycat.GfycatClient(Program.Config["GfyID"], Program.Config["GfySecret"]);
 
-                streamTracks = new TrackerHandler<TwitchTracker>();
-                twitterTracks = new TrackerHandler<TwitterTracker>();
-                OverwatchTracks = new TrackerHandler<OverwatchTracker>(20000);
-                ClipTracker = new Data.ClipTracker();
-                YoutubeTracks = new TrackerHandler<YoutubeTracker>();
-                osuTracker = new TrackerHandler<OsuTracker>();        
+                ClipTracker = new ClipTracker();
+                
+                trackers = new Dictionary<string, Data.TrackerWrapper>();
+                trackers["osu"] = new TrackerHandler<OsuTracker>();
+                trackers["overwatch"] = new TrackerHandler<OverwatchTracker>();
+                trackers["twitch"] = new TrackerHandler<TwitchTracker>();
+                trackers["twitter"] = new TrackerHandler<TwitterTracker>();
+                trackers["youtube"] = new TrackerHandler<YoutubeTracker>();
+                trackers["reddit"] = new TrackerHandler<RedditTracker>();
 
                 init = true;
+
             }
         }
 
@@ -103,6 +109,17 @@ namespace MopsBot
                 user.AddRange(Context.Guild.GetUsersAsync().Result.Where(u => u.Status.Equals(UserStatus.Online)));
             }
             return new List<IGuildUser>(user.Distinct());
+        }
+
+        public static async Task UpdateGameAsync(){
+            MemberSet = new HashSet<ulong>();
+            await Program.client.DownloadUsersAsync(Program.client.Guilds);
+            foreach(SocketGuild curGuild in Program.client.Guilds){
+                foreach(SocketGuildUser curUser in curGuild.Users){
+                    MemberSet.Add(curUser.Id);
+                }
+            }
+            await Program.client.SetActivityAsync(new Game($"{MemberSet.Count} people", ActivityType.Listening));
         }
     }
 }

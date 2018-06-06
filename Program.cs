@@ -1,26 +1,34 @@
 ﻿using System;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Text;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Discord;
 using Discord.WebSocket;
 using Discord.Commands;
-using System.Threading.Tasks;
+using System.Threading;
+using System.Net;
+using Newtonsoft.Json;
 
 namespace MopsBot
 {
     public class Program
     {
-        public static void Main(string[] args) =>
+        public static void Main(string[] args)
+        {
+            // Task.Run(() => BuildWebHost(args).Run());
             new Program().Start().GetAwaiter().GetResult();
 
+        }
         public static DiscordSocketClient client;
-        public static string twitchId;
-        public static string[] twitterAuth;
-        public static string youtubeKey;
-        private CommandHandler handler;
+        public static Dictionary<string, string> Config;
+        public static CommandHandler handler {get; private set;}
+        public static ReactionHandler reactionHandler {get; private set;}
 
         public async Task Start()
         {
@@ -29,33 +37,27 @@ namespace MopsBot
                 LogLevel = LogSeverity.Info,
             });
 
-            StreamReader sr = new StreamReader(new FileStream("mopsdata//config.txt", FileMode.Open));
+            using(StreamReader sr = new StreamReader(new FileStream("mopsdata//Config.json", FileMode.Open)))
+                Config = JsonConvert.DeserializeObject<Dictionary<string, string>>(sr.ReadToEnd());
 
-            var token = sr.ReadLine();
-            twitchId = sr.ReadLine();
-            twitterAuth = sr.ReadLine().Split(",");
-            youtubeKey = sr.ReadLine();
-
-            await client.LoginAsync(TokenType.Bot, token);
+            await client.LoginAsync(TokenType.Bot, Config["Discord"]);
             await client.StartAsync();
 
             client.Log += Client_Log;
             client.Ready += onClientReady;
             client.Disconnected += onClientDC;
 
-            var map = new ServiceCollection().AddSingleton(client).AddSingleton(new AudioService());
+            var map = new ServiceCollection().AddSingleton(client)
+                .AddSingleton(new AudioService())
+                .AddSingleton(new ReliabilityService(client, Client_Log));
+
             var provider = map.BuildServiceProvider();
 
             handler = new CommandHandler();
             await handler.Install(provider);
 
-            var ids = sr.ReadLine();
-            foreach (var id in ids.Split(':'))
-            {
-                StaticBase.BotManager.Add(ulong.Parse(id));
-            }
-
-            sr.Dispose();
+            reactionHandler = new ReactionHandler();
+            await reactionHandler.Install(provider);
 
             await Task.Delay(-1);
         }
@@ -69,6 +71,7 @@ namespace MopsBot
         private Task onClientReady()
         {
             Task.Run(() => StaticBase.initTracking());
+            Task.Run(() => StaticBase.UpdateGameAsync());
             return Task.CompletedTask;
         }
 
@@ -76,5 +79,14 @@ namespace MopsBot
         {
             await Task.Run(() => StaticBase.disconnected());
         }
+
+        public static IWebHost BuildWebHost(string[] args) =>
+            WebHost.CreateDefaultBuilder(args)
+                .UseUrls("http://0.0.0.0:5000/")
+                .UseKestrel()
+                .UseContentRoot(Directory.GetCurrentDirectory())
+                .UseIISIntegration()
+                .UseStartup<Startup>()
+                .Build();
     }
 }

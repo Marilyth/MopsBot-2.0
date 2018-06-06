@@ -15,9 +15,9 @@ namespace MopsBot
 {
     public class CommandHandler
     {
-        private CommandService commands;
+        public CommandService commands{get; private set;}
         private DiscordSocketClient client;
-        private IServiceProvider _provider;
+        public IServiceProvider _provider{get; private set;}
 
         /// <summary>
         /// Add command/module Service and create Events
@@ -37,9 +37,13 @@ namespace MopsBot
 
             guildPrefix = new Dictionary<ulong, string>();
             fillPrefix();
+            client.MessageReceived += Client_MessageReceived;
             client.MessageReceived += HandleCommand;
             client.UserJoined += Client_UserJoined;
-            client.MessageReceived += Client_MessageReceived;
+            client.UserJoined += UserCountChanged;
+            client.UserLeft += UserCountChanged;
+            client.JoinedGuild += GuildCountChanged;
+            client.LeftGuild += GuildCountChanged;
         }
 
         /// <summary>
@@ -51,15 +55,14 @@ namespace MopsBot
         private async Task Client_MessageReceived(SocketMessage arg)
         {
             //Poll
-            if (arg.Channel.Name.Contains((arg.Author.Username)) && StaticBase.poll != null)
+            if (arg.Channel is Discord.IDMChannel && StaticBase.poll != null)
             {
-                if (StaticBase.poll.participants.ToList().Select(x => x.Id).ToArray().Contains(arg.Author.Id))
+                if (StaticBase.poll.participants.ToList().Select(x => x.Id).Contains(arg.Author.Id))
                 {
-                    StaticBase.poll.results[int.Parse(arg.Content) - 1]++;
+                    StaticBase.poll.AddValue(StaticBase.poll.answers[int.Parse(arg.Content) - 1], arg.Author.Id);
                     await arg.Channel.SendMessageAsync("Vote accepted!");
                     StaticBase.poll.participants.RemoveAll(x => x.Id == arg.Author.Id);
                 }
-
             }
 
             //Daily Statistics & User Experience
@@ -85,6 +88,15 @@ namespace MopsBot
                 $" rechten wenden, die Dich alsbald zum Mitglied ernennen.\n\nHave a very mopsig day\nDein heimlicher Verehrer Mops");
         }
 
+        private async Task UserCountChanged(SocketGuildUser User)
+        {
+            await StaticBase.UpdateGameAsync();
+        }
+
+        private async Task GuildCountChanged(SocketGuild guild){
+            await StaticBase.UpdateGameAsync();
+        }
+
         /// <summary>
         /// Checks if message is a command, and executes it
         /// </summary>
@@ -100,7 +112,9 @@ namespace MopsBot
             int argPos = 0;
 
             //Determines if the Guild has set a special prefix, if not, ! is used
-            var id = ((SocketGuildChannel)message.Channel).Guild.Id;
+            ulong id = 0;
+            if(message.Channel is Discord.IDMChannel) id = message.Channel.Id;
+            else id = ((SocketGuildChannel)message.Channel).Guild.Id;
             var prefix = guildPrefix.ContainsKey(id) ? guildPrefix[id] : "!";
 
             // Determine if the message has a valid prefix, adjust argPos 
@@ -123,8 +137,9 @@ namespace MopsBot
             var result = await commands.ExecuteAsync(context, argPos, _provider);
 
             // If the command failed, notify the user
-            if (!result.IsSuccess)
+            if (!result.IsSuccess && !result.ErrorReason.Contains("Unknown command")){
                 await message.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}");
+            }
         }
 
         /// <summary>
@@ -140,9 +155,9 @@ namespace MopsBot
             {
                 output += "For more information regarding a specific command, please use ?<command>";
 
-                foreach (var module in commands.Modules)
+                foreach (var module in commands.Modules.Where(x=> !x.Preconditions.OfType<HideAttribute>().Any()))
                 {
-                    if (module.IsSubmodule)
+                    if (module.IsSubmodule && !module.Preconditions.OfType<HideAttribute>().Any())
                     {
                         output += $"`{module.Name}*` ";
                     }
@@ -182,9 +197,15 @@ namespace MopsBot
                     output += $"\n\n**Usage**: `{prefix}{(curCommand.Module.IsSubmodule ? curCommand.Module.Name + " " + curCommand.Name : curCommand.Name)}";
                     foreach (Discord.Commands.ParameterInfo p in curCommand.Parameters)
                     {
-                        output += $" <{p.Name}>";
+                        output += $" {(p.IsOptional?$"[Optional: {p.Name}]":$"<{p.Name}>")}";
                     }
                     output += "`";
+                    // if(curCommand.Parameters.Any(x=> x.IsOptional)){
+                    //     output +="\n\n**Default Values**:";
+                    //     foreach(var p in curCommand.Parameters.Where(x=>x.IsOptional))
+                    //         output+=$"\n    {p.Name}: {p.DefaultValue}";
+                    // }
+                    
                 }
                 else
                 {

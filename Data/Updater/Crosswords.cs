@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Discord;
 
-namespace MopsBot.Data.Session
+namespace MopsBot.Data.Updater
 {
     public class Crosswords
     {
@@ -26,7 +26,7 @@ namespace MopsBot.Data.Session
 
             for (int i = 0; i < words.Length; i++)
             {
-                if (words[i].ToLower().Equals("random")) words[i] = MopsBot.Module.Information.getRandomWord();
+                if (words[i].ToLower().Equals("random")) words[i] = MopsBot.Module.Information.GetRandomWordAsync().Result;
                 if (words[i].Length + 3 > fieldSize) fieldSize = words[i].Length + 3;
             }
 
