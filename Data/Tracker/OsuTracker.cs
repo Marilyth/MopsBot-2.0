@@ -67,21 +67,21 @@ namespace MopsBot.Data.Tracker
 
         public async Task<APIResults.OsuResult> fetchUser()
         {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://osu.ppy.sh/api/get_user?u={Name}&k=8ad11f6daf7b439f96eee1c256d474cd9925d4d8");
+            string query = await MopsBot.Module.Information.ReadURLAsync($"https://osu.ppy.sh/api/get_user?u={Name}&k={Program.Config["Osu"]}");
 
             return JsonConvert.DeserializeObject<APIResults.OsuResult>(query.Substring(1, query.Length-2));
         }
 
         public async Task<APIResults.Score> fetchScore(string beatmapID)
         {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://osu.ppy.sh/api/get_scores?b={beatmapID}&{CurMode}&u={Name}&limit=1&k=8ad11f6daf7b439f96eee1c256d474cd9925d4d8");
+            string query = await MopsBot.Module.Information.ReadURLAsync($"https://osu.ppy.sh/api/get_scores?b={beatmapID}&{CurMode}&u={Name}&limit=1&k={Program.Config["Osu"]}");
 
             return JsonConvert.DeserializeObject<APIResults.Score>(query.Substring(1, query.Length-2));;
         }
 
         public async Task<APIResults.Beatmap> fetchBeatmap(string beatmapID)
         {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://osu.ppy.sh/api/get_beatmaps?b={beatmapID}&{CurMode}&a=1&k=8ad11f6daf7b439f96eee1c256d474cd9925d4d8");
+            string query = await MopsBot.Module.Information.ReadURLAsync($"https://osu.ppy.sh/api/get_beatmaps?b={beatmapID}&{CurMode}&a=1&k={Program.Config["Osu"]}");
 
             return JsonConvert.DeserializeObject<APIResults.Beatmap>(query.Substring(1, query.Length-2));;
         }

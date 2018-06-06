@@ -39,7 +39,7 @@ namespace MopsBot.Module
             try
             {
 
-                string query = Task.Run(() => ReadURLAsync($"http://api.wordnik.com:80/v4/word.json/{text}/definitions?limit=1&includeRelated=false&sourceDictionaries=all&useCanonical=true&includeTags=false&api_key=5d5e7c17ad1704367f00b043b4e0c0c2c2f4133c4348ce180")).Result;
+                string query = Task.Run(() => ReadURLAsync($"http://api.wordnik.com:80/v4/word.json/{text}/definitions?limit=1&includeRelated=false&sourceDictionaries=all&useCanonical=true&includeTags=false&api_key={Program.Config["Wordnik"]}")).Result;
 
                 dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
 
@@ -123,7 +123,7 @@ namespace MopsBot.Module
             try
             {
 
-                string query = await ReadURLAsync("http://api.wordnik.com:80/v4/words.json/randomWord?hasDictionaryDef=true&excludePartOfSpeech=given-name&minCorpusCount=10000&maxCorpusCount=-1&minDictionaryCount=4&maxDictionaryCount=-1&minLength=3&maxLength=13&api_key=5d5e7c17ad1704367f00b043b4e0c0c2c2f4133c4348ce180");
+                string query = await ReadURLAsync($"http://api.wordnik.com:80/v4/words.json/randomWord?hasDictionaryDef=true&excludePartOfSpeech=given-name&minCorpusCount=10000&maxCorpusCount=-1&minDictionaryCount=4&maxDictionaryCount=-1&minLength=3&maxLength=13&api_key={Program.Config["Wordnik"]}");
                 dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
                 return tempDict["word"];
 
