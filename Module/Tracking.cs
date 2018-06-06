@@ -55,7 +55,7 @@ namespace MopsBot.Module
             [Command("Track")]
             [Summary("Keeps track of the specified Osu player, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task trackOsu(string OsuUser)
+            public async Task trackOsu([Remainder]string OsuUser)
             {
                 trackers["osu"].addTracker(OsuUser, Context.Channel.Id);
 
@@ -65,7 +65,7 @@ namespace MopsBot.Module
             [Command("UnTrack")]
             [Summary("Stops keeping track of the specified Osu player, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task unTrackOsu(string OsuUser)
+            public async Task unTrackOsu([Remainder]string OsuUser)
             {
                 trackers["osu"].removeTracker(OsuUser, Context.Channel.Id);
 
