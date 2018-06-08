@@ -52,7 +52,7 @@ namespace MopsBot
                 
                 trackers = new Dictionary<string, Data.TrackerWrapper>();
                 trackers["osu"] = new TrackerHandler<OsuTracker>();
-                trackers["overwatch"] = new TrackerHandler<OverwatchTracker>();
+                //trackers["overwatch"] = new TrackerHandler<OverwatchTracker>();
                 trackers["twitch"] = new TrackerHandler<TwitchTracker>();
                 trackers["twitter"] = new TrackerHandler<TwitterTracker>();
                 trackers["youtube"] = new TrackerHandler<YoutubeTracker>();
