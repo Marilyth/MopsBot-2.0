@@ -116,6 +116,7 @@ namespace MopsBot
             await Program.client.DownloadUsersAsync(Program.client.Guilds);
             foreach(SocketGuild curGuild in Program.client.Guilds){
                 foreach(SocketGuildUser curUser in curGuild.Users){
+                   if(!curUser.IsBot)
                     MemberSet.Add(curUser.Id);
                 }
             }
