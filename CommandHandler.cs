@@ -33,7 +33,7 @@ namespace MopsBot
             commands = new CommandService();
             //_map.Add(commands);
 
-            await commands.AddModulesAsync(Assembly.GetEntryAssembly(), provider);
+            await commands.AddModulesAsync(Assembly.GetEntryAssembly());
 
             guildPrefix = new Dictionary<ulong, string>();
             fillPrefix();
