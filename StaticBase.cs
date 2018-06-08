@@ -41,15 +41,15 @@ namespace MopsBot
             if (!init)
             {
                 ReactGiveaways = new ReactionGiveaway();
-                
-                Auth.SetUserCredentials(Program.Config["TwitterKey"], Program.Config["TwitterSecret"], 
+
+                Auth.SetUserCredentials(Program.Config["TwitterKey"], Program.Config["TwitterSecret"],
                                         Program.Config["TwitterToken"], Program.Config["TwitterAccessSecret"]);
                 TweetinviConfig.CurrentThreadSettings.TweetMode = TweetMode.Extended;
                 TweetinviConfig.ApplicationSettings.TweetMode = TweetMode.Extended;
                 gfy = new Gfycat.GfycatClient(Program.Config["GfyID"], Program.Config["GfySecret"]);
 
                 ClipTracker = new ClipTracker();
-                
+
                 trackers = new Dictionary<string, Data.TrackerWrapper>();
                 trackers["osu"] = new TrackerHandler<OsuTracker>();
                 //trackers["overwatch"] = new TrackerHandler<OverwatchTracker>();
@@ -111,13 +111,16 @@ namespace MopsBot
             return new List<IGuildUser>(user.Distinct());
         }
 
-        public static async Task UpdateGameAsync(){
+        public static async Task UpdateGameAsync()
+        {
             MemberSet = new HashSet<ulong>();
             await Program.client.DownloadUsersAsync(Program.client.Guilds);
-            foreach(SocketGuild curGuild in Program.client.Guilds){
-                foreach(SocketGuildUser curUser in curGuild.Users){
-                   if(!curUser.IsBot)
-                    MemberSet.Add(curUser.Id);
+            foreach (SocketGuild curGuild in Program.client.Guilds)
+            {
+                foreach (SocketGuildUser curUser in curGuild.Users)
+                {
+                    if (!curUser.IsBot)
+                        MemberSet.Add(curUser.Id);
                 }
             }
             await Program.client.SetActivityAsync(new Game($"{MemberSet.Count} people", ActivityType.Listening));
