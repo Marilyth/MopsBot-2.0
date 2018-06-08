@@ -45,13 +45,14 @@ namespace MopsBot.Module
         }
 
         [Command("poll"), Summary("Creates a poll\nExample: !poll (Am I sexy?) (Yes, No) @Panda @Demon @Snail")]
+        [RequireUserPermission(GuildPermission.Administrator)]
         public async Task Poll([Remainder] string Poll)
         {
             if (!Context.Guild.GetUserAsync(Context.User.Id).Result.GuildPermissions.Administrator)
                 return;
 
             MatchCollection match = Regex.Matches(Poll, @"(?<=\().+?(?=\))");
-            List<IGuildUser> participants = getMentionedUsers((CommandContext)Context);
+            List<IGuildUser> participants = Context.Message.MentionedUserIds.Select(x => Context.Guild.GetUserAsync(x).Result).ToList();
 
             poll = new Data.Updater.Poll(match[0].Value, match[1].Value.Split(","), participants.ToArray());
 
