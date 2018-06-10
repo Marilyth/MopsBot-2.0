@@ -20,7 +20,16 @@ namespace MopsBot.Module
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public class Role : ModuleBase
         {
-            [Command("join")]
+            [Command("AddToUser")]
+            [Summary("Adds the specified role, to the specified user, for the specified amount of time.")]
+            [RequireUserPermission(GuildPermission.ManageRoles)]
+            public async Task joinRole(SocketGuildUser person, int durationInMinutes, [Remainder]string role)
+            {
+                await StaticBase.MuteHandler.AddMute(person, Context.Guild.Id, durationInMinutes, role);
+                await ReplyAsync($"``{role}`` Role added to ``{person.Username}`` for **{durationInMinutes}** minutes.");
+            }
+
+            [Command("Join")]
             [Summary("Joins the specified role")]
             public async Task joinRole([Remainder]string role)
             {
@@ -31,7 +40,7 @@ namespace MopsBot.Module
                 await ReplyAsync($"You are now part of the {pRole.Name} role! Yay!");
             }
 
-            [Command("leave")]
+            [Command("Leave")]
             [Summary("Leaves the specified role")]
             [RequireBotPermission(GuildPermission.ManageRoles)]
             public async Task leaveRole([Remainder]string role)

@@ -31,6 +31,8 @@ namespace MopsBot
         public static Crosswords crosswords;
         public static ClipTracker ClipTracker;
         public static Dictionary<string, TrackerWrapper> trackers;
+        public static MuteTimeHandler MuteHandler;
+
         public static bool init = false;
 
         /// <summary>
@@ -50,9 +52,22 @@ namespace MopsBot
 
                 ClipTracker = new ClipTracker();
 
+                using (StreamReader read = new StreamReader(new FileStream($"mopsdata//MuteTimerHandler.json", FileMode.OpenOrCreate)))
+                {
+                    try{
+                        MuteHandler = Newtonsoft.Json.JsonConvert.DeserializeObject<MuteTimeHandler>(read.ReadToEnd());
+                        
+                        if(MuteHandler == null)
+                            MuteHandler = new MuteTimeHandler();
+                        
+                        MuteHandler.SetTimers();
+                    } catch(Exception e){
+                        Console.WriteLine(e.Message + e.StackTrace);
+                    }
+                }
                 trackers = new Dictionary<string, Data.TrackerWrapper>();
                 trackers["osu"] = new TrackerHandler<OsuTracker>();
-                trackers["overwatch"] = new TrackerHandler<OverwatchTracker>();
+                //trackers["overwatch"] = new TrackerHandler<OverwatchTracker>();
                 trackers["twitch"] = new TrackerHandler<TwitchTracker>();
                 trackers["twitter"] = new TrackerHandler<TwitterTracker>();
                 trackers["youtube"] = new TrackerHandler<YoutubeTracker>();
