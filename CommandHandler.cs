@@ -40,10 +40,8 @@ namespace MopsBot
             client.MessageReceived += Client_MessageReceived;
             client.MessageReceived += HandleCommand;
             client.UserJoined += Client_UserJoined;
-            client.UserJoined += UserCountChanged;
-            client.UserLeft += UserCountChanged;
-            //client.JoinedGuild += GuildCountChanged;
-            //client.LeftGuild += GuildCountChanged;
+            client.JoinedGuild += GuildCountChanged;
+            client.LeftGuild += GuildCountChanged;
         }
 
         /// <summary>

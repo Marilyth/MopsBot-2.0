@@ -128,17 +128,7 @@ namespace MopsBot
 
         public static async Task UpdateGameAsync()
         {
-            MemberSet = new HashSet<ulong>();
-            await Program.client.DownloadUsersAsync(Program.client.Guilds);
-            foreach (SocketGuild curGuild in Program.client.Guilds)
-            {
-                foreach (SocketGuildUser curUser in curGuild.Users)
-                {
-                    if (!curUser.IsBot)
-                        MemberSet.Add(curUser.Id);
-                }
-            }
-            await Program.client.SetActivityAsync(new Game($"{MemberSet.Count} people", ActivityType.Listening));
+            await Program.client.SetActivityAsync(new Game($"{Program.client.Guilds.Count} servers", ActivityType.Watching));
         }
     }
 }
