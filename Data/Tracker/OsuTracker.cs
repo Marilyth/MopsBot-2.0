@@ -44,8 +44,10 @@ namespace MopsBot.Data.Tracker
                 if(userInformation.events.Count > 0 && (CurMode == null || !CurMode.Equals(userInformation.events[0].getMode()))){
                     CurMode = userInformation.events[0].getMode();
                     userInformation = await fetchUser();
-                    pp = double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture);
                 }
+
+                if(pp == 0)
+                    pp = double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture);
 
                 if (pp + 0.5 <= double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture))
                 {
