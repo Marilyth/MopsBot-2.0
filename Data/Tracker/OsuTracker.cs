@@ -45,8 +45,7 @@ namespace MopsBot.Data.Tracker
                     return;
                 }
 
-                if (pp + 0.5 <= double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture)
-                    || Name.Equals("Black W0lf"))
+                if (pp + 0.5 <= double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture))
                 {
                     CurMode = userInformation.events[0].getMode();
                     APIResults.Score scoreInformation = await fetchScore(userInformation.events[0].beatmap_id);
