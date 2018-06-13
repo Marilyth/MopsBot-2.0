@@ -40,9 +40,11 @@ namespace MopsBot.Data.Tracker
             {
                 APIResults.OsuResult userInformation = await fetchUser();
                 if(userInformation == null) return;
-                if(pp == 0) {
+
+                if(userInformation.events.Count > 0 && (CurMode == null || !CurMode.Equals(userInformation.events[0].getMode()))){
+                    CurMode = userInformation.events[0].getMode();
+                    userInformation = await fetchUser();
                     pp = double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture);
-                    return;
                 }
 
                 if (pp + 0.5 <= double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture))
@@ -67,7 +69,7 @@ namespace MopsBot.Data.Tracker
 
         public async Task<APIResults.OsuResult> fetchUser()
         {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://osu.ppy.sh/api/get_user?u={Name}&k={Program.Config["Osu"]}");
+            string query = await MopsBot.Module.Information.ReadURLAsync($"https://osu.ppy.sh/api/get_user?u={Name}&{CurMode ?? "m=0"}&k={Program.Config["Osu"]}");
 
             return JsonConvert.DeserializeObject<APIResults.OsuResult>(query.Substring(1, query.Length-2));
         }
