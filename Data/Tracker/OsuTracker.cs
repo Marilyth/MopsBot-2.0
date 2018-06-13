@@ -47,8 +47,7 @@ namespace MopsBot.Data.Tracker
                     pp = double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture);
                 }
 
-                if (pp + 0.5 <= double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture)
-                || Name.Equals("PeanutLady"))
+                if (pp + 0.5 <= double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture))
                 {
                     var recentScores = await fetchRecent();
                     CurMode = userInformation.events[0].getMode();
