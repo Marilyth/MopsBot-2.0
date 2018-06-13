@@ -45,6 +45,8 @@ namespace MopsBot.Data
         }
 
         public async Task AddMute(SocketGuildUser person, ulong guildId, int length, string role){
+            await person.AddRoleAsync(Program.client.GetGuild(guildId).Roles.First(x => x.Name.ToLower().Equals(role.ToLower())));
+            
             if(ToUnmute == null)
                 ToUnmute = new Dictionary<ulong, int>();
             if(WhereToUnmute == null)
@@ -56,8 +58,6 @@ namespace MopsBot.Data
             WhereToUnmute.Add(person.Id, guildId);
             WhatRole.Add(person.Id, role);
             timers.Add(new System.Threading.Timer(OnTimerElapsed, new Tuple<ulong, int>(person.Id, timers.Count), 60000, 60000));
-
-            await person.AddRoleAsync(Program.client.GetGuild(guildId).Roles.First(x => x.Name.ToLower().Equals(role.ToLower())));
             
             SaveJson();
         }
