@@ -31,10 +31,10 @@ namespace MopsBot.Data.Tracker
             //Check if person exists by forcing Exceptions if not.
             try{
                 var checkExists = fetchChannel().Result;
-                var test = checkExists.etag;
+                Name = checkExists.items[0].id;
             } catch(Exception e){
                 Dispose();
-                throw new Exception($"Person `{Name}` could not be found on Youtube!");
+                throw new Exception($"Channel-ID `{Name}` could not be found on Youtube!\nPerhaps you used the channel-name instead?");
             }
         }
 
