@@ -113,7 +113,7 @@ namespace MopsBot
             ulong id = 0;
             if(message.Channel is Discord.IDMChannel) id = message.Channel.Id;
             else id = ((SocketGuildChannel)message.Channel).Guild.Id;
-            var prefix = guildPrefix.ContainsKey(id) ? guildPrefix[id] : "test";
+            var prefix = guildPrefix.ContainsKey(id) ? guildPrefix[id] : "!";
 
             // Determine if the message has a valid prefix, adjust argPos 
             if (!(message.HasMentionPrefix(client.CurrentUser, ref argPos) || message.HasStringPrefix(prefix, ref argPos) || message.HasCharPrefix('?', ref argPos))) return;
