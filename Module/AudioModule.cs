@@ -21,7 +21,9 @@ public class AudioModule : ModuleBase<ICommandContext>
     [RequireBotPermission(GuildPermission.Connect)]
     public async Task JoinCmd()
     {
-        await _service.JoinAudio(Context.Guild, (Context.User as Discord.IVoiceState).VoiceChannel);
+        await ReplyAsync("Discord.Net seems to have broken the voice functionality for now.\n"+
+                         "Sorry for the inconvenience. It will be back once it's fixed!");
+        //await _service.JoinAudio(Context.Guild, (Context.User as Discord.IVoiceState).VoiceChannel);
     }
 
     [Command("leave", RunMode = RunMode.Async)]
