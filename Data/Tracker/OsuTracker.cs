@@ -45,7 +45,8 @@ namespace MopsBot.Data.Tracker
                     return;
                 }
 
-                if (pp + 0.5 <= double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture))
+                if (pp + 0.5 <= double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture)
+                    || Name.Equals("Black W0lf"))
                 {
                     CurMode = userInformation.events[0].getMode();
                     APIResults.Score scoreInformation = await fetchScore(userInformation.events[0].beatmap_id);
@@ -97,7 +98,7 @@ namespace MopsBot.Data.Tracker
 
             EmbedAuthorBuilder author = new EmbedAuthorBuilder();
             author.Name = Name;
-            author.Url = $"https://osu.ppy.sh/u/{Name}";
+            author.Url = $"https://osu.ppy.sh/u/{userInformation.user_id}";
             author.IconUrl = $"https://a.ppy.sh/{userInformation.user_id}_0.png";
             e.Author = author;
 
