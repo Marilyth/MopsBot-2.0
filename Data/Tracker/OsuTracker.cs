@@ -92,14 +92,20 @@ namespace MopsBot.Data.Tracker
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0x6441A4);
             e.Title = beatmapInformation.artist + " - " + beatmapInformation.title;
-            e.Url = $"https://osu.ppy.sh/b/{beatmapInformation.beatmap_id}&{beatmapInformation.mode}";
+            e.Url = $"https://osu.ppy.sh/b/{beatmapInformation.beatmap_id}&m={beatmapInformation.mode}";
             e.Description = Math.Round(double.Parse(beatmapInformation.difficultyrating, CultureInfo.InvariantCulture), 2) + "*";
+            e.Timestamp = DateTime.Parse(scoreInformation.date);
 
             EmbedAuthorBuilder author = new EmbedAuthorBuilder();
             author.Name = Name;
             author.Url = $"https://osu.ppy.sh/u/{userInformation.user_id}";
             author.IconUrl = $"https://a.ppy.sh/{userInformation.user_id}_0.png";
             e.Author = author;
+
+            EmbedFooterBuilder footer = new EmbedFooterBuilder();
+            footer.IconUrl = "https://vignette.wikia.nocookie.net/cytus/images/5/51/Osu_icon.png";
+            footer.Text = "Osu!";
+            e.Footer = footer;
 
             e.ThumbnailUrl = $"https://a.ppy.sh/{userInformation.user_id}_0.png";
             e.ImageUrl = $"https://b.ppy.sh/thumb/{beatmapInformation.beatmapset_id}l.jpg";
