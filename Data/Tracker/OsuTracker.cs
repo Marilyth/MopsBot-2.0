@@ -47,15 +47,17 @@ namespace MopsBot.Data.Tracker
                     pp = double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture);
                 }
 
-                if (pp + 0.5 <= double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture))
+                if (pp + 0.5 <= double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture)
+                || Name.Equals("PeanutLady"))
                 {
+                    var recentScores = await fetchRecent();
                     CurMode = userInformation.events[0].getMode();
-                    APIResults.Score scoreInformation = await fetchScore(userInformation.events[0].beatmap_id);
+                    APIResults.RecentScore scoreInformation = recentScores.First(x => !x.rank.Equals("F"));
 
-                    APIResults.Beatmap beatmapInformation = await fetchBeatmap(userInformation.events[0].beatmap_id);
+                    APIResults.Beatmap beatmapInformation = await fetchBeatmap(scoreInformation.beatmap_id);
 
                     foreach(ulong channel in ChannelIds)
-                        await OnMajorChangeTracked(channel, createEmbed(userInformation, beatmapInformation, scoreInformation, double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture) - pp));
+                        await OnMajorChangeTracked(channel, createEmbed(userInformation, beatmapInformation, await fetchScore(scoreInformation.beatmap_id), double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture) - pp));
                 }
                 pp = double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture);
                 StaticBase.trackers["osu"].SaveJson();
@@ -72,6 +74,12 @@ namespace MopsBot.Data.Tracker
             string query = await MopsBot.Module.Information.ReadURLAsync($"https://osu.ppy.sh/api/get_user?u={Name}&{CurMode ?? "m=0"}&k={Program.Config["Osu"]}");
 
             return JsonConvert.DeserializeObject<APIResults.OsuResult>(query.Substring(1, query.Length-2));
+        }
+
+        public async Task<List<APIResults.RecentScore>> fetchRecent(){
+            string query = await MopsBot.Module.Information.ReadURLAsync($"https://osu.ppy.sh/api/get_user_recent?u={Name}&{CurMode ?? "m=0"}&k={Program.Config["Osu"]}");
+
+            return JsonConvert.DeserializeObject<List<APIResults.RecentScore>>(query);
         }
 
         public async Task<APIResults.Score> fetchScore(string beatmapID)
