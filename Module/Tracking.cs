@@ -179,7 +179,7 @@ namespace MopsBot.Module
                 await ReplyAsync("Following subreddits are currently being tracked:\n``" + StaticBase.trackers["reddit"].getTracker(Context.Channel.Id) + "``");
             }
         }
-        /*
+
         [Group("Overwatch")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public class Overwatch : ModuleBase
@@ -217,7 +217,7 @@ namespace MopsBot.Module
             {
                 await ReplyAsync("Following players are currently being tracked:\n``" + StaticBase.trackers["overwatch"].getTracker(Context.Channel.Id) + "``");
             }
-        }*/
+        }
         
         /*[Command("trackClips")]
         [Summary("Keeps track of clips from streams of the specified Streamer, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
