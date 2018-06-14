@@ -13,8 +13,7 @@ namespace MopsBot.Data.Tracker
 {
     public class OsuTracker : ITracker
     {
-        public string CurMode;
-        public double pp;
+        public Dictionary<string, double> allPP;
 
         public OsuTracker() : base(60000, ExistingTrackers * 2000)
         {
@@ -23,12 +22,20 @@ namespace MopsBot.Data.Tracker
         public OsuTracker(string name) : base(60000)
         {
             Name = name;
+            allPP = new Dictionary<string, double>();
+            allPP.Add("m=0", 0);
+            allPP.Add("m=1", 0);
+            allPP.Add("m=2", 0);
+            allPP.Add("m=3", 0);
 
             //Check if person exists by forcing Exceptions if not.
-            try{
+            try
+            {
                 var checkExists = fetchUser().Result;
                 var test = checkExists.username;
-            } catch(Exception e){
+            }
+            catch (Exception e)
+            {
                 Dispose();
                 throw new Exception($"Person `{Name}` could not be found on Osu!");
             }
@@ -36,33 +43,35 @@ namespace MopsBot.Data.Tracker
 
         protected async override void CheckForChange_Elapsed(object stateinfo)
         {
+            if(allPP == null){
+                allPP = new Dictionary<string, double>();
+                allPP.Add("m=0", 0);
+                allPP.Add("m=1", 0);
+                allPP.Add("m=2", 0);
+                allPP.Add("m=3", 0);
+            }
+
             try
             {
-                APIResults.OsuResult userInformation = await fetchUser();
-                if(userInformation == null) return;
-
-                if(userInformation.events.Count > 0 && (CurMode == null || !CurMode.Equals(userInformation.events[0].getMode()))){
-                    CurMode = userInformation.events[0].getMode();
-                    userInformation = await fetchUser();
-                }
-
-                if(pp == 0)
-                    pp = double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture);
-
-                if (pp + 0.5 <= double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture))
+                foreach (var pp in allPP.ToList())
                 {
-                    var recentScores = await fetchRecent();
-                    CurMode = userInformation.events[0].getMode();
-                    APIResults.RecentScore scoreInformation = recentScores.First(x => !x.rank.Equals("F"));
+                    APIResults.OsuResult userInformation = await fetchUser(pp.Key);
+                    if (userInformation == null) return;
 
-                    APIResults.Beatmap beatmapInformation = await fetchBeatmap(scoreInformation.beatmap_id);
+                    if (pp.Value > 0 && pp.Value + 0.1 <= double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture))
+                    {
+                        var recentScores = await fetchRecent(pp.Key);
+                        APIResults.RecentScore scoreInformation = recentScores.First(x => !x.rank.Equals("F"));
 
-                    foreach(ulong channel in ChannelIds)
-                        await OnMajorChangeTracked(channel, createEmbed(userInformation, beatmapInformation, await fetchScore(scoreInformation.beatmap_id), double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture) - pp));
+                        APIResults.Beatmap beatmapInformation = await fetchBeatmap(scoreInformation.beatmap_id, pp.Key);
+
+                        foreach (ulong channel in ChannelIds)
+                            await OnMajorChangeTracked(channel, createEmbed(userInformation, beatmapInformation, await fetchScore(scoreInformation.beatmap_id, pp.Key), 
+                                                       double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture) - pp.Value, pp.Key));
+                    }
+                    allPP[pp.Key] = double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture);
+                    StaticBase.trackers["osu"].SaveJson();
                 }
-                pp = double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture);
-                StaticBase.trackers["osu"].SaveJson();
-
             }
             catch (Exception e)
             {
@@ -70,35 +79,36 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public async Task<APIResults.OsuResult> fetchUser()
+        public async Task<APIResults.OsuResult> fetchUser(string mode = "m=0")
         {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://osu.ppy.sh/api/get_user?u={Name}&{CurMode ?? "m=0"}&k={Program.Config["Osu"]}");
+            string query = await MopsBot.Module.Information.ReadURLAsync($"https://osu.ppy.sh/api/get_user?u={Name}&{mode}&event_days=31&k={Program.Config["Osu"]}");
 
-            return JsonConvert.DeserializeObject<APIResults.OsuResult>(query.Substring(1, query.Length-2));
+            return JsonConvert.DeserializeObject<APIResults.OsuResult>(query.Substring(1, query.Length - 2));
         }
 
-        public async Task<List<APIResults.RecentScore>> fetchRecent(){
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://osu.ppy.sh/api/get_user_recent?u={Name}&{CurMode ?? "m=0"}&k={Program.Config["Osu"]}");
+        public async Task<List<APIResults.RecentScore>> fetchRecent(string mode = "m=0")
+        {
+            string query = await MopsBot.Module.Information.ReadURLAsync($"https://osu.ppy.sh/api/get_user_recent?u={Name}&limit=50&{mode}&k={Program.Config["Osu"]}");
 
             return JsonConvert.DeserializeObject<List<APIResults.RecentScore>>(query);
         }
 
-        public async Task<APIResults.Score> fetchScore(string beatmapID)
+        public async Task<APIResults.Score> fetchScore(string beatmapID, string mode = "m=0")
         {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://osu.ppy.sh/api/get_scores?b={beatmapID}&{CurMode}&u={Name}&limit=1&k={Program.Config["Osu"]}");
+            string query = await MopsBot.Module.Information.ReadURLAsync($"https://osu.ppy.sh/api/get_scores?b={beatmapID}&{mode}&u={Name}&limit=1&k={Program.Config["Osu"]}");
 
-            return JsonConvert.DeserializeObject<APIResults.Score>(query.Substring(1, query.Length-2));;
+            return JsonConvert.DeserializeObject<APIResults.Score>(query.Substring(1, query.Length - 2)); ;
         }
 
-        public async Task<APIResults.Beatmap> fetchBeatmap(string beatmapID)
+        public async Task<APIResults.Beatmap> fetchBeatmap(string beatmapID, string mode = "m=0")
         {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://osu.ppy.sh/api/get_beatmaps?b={beatmapID}&{CurMode}&a=1&k={Program.Config["Osu"]}");
+            string query = await MopsBot.Module.Information.ReadURLAsync($"https://osu.ppy.sh/api/get_beatmaps?b={beatmapID}&{mode}&a=1&k={Program.Config["Osu"]}");
 
-            return JsonConvert.DeserializeObject<APIResults.Beatmap>(query.Substring(1, query.Length-2));;
+            return JsonConvert.DeserializeObject<APIResults.Beatmap>(query.Substring(1, query.Length - 2)); ;
         }
 
         private Embed createEmbed(APIResults.OsuResult userInformation, APIResults.Beatmap beatmapInformation,
-                                        APIResults.Score scoreInformation, double ppChange)
+                                        APIResults.Score scoreInformation, double ppChange, string mode = "m=0")
         {
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0x6441A4);
@@ -118,7 +128,21 @@ namespace MopsBot.Data.Tracker
             footer.Text = "Osu!";
             e.Footer = footer;
 
-            e.ThumbnailUrl = $"https://a.ppy.sh/{userInformation.user_id}_0.png";
+            switch (mode)
+            {
+                case "m=0":
+                    e.ThumbnailUrl = "https://w.ppy.sh/1/19/Mode-osu.png";
+                    break;
+                case "m=1":
+                    e.ThumbnailUrl = "http://w.ppy.sh/4/40/Mode-taiko.png";
+                    break;
+                case "m=2":
+                    e.ThumbnailUrl = "https://w.ppy.sh/2/26/Mode-ctb.png";
+                    break;
+                case "m=3":
+                    e.ThumbnailUrl = "http://w.ppy.sh/5/51/Mode-mania.png";
+                    break;
+            }
             e.ImageUrl = $"https://b.ppy.sh/thumb/{beatmapInformation.beatmapset_id}l.jpg";
 
             e.AddField("Score", scoreInformation.score + $" ({scoreInformation.maxcombo}x)", true);
