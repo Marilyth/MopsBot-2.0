@@ -92,7 +92,7 @@ namespace MopsBot.Data.Tracker
             e.Color = new Color(0x6441A4);
             e.Title = "Tweet-Link";
             e.Url = tweet.Url;
-            e.Timestamp = tweet.CreatedAt.AddHours(-1);
+            e.Timestamp = tweet.CreatedAt;
 
             EmbedFooterBuilder footer = new EmbedFooterBuilder();
             footer.IconUrl = "https://upload.wikimedia.org/wikipedia/de/thumb/9/9f/Twitter_bird_logo_2012.svg/1259px-Twitter_bird_logo_2012.svg.png";
