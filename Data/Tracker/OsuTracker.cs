@@ -69,7 +69,7 @@ namespace MopsBot.Data.Tracker
                             await OnMajorChangeTracked(channel, createEmbed(userInformation, beatmapInformation, await fetchScore(scoreInformation.beatmap_id, pp.Key), 
                                                        double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture) - pp.Value, pp.Key));
                     }
-                    allPP[pp.Key] = double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture);
+                    allPP[pp.Key] = double.Parse(userInformation.pp_raw ?? "0", CultureInfo.InvariantCulture);
                     StaticBase.trackers["osu"].SaveJson();
                 }
             }
