@@ -67,7 +67,7 @@ namespace MopsBot.Data.Tracker
 
                         foreach (ulong channel in ChannelIds)
                             await OnMajorChangeTracked(channel, createEmbed(userInformation, beatmapInformation, await fetchScore(scoreInformation.beatmap_id, pp.Key), 
-                                                       double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture) - pp.Value, pp.Key));
+                                                       Math.Round(double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture) - pp.Value, 2), pp.Key));
                     }
                     allPP[pp.Key] = double.Parse(userInformation.pp_raw ?? "0", CultureInfo.InvariantCulture);
                     StaticBase.trackers["osu"].SaveJson();
