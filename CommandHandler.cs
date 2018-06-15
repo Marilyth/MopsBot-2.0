@@ -129,9 +129,6 @@ namespace MopsBot
                 return;
             }
 
-            if (char.IsWhiteSpace(message.Content[argPos]))
-                argPos += 1;
-
             // Create a Command Context
             var context = new CommandContext(client, message);
             // Execute the Command, store the result
