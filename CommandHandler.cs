@@ -120,7 +120,10 @@ namespace MopsBot
 
             StaticBase.people.AddStat(parameterMessage.Author.Id, 0, "experience");
 
-            if (message.Content.Contains("help") || message.HasCharPrefix('?', ref argPos))
+            if (char.IsWhiteSpace(message.Content[argPos]))
+                argPos += 1;
+
+            if (message.Content.Substring(argPos).StartsWith("help") || message.HasCharPrefix('?', ref argPos))
             {
                 await getCommands(parameterMessage, prefix);
                 return;
