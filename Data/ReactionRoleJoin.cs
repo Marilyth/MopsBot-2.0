@@ -106,6 +106,8 @@ namespace MopsBot.Data
                     RoleInvites[context.channel.Id].Remove(context.message.Id);
                 else
                     RoleInvites.Remove(context.channel.Id);
+
+                await context.message.DeleteAsync();
                 
                 SaveJson();
             }

@@ -21,10 +21,19 @@ namespace MopsBot.Module
         public class Role : ModuleBase
         {
             [Command("CreateInvite", RunMode = RunMode.Async)]
-            [Summary("Creates a reaction-invite message for the specified Role")]
+            [Summary("Creates a reaction-invite message for the specified Role.\nPeople will be able to invite themselves into the role.")]
+            [RequireBotPermission(ChannelPermission.AddReactions)]
+            [RequireBotPermission(ChannelPermission.ManageMessages)]   
+            [RequireBotPermission(ChannelPermission.ReadMessageHistory)]
             [RequireUserPermission(GuildPermission.ManageRoles)]
             public async Task createInvite(string roleName){
-                await StaticBase.ReactRoleJoin.AddInvite((ITextChannel)Context.Channel, roleName);
+                var highestRole = ((SocketGuildUser)await Context.Guild.GetCurrentUserAsync()).Roles.OrderByDescending(x => x.Position).First();
+                var requestedRole = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower().Equals(roleName.ToLower()));
+
+                if(requestedRole != null && requestedRole.Position < highestRole.Position)
+                    await StaticBase.ReactRoleJoin.AddInvite((ITextChannel)Context.Channel, roleName);
+                else
+                    await ReplyAsync($"**Error**: Role `{roleName}` could either not be found, or was beyond Mops' permissions.");
             }
 
             [Command("AddToUser")]
@@ -34,29 +43,6 @@ namespace MopsBot.Module
             {
                 await StaticBase.MuteHandler.AddMute(person, Context.Guild.Id, durationInMinutes, role);
                 await ReplyAsync($"``{role}`` Role added to ``{person.Username}`` for **{durationInMinutes}** minutes.");
-            }
-
-            [Command("Join")]
-            [Summary("Joins the specified role")]
-            public async Task joinRole([Remainder]string role)
-            {
-                SocketRole pRole = (SocketRole)Context.Guild.Roles.First(x => x.Name.ToLower().Equals(role.ToLower()));
-
-                await ((SocketGuildUser)Context.User).AddRoleAsync(pRole);
-
-                await ReplyAsync($"You are now part of the {pRole.Name} role! Yay!");
-            }
-
-            [Command("Leave")]
-            [Summary("Leaves the specified role")]
-            [RequireBotPermission(GuildPermission.ManageRoles)]
-            public async Task leaveRole([Remainder]string role)
-            {
-                SocketRole pRole = (SocketRole)Context.Guild.Roles.First(x => x.Name.ToLower().Equals(role.ToLower()));
-
-                await ((SocketGuildUser)Context.User).RemoveRoleAsync(pRole);
-
-                await ReplyAsync($"You left the {pRole.Name} role.");
             }
         }
 
