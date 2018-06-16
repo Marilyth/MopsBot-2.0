@@ -82,7 +82,7 @@ namespace MopsBot
             if (User.Guild.Id.Equals(205130885337448469))
                 await User.Guild.GetTextChannel(305443055396192267).SendMessageAsync($"Willkommen im **{User.Guild.Name}** Server, {User.Mention}!" +
                 $"\n\nBevor Du vollen Zugriff auf den Server hast, möchten wir Dich auf die Regeln des Servers hinweisen, die Du hier findest:" +
-                $" {User.Guild.GetTextChannel(305443033296535552).Mention}\nDort kannst Du dich auch freischalten, sobald Du die Regeln gelesen hast, und mit ihnen einverstanden bist." +
+                $" {User.Guild.GetTextChannel(457616881520738334).Mention}\nDort kannst Du dich auch freischalten, sobald Du die Regeln gelesen hast, und mit ihnen einverstanden bist." +
                 $"\n\nHave a very mopsig day\nDein heimlicher Verehrer Mops");
         }
 
