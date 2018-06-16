@@ -26,12 +26,15 @@ namespace MopsBot.Module
             [RequireBotPermission(ChannelPermission.ManageMessages)]   
             [RequireBotPermission(ChannelPermission.ReadMessageHistory)]
             [RequireUserPermission(GuildPermission.ManageRoles)]
-            public async Task createInvite(string roleName){
+            public async Task createInvite(string roleName, bool isGerman = false){
                 var highestRole = ((SocketGuildUser)await Context.Guild.GetCurrentUserAsync()).Roles.OrderByDescending(x => x.Position).First();
                 var requestedRole = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower().Equals(roleName.ToLower()));
 
                 if(requestedRole != null && requestedRole.Position < highestRole.Position)
-                    await StaticBase.ReactRoleJoin.AddInvite((ITextChannel)Context.Channel, roleName);
+                    if(isGerman)
+                        await StaticBase.ReactRoleJoin.AddInviteGerman((ITextChannel)Context.Channel, roleName);
+                    else
+                        await StaticBase.ReactRoleJoin.AddInvite((ITextChannel)Context.Channel, roleName);
                 else
                     await ReplyAsync($"**Error**: Role `{roleName}` could either not be found, or was beyond Mops' permissions.");
             }

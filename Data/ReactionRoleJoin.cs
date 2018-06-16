@@ -50,6 +50,31 @@ namespace MopsBot.Data
             using (StreamWriter write = new StreamWriter(new FileStream($"mopsdata//ReactionRoleJoin.json", FileMode.Create)))
                 write.Write(JsonConvert.SerializeObject(RoleInvites, Formatting.Indented));
         }
+        public async Task AddInviteGerman(ITextChannel channel, string name)
+        {
+            SocketRole role = (SocketRole)channel.Guild.Roles.First(x => x.Name.ToLower().Equals(name.ToLower()));
+            EmbedBuilder e = new EmbedBuilder();
+            e.Title = role.Name + " Einladung";
+            e.Description = $"Um der Rolle " + (role.IsMentionable ? role.Mention : role.Name) + " beizutreten, oder zu verlassen, drücke bitte die ✅/❎ Icons unter dieser Nachricht!\n" +
+                            "Falls du die Manage Role Permission besitzt, kannst du diese Einladung mit einem Druck auf den 🗑 Icon löschen.";
+            e.Color = role.Color;
+
+            var author = new EmbedAuthorBuilder();
+            e.AddField("Mitgliederanzahl der Rolle", role.Members.Count(), true);
+
+            var message = await channel.SendMessageAsync("", embed: e.Build());
+            await Program.reactionHandler.addHandler(message, new Emoji("✅"), JoinRole);
+            await Program.reactionHandler.addHandler(message, new Emoji("❎"), LeaveRole);
+            await Program.reactionHandler.addHandler(message, new Emoji("🗑"), DeleteInvite);
+
+            if (RoleInvites.ContainsKey(channel.Id)) RoleInvites[channel.Id].Add(message.Id);
+            else {
+                RoleInvites.Add(channel.Id, new HashSet<ulong>());
+                RoleInvites[channel.Id].Add(message.Id);
+            }
+
+            SaveJson();
+        }
 
         public async Task AddInvite(ITextChannel channel, string name)
         {
@@ -79,7 +104,7 @@ namespace MopsBot.Data
 
         private async Task JoinRole(ReactionHandlerContext context)
         {
-            var roleName = context.message.Embeds.First().Title.Split(" Role Invite")[0];
+            var roleName = context.message.Embeds.First().Title.Split(new string[]{" Role Invite", " Einladung"}, StringSplitOptions.None)[0];
             var role = ((ITextChannel)context.channel).Guild.Roles.First(x => x.Name.Equals(roleName));
             var user = await ((ITextChannel)context.channel).Guild.GetUserAsync(context.reaction.UserId);
             await user.AddRoleAsync(role);            
@@ -88,7 +113,7 @@ namespace MopsBot.Data
 
         private async Task LeaveRole(ReactionHandlerContext context)
         {
-            var roleName = context.message.Embeds.First().Title.Split(" Role Invite")[0];
+            var roleName = context.message.Embeds.First().Title.Split(new string[]{" Role Invite", " Einladung"}, StringSplitOptions.None)[0];
             var role = ((ITextChannel)context.channel).Guild.Roles.First(x => x.Name.Equals(roleName));
             var user = await ((ITextChannel)context.channel).Guild.GetUserAsync(context.reaction.UserId);
             await user.RemoveRoleAsync(role);                
@@ -121,7 +146,7 @@ namespace MopsBot.Data
 
             foreach (EmbedFieldBuilder field in e.Fields)
             {
-                if (field.Name.Equals("Members in role"))
+                if (field.Name.Equals("Members in role") || field.Name.Equals("Mitgliederanzahl der Rolle"))
                     field.Value = role.Members.Count();
             }
 
