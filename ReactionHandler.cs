@@ -25,7 +25,7 @@ namespace MopsBot{
             _provider = provider;
             client = _provider.GetService<DiscordSocketClient>();
             
-            client.ReactionAdded +=Client_ReactionAdded;
+            client.ReactionAdded += Client_ReactionAdded;
 
             messageFunctions = new Dictionary<IUserMessage, Dictionary<IEmote, Func<ReactionHandlerContext, Task>>>();
         }
@@ -34,20 +34,20 @@ namespace MopsBot{
             if(reaction.UserId.Equals(client.CurrentUser.Id))
                 return;
             
-            IUserMessage message = messageCache.DownloadAsync().Result;
+            IUserMessage message = await messageCache.DownloadAsync();
             ReactionHandlerContext context = new ReactionHandlerContext();
             context.channel = channel;
             context.messageCache = messageCache;
             context.emote = reaction.Emote;
             context.reaction = reaction;
-
+            Task.Run(async () => {
             if(messageFunctions.Any(x => x.Key.Id.Equals(message.Id))){
                 if(messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.ContainsKey(reaction.Emote))
                     await messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value[reaction.Emote](context);
                 else if(messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.ContainsKey(defaultEmote))
                     await messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value[defaultEmote](context);
                 await message.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
-            }
+            }});
         }
 
         public async Task addHandler(IUserMessage message, Func<ReactionHandlerContext, Task> function, bool clear=false){

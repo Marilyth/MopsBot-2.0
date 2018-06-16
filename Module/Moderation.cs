@@ -20,6 +20,13 @@ namespace MopsBot.Module
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public class Role : ModuleBase
         {
+            [Command("CreateInvite", RunMode = RunMode.Async)]
+            [Summary("Creates a reaction-invite message for the specified Role")]
+            [RequireUserPermission(GuildPermission.ManageRoles)]
+            public async Task createInvite(string roleName){
+                await StaticBase.ReactRoleJoin.AddInvite((ITextChannel)Context.Channel, roleName);
+            }
+
             [Command("AddToUser")]
             [Summary("Adds the specified role, to the specified user, for the specified amount of time.")]
             [RequireUserPermission(GuildPermission.ManageRoles)]
