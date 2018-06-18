@@ -43,7 +43,13 @@ namespace MopsBot.Module
             [Summary("Adds the specified role, to the specified user, for the specified amount of time.")]
             [RequireUserPermission(GuildPermission.ManageRoles)]
             public async Task joinRole(SocketGuildUser person, int durationInMinutes, [Remainder]string role)
-            {
+            {var highestRole = ((SocketGuildUser)await Context.Guild.GetCurrentUserAsync()).Roles.OrderByDescending(x => x.Position).First();
+                var requestedRole = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower().Equals(role.ToLower()));
+
+                if(requestedRole == null || requestedRole.Position >= highestRole.Position){
+                    await ReplyAsync($"**Error**: Role `{role}` could either not be found, or was beyond Mops' permissions.");
+                    return;
+                }
                 await StaticBase.MuteHandler.AddMute(person, Context.Guild.Id, durationInMinutes, role);
                 await ReplyAsync($"``{role}`` Role added to ``{person.Username}`` for **{durationInMinutes}** minutes.");
             }
