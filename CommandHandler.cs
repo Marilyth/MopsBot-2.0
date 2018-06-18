@@ -195,6 +195,8 @@ namespace MopsBot
 
                 foreach (CommandInfo curCommand in curModule.Commands)
                     output += $" `{curCommand.Name}`";
+                foreach (ModuleInfo curMod in curModule.Submodules)
+                    output += $" `{curMod.Name}*`";
             }
 
             await msg.Channel.SendMessageAsync(output);
