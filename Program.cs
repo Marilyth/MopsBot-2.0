@@ -48,7 +48,7 @@ namespace MopsBot
             client.Disconnected += onClientDC;
 
             var map = new ServiceCollection().AddSingleton(client)
-                .AddSingleton(new AudioService())
+                // .AddSingleton(new AudioService())
                 .AddSingleton(new ReliabilityService(client, Client_Log));
 
             var provider = map.BuildServiceProvider();
