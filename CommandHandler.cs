@@ -15,9 +15,9 @@ namespace MopsBot
 {
     public class CommandHandler
     {
-        public CommandService commands{get; private set;}
+        public CommandService commands { get; private set; }
         private DiscordSocketClient client;
-        public IServiceProvider _provider{get; private set;}
+        public IServiceProvider _provider { get; private set; }
 
         /// <summary>
         /// Add command/module Service and create Events
@@ -91,7 +91,8 @@ namespace MopsBot
             await StaticBase.UpdateGameAsync();
         }
 
-        private async Task GuildCountChanged(SocketGuild guild){
+        private async Task GuildCountChanged(SocketGuild guild)
+        {
             await StaticBase.UpdateGameAsync();
         }
 
@@ -111,7 +112,7 @@ namespace MopsBot
 
             //Determines if the Guild has set a special prefix, if not, ! is used
             ulong id = 0;
-            if(message.Channel is Discord.IDMChannel) id = message.Channel.Id;
+            if (message.Channel is Discord.IDMChannel) id = message.Channel.Id;
             else id = ((SocketGuildChannel)message.Channel).Guild.Id;
             var prefix = guildPrefix.ContainsKey(id) ? guildPrefix[id] : "!";
 
@@ -123,7 +124,7 @@ namespace MopsBot
             if (char.IsWhiteSpace(message.Content[argPos]))
                 argPos += 1;
 
-            if (message.Content.Substring(argPos).StartsWith("help") || message.HasCharPrefix('?', ref argPos))
+            if (message.HasCharPrefix('?', ref argPos))
             {
                 await getCommands(parameterMessage, prefix);
                 return;
@@ -135,7 +136,8 @@ namespace MopsBot
             var result = await commands.ExecuteAsync(context, argPos, _provider);
 
             // If the command failed, notify the user
-            if (!result.IsSuccess && !result.ErrorReason.Contains("Unknown command")){
+            if (!result.IsSuccess && !result.ErrorReason.Contains("Unknown command") && !result.ErrorReason.Equals(""))
+            {
                 await message.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}");
             }
         }
@@ -147,73 +149,52 @@ namespace MopsBot
         /// <returns>A Task that can be awaited</returns>
         public async Task getCommands(SocketMessage msg, string prefix)
         {
-            string output = "";
+            var output = "";
+            string message = msg.Content.Replace("?", "").ToLower();
 
-            if (msg.Content.Contains("help"))
+            string commandName = message, moduleName = message;
+
+            string[] tempMessages;
+            if ((tempMessages = message.Split(' ')).Length > 1)
             {
-                output += "For more information regarding a specific command, please use ?<command>";
-
-                foreach (var module in commands.Modules.Where(x=> !x.Preconditions.OfType<HideAttribute>().Any()))
-                {
-                    if (module.IsSubmodule && !module.Preconditions.OfType<HideAttribute>().Any())
-                    {
-                        output += $"`{module.Name}*` ";
-                    }
-                    else
-                    {
-                        output += $"\n**{module.Name}**: ";
-                        foreach (var command in module.Commands)
-                            if (!command.Preconditions.OfType<HideAttribute>().Any())
-                                output += $"`{command.Name}` ";
-                    }
-                }
+                moduleName = tempMessages[0];
+                commandName = tempMessages[1];
             }
 
+            if (commands.Commands.ToList().Exists(x => x.Name.ToLower().Equals(commandName)))
+            {
+                CommandInfo curCommand = commands.Commands.First(x => x.Name.ToLower().Equals(commandName));
+                if (!moduleName.Equals(commandName))
+                {
+                    curCommand = commands.Modules.First(x => x.Name.ToLower().Equals(moduleName)).Commands.First(x => x.Name.ToLower().Equals(commandName));
+                }
+
+                if(curCommand.Summary.Equals("")){
+                    return;
+                }
+                output += $"`{curCommand.Name}`:\n";
+                output += curCommand.Summary;
+                output += $"\n\n**Usage**: `{prefix}{(curCommand.Module.IsSubmodule ? curCommand.Module.Name + " " + curCommand.Name : curCommand.Name)}";
+                foreach (Discord.Commands.ParameterInfo p in curCommand.Parameters)
+                {
+                    output += $" {(p.IsOptional ? $"[Optional: {p.Name}]" : $"<{p.Name}>")}";
+                }
+                output += "`";
+                // if(curCommand.Parameters.Any(x=> x.IsOptional)){
+                //     output +="\n\n**Default Values**:";
+                //     foreach(var p in curCommand.Parameters.Where(x=>x.IsOptional))
+                //         output+=$"\n    {p.Name}: {p.DefaultValue}";
+                // }
+
+            }
             else
             {
-                string message = msg.Content.Replace("?", "").ToLower();
+                ModuleInfo curModule = commands.Modules.First(x => x.Name.ToLower().Equals(moduleName));
 
-                string commandName = message, moduleName = message;
+                output += $"**{curModule.Name}**:";
 
-                string[] tempMessages;
-                if ((tempMessages = message.Split(' ')).Length > 1)
-                {
-                    moduleName = tempMessages[0];
-                    commandName = tempMessages[1];
-                }
-
-                if (commands.Commands.ToList().Exists(x => x.Name.ToLower().Equals(commandName)))
-                {
-                    CommandInfo curCommand = commands.Commands.First(x => x.Name.ToLower().Equals(commandName));
-                    if (!moduleName.Equals(commandName))
-                    {
-                        curCommand = commands.Modules.First(x => x.Name.ToLower().Equals(moduleName)).Commands.First(x => x.Name.ToLower().Equals(commandName));
-                    }
-
-                    output += $"`{curCommand.Name}`:\n";
-                    output += curCommand.Summary;
-                    output += $"\n\n**Usage**: `{prefix}{(curCommand.Module.IsSubmodule ? curCommand.Module.Name + " " + curCommand.Name : curCommand.Name)}";
-                    foreach (Discord.Commands.ParameterInfo p in curCommand.Parameters)
-                    {
-                        output += $" {(p.IsOptional?$"[Optional: {p.Name}]":$"<{p.Name}>")}";
-                    }
-                    output += "`";
-                    // if(curCommand.Parameters.Any(x=> x.IsOptional)){
-                    //     output +="\n\n**Default Values**:";
-                    //     foreach(var p in curCommand.Parameters.Where(x=>x.IsOptional))
-                    //         output+=$"\n    {p.Name}: {p.DefaultValue}";
-                    // }
-                    
-                }
-                else
-                {
-                    ModuleInfo curModule = commands.Modules.First(x => x.Name.ToLower().Equals(moduleName));
-
-                    output += $"**{curModule.Name}**:";
-
-                    foreach (CommandInfo curCommand in curModule.Commands)
-                        output += $" `{curCommand.Name}`";
-                }
+                foreach (CommandInfo curCommand in curModule.Commands)
+                    output += $" `{curCommand.Name}`";
             }
 
             await msg.Channel.SendMessageAsync(output);

@@ -135,13 +135,36 @@ namespace MopsBot.Module
         }
 
         [Command("kill")]
-        [Summary("Stops Mops to adapt to any new changes in code.")]
+        // [Summary("Stops Mops to adapt to any new changes in code.")]
         [RequireBotManage()]
         [Hide]
         public Task kill()
         {
             Environment.Exit(0);
             return Task.CompletedTask;
+        }
+
+        [Command("help")]
+        [Hide]
+        public async Task help()
+        {
+            var output = "For more information regarding a specific command, please use ?<command>";
+
+            foreach (var module in Program.handler.commands.Modules.Where(x=> !x.Preconditions.OfType<HideAttribute>().Any()))
+            {
+                if (module.IsSubmodule && !module.Preconditions.OfType<HideAttribute>().Any())
+                {
+                    output += $"`{module.Name}*` ";
+                }
+                else
+                {
+                    output += $"\n**{module.Name}**: ";
+                    foreach (var command in module.Commands)
+                        if (!command.Preconditions.OfType<HideAttribute>().Any())
+                    output += $"`{command.Name}` ";
+                }
+            }
+            await ReplyAsync(output);
         }
     }
 }

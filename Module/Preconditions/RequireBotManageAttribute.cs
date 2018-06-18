@@ -12,7 +12,7 @@ namespace MopsBot.Module.Preconditions{
         {
             if(new List<string>(Program.Config["BotManager"].Split(":")).Contains(context.User.Id.ToString())||context.User.Id.Equals((await Program.client.GetApplicationInfoAsync()).Owner.Id))
                 return PreconditionResult.FromSuccess();
-            return PreconditionResult.FromError("You need to develop the bot to use this command.");
+            return PreconditionResult.FromError("");
         }
     }
 }
