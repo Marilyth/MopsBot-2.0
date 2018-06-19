@@ -22,7 +22,7 @@ namespace MopsBot.Data.Tracker
         public bool isThumbnailLarge;
         public Dictionary<ulong, string> ChannelMessages;
 
-        public TwitchTracker() : base(60000, ExistingTrackers * 2000)
+        public TwitchTracker() : base(60000, ExistingTrackers * 2000+500)
         {
         }
 
@@ -30,7 +30,15 @@ namespace MopsBot.Data.Tracker
         {
             viewerGraph = new Plot(Name, "Time In Minutes", "Viewers", IsOnline);
             foreach(var channelMessage in ToUpdate){
-                await setReaction((IUserMessage)((ITextChannel)Program.client.GetChannel(channelMessage.Key)).GetMessageAsync(channelMessage.Value).Result);
+                try{
+                    await setReaction((IUserMessage)((ITextChannel)Program.client.GetChannel(channelMessage.Key)).GetMessageAsync(channelMessage.Value).Result);
+                }catch{
+                    if(Program.client.GetChannel(channelMessage.Key)==null){
+                        StaticBase.trackers["twitch"].removeTracker(Name, channelMessage.Key);
+                        Console.Out.Write("remove tracker");
+                        
+                    }
+                }
             }
         }
 

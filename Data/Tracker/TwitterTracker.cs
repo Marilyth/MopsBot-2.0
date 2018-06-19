@@ -21,7 +21,7 @@ namespace MopsBot.Data.Tracker
         public Dictionary<ulong, string> OtherNotifications;
         private Task<IEnumerable<ITweet>> fetchTweets;
 
-        public TwitterTracker() : base(300000, ExistingTrackers * 2000)
+        public TwitterTracker() : base(300000, ExistingTrackers * 2000+500)
         {
             TweetNotifications = new Dictionary<ulong, string>();
             OtherNotifications = new Dictionary<ulong, string>();

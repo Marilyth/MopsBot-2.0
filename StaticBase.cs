@@ -75,6 +75,10 @@ namespace MopsBot
                 trackers["youtube"] = new TrackerHandler<YoutubeTracker>();
                 trackers["reddit"] = new TrackerHandler<RedditTracker>();
 
+                foreach(var tracker in trackers){
+                    tracker.Value.postInitialisation();
+                }
+
                 init = true;
 
             }
