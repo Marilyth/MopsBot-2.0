@@ -180,12 +180,15 @@ namespace MopsBot.Data
             }
             catch
             {
-                if (Program.client.GetChannel(channelID) == null)
+                if (Program.client.GetChannel(channelID) == null){
                     removeTracker(parent.Name, channelID);
+                    Console.Out.Write($"Removed Tracker: {parent.Name} Channel {channelID} is missing");
+                }
                 else{
                     var permission = (await ((IGuildChannel)Program.client.GetChannel(channelID)).Guild.GetCurrentUserAsync()).GetPermissions( ((IGuildChannel)Program.client.GetChannel(channelID)));
                     if(!permission.SendMessages || !permission.ViewChannel || !permission.ReadMessageHistory){
                         removeTracker(parent.Name, channelID);
+                        Console.Out.Write($"Removed Tracker: {parent.Name} missing Permission in Channel {channelID}");
                     }           
                 }
 
@@ -204,7 +207,6 @@ namespace MopsBot.Data
                 if (parent is Tracker.TwitchTracker)
                 {
                     Tracker.TwitchTracker parentHandle = parent as Tracker.TwitchTracker;
-                    throw new Exception("test");
                     if (parentHandle.ToUpdate.ContainsKey(channelID))
                     {
                         var message = ((IUserMessage)((ITextChannel)Program.client.GetChannel(channelID)).GetMessageAsync(parentHandle.ToUpdate[channelID]).Result);
@@ -234,12 +236,15 @@ namespace MopsBot.Data
             }
             catch
             {
-                if (Program.client.GetChannel(channelID) == null)
+                if (Program.client.GetChannel(channelID) == null){
                     removeTracker(parent.Name, channelID);
+                    Console.Out.Write($"Removed Tracker: {parent.Name} Channel {channelID} is missing");
+                }
                 else{
                     var permission = (await ((IGuildChannel)Program.client.GetChannel(channelID)).Guild.GetCurrentUserAsync()).GetPermissions( ((IGuildChannel)Program.client.GetChannel(channelID)));
                     if(!permission.SendMessages || !permission.ViewChannel || !permission.ReadMessageHistory || (parent is Tracker.TwitchTracker && (!permission.AddReactions || !permission.ManageMessages))){
                         removeTracker(parent.Name, channelID);
+                        Console.Out.Write($"Removed Tracker: {parent.Name} missing Permission in Channel {channelID}");
                     }           
                 }
             }
