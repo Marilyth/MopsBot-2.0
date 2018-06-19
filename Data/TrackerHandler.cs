@@ -241,7 +241,7 @@ namespace MopsBot.Data
             {
                 if (Program.client.GetChannel(channelID) == null){
                     removeTracker(parent.Name, channelID);
-                    Console.Out.Write($"Removed Tracker: {parent.Name} Channel {channelID} is missing");
+                    Console.Out.WriteLine($"Removed Tracker: {parent.Name} Channel {channelID} is missing");
                 }
                 else{
                     var permission = (await ((IGuildChannel)Program.client.GetChannel(channelID)).Guild.GetCurrentUserAsync()).GetPermissions( ((IGuildChannel)Program.client.GetChannel(channelID)));
