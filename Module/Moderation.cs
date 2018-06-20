@@ -121,6 +121,11 @@ namespace MopsBot.Module
         [RequireUserPermission(ChannelPermission.ManageChannels)]
         public async Task setPrefix([Remainder]string prefix)
         {
+            if(prefix.StartsWith("?")){
+                await ReplyAsync($"`?` is required for Mops functionality. Cannot change prefix to `{prefix}`");
+                return;
+            }
+
             string oldPrefix;
 
             if (guildPrefix.ContainsKey(Context.Guild.Id))
