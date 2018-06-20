@@ -63,7 +63,7 @@ namespace MopsBot.Api.Controllers
                 Where(x => allTypes || parameters["type"].Contains(x.Key)).ToDictionary(x => x.Key, x => x.Value);
 
             foreach(var key in allTrackers.Keys)
-                allResults = allResults.Concat(allTrackers[key].getTrackerSet().
+                allResults = allResults.Concat(allTrackers[key].GetTrackerSet().
                     Where(x => allChannels || 
                     parameters["channel"].Any(y => x.ChannelIds.Contains(ulong.Parse(y)))))
                     .ToHashSet();

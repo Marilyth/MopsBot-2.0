@@ -16,12 +16,12 @@ namespace MopsBot.Data
     public abstract class TrackerWrapper
     {
         public abstract void SaveJson();
-        public abstract void removeTracker(string name, ulong channelID);
-        public abstract void addTracker(string name, ulong channelID, string notification = "");
-        public abstract Dictionary<string, Tracker.ITracker> getTracker();
-        public abstract HashSet<Tracker.ITracker> getTrackerSet();
-        public abstract string getTracker(ulong channelID);
-        public abstract Type getTrackerType();
+        public abstract bool TryRemoveTracker(string name, ulong channelID);
+        public abstract void AddTracker(string name, ulong channelID, string notification = "");
+        public abstract Dictionary<string, Tracker.ITracker> GetTracker();
+        public abstract HashSet<Tracker.ITracker> GetTrackerSet();
+        public abstract string GetTracker(ulong channelID);
+        public abstract Type GetTrackerType();
         public abstract void postInitialisation();
 
     }
@@ -89,7 +89,7 @@ namespace MopsBot.Data
                 write.Write(dictAsJson);
         }
 
-        public override void removeTracker(string name, ulong channelID)
+        public override bool TryRemoveTracker(string name, ulong channelID)
         {
             if (trackers.ContainsKey(name) && trackers[name].ChannelIds.Contains(channelID))
             {
@@ -119,10 +119,12 @@ namespace MopsBot.Data
                 }
 
                 SaveJson();
+                return true;
             }
+            return false;
         }
 
-        public override void addTracker(string name, ulong channelID, string notification = "")
+        public override void AddTracker(string name, ulong channelID, string notification = "")
         {
             if (trackers.ContainsKey(name))
             {
@@ -148,21 +150,21 @@ namespace MopsBot.Data
             SaveJson();
         }
 
-        public override string getTracker(ulong channelID)
+        public override string GetTracker(ulong channelID)
         {
             return string.Join(", ", trackers.Where(x => x.Value.ChannelIds.Contains(channelID)).Select(x => x.Key));
         }
-        public override Dictionary<string, ITracker> getTracker()
+        public override Dictionary<string, ITracker> GetTracker()
         {
             return trackers.Select(x => new KeyValuePair<string, ITracker>(x.Key, (ITracker)x.Value)).ToDictionary(x => x.Key, x => x.Value);
         }
 
-        public override HashSet<ITracker> getTrackerSet()
+        public override HashSet<ITracker> GetTrackerSet()
         {
             return trackers.Values.Select(x => (ITracker)x).ToHashSet();
         }
 
-        public override Type getTrackerType()
+        public override Type GetTrackerType()
         {
             return typeof(T);
         }
@@ -181,13 +183,13 @@ namespace MopsBot.Data
             catch
             {
                 if (Program.client.GetChannel(channelID) == null){
-                    removeTracker(parent.Name, channelID);
+                    TryRemoveTracker(parent.Name, channelID);
                     Console.Out.WriteLine($"Removed Tracker: {parent.Name} Channel {channelID} is missing");
                 }
                 else{
                     var permission = (await ((IGuildChannel)Program.client.GetChannel(channelID)).Guild.GetCurrentUserAsync()).GetPermissions( ((IGuildChannel)Program.client.GetChannel(channelID)));
                     if(!permission.SendMessages || !permission.ViewChannel || !permission.ReadMessageHistory){
-                        removeTracker(parent.Name, channelID);
+                        TryRemoveTracker(parent.Name, channelID);
                         Console.Out.WriteLine($"Removed a tracker for {parent.Name} due to missing Permissions");
                         if(permission.SendMessages){
                             await ((ITextChannel)Program.client.GetChannel(channelID)).SendMessageAsync($"Removed tracker for `{parent.Name}` due to missing Permissions");
@@ -240,13 +242,13 @@ namespace MopsBot.Data
             catch
             {
                 if (Program.client.GetChannel(channelID) == null){
-                    removeTracker(parent.Name, channelID);
+                    TryRemoveTracker(parent.Name, channelID);
                     Console.Out.WriteLine($"Removed Tracker: {parent.Name} Channel {channelID} is missing");
                 }
                 else{
                     var permission = (await ((IGuildChannel)Program.client.GetChannel(channelID)).Guild.GetCurrentUserAsync()).GetPermissions( ((IGuildChannel)Program.client.GetChannel(channelID)));
                     if(!permission.SendMessages || !permission.ViewChannel || !permission.ReadMessageHistory || (parent is Tracker.TwitchTracker && (!permission.AddReactions || !permission.ManageMessages))){
-                        removeTracker(parent.Name, channelID);
+                        TryRemoveTracker(parent.Name, channelID);
                         Console.Out.WriteLine($"Removed a tracker for {parent.Name} due to missing Permissions");
                         if(permission.SendMessages){
                             await ((ITextChannel)Program.client.GetChannel(channelID)).SendMessageAsync($"Removed tracker for `{parent.Name}` due to missing Permissions");

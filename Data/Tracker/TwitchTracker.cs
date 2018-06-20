@@ -34,7 +34,7 @@ namespace MopsBot.Data.Tracker
                     await setReaction((IUserMessage)((ITextChannel)Program.client.GetChannel(channelMessage.Key)).GetMessageAsync(channelMessage.Value).Result);
                 }catch{
                     if(Program.client.GetChannel(channelMessage.Key)==null){
-                        StaticBase.trackers["twitch"].removeTracker(Name, channelMessage.Key);
+                        StaticBase.trackers["twitch"].TryRemoveTracker(Name, channelMessage.Key);
                         Console.Out.Write("remove tracker");
                         
                     }
