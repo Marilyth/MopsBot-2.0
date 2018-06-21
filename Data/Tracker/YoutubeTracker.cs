@@ -40,7 +40,9 @@ namespace MopsBot.Data.Tracker
 
         private async Task<YoutubeResult> fetchVideos()
         {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://www.googleapis.com/youtube/v3/search?key={Program.Config["Youtube"]}&channelId={Name}&part=snippet,id&order=date&maxResults=20&publishedAfter={LastTime}");
+            var lastDateTime = DateTime.Parse(LastTime);
+            var lastStringDateTime = XmlConvert.ToString(lastDateTime.AddSeconds(1), XmlDateTimeSerializationMode.Utc);
+            string query = await MopsBot.Module.Information.ReadURLAsync($"https://www.googleapis.com/youtube/v3/search?key={Program.Config["Youtube"]}&channelId={Name}&part=snippet,id&order=date&maxResults=20&publishedAfter={lastStringDateTime}");
 
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {
@@ -73,7 +75,7 @@ namespace MopsBot.Data.Tracker
                 YoutubeResult curStats = await fetchVideos();
                 APIResults.Item[] newVideos = curStats.items.ToArray();
 
-                if (newVideos.Length > 1)
+                if (newVideos.Length > 0)
                 {
                     LastTime = XmlConvert.ToString(newVideos[0].snippet.publishedAt, XmlDateTimeSerializationMode.Utc);
                     StaticBase.trackers["youtube"].SaveJson();
@@ -81,12 +83,9 @@ namespace MopsBot.Data.Tracker
 
                 foreach (APIResults.Item video in newVideos)
                 {
-                    if (video != newVideos[newVideos.Length - 1])
+                    foreach (ulong channel in ChannelIds)
                     {
-                        foreach (ulong channel in ChannelIds)
-                        {
-                            await OnMajorChangeTracked(channel, await createEmbed(video), "New Video");
-                        }
+                        await OnMajorChangeTracked(channel, await createEmbed(video), "New Video");
                     }
                 }
             }
