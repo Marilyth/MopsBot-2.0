@@ -16,6 +16,7 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.7" />
     <PackageReference Include="Gfycat.Net" Version="1.0.10.73" />
+    <PackageReference Include="NewsAPI" Version="0.5.0" />
   </ItemGroup>
 
   <ItemGroup>

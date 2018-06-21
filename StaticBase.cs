@@ -11,6 +11,7 @@ using MopsBot.Data;
 using MopsBot.Data.Tracker;
 using MopsBot.Data.Updater;
 using Tweetinvi;
+using NewsAPI;
 
 namespace MopsBot
 {
@@ -33,6 +34,7 @@ namespace MopsBot
         public static ClipTracker ClipTracker;
         public static Dictionary<string, TrackerWrapper> trackers;
         public static MuteTimeHandler MuteHandler;
+        public static NewsApiClient NewsClient;
 
         public static bool init = false;
 
@@ -51,6 +53,7 @@ namespace MopsBot
                 TweetinviConfig.CurrentThreadSettings.TweetMode = TweetMode.Extended;
                 TweetinviConfig.ApplicationSettings.TweetMode = TweetMode.Extended;
                 gfy = new Gfycat.GfycatClient(Program.Config["GfyID"], Program.Config["GfySecret"]);
+                NewsClient = new NewsApiClient(Program.Config["NewsAPI"]);
 
                 ClipTracker = new ClipTracker();
 
@@ -74,6 +77,7 @@ namespace MopsBot
                 trackers["twitter"] = new TrackerHandler<TwitterTracker>();
                 trackers["youtube"] = new TrackerHandler<YoutubeTracker>();
                 trackers["reddit"] = new TrackerHandler<RedditTracker>();
+                trackers["news"] = new TrackerHandler<NewsTracker>();
 
                 foreach(var tracker in trackers){
                     tracker.Value.postInitialisation();

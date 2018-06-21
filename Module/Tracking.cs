@@ -162,7 +162,6 @@ namespace MopsBot.Module
             [Summary("Keeps track of the specified Subreddit, in the Channel you are calling this command right now.\nRequires Manage channel permissions."
             + "\n queries MUST look something like this: `title:mei+title:hanzo`")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            [Hide]
             public async Task trackSubreddit(string subreddit, string query = null)
             {
                 trackers["reddit"].AddTracker(String.Join(" ", new string[] { subreddit, query }.Where(x => x != null)), Context.Channel.Id);
@@ -228,6 +227,40 @@ namespace MopsBot.Module
             public async Task getTracks()
             {
                 await ReplyAsync("Following players are currently being tracked:\n``" + StaticBase.trackers["overwatch"].GetTracker(Context.Channel.Id) + "``");
+            }
+        }
+
+        [Group("News")]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
+        public class News : ModuleBase
+        {
+            [Command("Track")]
+            [Summary("Keeps track of articles from the specified source.\n"+
+                     "Here is a list of possible sources: https://newsapi.org/sources")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task trackNews(string source, [Remainder]string query = "")
+            {
+                trackers["news"].AddTracker(String.Join("|", new string[] { source, query }), Context.Channel.Id);
+                await ReplyAsync($"Keeping track of `{source}`'s articles {(query.Equals("") ? "" : $"including `{query}` from now on!")}");
+            }
+
+            [Command("UnTrack")]
+            [Summary("Stops tracking articles with the specified query.\nRequires Manage channel permissions.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task unTrackNews([Remainder]string articleQuery)
+            {
+                if(trackers["news"].TryRemoveTracker(articleQuery, Context.Channel.Id))
+                    await ReplyAsync("Stopped keeping track of articles including " + articleQuery + "!");
+                else
+                    await ReplyAsync($"Could not find tracker for `{articleQuery}`\n"+
+                                     $"Currently tracked article queries are: ``{StaticBase.trackers["news"].GetTracker(Context.Channel.Id)}``");
+            }
+
+            [Command("GetTracks")]
+            [Summary("Returns the article queries that are tracked in the current channel.")]
+            public async Task getTracks()
+            {
+                await ReplyAsync("Following article queries are currently being tracked:\n``" + StaticBase.trackers["news"].GetTracker(Context.Channel.Id) + "``");
             }
         }
         
