@@ -15,7 +15,7 @@ namespace MopsBot.Data.Tracker
     {
         public Dictionary<string, double> allPP;
 
-        public OsuTracker() : base(60000, ExistingTrackers * 2000+500   )
+        public OsuTracker() : base(60000, (ExistingTrackers * 2000+500) % 60000)
         {
         }
 

@@ -19,7 +19,7 @@ namespace MopsBot.Data.Tracker
     {
         public string LastTime;
 
-        public YoutubeTracker() : base(300000, ExistingTrackers * 2000+500)
+        public YoutubeTracker() : base(300000, (ExistingTrackers * 2000+500) % 300000)
         {
         }
 

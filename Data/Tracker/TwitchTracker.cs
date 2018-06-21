@@ -22,7 +22,7 @@ namespace MopsBot.Data.Tracker
         public bool isThumbnailLarge;
         public Dictionary<ulong, string> ChannelMessages;
 
-        public TwitchTracker() : base(60000, ExistingTrackers * 2000+500)
+        public TwitchTracker() : base(60000, (ExistingTrackers * 2000+500) % 60000)
         {
         }
 
@@ -35,8 +35,7 @@ namespace MopsBot.Data.Tracker
                 }catch{
                     if(Program.client.GetChannel(channelMessage.Key)==null){
                         StaticBase.trackers["twitch"].TryRemoveTracker(Name, channelMessage.Key);
-                        Console.Out.Write("remove tracker");
-                        
+                        Console.Out.Write("remove tracker");  
                     }
                 }
             }
@@ -172,6 +171,7 @@ namespace MopsBot.Data.Tracker
             e.Color = new Color(0x6441A4);
             e.Title = streamer.status;
             e.Url = streamer.url;
+            e.Description = "**For people with manage channel permission**:\n🖌: Change chart colour\n🔄: Switch thumbnail and chart position";
 
             EmbedAuthorBuilder author = new EmbedAuthorBuilder();
             author.Name = Name;
@@ -194,18 +194,22 @@ namespace MopsBot.Data.Tracker
         }
 
         private async Task recolour(ReactionHandlerContext context){
-            viewerGraph.Recolour();
+            if(((IGuildUser)await context.reaction.Channel.GetUserAsync(context.reaction.UserId)).GetPermissions((IGuildChannel)context.channel).ManageChannel){
+                viewerGraph.Recolour();
 
-            foreach (ulong channel in ChannelIds)
-                await OnMajorChangeTracked(channel, createEmbed());
+                foreach (ulong channel in ChannelIds)
+                    await OnMajorChangeTracked(channel, createEmbed());
+            }
         }
 
         private async Task switchThumbnail(ReactionHandlerContext context){
-            isThumbnailLarge = !isThumbnailLarge;
-            StaticBase.trackers["twitch"].SaveJson();
+            if(((IGuildUser)await context.reaction.Channel.GetUserAsync(context.reaction.UserId)).GetPermissions((IGuildChannel)context.channel).ManageChannel){
+                isThumbnailLarge = !isThumbnailLarge;
+                StaticBase.trackers["twitch"].SaveJson();
 
-            foreach (ulong channel in ChannelIds)
-                await OnMajorChangeTracked(channel, createEmbed());
+                foreach (ulong channel in ChannelIds)
+                    await OnMajorChangeTracked(channel, createEmbed());
+            }
         }
     }
 }
