@@ -31,7 +31,7 @@ namespace MopsBot.Data.Tracker
             Source = request[0];
             Query = request[1];
 
-            //Check if person exists by forcing Exceptions if not.
+            //Check if query and source yield proper results, by forcing exceptions if not.
             try{
                 var checkExists = getNews().Result;
                 var test = checkExists[0];
@@ -42,7 +42,7 @@ namespace MopsBot.Data.Tracker
                 LastNews = test.PublishedAt.ToString();
             } catch(Exception e){
                 Dispose();
-                throw new Exception($"`{Source}` didn't yield any result{(Query.Equals("") ? "" : $" for `{Query}`")}.");
+                throw new Exception($"`{Source}` didn't yield any proper result{(Query.Equals("") ? "" : $" for `{Query}`")}.");
             }
         }
 
@@ -52,7 +52,6 @@ namespace MopsBot.Data.Tracker
                 Article[] newArticles = await getNews();
 
                 if(newArticles.Length > 0){
-                    var test = newArticles.First().PublishedAt;
                     LastNews = newArticles.First().PublishedAt.ToString();
                     StaticBase.trackers["news"].SaveJson();
                 }
