@@ -54,7 +54,7 @@ namespace MopsBot.Data
         {
             SocketRole role = (SocketRole)channel.Guild.Roles.First(x => x.Name.ToLower().Equals(name.ToLower()));
             EmbedBuilder e = new EmbedBuilder();
-            e.Title = role.Name + " Einladung";
+            e.Title = role.Name + $" Einladung :{role.Id}";
             e.Description = $"Um der Rolle " + (role.IsMentionable ? role.Mention : role.Name) + " beizutreten, oder sie zu verlassen, drücke bitte die ✅/❎ Icons unter dieser Nachricht!\n" +
                             "Falls du die Manage Role Permission besitzt, kannst du diese Einladung mit einem Druck auf den 🗑 Icon löschen.";
             e.Color = role.Color;
@@ -80,7 +80,7 @@ namespace MopsBot.Data
         {
             SocketRole role = (SocketRole)channel.Guild.Roles.First(x => x.Name.ToLower().Equals(name.ToLower()));
             EmbedBuilder e = new EmbedBuilder();
-            e.Title = role.Name + " Role Invite";
+            e.Title = role.Name + $" Role Invite :{role.Id}";
             e.Description = $"To join/leave the " + (role.IsMentionable ? role.Mention : role.Name) + " role, press the ✅/❎ Icons below this message!\n" +
                             "If you can manage Roles, you may delete this invitation by pressing the 🗑 Icon.";
             e.Color = role.Color;
@@ -143,7 +143,7 @@ namespace MopsBot.Data
             var e = context.message.Embeds.First().ToEmbedBuilder();
 
             e.Color = role.Color;
-
+            e.Title = e.Title.Contains("Einladung") ? $"{role.Name} Einladung :{role.Id}" : $"{role.Name} Role Invite :{role.Id}";
             foreach (EmbedFieldBuilder field in e.Fields)
             {
                 if (field.Name.Equals("Members in role") || field.Name.Equals("Mitgliederanzahl der Rolle"))
