@@ -29,7 +29,6 @@ namespace MopsBot
         public static ReactionGiveaway ReactGiveaways;
         public static ReactionRoleJoin ReactRoleJoin;
         public static Poll poll;
-        public static Blackjack blackjack;
         public static Crosswords crosswords;
         public static ClipTracker ClipTracker;
         public static Dictionary<string, TrackerWrapper> trackers;

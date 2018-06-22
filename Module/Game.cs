@@ -77,59 +77,5 @@ namespace MopsBot.Module
                 await Context.Message.DeleteAsync();
             }
         }
-        
-        [Group("Blackjack")]
-        [RequireBotPermission(ChannelPermission.SendMessages)]
-        [RequireBotPermission(ChannelPermission.ReadMessageHistory)]
-        [RequireBotPermission(ChannelPermission.ManageMessages)]
-        public class Blackjack : ModuleBase
-        {
-            [Command("join")]
-            [Summary("Joins a game of blackjack")]
-            public async Task join(int betAmount)
-            {
-                if (StaticBase.blackjack == null || !StaticBase.blackjack.active)
-                {
-                    StaticBase.blackjack = new Data.Updater.Blackjack(Context.Client.CurrentUser);
-                    StaticBase.blackjack.toEdit = await ReplyAsync("Table set up. Woof");
-                }
-
-                if (betAmount <= StaticBase.people.Users[Context.User.Id].Score && betAmount > 0)
-                    StaticBase.blackjack.userJoin(Context.User, betAmount);
-
-                else
-                    await ReplyAsync("You can't bet that much.");
-            }
-
-            [Command("start")]
-            [Summary("Starts the game of Blackjack")]
-            public Task start()
-            {
-                if(!StaticBase.blackjack.active)
-                    StaticBase.blackjack.start();
-
-                return Task.CompletedTask;
-            }
-
-            [Command("hit")]
-            [Summary("You get another card")]
-            public Task hit()
-            {
-                if(StaticBase.blackjack.active)
-                    StaticBase.blackjack.drawCard(Context.User, true);
-
-                return Task.CompletedTask;
-            }
-
-            [Command("skip")]
-            [Summary("You skip the round")]
-            public Task skip()
-            {
-                if(StaticBase.blackjack.active)
-                    StaticBase.blackjack.skipRound(Context.User);
-
-                return Task.CompletedTask;
-            }
-        }
     }
 }

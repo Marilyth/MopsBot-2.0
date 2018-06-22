@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Discord.Commands;
 using Discord.WebSocket;
+using Discord;
 using MopsBot.Module.Preconditions;
 using System.IO;
 using static MopsBot.StaticBase;
@@ -153,6 +154,7 @@ namespace MopsBot
             string message = msg.Content.Replace("?", "").ToLower();
 
             string commandName = message, moduleName = message;
+            Embed embed = null;
 
             string[] tempMessages;
             if ((tempMessages = message.Split(' ')).Length > 1)
@@ -172,14 +174,14 @@ namespace MopsBot
                 if(curCommand.Summary.Equals("")){
                     return;
                 }
-                output += $"`{curCommand.Name}`:\n";
-                output += curCommand.Summary;
-                output += $"\n\n**Usage**: `{prefix}{(curCommand.Module.IsSubmodule ? curCommand.Module.Name + " " + curCommand.Name : curCommand.Name)}";
+                output += $"`{prefix}{(curCommand.Module.IsSubmodule ? curCommand.Module.Name + " " + curCommand.Name : curCommand.Name)}";
                 foreach (Discord.Commands.ParameterInfo p in curCommand.Parameters)
                 {
                     output += $" {(p.IsOptional ? $"[Optional: {p.Name}]" : $"<{p.Name}>")}";
                 }
                 output += "`";
+
+                embed = createHelpEmbed($"{(curCommand.Module.IsSubmodule ? curCommand.Module.Name + " " + curCommand.Name : curCommand.Name)}", output, curCommand.Summary);
                 // if(curCommand.Parameters.Any(x=> x.IsOptional)){
                 //     output +="\n\n**Default Values**:";
                 //     foreach(var p in curCommand.Parameters.Where(x=>x.IsOptional))
@@ -199,7 +201,22 @@ namespace MopsBot
                     output += $" `{curMod.Name}*`";
             }
 
-            await msg.Channel.SendMessageAsync(output);
+            if(embed == null)
+                await msg.Channel.SendMessageAsync(output);
+            else
+                await msg.Channel.SendMessageAsync("", embed: embed);
+        }
+
+        private Embed createHelpEmbed(string command, string usage, string description){
+            EmbedBuilder e = new EmbedBuilder();
+            e.Color = new Color(0x0099ff);
+            e.Title = command;
+            e.ImageUrl = $"http://5.45.104.29/mops_example_usage/{command.ToLower()}.PNG".Replace(" ", "%20");
+
+            e.AddField("Example usage", usage);
+            e.Description = description;
+
+            return e.Build();
         }
 
         private void fillPrefix()
