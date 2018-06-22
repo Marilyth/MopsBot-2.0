@@ -55,7 +55,7 @@ namespace MopsBot.Data
             SocketRole role = (SocketRole)channel.Guild.Roles.First(x => x.Name.ToLower().Equals(name.ToLower()));
             EmbedBuilder e = new EmbedBuilder();
             e.Title = role.Name + $" Einladung :{role.Id}";
-            e.Description = $"Um der Rolle " + (role.IsMentionable ? role.Mention : role.Name) + " beizutreten, oder sie zu verlassen, drücke bitte die ✅/❎ Icons unter dieser Nachricht!\n" +
+            e.Description = $"Um der Rolle " + (role.IsMentionable ? role.Mention : $"**{role.Name}**") + " beizutreten, oder sie zu verlassen, drücke bitte die ✅/❎ Icons unter dieser Nachricht!\n" +
                             "Falls du die Manage Role Permission besitzt, kannst du diese Einladung mit einem Druck auf den 🗑 Icon löschen.";
             e.Color = role.Color;
 
@@ -81,7 +81,7 @@ namespace MopsBot.Data
             SocketRole role = (SocketRole)channel.Guild.Roles.First(x => x.Name.ToLower().Equals(name.ToLower()));
             EmbedBuilder e = new EmbedBuilder();
             e.Title = role.Name + $" Role Invite :{role.Id}";
-            e.Description = $"To join/leave the " + (role.IsMentionable ? role.Mention : role.Name) + " role, press the ✅/❎ Icons below this message!\n" +
+            e.Description = $"To join/leave the " + (role.IsMentionable ? role.Mention : $"**{role.Name}**") + " role, press the ✅/❎ Icons below this message!\n" +
                             "If you can manage Roles, you may delete this invitation by pressing the 🗑 Icon.";
             e.Color = role.Color;
 
@@ -104,8 +104,8 @@ namespace MopsBot.Data
 
         private async Task JoinRole(ReactionHandlerContext context)
         {
-            var roleName = context.message.Embeds.First().Title.Split(new string[]{" Role Invite", " Einladung"}, StringSplitOptions.None)[0];
-            var role = ((ITextChannel)context.channel).Guild.Roles.First(x => x.Name.Equals(roleName));
+            var roleID = ulong.Parse(context.message.Embeds.First().Title.Split(new string[]{":"}, StringSplitOptions.None)[1]);
+            var role = ((ITextChannel)context.channel).Guild.GetRole(roleID);
             var user = await ((ITextChannel)context.channel).Guild.GetUserAsync(context.reaction.UserId);
             await user.AddRoleAsync(role);            
             await updateMessage(context, (SocketRole) role);
@@ -113,8 +113,8 @@ namespace MopsBot.Data
 
         private async Task LeaveRole(ReactionHandlerContext context)
         {
-            var roleName = context.message.Embeds.First().Title.Split(new string[]{" Role Invite", " Einladung"}, StringSplitOptions.None)[0];
-            var role = ((ITextChannel)context.channel).Guild.Roles.First(x => x.Name.Equals(roleName));
+            var roleID = ulong.Parse(context.message.Embeds.First().Title.Split(new string[]{":"}, StringSplitOptions.None)[1]);
+            var role = ((ITextChannel)context.channel).Guild.GetRole(roleID);
             var user = await ((ITextChannel)context.channel).Guild.GetUserAsync(context.reaction.UserId);
             await user.RemoveRoleAsync(role);                
             await updateMessage(context, (SocketRole) role);
