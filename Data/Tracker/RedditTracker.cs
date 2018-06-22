@@ -107,7 +107,13 @@ namespace MopsBot.Data.Tracker
             footer.Text = "Reddit";
             e.Timestamp = DateTimeOffset.FromUnixTimeSeconds((long)redditPost.created_utc).DateTime;
             e.Footer = footer;
-            e.ThumbnailUrl = !redditPost.thumbnail.Equals("self") && !redditPost.thumbnail.Equals("default") ? redditPost.thumbnail : null;
+
+            try{
+                e.ThumbnailUrl = !redditPost.thumbnail.Equals("self") && !redditPost.thumbnail.Equals("default") ? redditPost.thumbnail : null;
+            } catch(Exception exception){
+                e.ThumbnailUrl = null;
+            }
+
             e.AddField("Score", redditPost.score, true);
 
             if(redditPost.media_embed != null && redditPost.media_embed.media_domain_url != null)
