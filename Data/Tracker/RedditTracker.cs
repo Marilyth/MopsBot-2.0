@@ -105,7 +105,7 @@ namespace MopsBot.Data.Tracker
             EmbedFooterBuilder footer = new EmbedFooterBuilder();
             footer.IconUrl = "http://1000logos.net/wp-content/uploads/2017/05/Reddit-logo.png";
             footer.Text = "Reddit";
-            e.Timestamp = DateTimeOffset.FromUnixTimeSeconds((long)redditPost.created_utc).DateTime;
+            e.Timestamp = DateTimeOffset.FromUnixTimeSeconds((long)redditPost.created_utc).DateTime.AddHours(2);
             e.Footer = footer;
 
             try{
