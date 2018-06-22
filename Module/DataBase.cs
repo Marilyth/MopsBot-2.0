@@ -14,15 +14,13 @@ namespace MopsBot.Module
         [Command("hug")]
         [Summary("Hugs the specified person")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public async Task hug(string person)
+        public async Task hug(SocketGuildUser person)
         {
-            IGuildUser mentioned = Context.Guild.GetUserAsync(Context.Message.MentionedUserIds.ElementAt(0)).Result;
-
-            if (!mentioned.Id.Equals(Context.User.Id))
+            if (!person.Id.Equals(Context.User.Id))
             {
-                StaticBase.people.AddStat(mentioned.Id, 1, "hug");
-                await ReplyAsync($"Aww. **{mentioned.Username}** got hugged by **{Context.User.Username}**.\n" +
-                                 $"They have already been hugged {StaticBase.people.Users[mentioned.Id].hugged} times!");
+                StaticBase.people.AddStat(person.Id, 1, "hug");
+                await ReplyAsync($"Aww. **{person.Username}** got hugged by **{Context.User.Username}**.\n" +
+                                 $"They have already been hugged {StaticBase.people.Users[person.Id].hugged} times!");
             }
             else
                 await ReplyAsync("Go ahead.");
@@ -31,15 +29,13 @@ namespace MopsBot.Module
         [Command("kiss")]
         [Summary("Smooches the specified person")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public async Task kiss(string person)
+        public async Task kiss(SocketGuildUser person)
         {
-            IGuildUser mentioned = Context.Guild.GetUserAsync(Context.Message.MentionedUserIds.ElementAt(0)).Result;
-
-            if (!mentioned.Id.Equals(Context.User.Id))
+            if (!person.Id.Equals(Context.User.Id))
             {
-                StaticBase.people.AddStat(mentioned.Id, 1, "kiss");
-                await ReplyAsync($"Hmpf. Cute, I guess? **{mentioned.Username}** got kissed by **{Context.User.Username}**.\n" +
-                                 $"They have already been kissed {StaticBase.people.Users[mentioned.Id].kissed} times!");
+                StaticBase.people.AddStat(person.Id, 1, "kiss");
+                await ReplyAsync($"Hmpf. Cute, I guess? **{person.Username}** got kissed by **{Context.User.Username}**.\n" +
+                                 $"They have already been kissed {StaticBase.people.Users[person.Id].kissed} times!");
             }
             else
                 await ReplyAsync("That's sad.");
@@ -48,15 +44,13 @@ namespace MopsBot.Module
         [Command("punch")]
         [Summary("Fucks the specified person up")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public async Task punch(string person)
+        public async Task punch(SocketGuildUser person)
         {
-            IGuildUser mentioned = Context.Guild.GetUserAsync(Context.Message.MentionedUserIds.ElementAt(0)).Result;
-
-            if (!mentioned.Id.Equals(Context.User.Id))
+            if (!person.Id.Equals(Context.User.Id))
             {
-                StaticBase.people.AddStat(mentioned.Id, 1, "punch");
-                await ReplyAsync($"DAAMN! **{mentioned.Username}** just got fucked up by **{Context.User.Username}**.\n" +
-                                 $"That's {StaticBase.people.Users[mentioned.Id].punched} times, they have been fucked up now.");
+                StaticBase.people.AddStat(person.Id, 1, "punch");
+                await ReplyAsync($"DAAMN! **{person.Username}** just got fucked up by **{Context.User.Username}**.\n" +
+                                 $"That's {StaticBase.people.Users[person.Id].punched} times, they have been fucked up now.");
             }
             else
                 await ReplyAsync("Please don't fuck yourself up. That's unhealthy.");
