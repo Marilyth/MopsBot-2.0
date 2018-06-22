@@ -106,8 +106,8 @@ namespace MopsBot.Data
                     foreach(var channel in Giveaways){
                         foreach(var message in channel.Value){
                             var textmessage = (IUserMessage)((ITextChannel)Program.client.GetChannel(channel.Key)).GetMessageAsync(message.Key).Result;
-                            Program.reactionHandler.addHandler(textmessage, new Emoji("➕"), JoinGiveaway).Wait();
-                            Program.reactionHandler.addHandler(textmessage, new Emoji("➖"), LeaveGiveaway).Wait();
+                            Program.reactionHandler.addHandler(textmessage, new Emoji("✅"), JoinGiveaway).Wait();
+                            Program.reactionHandler.addHandler(textmessage, new Emoji("❎"), LeaveGiveaway).Wait();
                             Program.reactionHandler.addHandler(textmessage, new Emoji("🎁"), DrawGiveaway).Wait();
                         }
                     }
@@ -130,7 +130,7 @@ namespace MopsBot.Data
         {
             EmbedBuilder e = new EmbedBuilder();
             e.Title = name + " Giveaway!";
-            e.Description = "To join/leave the giveaway, press the ➕/➖ Icons below this message!\n" +
+            e.Description = "To join/leave the giveaway, press the ✅/❎ Icons below this message!\n" +
                             "The Creator may draw a winner at any time, by pressing the 🎁 Icon.";
             e.Color = new Color(100, 100, 0);
 
@@ -143,8 +143,8 @@ namespace MopsBot.Data
             e.AddField("Chance to win", Double.NaN, true);
 
             var message = await channel.SendMessageAsync("", embed: e.Build());
-            await Program.reactionHandler.addHandler(message, new Emoji("➕"), JoinGiveaway);
-            await Program.reactionHandler.addHandler(message, new Emoji("➖"), LeaveGiveaway);
+            await Program.reactionHandler.addHandler(message, new Emoji("✅"), JoinGiveaway);
+            await Program.reactionHandler.addHandler(message, new Emoji("❎"), LeaveGiveaway);
             await Program.reactionHandler.addHandler(message, new Emoji("🎁"), DrawGiveaway);
 
             Dictionary<ulong, HashSet<ulong>> messages = new Dictionary<ulong, HashSet<ulong>>();
