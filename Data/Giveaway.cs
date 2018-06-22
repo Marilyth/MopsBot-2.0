@@ -102,7 +102,6 @@ namespace MopsBot.Data
                 try
                 {
                     Giveaways = JsonConvert.DeserializeObject<Dictionary<ulong, Dictionary<ulong, HashSet<ulong>>>>(read.ReadToEnd());
-                    if(Giveaways == null) return;
                     foreach(var channel in Giveaways){
                         foreach(var message in channel.Value){
                             var textmessage = (IUserMessage)((ITextChannel)Program.client.GetChannel(channel.Key)).GetMessageAsync(message.Key).Result;
