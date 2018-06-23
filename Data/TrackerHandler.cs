@@ -109,6 +109,7 @@ namespace MopsBot.Data
                     if (trackers.First().Value.GetType() == typeof(Tracker.TwitchTracker))
                     {
                         (trackers[name] as Tracker.TwitchTracker).ChannelMessages.Remove(channelID);
+                        (trackers[name] as Tracker.TwitchTracker).ToUpdate.Remove(channelID);
                     }
                     if (trackers.First().Value.GetType() == typeof(Tracker.TwitterTracker))
                     {
