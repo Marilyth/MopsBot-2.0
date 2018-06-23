@@ -19,11 +19,11 @@ namespace MopsBot.Data.Tracker
     {
         public string LastTime;
 
-        public YoutubeTracker() : base(600000, (ExistingTrackers * 2000+500) % 600000)
+        public YoutubeTracker() : base(1200000, (ExistingTrackers * 2000+500) % 1200000)
         {
         }
 
-        public YoutubeTracker(string channelId) : base(600000)
+        public YoutubeTracker(string channelId) : base(1200000)
         {
             Name = channelId;
             LastTime = XmlConvert.ToString(DateTime.Now, XmlDateTimeSerializationMode.Utc);
