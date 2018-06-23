@@ -221,7 +221,7 @@ namespace MopsBot.Data
                     if (parentHandle.ToUpdate.ContainsKey(channelID))
                     {
                         var message = ((IUserMessage)((ITextChannel)Program.client.GetChannel(channelID)).GetMessageAsync(parentHandle.ToUpdate[channelID]).Result);
-                        if(message !=null)
+                        if(message != null)
                             await message.ModifyAsync(x =>
                             {
                                 x.Content = notification;
