@@ -198,6 +198,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task trackOW(string owUser)
             {
+                owUser = owUser.Replace("#", "-");
                 trackers["overwatch"].AddTracker(owUser, Context.Channel.Id);
 
                 await ReplyAsync("Keeping track of " + owUser + "'s stats, from now on!");
@@ -208,6 +209,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task unTrackOW(string owUser)
             {
+                owUser = owUser.Replace("#", "-");
                 if(trackers["overwatch"].TryRemoveTracker(owUser, Context.Channel.Id))
                     await ReplyAsync("Stopped keeping track of " + owUser + "'s stats!");
                 else

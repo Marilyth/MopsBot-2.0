@@ -38,7 +38,7 @@ namespace MopsBot.Data.Tracker
                 var test = checkExists.eu;
             } catch(Exception e){
                 Dispose();
-                throw new Exception($"Person `{Name}` could not be found on Overwatch!");
+                throw new Exception($"Person `{Name}` could not be found on Overwatch!\nPerhaps the profile is private?");
             }
         }
 
