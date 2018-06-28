@@ -18,9 +18,10 @@ namespace MopsBot.Data
         public abstract void SaveJson();
         public abstract bool TryRemoveTracker(string name, ulong channelID);
         public abstract void AddTracker(string name, ulong channelID, string notification = "");
-        public abstract Dictionary<string, Tracker.ITracker> GetTracker();
         public abstract HashSet<Tracker.ITracker> GetTrackerSet();
-        public abstract string GetTracker(ulong channelID);
+        public abstract Dictionary<string, Tracker.ITracker> GetTrackers();
+        public abstract IEnumerable<ITracker> GetTrackers(ulong channelID);
+        public abstract ITracker GetTracker(ulong channelID, string name);
         public abstract Type GetTrackerType();
         public abstract void postInitialisation();
 
@@ -156,13 +157,19 @@ namespace MopsBot.Data
             SaveJson();
         }
 
-        public override string GetTracker(ulong channelID)
+        public override IEnumerable<ITracker> GetTrackers(ulong channelID)
         {
-            return string.Join(", ", trackers.Where(x => x.Value.ChannelIds.Contains(channelID)).Select(x => x.Key));
+            return trackers.Select(x => x.Value).Where(x => x.ChannelIds.Contains(channelID));
         }
-        public override Dictionary<string, ITracker> GetTracker()
+
+        public override Dictionary<string, ITracker> GetTrackers()
         {
             return trackers.Select(x => new KeyValuePair<string, ITracker>(x.Key, (ITracker)x.Value)).ToDictionary(x => x.Key, x => x.Value);
+        }
+
+        public override ITracker GetTracker(ulong channelID, string name)
+        {
+            return trackers.FirstOrDefault(x => x.Key.Equals(name) && x.Value.ChannelIds.Contains(channelID)).Value;
         }
 
         public override HashSet<ITracker> GetTrackerSet()

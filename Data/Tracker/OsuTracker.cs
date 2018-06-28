@@ -14,6 +14,7 @@ namespace MopsBot.Data.Tracker
     public class OsuTracker : ITracker
     {
         public Dictionary<string, double> allPP;
+        public double PPThreshold;
 
         public OsuTracker() : base(60000, (ExistingTrackers * 2000+500) % 60000)
         {
@@ -27,6 +28,7 @@ namespace MopsBot.Data.Tracker
             allPP.Add("m=1", 0);
             allPP.Add("m=2", 0);
             allPP.Add("m=3", 0);
+            PPThreshold = 0.1;
 
             //Check if person exists by forcing Exceptions if not.
             try
@@ -50,6 +52,8 @@ namespace MopsBot.Data.Tracker
                 allPP.Add("m=2", 0);
                 allPP.Add("m=3", 0);
             }
+            if(PPThreshold == 0)
+                PPThreshold = 0.1;
 
             try
             {
@@ -58,7 +62,7 @@ namespace MopsBot.Data.Tracker
                     APIResults.OsuResult userInformation = await fetchUser(pp.Key);
                     if (userInformation == null) return;
 
-                    if (pp.Value > 0 && pp.Value + 0.1 <= double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture))
+                    if (pp.Value > 0 && pp.Value + PPThreshold <= double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture))
                     {
                         var recentScores = await fetchRecent(pp.Key);
                         APIResults.RecentScore scoreInformation = recentScores.First(x => !x.rank.Equals("F"));
