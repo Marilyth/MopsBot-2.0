@@ -24,8 +24,6 @@ namespace MopsBot.Data
         public abstract IEnumerable<ITracker> GetTrackers(ulong channelID);
         public abstract ITracker GetTracker(ulong channelID, string name);
         public abstract Type GetTrackerType();
-        public abstract void postInitialisation();
-
     }
 
     /// <summary>
@@ -34,28 +32,8 @@ namespace MopsBot.Data
     public class TrackerHandler<T> : TrackerWrapper where T : Tracker.ITracker
     {
         public Dictionary<string, T> trackers;
-        public TrackerHandler()
-        {
-            // using (StreamReader read = new StreamReader(new FileStream($"mopsdata//{typeof(T).Name}.json", FileMode.OpenOrCreate)))
-            // {
-            //     try
-            //     {
-            //         trackers = JsonConvert.DeserializeObject<Dictionary<string, T>>(read.ReadToEnd());
-            //     }
-            //     catch (Exception e)
-            //     {
-            //         Console.WriteLine(e.Message + e.StackTrace);
-            //     }
-            // }
-            // trackers = (trackers == null ? new Dictionary<string, T>() : trackers);
-            // foreach(KeyValuePair<string, T> cur in trackers){
-            //     cur.Value.PostInitialisation();
-            //     cur.Value.OnMinorEventFired += OnMinorEvent;
-            //     cur.Value.OnMajorEventFired += OnMajorEvent;
-            // }
-        }
 
-        public override void postInitialisation()
+        public TrackerHandler()
         {
             using (StreamReader read = new StreamReader(new FileStream($"mopsdata//{typeof(T).Name}.json", FileMode.OpenOrCreate)))
             {
@@ -77,11 +55,6 @@ namespace MopsBot.Data
                 cur.OnMinorEventFired += OnMinorEvent;
                 cur.OnMajorEventFired += OnMajorEvent;
             }
-            // foreach(KeyValuePair<string, T> cur in trackers){
-            //     cur.Value.PostInitialisation();
-            //     cur.Value.OnMinorEventFired += OnMinorEvent;
-            //     cur.Value.OnMajorEventFired += OnMajorEvent;
-            // }
         }
 
         public override void SaveJson()

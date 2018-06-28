@@ -78,10 +78,6 @@ namespace MopsBot
                 trackers["reddit"] = new TrackerHandler<RedditTracker>();
                 trackers["news"] = new TrackerHandler<NewsTracker>();
 
-                foreach(var tracker in trackers){
-                    tracker.Value.postInitialisation();
-                }
-
                 init = true;
 
             }
