@@ -20,7 +20,6 @@ namespace MopsBot.Data.Tracker
         public Boolean IsOnline;
         public string CurGame;
         public bool isThumbnailLarge;
-        public Dictionary<ulong, string> ChannelMessages;
 
         public TwitchTracker() : base(60000, (ExistingTrackers * 2000+500) % 60000)
         {
