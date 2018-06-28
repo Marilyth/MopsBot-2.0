@@ -48,20 +48,6 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public override void PostInitialisation()
-        {
-            foreach (ulong channel in ChannelIds)
-            {
-                if (ChannelMessages == null)
-                    ChannelMessages = new Dictionary<ulong, string>();
-                if (!ChannelMessages.ContainsKey(channel))
-                {
-                    ChannelMessages.Add(channel, "");
-                    StaticBase.trackers["reddit"].SaveJson();
-                }
-            }
-        }
-
         /// <summary>
         /// Event for the Timer, to check for changed stats
         /// </summary>

@@ -39,20 +39,6 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public override void PostInitialisation()
-        {
-            foreach (ulong channel in ChannelIds)
-            {
-                if (ChannelMessages == null)
-                    ChannelMessages = new Dictionary<ulong, string>();
-                if (!ChannelMessages.ContainsKey(channel))
-                {
-                    ChannelMessages.Add(channel, "~Tweet Tweet~|~Tweet Tweet~");
-                    StaticBase.trackers["twitter"].SaveJson();
-                }
-            }
-        }
-
         protected async override void CheckForChange_Elapsed(object stateinfo)
         {
             try

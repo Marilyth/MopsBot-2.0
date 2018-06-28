@@ -43,33 +43,8 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public override void PostInitialisation()
-        {
-            foreach (ulong channel in ChannelIds)
-            {
-                if (ChannelMessages == null)
-                    ChannelMessages = new Dictionary<ulong, string>();
-                if (!ChannelMessages.ContainsKey(channel))
-                {
-                    ChannelMessages.Add(channel, "");
-                    StaticBase.trackers["osu"].SaveJson();
-                }
-            }
-        }
-
         protected async override void CheckForChange_Elapsed(object stateinfo)
         {
-            if (allPP == null)
-            {
-                allPP = new Dictionary<string, double>();
-                allPP.Add("m=0", 0);
-                allPP.Add("m=1", 0);
-                allPP.Add("m=2", 0);
-                allPP.Add("m=3", 0);
-            }
-            if (PPThreshold == 0)
-                PPThreshold = 0.1;
-
             try
             {
                 foreach (var pp in allPP.ToList())
