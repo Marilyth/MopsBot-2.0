@@ -24,7 +24,7 @@ namespace MopsBot.Data.Tracker
         /// Initialises the tracker by setting attributes and setting up a Timer with a 10 minutes interval
         /// </summary>
         /// <param Name="OWName"> The Name-Battletag combination of the player to track </param>
-        public RedditTracker() : base(600000, (ExistingTrackers * 2000+500) % 600000)
+        public RedditTracker() : base(600000, (ExistingTrackers * 2000 + 500) % 600000)
         {
         }
 
@@ -33,15 +33,32 @@ namespace MopsBot.Data.Tracker
             lastCheck = (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
             Name = name;
 
-            try{
+            try
+            {
                 var test = fetchPosts().Result;
-                if(test.data.children.Count == 0) 
+                if (test.data.children.Count == 0)
                     throw new Exception("");
-            } catch(Exception e){
+            }
+            catch (Exception e)
+            {
                 Dispose();
                 Console.WriteLine("");
-                throw new Exception($"No results were found for Subreddit `{Name.Split(" ")[0]}`"+
+                throw new Exception($"No results were found for Subreddit `{Name.Split(" ")[0]}`" +
                                     $"{(Name.Split(" ").Length > 1 ? $" with restriction(s) `{Name.Split(" ")[1]}`." : ".")}");
+            }
+        }
+
+        public override void PostInitialisation()
+        {
+            foreach (ulong channel in ChannelIds)
+            {
+                if (ChannelMessages == null)
+                    ChannelMessages = new Dictionary<ulong, string>();
+                if (!ChannelMessages.ContainsKey(channel))
+                {
+                    ChannelMessages.Add(channel, "");
+                    StaticBase.trackers["reddit"].SaveJson();
+                }
             }
         }
 
@@ -62,9 +79,11 @@ namespace MopsBot.Data.Tracker
                     StaticBase.trackers["reddit"].SaveJson();
 
                     newPosts = newPosts.Reverse().ToArray();
-                    foreach(var post in newPosts)
-                        foreach(ulong channel in ChannelIds)
+                    foreach (var post in newPosts)
+                        foreach (ulong channel in ChannelIds)
+                        {
                             await OnMajorChangeTracked(channel, await createEmbed(post.data), "");
+                        }
                 }
             }
             catch (Exception e)
@@ -73,8 +92,9 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        private async Task<RedditResult> fetchPosts(){
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://www.reddit.com/r/{Name.Split(" ")[0]}/"+
+        private async Task<RedditResult> fetchPosts()
+        {
+            string query = await MopsBot.Module.Information.ReadURLAsync($"https://www.reddit.com/r/{Name.Split(" ")[0]}/" +
                                                                         $"{(Name.Split(" ").Length > 1 ? $"search.json?sort=new&restrict_sr=on&q={Name.Split(" ")[1]}" : "new.json?restrict_sr=on")}");
 
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
@@ -108,17 +128,20 @@ namespace MopsBot.Data.Tracker
             e.Timestamp = DateTimeOffset.FromUnixTimeSeconds((long)redditPost.created_utc).DateTime.AddHours(2);
             e.Footer = footer;
 
-            try{
+            try
+            {
                 e.ThumbnailUrl = !redditPost.thumbnail.Equals("self") && !redditPost.thumbnail.Equals("default") ? redditPost.thumbnail : null;
-            } catch(Exception exception){
+            }
+            catch (Exception exception)
+            {
                 e.ThumbnailUrl = null;
             }
 
             e.AddField("Score", redditPost.score, true);
 
-            if(redditPost.media_embed != null && redditPost.media_embed.media_domain_url != null)
+            if (redditPost.media_embed != null && redditPost.media_embed.media_domain_url != null)
                 e.ImageUrl = (await Module.Information.ConvertToGifAsync(redditPost.media_embed.media_domain_url)).Max5MbGif;
-            else if(redditPost.media != null && redditPost.media.reddit_video != null)
+            else if (redditPost.media != null && redditPost.media.reddit_video != null)
                 e.ImageUrl = (await Module.Information.ConvertToGifAsync(redditPost.media.reddit_video.fallback_url)).Max5MbGif;
 
             return e.Build();

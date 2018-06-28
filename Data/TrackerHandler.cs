@@ -17,6 +17,7 @@ namespace MopsBot.Data
     {
         public abstract void SaveJson();
         public abstract bool TryRemoveTracker(string name, ulong channelID);
+        public abstract bool TrySetNotification(string name, ulong channelID, string notificationMessage);
         public abstract void AddTracker(string name, ulong channelID, string notification = "");
         public abstract HashSet<Tracker.ITracker> GetTrackerSet();
         public abstract Dictionary<string, Tracker.ITracker> GetTrackers();
@@ -106,16 +107,12 @@ namespace MopsBot.Data
 
                 if (trackers[name].ChannelIds.Count > 1)
                 {
+                    trackers[name].ChannelMessages.Remove(channelID);
                     trackers[name].ChannelIds.Remove(channelID);
+
                     if (trackers.First().Value.GetType() == typeof(Tracker.TwitchTracker))
                     {
-                        (trackers[name] as Tracker.TwitchTracker).ChannelMessages.Remove(channelID);
                         (trackers[name] as Tracker.TwitchTracker).ToUpdate.Remove(channelID);
-                    }
-                    if (trackers.First().Value.GetType() == typeof(Tracker.TwitterTracker))
-                    {
-                        (trackers[name] as Tracker.TwitterTracker).TweetNotifications.Remove(channelID);
-                        (trackers[name] as Tracker.TwitterTracker).OtherNotifications.Remove(channelID);
                     }
                 }
 
@@ -145,16 +142,22 @@ namespace MopsBot.Data
                 trackers[name].OnMajorEventFired += OnMajorEvent;
                 trackers[name].OnMinorEventFired += OnMinorEvent;
             }
-            if (trackers.First().Value.GetType() == typeof(Tracker.TwitchTracker))
-            {
-                (trackers[name] as Tracker.TwitchTracker).ChannelMessages.Add(channelID, notification);
-            }
-            else if (trackers.First().Value.GetType() == typeof(Tracker.TwitterTracker))
-            {
-                (trackers[name] as Tracker.TwitterTracker).SetNotification(channelID, notification.Split("|")[0], notification.Split("|")[1]);
-            }
+
+            trackers[name].ChannelMessages.Add(channelID, notification);
 
             SaveJson();
+        }
+
+        public override bool TrySetNotification(string name, ulong channelID, string notificationMessage){
+            var tracker = GetTracker(channelID, name);
+
+            if(tracker != null){
+                tracker.ChannelMessages[channelID] = notificationMessage;
+                SaveJson();
+                return true;
+            }
+
+            return false;
         }
 
         public override IEnumerable<ITracker> GetTrackers(ulong channelID)

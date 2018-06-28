@@ -16,7 +16,7 @@ namespace MopsBot.Data.Tracker
         public Dictionary<string, double> allPP;
         public double PPThreshold;
 
-        public OsuTracker() : base(60000, (ExistingTrackers * 2000+500) % 60000)
+        public OsuTracker() : base(60000, (ExistingTrackers * 2000 + 500) % 60000)
         {
         }
 
@@ -43,16 +43,31 @@ namespace MopsBot.Data.Tracker
             }
         }
 
+        public override void PostInitialisation()
+        {
+            foreach (ulong channel in ChannelIds)
+            {
+                if (ChannelMessages == null)
+                    ChannelMessages = new Dictionary<ulong, string>();
+                if (!ChannelMessages.ContainsKey(channel))
+                {
+                    ChannelMessages.Add(channel, "");
+                    StaticBase.trackers["osu"].SaveJson();
+                }
+            }
+        }
+
         protected async override void CheckForChange_Elapsed(object stateinfo)
         {
-            if(allPP == null){
+            if (allPP == null)
+            {
                 allPP = new Dictionary<string, double>();
                 allPP.Add("m=0", 0);
                 allPP.Add("m=1", 0);
                 allPP.Add("m=2", 0);
                 allPP.Add("m=3", 0);
             }
-            if(PPThreshold == 0)
+            if (PPThreshold == 0)
                 PPThreshold = 0.1;
 
             try
@@ -70,8 +85,10 @@ namespace MopsBot.Data.Tracker
                         APIResults.Beatmap beatmapInformation = await fetchBeatmap(scoreInformation.beatmap_id, pp.Key);
 
                         foreach (ulong channel in ChannelIds)
-                            await OnMajorChangeTracked(channel, createEmbed(userInformation, beatmapInformation, await fetchScore(scoreInformation.beatmap_id, pp.Key), 
-                                                       Math.Round(double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture) - pp.Value, 2), pp.Key));
+                        {
+                            await OnMajorChangeTracked(channel, createEmbed(userInformation, beatmapInformation, await fetchScore(scoreInformation.beatmap_id, pp.Key),
+                                                       Math.Round(double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture) - pp.Value, 2), pp.Key), ChannelMessages[channel]);
+                        }
                     }
                     allPP[pp.Key] = double.Parse(userInformation.pp_raw ?? "0", CultureInfo.InvariantCulture);
                     StaticBase.trackers["osu"].SaveJson();

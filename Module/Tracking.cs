@@ -51,14 +51,12 @@ namespace MopsBot.Module
             }
 
             [Command("SetNotification")]
-            [Summary("Sets the notification text that is used each time a new Tweet is found")]
+            [Summary("Sets the notification text that is used each time a new Tweet is found.")]
             public async Task SetNotification(string twitterUser, [Remainder]string notification)
             {
-                var twitter = (TwitterTracker)StaticBase.trackers["twitter"].GetTracker(Context.Channel.Id, twitterUser);
-                if(twitter != null){
-                    twitter.TweetNotifications[Context.Channel.Id] = notification;
-                    twitter.OtherNotifications[Context.Channel.Id] = notification;
-                    StaticBase.trackers["twitter"].SaveJson();
+                notification = notification.Contains("|") ? notification : notification + "|" + notification;
+
+                if(StaticBase.trackers["twitter"].TrySetNotification(twitterUser, Context.Channel.Id, notification)){
                     await ReplyAsync($"Changed notification for `{twitterUser}` to `{notification}`");
                 }
                 else
@@ -118,6 +116,18 @@ namespace MopsBot.Module
                     await ReplyAsync($"Could not find tracker for `{osuUser}`\n"+
                                      $"Currently tracked Osu Players are: ``{String.Join(", ", StaticBase.trackers["osu"].GetTrackers(Context.Channel.Id).Select(x => x.Name))}``");
             }
+
+            [Command("SetNotification")]
+            [Summary("Sets the notification text that is used each time a player gained pp.")]
+            public async Task SetNotification(string osuUser, [Remainder]string notification)
+            {
+                if(StaticBase.trackers["osu"].TrySetNotification(osuUser, Context.Channel.Id, notification)){
+                    await ReplyAsync($"Changed notification for `{osuUser}` to `{notification}`");
+                }
+                else
+                    await ReplyAsync($"Could not find tracker for `{osuUser}`\n"+
+                                     $"Currently tracked Osu Players are: ``{String.Join(", ", StaticBase.trackers["osu"].GetTrackers(Context.Channel.Id).Select(x => x.Name))}``");
+            }
         }
 
         [Group("Youtube")]
@@ -127,7 +137,7 @@ namespace MopsBot.Module
             [Command("Track")]
             [Summary("Keeps track of the specified Youtuber, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task trackTwitter(string channelID)
+            public async Task trackYoutube(string channelID, [Remainder]string notificationMessage = "New Video")
             {
                 trackers["youtube"].AddTracker(channelID, Context.Channel.Id);
 
@@ -151,6 +161,18 @@ namespace MopsBot.Module
             public async Task getTracks()
             {
                 await ReplyAsync("Following Youtubers are currently being tracked:\n``" + String.Join(", ", StaticBase.trackers["youtube"].GetTrackers(Context.Channel.Id).Select(x => x.Name)) + "``");
+            }
+
+            [Command("SetNotification")]
+            [Summary("Sets the notification text that is used each time a new video appears.")]
+            public async Task SetNotification(string channelID, [Remainder]string notification)
+            {
+                if(StaticBase.trackers["youtube"].TrySetNotification(channelID, Context.Channel.Id, notification)){
+                    await ReplyAsync($"Changed notification for `{channelID}` to `{notification}`");
+                }
+                else
+                    await ReplyAsync($"Could not find tracker for `{channelID}`\n"+
+                                     $"Currently tracked channels are: ``{String.Join(", ", StaticBase.trackers["youtube"].GetTrackers(Context.Channel.Id).Select(x => x.Name))}``");
             }
         }
         [Group("Twitch")]
@@ -191,17 +213,14 @@ namespace MopsBot.Module
 
             [Command("SetNotification")]
             [Summary("Sets the notification text that is used each time a streamer goes live.")]
-            public async Task SetNotification(string streamerName, [Remainder]string notification)
+            public async Task SetNotification(string streamer, [Remainder]string notification)
             {
-                var streamer = (TwitchTracker)StaticBase.trackers["twitch"].GetTracker(Context.Channel.Id, streamerName);
-                if(streamer != null){
-                    streamer.ChannelMessages[Context.Channel.Id] = notification;
-                    StaticBase.trackers["twitch"].SaveJson();
-                    await ReplyAsync($"Changed notification for `{streamerName}` to `{notification}`");
+                if(StaticBase.trackers["twitch"].TrySetNotification(streamer, Context.Channel.Id, notification)){
+                    await ReplyAsync($"Changed notification for `{streamer}` to `{notification}`");
                 }
                 else
-                    await ReplyAsync($"Could not find tracker for `{streamerName}`\n"+
-                                     $"Currently tracked Streamers are: ``{String.Join(", ", StaticBase.trackers["twitch"].GetTrackers(Context.Channel.Id).Select(x => x.Name))}``");
+                    await ReplyAsync($"Could not find tracker for `{streamer}`\n"+
+                                     $"Currently tracked streamers are: ``{String.Join(", ", StaticBase.trackers["twitch"].GetTrackers(Context.Channel.Id).Select(x => x.Name))}``");
             }
         }
 
@@ -237,6 +256,18 @@ namespace MopsBot.Module
             public async Task getTracks()
             {
                 await ReplyAsync("Following subreddits are currently being tracked:\n``" + String.Join(", ", StaticBase.trackers["reddit"].GetTrackers(Context.Channel.Id).Select(x => x.Name)) + "``");
+            }
+
+            [Command("SetNotification")]
+            [Summary("Sets the notification text that is used each time a new post was found.")]
+            public async Task SetNotification(string subreddit, string notification, string query = null)
+            {
+                if(StaticBase.trackers["reddit"].TrySetNotification(String.Join(" ", new string[] { subreddit, query }.Where(x => x != null)), Context.Channel.Id, notification)){
+                    await ReplyAsync($"Changed notification for `{subreddit}` to `{notification}`");
+                }
+                else
+                    await ReplyAsync($"Could not find tracker for `{subreddit}`\n"+
+                                     $"Currently tracked subreddits are: ``{String.Join(", ", StaticBase.trackers["overwatch"].GetTrackers(Context.Channel.Id).Select(x => x.Name))}``");
             }
         }
 
@@ -281,6 +312,19 @@ namespace MopsBot.Module
             {
                 await ReplyAsync("Following players are currently being tracked:\n``" + String.Join(", ", StaticBase.trackers["overwatch"].GetTrackers(Context.Channel.Id).Select(x => x.Name)) + "``");
             }
+
+            [Command("SetNotification")]
+            [Summary("Sets the notification text that is used each time a players' stats changed.")]
+            public async Task SetNotification(string owUser, [Remainder]string notification)
+            {
+                owUser = owUser.Replace("#", "-");
+                if(StaticBase.trackers["overwatch"].TrySetNotification(owUser, Context.Channel.Id, notification)){
+                    await ReplyAsync($"Changed notification for `{owUser}` to `{notification}`");
+                }
+                else
+                    await ReplyAsync($"Could not find tracker for `{owUser}`\n"+
+                                     $"Currently tracked players are: ``{String.Join(", ", StaticBase.trackers["overwatch"].GetTrackers(Context.Channel.Id).Select(x => x.Name))}``");
+            }
         }
 
         [Group("News")]
@@ -314,6 +358,18 @@ namespace MopsBot.Module
             public async Task getTracks()
             {
                 await ReplyAsync("Following article queries are currently being tracked:\n``" + String.Join(", ", StaticBase.trackers["news"].GetTrackers(Context.Channel.Id).Select(x => x.Name)) + "``");
+            }
+
+            [Command("SetNotification")]
+            [Summary("Sets the notification text that is used each time a article was found.")]
+            public async Task SetNotification(string articleQuery, [Remainder]string notification)
+            {
+                if(StaticBase.trackers["news"].TrySetNotification(articleQuery, Context.Channel.Id, notification)){
+                    await ReplyAsync($"Changed notification for `{articleQuery}` to `{notification}`");
+                }
+                else
+                    await ReplyAsync($"Could not find tracker for `{articleQuery}`\n"+
+                                     $"Currently tracked article queries are: ``{String.Join(", ", StaticBase.trackers["news"].GetTrackers(Context.Channel.Id).Select(x => x.Name))}``");
             }
         }
         

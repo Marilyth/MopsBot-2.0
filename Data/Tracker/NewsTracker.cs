@@ -19,7 +19,7 @@ namespace MopsBot.Data.Tracker
     {
         public string LastNews, Query, Source;
 
-        public NewsTracker() : base(600000, (ExistingTrackers * 2000+500) % 600000)
+        public NewsTracker() : base(600000, (ExistingTrackers * 2000 + 500) % 600000)
         {
         }
 
@@ -27,51 +27,75 @@ namespace MopsBot.Data.Tracker
         {
             var request = NewsQuery.Split("|");
             Name = NewsQuery;
-            
+
             Source = request[0];
             Query = request[1];
 
             //Check if query and source yield proper results, by forcing exceptions if not.
-            try{
+            try
+            {
                 var checkExists = getNews().Result;
                 var test = checkExists[0];
 
-                if(checkExists.GroupBy(x => x.Source.Name).Count() > 1)
+                if (checkExists.GroupBy(x => x.Source.Name).Count() > 1)
                     throw new Exception();
-                
+
                 LastNews = test.PublishedAt.ToString();
-            } catch(Exception e){
+            }
+            catch (Exception e)
+            {
                 Dispose();
                 throw new Exception($"`{Source}` didn't yield any proper result{(Query.Equals("") ? "" : $" for `{Query}`")}.");
             }
         }
 
+        public override void PostInitialisation()
+        {
+            foreach (ulong channel in ChannelIds)
+            {
+                if (ChannelMessages == null)
+                    ChannelMessages = new Dictionary<ulong, string>();
+                if (!ChannelMessages.ContainsKey(channel))
+                {
+                    ChannelMessages.Add(channel, "~ New Article ~");
+                    StaticBase.trackers["news"].SaveJson();
+                }
+            }
+        }
+
         protected async override void CheckForChange_Elapsed(object stateinfo)
         {
-            try{
+            try
+            {
                 Article[] newArticles = await getNews();
 
-                if(newArticles.Length > 0){
+                if (newArticles.Length > 0)
+                {
                     LastNews = newArticles.First().PublishedAt.ToString();
                     StaticBase.trackers["news"].SaveJson();
                 }
 
-                foreach(Article newArticle in newArticles){
-                    foreach(ulong channel in ChannelIds){
-                        await OnMajorChangeTracked(channel, createEmbed(newArticle), "~ New Article ~");
+                foreach (Article newArticle in newArticles)
+                {
+                    foreach (ulong channel in ChannelIds)
+                    {
+                        await OnMajorChangeTracked(channel, createEmbed(newArticle), ChannelMessages[channel]);
                     }
                 }
 
-            }catch (Exception e)
+            }
+            catch (Exception e)
             {
                 Console.WriteLine($"[ERROR] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
             }
         }
 
-        private async Task<Article[]> getNews(){
-            var result = await StaticBase.NewsClient.GetEverythingAsync(new EverythingRequest(){
+        private async Task<Article[]> getNews()
+        {
+            var result = await StaticBase.NewsClient.GetEverythingAsync(new EverythingRequest()
+            {
                 Q = Query,
-                Sources = new List<string>(){Source},
+                Sources = new List<string>() { Source },
                 From = DateTime.Parse(LastNews ?? DateTime.MinValue.ToUniversalTime().ToString()).AddSeconds(1),
                 SortBy = SortBys.PublishedAt
             });
@@ -79,7 +103,7 @@ namespace MopsBot.Data.Tracker
             return result.Articles.ToArray();
             //return result.Articles.Where(x => x.Title.ToUpper().Contains(Query.ToUpper())).ToArray();
         }
-    
+
         private Embed createEmbed(Article article)
         {
             EmbedBuilder e = new EmbedBuilder();
@@ -104,4 +128,4 @@ namespace MopsBot.Data.Tracker
             return e.Build();
         }
     }
-}   
+}

@@ -17,75 +17,87 @@ namespace MopsBot.Data.Tracker
     public class TwitterTracker : ITracker
     {
         public long lastMessage;
-        public Dictionary<ulong, string> TweetNotifications;
-        public Dictionary<ulong, string> OtherNotifications;
         private Task<IEnumerable<ITweet>> fetchTweets;
 
-        public TwitterTracker() : base(300000, (ExistingTrackers * 2000+500) % 300000)
+        public TwitterTracker() : base(300000, (ExistingTrackers * 2000 + 500) % 300000)
         {
-            TweetNotifications = new Dictionary<ulong, string>();
-            OtherNotifications = new Dictionary<ulong, string>();
         }
 
         public TwitterTracker(string twitterName) : base(300000)
         {
             Name = twitterName;
-            TweetNotifications = new Dictionary<ulong, string>();
-            OtherNotifications = new Dictionary<ulong, string>();
 
             //Check if person exists by forcing Exceptions if not.
-            try{
+            try
+            {
                 var checkExists = getNewTweets();
-            } catch(Exception e){
+            }
+            catch (Exception e)
+            {
                 Dispose();
                 throw new Exception($"Person `{Name}` could not be found on Twitter!");
             }
         }
 
-        public void SetNotification(ulong channel, string tweetNotification, string otherNotification){
-            TweetNotifications.Add(channel, tweetNotification);
-            OtherNotifications.Add(channel, otherNotification);
-            StaticBase.trackers["twitter"].SaveJson();
+        public override void PostInitialisation()
+        {
+            foreach (ulong channel in ChannelIds)
+            {
+                if (ChannelMessages == null)
+                    ChannelMessages = new Dictionary<ulong, string>();
+                if (!ChannelMessages.ContainsKey(channel))
+                {
+                    ChannelMessages.Add(channel, "~Tweet Tweet~|~Tweet Tweet~");
+                    StaticBase.trackers["twitter"].SaveJson();
+                }
+            }
         }
 
         protected async override void CheckForChange_Elapsed(object stateinfo)
         {
-            try{
+            try
+            {
                 ITweet[] newTweets = getNewTweets();
-                if(lastMessage == 0){
-                    lastMessage = newTweets[newTweets.Length -1].Id;
+                if (lastMessage == 0)
+                {
+                    lastMessage = newTweets[newTweets.Length - 1].Id;
                     StaticBase.trackers["twitter"].SaveJson();
                     return;
                 }
 
-                foreach(ITweet newTweet in newTweets){
-                    foreach(ulong channel in ChannelIds){
-                        if(newTweet.InReplyToScreenName == null && !newTweet.IsRetweet)
-                            await OnMajorChangeTracked(channel, createEmbed(newTweet), TweetNotifications[channel] ?? "~ Tweet Tweet ~");
+                foreach (ITweet newTweet in newTweets)
+                {
+                    foreach (ulong channel in ChannelIds)
+                    {
+                        if (newTweet.InReplyToScreenName == null && !newTweet.IsRetweet)
+                            await OnMajorChangeTracked(channel, createEmbed(newTweet), ChannelMessages[channel].Split("|")[0]);
                         else
-                            await OnMajorChangeTracked(channel, createEmbed(newTweet), OtherNotifications[channel] ?? "~ Tweet Tweet ~");
+                            await OnMajorChangeTracked(channel, createEmbed(newTweet), ChannelMessages[channel].Split("|")[1]);
                     }
                 }
 
-                if(newTweets.Length != 0){
-                    lastMessage = newTweets[newTweets.Length -1].Id;
+                if (newTweets.Length != 0)
+                {
+                    lastMessage = newTweets[newTweets.Length - 1].Id;
                     StaticBase.trackers["twitter"].SaveJson();
                 }
 
-            }catch (Exception e)
+            }
+            catch (Exception e)
             {
                 Console.WriteLine($"[ERROR] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
             }
         }
 
-        private ITweet[] getNewTweets(){
+        private ITweet[] getNewTweets()
+        {
             Tweetinvi.Parameters.IUserTimelineParameters parameters = Timeline.CreateUserTimelineParameter();
-            if(lastMessage != 0) parameters.SinceId = lastMessage;
+            if (lastMessage != 0) parameters.SinceId = lastMessage;
             parameters.MaximumNumberOfTweetsToRetrieve = 10;
 
             return Timeline.GetUserTimeline(Name, parameters).Reverse().ToArray();
         }
-    
+
         private Embed createEmbed(ITweet tweet)
         {
             EmbedBuilder e = new EmbedBuilder();
@@ -106,8 +118,8 @@ namespace MopsBot.Data.Tracker
             e.Author = author;
 
             e.ThumbnailUrl = tweet.CreatedBy.ProfileImageUrl;
-            foreach(Tweetinvi.Models.Entities.IMediaEntity cur in tweet.Media)
-                if(cur.MediaType.Equals("photo")) 
+            foreach (Tweetinvi.Models.Entities.IMediaEntity cur in tweet.Media)
+                if (cur.MediaType.Equals("photo"))
                     e.ImageUrl = cur.MediaURL;
 
             e.Description = tweet.FullText;
@@ -115,4 +127,4 @@ namespace MopsBot.Data.Tracker
             return e.Build();
         }
     }
-}   
+}

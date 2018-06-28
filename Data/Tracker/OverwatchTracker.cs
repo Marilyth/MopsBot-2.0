@@ -24,7 +24,7 @@ namespace MopsBot.Data.Tracker
         /// Initialises the tracker by setting attributes and setting up a Timer with a 10 minutes interval
         /// </summary>
         /// <param Name="OWName"> The Name-Battletag combination of the player to track </param>
-        public OverwatchTracker() : base(600000, (ExistingTrackers * 20000+500) % 600000)
+        public OverwatchTracker() : base(600000, (ExistingTrackers * 20000 + 500) % 600000)
         {
         }
 
@@ -33,12 +33,29 @@ namespace MopsBot.Data.Tracker
             Name = OWName;
 
             //Check if person exists by forcing Exceptions if not.
-            try{
+            try
+            {
                 var checkExists = overwatchInformation().Result;
                 var test = checkExists.eu;
-            } catch(Exception e){
+            }
+            catch (Exception e)
+            {
                 Dispose();
                 throw new Exception($"Person `{Name}` could not be found on Overwatch!\nPerhaps the profile is private?");
+            }
+        }
+
+        public override void PostInitialisation()
+        {
+            foreach (ulong channel in ChannelIds)
+            {
+                if (ChannelMessages == null)
+                    ChannelMessages = new Dictionary<ulong, string>();
+                if (!ChannelMessages.ContainsKey(channel))
+                {
+                    ChannelMessages.Add(channel, "");
+                    StaticBase.trackers["overwatch"].SaveJson();
+                }
             }
         }
 
@@ -63,8 +80,10 @@ namespace MopsBot.Data.Tracker
 
                 if (changedStats.Count != 0)
                 {
-                    foreach(ulong channel in ChannelIds)
-                        await OnMajorChangeTracked(channel, createEmbed(newInformation, changedStats, getSessionMostPlayed(information.getNotNull().heroes.playtime, newInformation.getNotNull().heroes.playtime)));
+                    foreach (ulong channel in ChannelIds)
+                    {
+                        await OnMajorChangeTracked(channel, createEmbed(newInformation, changedStats, getSessionMostPlayed(information.getNotNull().heroes.playtime, newInformation.getNotNull().heroes.playtime)), ChannelMessages[channel]);
+                    }
                     information = newInformation;
                 }
             }
@@ -103,7 +122,7 @@ namespace MopsBot.Data.Tracker
             OStatsResult info = JsonConvert.DeserializeObject<OStatsResult>(query, _jsonWriter);
             Quickplay stats = info.getNotNull().stats.quickplay;
             var mostPlayed = getMostPlayed(info.getNotNull().heroes.playtime);
-            
+
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0x6441A4);
             e.Title = "Stats";
@@ -123,28 +142,28 @@ namespace MopsBot.Data.Tracker
 
             e.ThumbnailUrl = stats.overall_stats.avatar;
 
-            e.AddField("Damage", $"Total: {stats.game_stats.all_damage_done}"+
-                            $"\nBest: {stats.game_stats.all_damage_done_most_in_game}"+
+            e.AddField("Damage", $"Total: {stats.game_stats.all_damage_done}" +
+                            $"\nBest: {stats.game_stats.all_damage_done_most_in_game}" +
                             $"\nAverage: {stats.rolling_average_stats.all_damage_done * 1000}", true);
 
-            e.AddField("Eliminations", $"Total: {stats.game_stats.eliminations}"+
-                            $"\nKPD Best: {stats.game_stats.kill_streak_best}"+
+            e.AddField("Eliminations", $"Total: {stats.game_stats.eliminations}" +
+                            $"\nKPD Best: {stats.game_stats.kill_streak_best}" +
                             $"\nKPD Average: {stats.game_stats.kpd}", true);
 
-            e.AddField("Healing", $"Total: {stats.game_stats.healing_done}"+
-                            $"\nBest: {stats.game_stats.healing_done_most_in_game}"+
+            e.AddField("Healing", $"Total: {stats.game_stats.healing_done}" +
+                            $"\nBest: {stats.game_stats.healing_done_most_in_game}" +
                             $"\nAverage: {stats.rolling_average_stats.healing_done * 1000}", true);
 
-            e.AddField("Medals", $"Bronze: {stats.game_stats.medals_bronze}"+
-                            $"\nSilver: {stats.game_stats.medals_silver}"+
+            e.AddField("Medals", $"Bronze: {stats.game_stats.medals_bronze}" +
+                            $"\nSilver: {stats.game_stats.medals_silver}" +
                             $"\nGold: {stats.game_stats.medals_gold}", true);
 
-            e.AddField("General", $"Time played: {stats.game_stats.time_played}hrs"+
-                            $"\nLevel: {stats.overall_stats.level + (100 * stats.overall_stats.prestige)}"+
+            e.AddField("General", $"Time played: {stats.game_stats.time_played}hrs" +
+                            $"\nLevel: {stats.overall_stats.level + (100 * stats.overall_stats.prestige)}" +
                             $"\nWon Games: {stats.overall_stats.wins}", true);
 
-            e.AddField("Competitive", $"Time played: {info.getNotNull().stats.competitive.game_stats.time_played}hrs"+
-                            $"\nWin Rate: {info.getNotNull().stats.competitive.overall_stats.win_rate}%"+
+            e.AddField("Competitive", $"Time played: {info.getNotNull().stats.competitive.game_stats.time_played}hrs" +
+                            $"\nWin Rate: {info.getNotNull().stats.competitive.overall_stats.win_rate}%" +
                             $"\nRank: {info.getNotNull().stats.competitive.overall_stats.comprank}", true);
 
             e.AddField("Most Played", mostPlayed.Item2);
@@ -260,17 +279,18 @@ namespace MopsBot.Data.Tracker
 
             foreach (string key in Old.Keys)
                 difference.Add(key, New[key] - Old[key]);
-                
+
             var sortedList = (from entry in difference orderby entry.Value descending select entry).ToList();
             string leaderboard = "";
-            for(int i = 0; i < 5; i++){
-                if(sortedList[i].Value > 0.005)
+            for (int i = 0; i < 5; i++)
+            {
+                if (sortedList[i].Value > 0.005)
                     leaderboard += $"{sortedList[i].Key}: {Math.Round(New[sortedList[i].Key], 2)}hrs (+{Math.Round(sortedList[i].Value, 2)})\n";
                 else
                     break;
             }
 
-            if(difference[sortedList[0].Key] > 0)
+            if (difference[sortedList[0].Key] > 0)
                 return Tuple.Create(sortedList[0].Key, leaderboard);
 
             return Tuple.Create("CannotFetchArcade", "CannotFetchArcade");
@@ -281,14 +301,15 @@ namespace MopsBot.Data.Tracker
             var playtime = stats.merge();
             var sortedList = (from entry in playtime orderby entry.Value descending select entry).ToList();
             string leaderboard = "";
-            for(int i = 0; i < 5; i++){
-                if(sortedList[i].Value > 0.005)
+            for (int i = 0; i < 5; i++)
+            {
+                if (sortedList[i].Value > 0.005)
                     leaderboard += $"{sortedList[i].Key}: {Math.Round(playtime[sortedList[i].Key], 2)}hrs\n";
                 else
                     break;
             }
 
-            if(playtime[sortedList[0].Key] > 0)
+            if (playtime[sortedList[0].Key] > 0)
                 return Tuple.Create(sortedList[0].Key, leaderboard);
 
             return Tuple.Create("CannotFetchArcade", "CannotFetchArcade");

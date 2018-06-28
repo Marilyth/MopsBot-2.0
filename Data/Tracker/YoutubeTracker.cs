@@ -19,7 +19,7 @@ namespace MopsBot.Data.Tracker
     {
         public string LastTime;
 
-        public YoutubeTracker() : base(1200000, (ExistingTrackers * 2000+500) % 1200000)
+        public YoutubeTracker() : base(1200000, (ExistingTrackers * 2000 + 500) % 1200000)
         {
         }
 
@@ -29,12 +29,29 @@ namespace MopsBot.Data.Tracker
             LastTime = XmlConvert.ToString(DateTime.Now, XmlDateTimeSerializationMode.Utc);
 
             //Check if person exists by forcing Exceptions if not.
-            try{
+            try
+            {
                 var checkExists = fetchChannel().Result;
                 Name = checkExists.items[0].id;
-            } catch(Exception e){
+            }
+            catch (Exception e)
+            {
                 Dispose();
                 throw new Exception($"Channel-ID `{Name}` could not be found on Youtube!\nPerhaps you used the channel-name instead?");
+            }
+        }
+
+        public override void PostInitialisation()
+        {
+            foreach (ulong channel in ChannelIds)
+            {
+                if (ChannelMessages == null)
+                    ChannelMessages = new Dictionary<ulong, string>();
+                if (!ChannelMessages.ContainsKey(channel))
+                {
+                    ChannelMessages.Add(channel, "New Video");
+                    StaticBase.trackers["youtube"].SaveJson();
+                }
             }
         }
 
@@ -85,11 +102,11 @@ namespace MopsBot.Data.Tracker
                 {
                     foreach (ulong channel in ChannelIds)
                     {
-                        await OnMajorChangeTracked(channel, await createEmbed(video), "New Video");
+                        await OnMajorChangeTracked(channel, await createEmbed(video), ChannelMessages[channel]);
                     }
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Console.WriteLine($"[ERROR] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
             }
