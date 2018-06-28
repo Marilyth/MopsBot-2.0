@@ -192,6 +192,8 @@ namespace MopsBot.Data
         /// <returns>A Task that can be awaited</returns>
         private async Task OnMinorEvent(ulong channelID, Tracker.ITracker parent, string notification)
         {
+            if(!Program.client.ConnectionState.Equals(Discord.ConnectionState.Connected))
+                return;
             try
             {
                 await ((Discord.WebSocket.SocketTextChannel)Program.client.GetChannel(channelID)).SendMessageAsync(notification);
@@ -223,6 +225,8 @@ namespace MopsBot.Data
         /// <returns>A Task that can be awaited</returns>
         private async Task OnMajorEvent(ulong channelID, Embed embed, Tracker.ITracker parent, string notification)
         {
+            if(!Program.client.ConnectionState.Equals(Discord.ConnectionState.Connected))
+                return;
             try
             {
                 if (parent is Tracker.TwitchTracker)
