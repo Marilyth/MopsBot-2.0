@@ -267,7 +267,7 @@ namespace MopsBot.Module
                 }
                 else
                     await ReplyAsync($"Could not find tracker for `{subreddit}`\n"+
-                                     $"Currently tracked subreddits are: ``{String.Join(", ", StaticBase.trackers["overwatch"].GetTrackers(Context.Channel.Id).Select(x => x.Name))}``");
+                                     $"Currently tracked subreddits are: ``{String.Join(", ", StaticBase.trackers["reddit"].GetTrackers(Context.Channel.Id).Select(x => x.Name))}``");
             }
         }
 
