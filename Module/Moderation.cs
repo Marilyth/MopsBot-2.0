@@ -161,9 +161,10 @@ namespace MopsBot.Module
         [Hide]
         public async Task eval([Remainder]string expression)
         {
-            var script = CSharpScript.Create(expression, globalsType: typeof(MopsBot.Module.Moderation));
             try{
-                var result = await script.RunAsync(this);
+                var imports = Microsoft.CodeAnalysis.Scripting.ScriptOptions.Default.WithReferences(typeof(MopsBot.Program).Assembly, typeof(Discord.Attachment).Assembly).WithImports("MopsBot", "Discord");
+                var script = CSharpScript.Create(expression, globalsType: typeof(MopsBot.Module.Moderation));
+                var result = await script.WithOptions(imports).RunAsync(this);
                 await ReplyAsync(result.ReturnValue.ToString());
             } catch(Exception e){
                 await ReplyAsync("**Error:** " + e.Message);
