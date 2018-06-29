@@ -1,6 +1,7 @@
 ﻿using Discord.Commands;
 using Discord.WebSocket;
 using Discord;
+using Microsoft.CodeAnalysis.CSharp.Scripting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,7 +30,7 @@ namespace MopsBot.Module
             public async Task createInvite(string roleName, bool isGerman = false){
                 var highestRole = ((SocketGuildUser)await Context.Guild.GetCurrentUserAsync()).Roles.OrderByDescending(x => x.Position).First();
                 var requestedRole = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower().Equals(roleName.ToLower()));
-
+                
                 if(requestedRole != null && requestedRole.Position < highestRole.Position)
                     if(isGerman)
                         await StaticBase.ReactRoleJoin.AddInviteGerman((ITextChannel)Context.Channel, roleName);
@@ -153,6 +154,16 @@ namespace MopsBot.Module
         {
             Environment.Exit(0);
             return Task.CompletedTask;
+        }
+
+        [Command("eval")]
+        [RequireBotManage()]
+        [Hide]
+        public async Task eval([Remainder]string expression)
+        {
+            var script = CSharpScript.Create(expression, globalsType: typeof(MopsBot.Module.Moderation));
+            var result = await script.RunAsync(this);
+            await ReplyAsync(result.ReturnValue.ToString());
         }
 
         [Command("help")]
