@@ -117,7 +117,7 @@ namespace MopsBot.Data.Tracker
             EmbedAuthorBuilder author = new EmbedAuthorBuilder();
             author.Name = owName.Split("-")[0];
             author.Url = $"https://playoverwatch.com/en-us/career/pc/eu/{owName}";
-            author.IconUrl = info.getNotNull().stats.competitive.overall_stats.tier_image;
+
             e.Author = author;
 
             EmbedFooterBuilder footer = new EmbedFooterBuilder();
@@ -148,9 +148,12 @@ namespace MopsBot.Data.Tracker
                             $"\nLevel: {stats.overall_stats.level + (100 * stats.overall_stats.prestige)}" +
                             $"\nWon Games: {stats.overall_stats.wins}", true);
 
-            e.AddField("Competitive", $"Time played: {info.getNotNull().stats.competitive.game_stats.time_played}hrs" +
+            if(info.getNotNull().stats.competitive != null){
+                author.IconUrl = info.getNotNull().stats.competitive.overall_stats.tier_image;
+                e.AddField("Competitive", $"Time played: {info.getNotNull().stats.competitive.game_stats.time_played}hrs" +
                             $"\nWin Rate: {info.getNotNull().stats.competitive.overall_stats.win_rate}%" +
                             $"\nRank: {info.getNotNull().stats.competitive.overall_stats.comprank}", true);
+            }
 
             e.AddField("Most Played", mostPlayed.Item2);
 
