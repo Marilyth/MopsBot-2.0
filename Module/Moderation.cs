@@ -156,14 +156,18 @@ namespace MopsBot.Module
             return Task.CompletedTask;
         }
 
-        [Command("eval")]
+        [Command("eval", RunMode = RunMode.Async)]
         [RequireBotManage()]
         [Hide]
         public async Task eval([Remainder]string expression)
         {
             var script = CSharpScript.Create(expression, globalsType: typeof(MopsBot.Module.Moderation));
-            var result = await script.RunAsync(this);
-            await ReplyAsync(result.ReturnValue.ToString());
+            try{
+                var result = await script.RunAsync(this);
+                await ReplyAsync(result.ReturnValue.ToString());
+            } catch(Exception e){
+                await ReplyAsync("**Error:** " + e.Message);
+            }
         }
 
         [Command("help")]
