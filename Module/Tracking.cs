@@ -139,7 +139,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task trackYoutube(string channelID, [Remainder]string notificationMessage = "New Video")
             {
-                trackers["youtube"].AddTracker(channelID, Context.Channel.Id);
+                trackers["youtube"].AddTracker(channelID, Context.Channel.Id, notificationMessage);
 
                 await ReplyAsync("Keeping track of " + channelID + "'s videos, from now on!");
             }

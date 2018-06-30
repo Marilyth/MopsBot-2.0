@@ -78,18 +78,18 @@ namespace MopsBot.Data.Tracker
                 YoutubeResult curStats = await fetchVideos();
                 APIResults.Item[] newVideos = curStats.items.ToArray();
 
-                if (newVideos.Length > 0)
-                {
-                    LastTime = XmlConvert.ToString(newVideos[0].snippet.publishedAt, XmlDateTimeSerializationMode.Utc);
-                    StaticBase.trackers["youtube"].SaveJson();
-                }
-
                 foreach (APIResults.Item video in newVideos)
                 {
                     foreach (ulong channel in ChannelIds)
                     {
                         await OnMajorChangeTracked(channel, await createEmbed(video), ChannelMessages[channel]);
                     }
+                }
+
+                if (newVideos.Length > 0)
+                {
+                    LastTime = XmlConvert.ToString(newVideos[0].snippet.publishedAt, XmlDateTimeSerializationMode.Utc);
+                    StaticBase.trackers["youtube"].SaveJson();
                 }
             }
             catch (Exception e)
