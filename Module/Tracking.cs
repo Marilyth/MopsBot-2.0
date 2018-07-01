@@ -51,7 +51,9 @@ namespace MopsBot.Module
             }
 
             [Command("SetNotification")]
-            [Summary("Sets the notification text that is used each time a new Tweet is found.")]
+            [Summary("Sets the notification text that is used each time a new Tweet is found.\n"+
+                     "To differentiate between main tweets and other tweets, use `<Main Tweet Notification>|<Other Tweet Notification>`\n"+
+                     "To disable a kind of tweet, set notification to **NONE**")]
             public async Task SetNotification(string twitterUser, [Remainder]string notification)
             {
                 notification = notification.Contains("|") ? notification : notification + "|" + notification;

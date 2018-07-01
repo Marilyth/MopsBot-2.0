@@ -55,9 +55,11 @@ namespace MopsBot.Data.Tracker
                 {
                     foreach (ulong channel in ChannelIds)
                     {
-                        if (newTweet.InReplyToScreenName == null && !newTweet.IsRetweet)
-                            await OnMajorChangeTracked(channel, createEmbed(newTweet), ChannelMessages[channel].Split("|")[0]);
-                        else
+                        if (newTweet.InReplyToScreenName == null && !newTweet.IsRetweet){
+                            if (!ChannelMessages[channel].Split("|")[0].Equals("NONE"))
+                                await OnMajorChangeTracked(channel, createEmbed(newTweet), ChannelMessages[channel].Split("|")[0]);
+                        }
+                        else if(!ChannelMessages[channel].Split("|")[1].Equals("NONE"))
                             await OnMajorChangeTracked(channel, createEmbed(newTweet), ChannelMessages[channel].Split("|")[1]);
                     }
                 }
