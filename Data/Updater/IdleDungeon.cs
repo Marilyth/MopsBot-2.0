@@ -18,7 +18,7 @@ namespace MopsBot.Data.Updater
         public System.Threading.Timer timer;
         public IdleDungeon(Discord.IUserMessage pUpdateMessage, ulong ID, int pLength)
         {
-            username = Program.client.GetUser(ID).Username;
+            username = Program.Client.GetUser(ID).Username;
             log = $"00:00 {username} has entered the dungeon.";
             StaticBase.people.Users[ID].getEquipment(ID);
             player = ID;

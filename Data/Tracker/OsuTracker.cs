@@ -66,7 +66,7 @@ namespace MopsBot.Data.Tracker
                         }
                     }
                     allPP[pp.Key] = double.Parse(userInformation.pp_raw ?? "0", CultureInfo.InvariantCulture);
-                    StaticBase.trackers["osu"].SaveJson();
+                    StaticBase.Trackers["osu"].SaveJson();
                 }
             }
             catch (Exception e)

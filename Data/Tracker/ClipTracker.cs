@@ -64,7 +64,7 @@ namespace MopsBot.Data.Tracker
                 {
                     var temp = clip["broadcaster"]["name"].ToString();
                     List<ulong> channels = tracklist[temp];
-                    foreach (SocketTextChannel c in channels.Select(id => Program.client.GetChannel(id)))
+                    foreach (SocketTextChannel c in channels.Select(id => Program.Client.GetChannel(id)))
                     {
                         c.SendMessageAsync(clip["url"].ToString());
                     }

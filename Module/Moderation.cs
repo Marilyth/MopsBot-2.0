@@ -66,18 +66,18 @@ namespace MopsBot.Module
             MatchCollection match = Regex.Matches(Poll, @"(?<=\().+?(?=\))");
             List<IGuildUser> participants = Context.Message.MentionedUserIds.Select(x => Context.Guild.GetUserAsync(x).Result).ToList();
 
-            poll = new Data.Updater.Poll(match[0].Value, match[1].Value.Split(","), participants.ToArray());
+            StaticBase.Poll = new Data.Updater.Poll(match[0].Value, match[1].Value.Split(","), participants.ToArray());
 
             foreach (IGuildUser part in participants)
             {
                 string output = "";
-                for (int i = 0; i < poll.answers.Length; i++)
+                for (int i = 0; i < StaticBase.Poll.answers.Length; i++)
                 {
-                    output += $"\n``{i + 1}`` {poll.answers[i]}";
+                    output += $"\n``{i + 1}`` {StaticBase.Poll.answers[i]}";
                 }
                 try
                 {
-                    await part.GetOrCreateDMChannelAsync().Result.SendMessageAsync($"{Context.User.Username} has created a poll:\n\n📄: {poll.question}\n{output}\n\nTo vote, simply PM me the **Number** of the answer you agree with.");
+                    await part.GetOrCreateDMChannelAsync().Result.SendMessageAsync($"{Context.User.Username} has created a poll:\n\n📄: {StaticBase.Poll.question}\n{output}\n\nTo vote, simply PM me the **Number** of the answer you agree with.");
                 }
                 catch { }
             }
@@ -90,16 +90,16 @@ namespace MopsBot.Module
         {
             if (!Context.Guild.GetUserAsync(Context.User.Id).Result.GuildPermissions.Administrator)
                 return;
-            poll.isPrivate = isPrivate;
-            await ReplyAsync(poll.DrawPlot());
+            StaticBase.Poll.isPrivate = isPrivate;
+            await base.ReplyAsync(StaticBase.Poll.DrawPlot());
 
-            foreach (IGuildUser part in poll.participants)
+            foreach (IGuildUser part in StaticBase.Poll.participants)
             {
-                await part.GetOrCreateDMChannelAsync().Result.SendMessageAsync($"📄:{poll.question}\n\nHas ended without your participation, sorry!");
-                poll.participants.Remove(part);
+                await part.GetOrCreateDMChannelAsync().Result.SendMessageAsync($"📄:{StaticBase.Poll.question}\n\nHas ended without your participation, sorry!");
+                StaticBase.Poll.participants.Remove(part);
             }
 
-            poll = null;
+            StaticBase.Poll = null;
         }
 
         [Group("Giveaway")]
@@ -129,16 +129,16 @@ namespace MopsBot.Module
 
             string oldPrefix;
 
-            if (guildPrefix.ContainsKey(Context.Guild.Id))
+            if (GuildPrefix.ContainsKey(Context.Guild.Id))
             {
-                oldPrefix = guildPrefix[Context.Guild.Id];
-                guildPrefix[Context.Guild.Id] = prefix;
+                oldPrefix = GuildPrefix[Context.Guild.Id];
+                GuildPrefix[Context.Guild.Id] = prefix;
             }
 
             else
             {
                 oldPrefix = "!";
-                guildPrefix.Add(Context.Guild.Id, prefix);
+                GuildPrefix.Add(Context.Guild.Id, prefix);
             }
 
             savePrefix();
@@ -177,7 +177,7 @@ namespace MopsBot.Module
         {
             var output = "For more information regarding a specific command, please use ?<command>";
 
-            foreach (var module in Program.handler.commands.Modules.Where(x=> !x.Preconditions.OfType<HideAttribute>().Any()))
+            foreach (var module in Program.Handler.commands.Modules.Where(x=> !x.Preconditions.OfType<HideAttribute>().Any()))
             {
                 if (module.IsSubmodule && !module.Preconditions.OfType<HideAttribute>().Any())
                 {

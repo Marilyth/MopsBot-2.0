@@ -25,7 +25,7 @@ namespace MopsBot.Data.Updater
             return Plot.CreateBarDiagram<KeyValuePair<string, List<ulong>>>(
                                         answers.Length, 
                                         x => x.Value.Count, 
-                                        x => isPrivate ? x.Key : String.Join(", ", x.Value.Select(y => Program.client.GetUser(y).Username)), 
+                                        x => isPrivate ? x.Key : String.Join(", ", x.Value.Select(y => Program.Client.GetUser(y).Username)), 
                                         results.ToList());
         }
 

@@ -36,7 +36,7 @@ namespace MopsBot
 
             await commands.AddModulesAsync(Assembly.GetEntryAssembly(), provider);
 
-            guildPrefix = new Dictionary<ulong, string>();
+            GuildPrefix = new Dictionary<ulong, string>();
             fillPrefix();
             client.MessageReceived += Client_MessageReceived;
             client.MessageReceived += HandleCommand;
@@ -54,13 +54,13 @@ namespace MopsBot
         private async Task Client_MessageReceived(SocketMessage arg)
         {
             //Poll
-            if (arg.Channel is Discord.IDMChannel && StaticBase.poll != null)
+            if (arg.Channel is Discord.IDMChannel && StaticBase.Poll != null)
             {
-                if (StaticBase.poll.participants.ToList().Select(x => x.Id).Contains(arg.Author.Id))
+                if (StaticBase.Poll.participants.ToList().Select(x => x.Id).Contains(arg.Author.Id))
                 {
-                    StaticBase.poll.AddValue(StaticBase.poll.answers[int.Parse(arg.Content) - 1], arg.Author.Id);
+                    StaticBase.Poll.AddValue(StaticBase.Poll.answers[int.Parse(arg.Content) - 1], arg.Author.Id);
                     await arg.Channel.SendMessageAsync("Vote accepted!");
-                    StaticBase.poll.participants.RemoveAll(x => x.Id == arg.Author.Id);
+                    StaticBase.Poll.participants.RemoveAll(x => x.Id == arg.Author.Id);
                 }
             }
 
@@ -115,7 +115,7 @@ namespace MopsBot
             ulong id = 0;
             if (message.Channel is Discord.IDMChannel) id = message.Channel.Id;
             else id = ((SocketGuildChannel)message.Channel).Guild.Id;
-            var prefix = guildPrefix.ContainsKey(id) ? guildPrefix[id] : "!";
+            var prefix = GuildPrefix.ContainsKey(id) ? GuildPrefix[id] : "!";
 
             // Determine if the message has a valid prefix, adjust argPos 
             if (!(message.HasMentionPrefix(client.CurrentUser, ref argPos) || message.HasStringPrefix(prefix, ref argPos) || message.HasCharPrefix('?', ref argPos))) return;
@@ -231,9 +231,9 @@ namespace MopsBot
                         var trackerInformation = s.Split('|');
                         var prefix = trackerInformation[1];
                         var guildID = ulong.Parse(trackerInformation[0]);
-                        if (!guildPrefix.ContainsKey(guildID))
+                        if (!GuildPrefix.ContainsKey(guildID))
                         {
-                            guildPrefix.Add(guildID, prefix);
+                            GuildPrefix.Add(guildID, prefix);
                         }
 
                     }

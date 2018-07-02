@@ -23,7 +23,7 @@ namespace MopsBot.Module
                     Discord.IUserMessage updateMessage = await Context.Channel.SendMessageAsync("Generating dungeon.");
 
                     Data.Updater.IdleDungeon test = new Data.Updater.IdleDungeon(updateMessage, Context.User.Id, (int)lengthInMinutes);
-                    StaticBase.dungeonCrawler.Add(test);
+                    StaticBase.DungeonCrawler.Add(test);
                 }
                 else
                     await ReplyAsync("Fuck you.");
@@ -66,14 +66,14 @@ namespace MopsBot.Module
             public async Task start([Remainder] string words)
             {
                 string[] wordArray = words.Split(" ");
-                StaticBase.crosswords = new MopsBot.Data.Updater.Crosswords(wordArray);
-                StaticBase.crosswords.setToUpdate(await ReplyAsync(StaticBase.crosswords.drawMap()));
+                StaticBase.Crosswords = new MopsBot.Data.Updater.Crosswords(wordArray);
+                StaticBase.Crosswords.setToUpdate(await ReplyAsync(StaticBase.Crosswords.drawMap()));
             }
             [Command("guess")]
             [Summary("Guess a word.")]
             public async Task guess(string guess)
             {
-                StaticBase.crosswords.guessWord(Context.User.Id, guess);
+                StaticBase.Crosswords.guessWord(Context.User.Id, guess);
                 await Context.Message.DeleteAsync();
             }
         }

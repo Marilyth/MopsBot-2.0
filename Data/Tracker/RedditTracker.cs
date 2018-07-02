@@ -62,7 +62,7 @@ namespace MopsBot.Data.Tracker
                 if (newPosts.Length > 0)
                 {
                     lastCheck = newPosts.Max(x => x.data.created_utc);
-                    StaticBase.trackers["reddit"].SaveJson();
+                    StaticBase.Trackers["reddit"].SaveJson();
 
                     newPosts = newPosts.Reverse().ToArray();
                     foreach (var post in newPosts)

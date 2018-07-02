@@ -47,7 +47,7 @@ namespace MopsBot.Data.Tracker
                 if (lastMessage == 0)
                 {
                     lastMessage = newTweets[newTweets.Length - 1].Id;
-                    StaticBase.trackers["twitter"].SaveJson();
+                    StaticBase.Trackers["twitter"].SaveJson();
                     return;
                 }
 
@@ -67,7 +67,7 @@ namespace MopsBot.Data.Tracker
                 if (newTweets.Length != 0)
                 {
                     lastMessage = newTweets[newTweets.Length - 1].Id;
-                    StaticBase.trackers["twitter"].SaveJson();
+                    StaticBase.Trackers["twitter"].SaveJson();
                 }
 
             }

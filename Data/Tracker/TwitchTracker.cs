@@ -30,10 +30,10 @@ namespace MopsBot.Data.Tracker
             viewerGraph = new Plot(Name, "Time In Minutes", "Viewers", IsOnline);
             foreach(var channelMessage in ToUpdate){
                 try{
-                    await setReaction((IUserMessage)((ITextChannel)Program.client.GetChannel(channelMessage.Key)).GetMessageAsync(channelMessage.Value).Result);
+                    await setReaction((IUserMessage)((ITextChannel)Program.Client.GetChannel(channelMessage.Key)).GetMessageAsync(channelMessage.Value).Result);
                 }catch{
-                    if(Program.client.GetChannel(channelMessage.Key)==null){
-                        StaticBase.trackers["twitch"].TryRemoveTracker(Name, channelMessage.Key);
+                    if(Program.Client.GetChannel(channelMessage.Key)==null){
+                        StaticBase.Trackers["twitch"].TryRemoveTracker(Name, channelMessage.Key);
                         Console.Out.WriteLine($"remove tracker for {Name} in channel: {channelMessage.Key}");  
                     }
                 }
@@ -42,8 +42,8 @@ namespace MopsBot.Data.Tracker
 
         public async Task setReaction(IUserMessage message){
             //await message.RemoveAllReactionsAsync();
-            await Program.reactionHandler.addHandler(message, new Emoji("🖌"), recolour);
-            await Program.reactionHandler.addHandler(message, new Emoji("🔄"), switchThumbnail);
+            await Program.ReactionHandler.AddHandler(message, new Emoji("🖌"), recolour);
+            await Program.ReactionHandler.AddHandler(message, new Emoji("🔄"), switchThumbnail);
         }
 
         public TwitchTracker(string streamerName) : base(60000)
@@ -87,7 +87,7 @@ namespace MopsBot.Data.Tracker
                         viewerGraph.RemovePlot();
                         viewerGraph = new Plot(Name, "Time In Minutes", "Viewers", false);
                         foreach(var channelMessage in ToUpdate)
-                            await Program.reactionHandler.clearHandler((IUserMessage) await ((ITextChannel)Program.client.GetChannel(channelMessage.Key)).GetMessageAsync(channelMessage.Value));
+                            await Program.ReactionHandler.ClearHandler((IUserMessage) await ((ITextChannel)Program.Client.GetChannel(channelMessage.Key)).GetMessageAsync(channelMessage.Value));
                         ToUpdate = new Dictionary<ulong, ulong>();
 
                         foreach (ulong channel in ChannelMessages.Keys)
@@ -102,7 +102,7 @@ namespace MopsBot.Data.Tracker
                         foreach (ulong channel in ChannelMessages.Keys)
                             await OnMinorChangeTracked(channel, ChannelMessages[channel]);
                     }
-                    StaticBase.trackers["twitch"].SaveJson();
+                    StaticBase.Trackers["twitch"].SaveJson();
                 }
 
                 if (IsOnline)
@@ -116,7 +116,7 @@ namespace MopsBot.Data.Tracker
 
                         foreach (ulong channel in ChannelMessages.Keys)
                             await OnMinorChangeTracked(channel, $"{Name} switched games to **{CurGame}**");
-                        StaticBase.trackers["twitch"].SaveJson();
+                        StaticBase.Trackers["twitch"].SaveJson();
                     }
 
                     foreach (ulong channel in ChannelIds)
@@ -204,7 +204,7 @@ namespace MopsBot.Data.Tracker
         private async Task switchThumbnail(ReactionHandlerContext context){
             if(((IGuildUser)await context.reaction.Channel.GetUserAsync(context.reaction.UserId)).GetPermissions((IGuildChannel)context.channel).ManageChannel){
                 isThumbnailLarge = !isThumbnailLarge;
-                StaticBase.trackers["twitch"].SaveJson();
+                StaticBase.Trackers["twitch"].SaveJson();
 
                 foreach (ulong channel in ChannelIds)
                     await OnMajorChangeTracked(channel, createEmbed());

@@ -10,7 +10,7 @@ namespace MopsBot.Module.Preconditions{
     {
         public async override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services)
         {
-            if(new List<string>(Program.Config["BotManager"].Split(":")).Contains(context.User.Id.ToString())||context.User.Id.Equals((await Program.client.GetApplicationInfoAsync()).Owner.Id))
+            if(new List<string>(Program.Config["BotManager"].Split(":")).Contains(context.User.Id.ToString())||context.User.Id.Equals((await Program.Client.GetApplicationInfoAsync()).Owner.Id))
                 return PreconditionResult.FromSuccess();
             return PreconditionResult.FromError("");
         }

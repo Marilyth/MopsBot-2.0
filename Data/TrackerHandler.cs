@@ -99,7 +99,7 @@ namespace MopsBot.Data
                     foreach (var channel in (trackers[name] as Tracker.TwitchTracker).ToUpdate.Where(x => x.Key.Equals(channelID)))
                         try
                         {
-                            Program.reactionHandler.clearHandler((IUserMessage)((ITextChannel)Program.client.GetChannel(channelID)).GetMessageAsync(channel.Value).Result).Wait();
+                            Program.ReactionHandler.ClearHandler((IUserMessage)((ITextChannel)Program.Client.GetChannel(channelID)).GetMessageAsync(channel.Value).Result).Wait();
                         }
                         catch
                         {
@@ -192,25 +192,25 @@ namespace MopsBot.Data
         /// <returns>A Task that can be awaited</returns>
         private async Task OnMinorEvent(ulong channelID, Tracker.ITracker parent, string notification)
         {
-            if(!Program.client.ConnectionState.Equals(Discord.ConnectionState.Connected))
+            if(!Program.Client.ConnectionState.Equals(Discord.ConnectionState.Connected))
                 return;
             try
             {
-                await ((Discord.WebSocket.SocketTextChannel)Program.client.GetChannel(channelID)).SendMessageAsync(notification);
+                await ((Discord.WebSocket.SocketTextChannel)Program.Client.GetChannel(channelID)).SendMessageAsync(notification);
             }
             catch
             {
-                if (Program.client.GetChannel(channelID) == null){
+                if (Program.Client.GetChannel(channelID) == null){
                     TryRemoveTracker(parent.Name, channelID);
                     Console.Out.WriteLine($"Removed Tracker: {parent.Name} Channel {channelID} is missing");
                 }
                 else{
-                    var permission = (await ((IGuildChannel)Program.client.GetChannel(channelID)).Guild.GetCurrentUserAsync()).GetPermissions( ((IGuildChannel)Program.client.GetChannel(channelID)));
+                    var permission = (await ((IGuildChannel)Program.Client.GetChannel(channelID)).Guild.GetCurrentUserAsync()).GetPermissions( ((IGuildChannel)Program.Client.GetChannel(channelID)));
                     if(!permission.SendMessages || !permission.ViewChannel || !permission.ReadMessageHistory){
                         TryRemoveTracker(parent.Name, channelID);
                         Console.Out.WriteLine($"Removed a tracker for {parent.Name} due to missing Permissions");
                         if(permission.SendMessages){
-                            await ((ITextChannel)Program.client.GetChannel(channelID)).SendMessageAsync($"Removed tracker for `{parent.Name}` due to missing Permissions");
+                            await ((ITextChannel)Program.Client.GetChannel(channelID)).SendMessageAsync($"Removed tracker for `{parent.Name}` due to missing Permissions");
                         }
                     }           
                 }
@@ -225,7 +225,7 @@ namespace MopsBot.Data
         /// <returns>A Task that can be awaited</returns>
         private async Task OnMajorEvent(ulong channelID, Embed embed, Tracker.ITracker parent, string notification)
         {
-            if(!Program.client.ConnectionState.Equals(Discord.ConnectionState.Connected))
+            if(!Program.Client.ConnectionState.Equals(Discord.ConnectionState.Connected))
                 return;
             try
             {
@@ -234,7 +234,7 @@ namespace MopsBot.Data
                     Tracker.TwitchTracker parentHandle = parent as Tracker.TwitchTracker;
                     if (parentHandle.ToUpdate.ContainsKey(channelID))
                     {
-                        var message = ((IUserMessage)((ITextChannel)Program.client.GetChannel(channelID)).GetMessageAsync(parentHandle.ToUpdate[channelID]).Result);
+                        var message = ((IUserMessage)((ITextChannel)Program.Client.GetChannel(channelID)).GetMessageAsync(parentHandle.ToUpdate[channelID]).Result);
                         if(message != null)
                             await message.ModifyAsync(x =>
                             {
@@ -242,7 +242,7 @@ namespace MopsBot.Data
                                 x.Embed = embed;
                             });
                         else{
-                            var newMessage = await ((Discord.WebSocket.SocketTextChannel)Program.client.GetChannel(channelID)).SendMessageAsync(notification, embed: embed);
+                            var newMessage = await ((Discord.WebSocket.SocketTextChannel)Program.Client.GetChannel(channelID)).SendMessageAsync(notification, embed: embed);
                             parentHandle.ToUpdate[channelID]=newMessage.Id;
                             await parentHandle.setReaction((IUserMessage)message);
                             SaveJson();
@@ -250,28 +250,28 @@ namespace MopsBot.Data
                     }
                     else
                     {
-                        var message = await ((Discord.WebSocket.SocketTextChannel)Program.client.GetChannel(channelID)).SendMessageAsync(notification, embed: embed);
+                        var message = await ((Discord.WebSocket.SocketTextChannel)Program.Client.GetChannel(channelID)).SendMessageAsync(notification, embed: embed);
                         parentHandle.ToUpdate.Add(channelID, message.Id);
                         await parentHandle.setReaction((IUserMessage)message);
                         SaveJson();
                     }
                 }
                 else
-                    await ((Discord.WebSocket.SocketTextChannel)Program.client.GetChannel(channelID)).SendMessageAsync(notification, embed: embed);
+                    await ((Discord.WebSocket.SocketTextChannel)Program.Client.GetChannel(channelID)).SendMessageAsync(notification, embed: embed);
             }
             catch
             {
-                if (Program.client.GetChannel(channelID) == null){
+                if (Program.Client.GetChannel(channelID) == null){
                     TryRemoveTracker(parent.Name, channelID);
                     Console.Out.WriteLine($"Removed Tracker: {parent.Name} Channel {channelID} is missing");
                 }
                 else{
-                    var permission = (await ((IGuildChannel)Program.client.GetChannel(channelID)).Guild.GetCurrentUserAsync()).GetPermissions( ((IGuildChannel)Program.client.GetChannel(channelID)));
+                    var permission = (await ((IGuildChannel)Program.Client.GetChannel(channelID)).Guild.GetCurrentUserAsync()).GetPermissions( ((IGuildChannel)Program.Client.GetChannel(channelID)));
                     if(!permission.SendMessages || !permission.ViewChannel || !permission.ReadMessageHistory || (parent is Tracker.TwitchTracker && (!permission.AddReactions || !permission.ManageMessages))){
                         TryRemoveTracker(parent.Name, channelID);
                         Console.Out.WriteLine($"Removed a tracker for {parent.Name} due to missing Permissions");
                         if(permission.SendMessages){
-                            await ((ITextChannel)Program.client.GetChannel(channelID)).SendMessageAsync($"Removed tracker for `{parent.Name}` due to missing Permissions");
+                            await ((ITextChannel)Program.Client.GetChannel(channelID)).SendMessageAsync($"Removed tracker for `{parent.Name}` due to missing Permissions");
                         }
                     }           
                 }

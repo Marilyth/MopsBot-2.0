@@ -58,7 +58,7 @@ namespace MopsBot.Data.Tracker
                 if (newArticles.Length > 0)
                 {
                     LastNews = newArticles.First().PublishedAt.ToString();
-                    StaticBase.trackers["news"].SaveJson();
+                    StaticBase.Trackers["news"].SaveJson();
                 }
 
                 foreach (Article newArticle in newArticles)

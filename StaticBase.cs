@@ -20,18 +20,18 @@ namespace MopsBot
         public static Data.Statistics stats = new Data.Statistics();
         public static Data.UserScore people = new Data.UserScore();
         public static Random ran = new Random();
-        public static List<IdleDungeon> dungeonCrawler = new List<IdleDungeon>();
+        public static List<IdleDungeon> DungeonCrawler = new List<IdleDungeon>();
         public static Gfycat.GfycatClient gfy;
-        public static List<string> playlist = new List<string>();
+        public static List<string> Playlist = new List<string>();
         public static HashSet<ulong> MemberSet;
-        public static Dictionary<ulong, string> guildPrefix;
+        public static Dictionary<ulong, string> GuildPrefix;
         public static Giveaway Giveaways = new Giveaway();
         public static ReactionGiveaway ReactGiveaways;
         public static ReactionRoleJoin ReactRoleJoin;
-        public static Poll poll;
-        public static Crosswords crosswords;
+        public static Poll Poll;
+        public static Crosswords Crosswords;
         public static ClipTracker ClipTracker;
-        public static Dictionary<string, TrackerWrapper> trackers;
+        public static Dictionary<string, TrackerWrapper> Trackers;
         public static MuteTimeHandler MuteHandler;
         public static NewsApiClient NewsClient;
 
@@ -69,16 +69,16 @@ namespace MopsBot
                         Console.WriteLine(e.Message + e.StackTrace);
                     }
                 }
-                trackers = new Dictionary<string, Data.TrackerWrapper>();
-                trackers["osu"] = new TrackerHandler<OsuTracker>();
-                trackers["overwatch"] = new TrackerHandler<OverwatchTracker>();
-                trackers["twitch"] = new TrackerHandler<TwitchTracker>();
-                trackers["twitter"] = new TrackerHandler<TwitterTracker>();
-                trackers["youtube"] = new TrackerHandler<YoutubeTracker>();
-                trackers["reddit"] = new TrackerHandler<RedditTracker>();
-                trackers["news"] = new TrackerHandler<NewsTracker>();
+                Trackers = new Dictionary<string, Data.TrackerWrapper>();
+                Trackers["osu"] = new TrackerHandler<OsuTracker>();
+                Trackers["overwatch"] = new TrackerHandler<OverwatchTracker>();
+                Trackers["twitch"] = new TrackerHandler<TwitchTracker>();
+                Trackers["twitter"] = new TrackerHandler<TwitterTracker>();
+                Trackers["youtube"] = new TrackerHandler<YoutubeTracker>();
+                Trackers["reddit"] = new TrackerHandler<RedditTracker>();
+                Trackers["news"] = new TrackerHandler<NewsTracker>();
 
-                foreach(var tracker in trackers){
+                foreach(var tracker in Trackers){
                     tracker.Value.postInitialisation();
                 }
 
@@ -92,7 +92,7 @@ namespace MopsBot
             using (StreamWriter write = new StreamWriter(new FileStream("mopsdata//guildprefixes.txt", FileMode.Create)))
             {
                 write.AutoFlush = true;
-                foreach (var kv in guildPrefix)
+                foreach (var kv in GuildPrefix)
                 {
                     write.WriteLine($"{kv.Key}|{kv.Value}");
                 }
@@ -137,7 +137,7 @@ namespace MopsBot
 
         public static async Task UpdateGameAsync()
         {
-            await Program.client.SetActivityAsync(new Game($"{Program.client.Guilds.Count} servers", ActivityType.Watching));
+            await Program.Client.SetActivityAsync(new Game($"{Program.Client.Guilds.Count} servers", ActivityType.Watching));
         }
     }
 }

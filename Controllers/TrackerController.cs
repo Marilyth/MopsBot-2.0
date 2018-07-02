@@ -56,7 +56,7 @@ namespace MopsBot.Api.Controllers
             bool allTypes = !parameters.ContainsKey("type");
             bool allChannels = !parameters.ContainsKey("channel");
 
-            Dictionary<string, TrackerWrapper> allTrackers = StaticBase.trackers;
+            Dictionary<string, TrackerWrapper> allTrackers = StaticBase.Trackers;
             HashSet<ITracker> allResults = new HashSet<ITracker>();
 
             allTrackers = allTrackers.
