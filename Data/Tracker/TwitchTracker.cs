@@ -32,10 +32,12 @@ namespace MopsBot.Data.Tracker
                 try{
                     await setReaction((IUserMessage)((ITextChannel)Program.Client.GetChannel(channelMessage.Key)).GetMessageAsync(channelMessage.Value).Result);
                 }catch{
-                    if(Program.Client.GetChannel(channelMessage.Key)==null){
-                        StaticBase.Trackers["twitch"].TryRemoveTracker(Name, channelMessage.Key);
-                        Console.Out.WriteLine($"remove tracker for {Name} in channel: {channelMessage.Key}");  
-                    }
+                    // if(Program.Client.GetChannel(channelMessage.Key)==null){
+                    //     StaticBase.Trackers["twitch"].TryRemoveTracker(Name, channelMessage.Key);
+                    //     Console.Out.WriteLine($"remove tracker for {Name} in channel: {channelMessage.Key}");  
+                    // }
+                    //
+                    // the Tracker Should be removed on the first Event Call
                 }
             }
         }
