@@ -73,6 +73,7 @@ namespace MopsBot
                 Trackers["osu"] = new TrackerHandler<OsuTracker>();
                 Trackers["overwatch"] = new TrackerHandler<OverwatchTracker>();
                 Trackers["twitch"] = new TrackerHandler<TwitchTracker>();
+                Trackers["twitchclips"] = new TrackerHandler<TwitchClipTracker>();
                 Trackers["twitter"] = new TrackerHandler<TwitterTracker>();
                 Trackers["youtube"] = new TrackerHandler<YoutubeTracker>();
                 Trackers["reddit"] = new TrackerHandler<RedditTracker>();

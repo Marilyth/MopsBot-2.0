@@ -43,9 +43,9 @@ namespace MopsBot.Module
                                      $"Currently tracked Twitter Users are: ``{String.Join(", ", StaticBase.Trackers["twitter"].GetTrackers(Context.Channel.Id).Select(x => x.Name))}``");
             }
 
-            [Command("GetTracks")]
+            [Command("GetTrackers")]
             [Summary("Returns the twitters that are tracked in the current channel.")]
-            public async Task getTracks()
+            public async Task getTrackers()
             {
                 await ReplyAsync("Following twitters are currently being tracked:\n``" + String.Join(", ", StaticBase.Trackers["twitter"].GetTrackers(Context.Channel.Id).Select(x => x.Name)) + "``");
             }
@@ -54,6 +54,7 @@ namespace MopsBot.Module
             [Summary("Sets the notification text that is used each time a new Tweet is found.\n"+
                      "To differentiate between main tweets and other tweets, use `<Main Tweet Notification>|<Other Tweet Notification>`\n"+
                      "To disable a kind of tweet, set notification to **NONE**")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task SetNotification(string twitterUser, [Remainder]string notification)
             {
                 notification = notification.Contains("|") ? notification : notification + "|" + notification;
@@ -93,15 +94,16 @@ namespace MopsBot.Module
                                      $"Currently tracked osu! players are: ``{String.Join(", ", StaticBase.Trackers["osu"].GetTrackers(Context.Channel.Id).Select(x => x.Name))}``");
             }
 
-            [Command("GetTracks")]
+            [Command("GetTrackers")]
             [Summary("Returns the Osu players that are tracked in the current channel.")]
-            public async Task getTracks()
+            public async Task getTrackers()
             {
                 await ReplyAsync("Following Osu players are currently being tracked:\n``" + String.Join(", ", StaticBase.Trackers["osu"].GetTrackers(Context.Channel.Id).Select(x => x.Name)) + "``");
             }
 
             [Command("SetPPBounds")]
             [Summary("Sets the lower bounds of pp gain that must be reached, to show a notification.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task SetPPBounds(string osuUser, double threshold)
             {
                 var player = (OsuTracker)StaticBase.Trackers["osu"].GetTracker(Context.Channel.Id, osuUser);
@@ -121,6 +123,7 @@ namespace MopsBot.Module
 
             [Command("SetNotification")]
             [Summary("Sets the notification text that is used each time a player gained pp.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task SetNotification(string osuUser, [Remainder]string notification)
             {
                 if(StaticBase.Trackers["osu"].TrySetNotification(osuUser, Context.Channel.Id, notification)){
@@ -158,15 +161,16 @@ namespace MopsBot.Module
                                      $"Currently tracked Youtubers are: ``{String.Join(", ", StaticBase.Trackers["youtube"].GetTrackers(Context.Channel.Id).Select(x => x.Name))}``");
             }
 
-            [Command("GetTracks")]
+            [Command("GetTrackers")]
             [Summary("Returns the Youtubers that are tracked in the current channel.")]
-            public async Task getTracks()
+            public async Task getTrackers()
             {
                 await ReplyAsync("Following Youtubers are currently being tracked:\n``" + String.Join(", ", StaticBase.Trackers["youtube"].GetTrackers(Context.Channel.Id).Select(x => x.Name)) + "``");
             }
 
             [Command("SetNotification")]
             [Summary("Sets the notification text that is used each time a new video appears.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task SetNotification(string channelID, [Remainder]string notification)
             {
                 if(StaticBase.Trackers["youtube"].TrySetNotification(channelID, Context.Channel.Id, notification)){
@@ -177,6 +181,7 @@ namespace MopsBot.Module
                                      $"Currently tracked channels are: ``{String.Join(", ", StaticBase.Trackers["youtube"].GetTrackers(Context.Channel.Id).Select(x => x.Name))}``");
             }
         }
+
         [Group("Twitch")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public class Twitch : ModuleBase
@@ -206,15 +211,16 @@ namespace MopsBot.Module
                                      $"Currently tracked Streamers are: ``{String.Join(", ", StaticBase.Trackers["twitch"].GetTrackers(Context.Channel.Id).Select(x => x.Name))}``");
             }
 
-            [Command("GetTracks")]
+            [Command("GetTrackers")]
             [Summary("Returns the streamers that are tracked in the current channel.")]
-            public async Task getTracks()
+            public async Task getTrackers()
             {
                 await ReplyAsync("Following streamers are currently being tracked:\n``" + String.Join(", ", StaticBase.Trackers["twitch"].GetTrackers(Context.Channel.Id).Select(x => x.Name)) + "``");
             }
 
             [Command("SetNotification")]
             [Summary("Sets the notification text that is used each time a streamer goes live.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task SetNotification(string streamer, [Remainder]string notification)
             {
                 if(StaticBase.Trackers["twitch"].TrySetNotification(streamer, Context.Channel.Id, notification)){
@@ -223,6 +229,69 @@ namespace MopsBot.Module
                 else
                     await ReplyAsync($"Could not find tracker for `{streamer}`\n"+
                                      $"Currently tracked streamers are: ``{String.Join(", ", StaticBase.Trackers["twitch"].GetTrackers(Context.Channel.Id).Select(x => x.Name))}``");
+            }
+        }
+
+        [Group("TwitchClips")]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
+        public class TwitchClips : ModuleBase
+        {
+            [Command("Track")]
+            [Summary("Keeps track of the specified streamer's top clips every 30 minutes, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task trackClips(string streamerName, [Remainder]string notificationMessage = "New trending clip found!")
+            {
+                Trackers["twitchclips"].AddTracker(streamerName, Context.Channel.Id, notificationMessage);
+
+                await ReplyAsync("Keeping track of " + streamerName + "'s top clips above **2** views every 30 minutes, from now on!\nUse the `SetViewThreshold` subcommand to change the threshold.");
+            }
+
+            [Command("UnTrack")]
+            [Summary("Stops tracking the specified streamer's clips.\nRequires Manage channel permissions.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task unTrackStreamer(string streamerName)
+            {
+                if(Trackers["twitchclips"].TryRemoveTracker(streamerName, Context.Channel.Id))
+                    await ReplyAsync("Stopped keeping track of " + streamerName + "'s streams!");
+                else
+                    await ReplyAsync($"Could not find tracker for `{streamerName}`\n"+
+                                     $"Currently tracked Streamers are: ``{String.Join(", ", StaticBase.Trackers["twitch"].GetTrackers(Context.Channel.Id).Select(x => x.Name))}``");
+            }
+
+            [Command("GetTrackers")]
+            [Summary("Returns the streamers that are tracked in the current channel.")]
+            public async Task getTrackers()
+            {
+                await ReplyAsync("Following streamers are currently being tracked:\n``" + String.Join(", ", StaticBase.Trackers["twitchclips"].GetTrackers(Context.Channel.Id).Select(x => x.Name)) + "``");
+            }
+
+            [Command("SetNotification")]
+            [Summary("Sets the notification text that is used each time a new clip is found.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task SetNotification(string streamer, [Remainder]string notification)
+            {
+                if(StaticBase.Trackers["twitchclips"].TrySetNotification(streamer, Context.Channel.Id, notification)){
+                    await ReplyAsync($"Changed notification for `{streamer}` to `{notification}`");
+                }
+                else
+                    await ReplyAsync($"Could not find tracker for `{streamer}`\n"+
+                                     $"Currently tracked streamers are: ``{String.Join(", ", StaticBase.Trackers["twitchclips"].GetTrackers(Context.Channel.Id).Select(x => x.Name))}``");
+            }
+
+            [Command("SetViewThreshold")]
+            [Summary("Sets the minimum views a top clip must have to be shown.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task SetViewThreshold(string streamer, uint threshold)
+            {
+                var tracker = (TwitchClipTracker)StaticBase.Trackers["twitchclips"].GetTracker(Context.Channel.Id, streamer);
+                if(tracker != null){
+                    tracker.ViewThreshold = threshold;
+                    StaticBase.Trackers["twitchclips"].SaveJson();
+                    await ReplyAsync($"Will only notify about clips equal or above **{threshold}** views for `{streamer}` now.");
+                }
+                else
+                    await ReplyAsync($"Could not find tracker for `{streamer}`\n"+
+                                     $"Currently tracked streamers are: ``{String.Join(", ", StaticBase.Trackers["twitchclips"].GetTrackers(Context.Channel.Id).Select(x => x.Name))}``");
             }
         }
 
@@ -253,15 +322,16 @@ namespace MopsBot.Module
                                      $"Currently tracked Subreddits are: ``{String.Join(", ", StaticBase.Trackers["reddit"].GetTrackers(Context.Channel.Id).Select(x => x.Name))}``");
             }
 
-            [Command("GetTracks")]
+            [Command("GetTrackers")]
             [Summary("Returns the subreddits that are tracked in the current channel.")]
-            public async Task getTracks()
+            public async Task getTrackers()
             {
                 await ReplyAsync("Following subreddits are currently being tracked:\n``" + String.Join(", ", StaticBase.Trackers["reddit"].GetTrackers(Context.Channel.Id).Select(x => x.Name)) + "``");
             }
 
             [Command("SetNotification")]
             [Summary("Sets the notification text that is used each time a new post was found.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task SetNotification(string subreddit, string notification, string query = null)
             {
                 if(StaticBase.Trackers["reddit"].TrySetNotification(String.Join(" ", new string[] { subreddit, query }.Where(x => x != null)), Context.Channel.Id, notification)){
@@ -308,15 +378,16 @@ namespace MopsBot.Module
                 await ReplyAsync("Stats fetched:", false, await Data.Tracker.OverwatchTracker.overwatchInformation(owUser));
             }
 
-            [Command("GetTracks")]
+            [Command("GetTrackers")]
             [Summary("Returns the players that are tracked in the current channel.")]
-            public async Task getTracks()
+            public async Task getTrackers()
             {
                 await ReplyAsync("Following players are currently being tracked:\n``" + String.Join(", ", StaticBase.Trackers["overwatch"].GetTrackers(Context.Channel.Id).Select(x => x.Name)) + "``");
             }
 
             [Command("SetNotification")]
             [Summary("Sets the notification text that is used each time a players' stats changed.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task SetNotification(string owUser, [Remainder]string notification)
             {
                 owUser = owUser.Replace("#", "-");
@@ -355,15 +426,16 @@ namespace MopsBot.Module
                                      $"Currently tracked article queries are: ``{String.Join(", ", StaticBase.Trackers["news"].GetTrackers(Context.Channel.Id).Select(x => x.Name))}``");
             }
 
-            [Command("GetTracks")]
+            [Command("GetTrackers")]
             [Summary("Returns the article queries that are tracked in the current channel.")]
-            public async Task getTracks()
+            public async Task getTrackers()
             {
                 await ReplyAsync("Following article queries are currently being tracked:\n``" + String.Join(", ", StaticBase.Trackers["news"].GetTrackers(Context.Channel.Id).Select(x => x.Name)) + "``");
             }
 
             [Command("SetNotification")]
             [Summary("Sets the notification text that is used each time a article was found.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task SetNotification(string articleQuery, [Remainder]string notification)
             {
                 if(StaticBase.Trackers["news"].TrySetNotification(articleQuery, Context.Channel.Id, notification)){

@@ -16,13 +16,15 @@ public class Curator
     public string name { get; set; }
     public string display_name { get; set; }
     public string channel_url { get; set; }
-    public object logo { get; set; }
+    public string logo { get; set; }
 }
 
 public class Vod
 {
     public string id { get; set; }
     public string url { get; set; }
+    public int offset { get; set; }
+    public string preview_image_url { get; set; }
 }
 
 public class Thumbnails
@@ -42,6 +44,7 @@ public class Clip
     public Broadcaster broadcaster { get; set; }
     public Curator curator { get; set; }
     public Vod vod { get; set; }
+    public string broadcast_id { get; set; }
     public string game { get; set; }
     public string language { get; set; }
     public string title { get; set; }

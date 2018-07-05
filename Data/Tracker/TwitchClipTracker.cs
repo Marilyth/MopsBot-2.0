@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using Discord;
 using Discord.WebSocket;
 using Discord.Commands;
@@ -13,17 +14,19 @@ namespace MopsBot.Data.Tracker
 {
     public class TwitchClipTracker : ITracker
     {
-        public DateTime LastTime;
-        public TwitchClipTracker() : base(60000, (ExistingTrackers * 2000+500) % 60000)
+        public uint ViewThreshold;
+        public List<DateTime> TrackedClips;
+        public TwitchClipTracker() : base(600000, (ExistingTrackers * 2000 + 500) % 600000)
         {
         }
 
-        public TwitchClipTracker(string streamerName) : base(60000)
+        public TwitchClipTracker(string streamerName) : base(600000)
         {
             Console.Out.WriteLine($"{DateTime.Now} Started TwitchClipTracker for {streamerName}");
             Name = streamerName;
-            LastTime = DateTime.Now;
+            TrackedClips = new List<DateTime>();
             ChannelMessages = new Dictionary<ulong, string>();
+            ViewThreshold = 2;
 
             try
             {
@@ -43,16 +46,24 @@ namespace MopsBot.Data.Tracker
             try
             {
                 TwitchClipResult clips = await getClips();
-                if(clips.clips.Count>0){
-                    foreach( Clip clip in clips.clips){
-                        var embed = createEmbed(clip);
-                        foreach(ulong channel in ChannelMessages.Keys){
-                            await OnMajorChangeTracked(channel, embed, ChannelMessages[channel]);
-                        }
+                foreach (var datetime in TrackedClips.ToList())
+                {
+                    if (datetime.AddMinutes(30) <= DateTime.UtcNow){
+                        TrackedClips.Remove(datetime);
+                        StaticBase.Trackers["twitchclips"].SaveJson();
                     }
                 }
 
-            }catch(Exception e)
+                foreach (Clip clip in clips.clips)
+                {
+                    var embed = createEmbed(clip);
+                    foreach (ulong channel in ChannelMessages.Keys)
+                    {
+                        await OnMajorChangeTracked(channel, embed, ChannelMessages[channel] + "\nhttps://clips.twitch.tv/" + clip.slug);
+                    }
+                }
+            }
+            catch (Exception e)
             {
                 Console.WriteLine($"[Error] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
             }
@@ -63,31 +74,38 @@ namespace MopsBot.Data.Tracker
             return await NextPage(Name);
         }
 
-        private async Task<TwitchClipResult> NextPage(string name, TwitchClipResult clips=null,  string cursor = ""){
-            if(clips.Equals(null)){
+        private async Task<TwitchClipResult> NextPage(string name, TwitchClipResult clips = null, string cursor = "")
+        {
+            if (clips == null)
+            {
                 clips = new TwitchClipResult();
                 clips.clips = new List<Clip>();
             }
-            try{
-                string query = await MopsBot.Module.Information.ReadURLAsync($"https://api.twitch.tv/kraken/clips/topclient_id={Program.Config["Twitch"]}&channel={name}&limit=100&period=day{(!cursor.Equals("")?$"&cursor={cursor}":"")}");
+            try
+            {
+                var acceptHeader = new KeyValuePair<string, string>("Accept", "application/vnd.twitchtv.v5+json");
+                string query = await MopsBot.Module.Information.ReadURLAsync($"https://api.twitch.tv/kraken/clips/top?client_id={Program.Config["Twitch"]}&channel={name}&period=day{(!cursor.Equals("") ? $"&cursor={cursor}" : "")}", acceptHeader);
+
                 JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
                 {
                     NullValueHandling = NullValueHandling.Ignore
                 };
-                TwitchClipResult tmpResult = JsonConvert.DeserializeObject<TwitchClipResult>(query, _jsonWriter);
-                if(tmpResult.clips!=null){
-                    foreach(var clip in tmpResult.clips.Where(p => p.created_at.CompareTo(LastTime) > 0)){
+
+                var tmpResult = JsonConvert.DeserializeObject<TwitchClipResult>(query, _jsonWriter);
+                if (tmpResult.clips != null)
+                {
+                    foreach (var clip in tmpResult.clips.Where(p => !TrackedClips.Contains(p.created_at) && p.created_at > DateTime.UtcNow.AddMinutes(-30) && p.views >= ViewThreshold))
+                    {
                         clips.clips.Add(clip);
+                        TrackedClips.Add(clip.created_at);
+                        StaticBase.Trackers["twitchclips"].SaveJson();
                     }
-                    if(!tmpResult._cursor.Equals("")){
-                        return await NextPage(name,clips, tmpResult._cursor);
-                    }else{
-                        if(clips.clips.Count > 0)
-                            LastTime = clips.clips.Max( p => p.created_at);
+                    if (!tmpResult._cursor.Equals(""))
+                    {
+                        return await NextPage(name, clips, tmpResult._cursor);
                     }
                 }
                 return clips;
-
             }
             catch (Exception e)
             {
@@ -96,7 +114,8 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        private Embed createEmbed(Clip clip){
+        private Embed createEmbed(Clip clip)
+        {
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0x6441A4);
             e.Title = clip.title;
@@ -114,7 +133,10 @@ namespace MopsBot.Data.Tracker
             footer.Text = "Twitch";
             e.Footer = footer;
 
-            e.ThumbnailUrl  = clip.thumbnails.medium;
+            e.ImageUrl = clip.thumbnails.medium;
+
+            e.AddField("Length", clip.duration + " seconds", true);
+            e.AddField("Views", clip.views, true);
 
             return e.Build();
         }
