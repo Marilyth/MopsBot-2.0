@@ -50,9 +50,8 @@ namespace MopsBot.Data
             using (StreamWriter write = new StreamWriter(new FileStream($"mopsdata//ReactionRoleJoin.json", FileMode.Create)))
                 write.Write(JsonConvert.SerializeObject(RoleInvites, Formatting.Indented));
         }
-        public async Task AddInviteGerman(ITextChannel channel, string name)
+        public async Task AddInviteGerman(ITextChannel channel, SocketRole role)
         {
-            SocketRole role = (SocketRole)channel.Guild.Roles.First(x => x.Name.ToLower().Equals(name.ToLower()));
             EmbedBuilder e = new EmbedBuilder();
             e.Title = role.Name + $" Einladung :{role.Id}";
             e.Description = $"Um der Rolle " + (role.IsMentionable ? role.Mention : $"**{role.Name}**") + " beizutreten, oder sie zu verlassen, drücke bitte die ✅/❎ Icons unter dieser Nachricht!\n" +
@@ -76,9 +75,8 @@ namespace MopsBot.Data
             SaveJson();
         }
 
-        public async Task AddInvite(ITextChannel channel, string name)
+        public async Task AddInvite(ITextChannel channel, SocketRole role)
         {
-            SocketRole role = (SocketRole)channel.Guild.Roles.First(x => x.Name.ToLower().Equals(name.ToLower()));
             EmbedBuilder e = new EmbedBuilder();
             e.Title = role.Name + $" Role Invite :{role.Id}";
             e.Description = $"To join/leave the " + (role.IsMentionable ? role.Mention : $"**{role.Name}**") + " role, press the ✅/❎ Icons below this message!\n" +
