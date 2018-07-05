@@ -34,7 +34,7 @@ namespace MopsBot.Data.Tracker
                 var checkExists = fetchChannel().Result;
                 Name = checkExists.items[0].id;
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 Dispose();
                 throw new Exception($"Channel-ID `{Name}` could not be found on Youtube!\nPerhaps you used the channel-name instead?");

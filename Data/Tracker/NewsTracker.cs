@@ -42,7 +42,7 @@ namespace MopsBot.Data.Tracker
 
                 LastNews = test.PublishedAt.ToString();
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 Dispose();
                 throw new Exception($"`{Source}` didn't yield any proper result{(Query.Equals("") ? "" : $" for `{Query}`")}.");

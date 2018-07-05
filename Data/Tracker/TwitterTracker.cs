@@ -17,7 +17,6 @@ namespace MopsBot.Data.Tracker
     public class TwitterTracker : ITracker
     {
         public long lastMessage;
-        private Task<IEnumerable<ITweet>> fetchTweets;
 
         public TwitterTracker() : base(300000, (ExistingTrackers * 2000 + 500) % 300000)
         {
@@ -32,7 +31,7 @@ namespace MopsBot.Data.Tracker
             {
                 var checkExists = getNewTweets();
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 Dispose();
                 throw new Exception($"Person `{Name}` could not be found on Twitter!");

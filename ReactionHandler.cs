@@ -21,7 +21,7 @@ namespace MopsBot{
         private Dictionary<IUserMessage, Dictionary<IEmote, Func<ReactionHandlerContext, Task>>> messageFunctions;
         public static IEmote defaultEmote = new Emoji("DEFAULT");
 
-        public async Task Install(IServiceProvider provider){
+        public void Install(IServiceProvider provider){
             _provider = provider;
             client = _provider.GetService<DiscordSocketClient>();
             

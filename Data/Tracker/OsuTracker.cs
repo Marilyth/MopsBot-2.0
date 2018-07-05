@@ -36,7 +36,7 @@ namespace MopsBot.Data.Tracker
                 var checkExists = fetchUser().Result;
                 var test = checkExists.username;
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 Dispose();
                 throw new Exception($"Person `{Name}` could not be found on Osu!");

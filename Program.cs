@@ -57,7 +57,7 @@ namespace MopsBot
             await Handler.Install(provider);
 
             ReactionHandler = new ReactionHandler();
-            await ReactionHandler.Install(provider);
+            ReactionHandler.Install(provider);
 
             await Task.Delay(-1);
         }

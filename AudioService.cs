@@ -108,7 +108,7 @@ public class AudioService
                 try{
                     StaticBase.Playlist.Add($"https://www.youtube.com/watch?v={entry["id"]}");
                 }
-                catch(Exception e){
+                catch(Exception){
                     
                 }
             }

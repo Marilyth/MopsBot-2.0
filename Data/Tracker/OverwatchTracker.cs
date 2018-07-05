@@ -38,7 +38,7 @@ namespace MopsBot.Data.Tracker
                 var checkExists = overwatchInformation().Result;
                 var test = checkExists.eu;
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 Dispose();
                 throw new Exception($"Person `{Name}` could not be found on Overwatch!\nPerhaps the profile is private?");
@@ -96,6 +96,11 @@ namespace MopsBot.Data.Tracker
             return JsonConvert.DeserializeObject<OStatsResult>(query, _jsonWriter);
         }
 
+        /// <summary>
+        /// Queries the API to fetch a JSON containing all the stats for the player
+        /// Then converts it into OStatsResult
+        /// </summary>
+        /// <returns>An OStatsResult representing the fetched JSON as an object</returns>
         public static async Task<Embed> overwatchInformation(string owName)
         {
             string query = await MopsBot.Module.Information.ReadURLAsync($"http://localhost:4444/api/v3/u/{owName}/blob");

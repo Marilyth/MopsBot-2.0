@@ -39,7 +39,7 @@ namespace MopsBot.Data.Tracker
                 if (test.data.children.Count == 0)
                     throw new Exception("");
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 Dispose();
                 Console.WriteLine("");
@@ -118,7 +118,7 @@ namespace MopsBot.Data.Tracker
             {
                 e.ThumbnailUrl = !redditPost.thumbnail.Equals("self") && !redditPost.thumbnail.Equals("default") ? redditPost.thumbnail : null;
             }
-            catch (Exception exception)
+            catch (Exception)
             {
                 e.ThumbnailUrl = null;
             }

@@ -34,7 +34,7 @@ namespace MopsBot.Data.Tracker
                 Channel checkExists = JsonConvert.DeserializeObject<Channel>(query);
                 var test = checkExists.broadcaster_language;
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 Dispose();
                 throw new Exception($"Person `{Name}` could not be found on Twitch!");
