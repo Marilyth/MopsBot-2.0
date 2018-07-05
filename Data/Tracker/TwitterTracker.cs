@@ -29,12 +29,12 @@ namespace MopsBot.Data.Tracker
             //Check if person exists by forcing Exceptions if not.
             try
             {
-                var checkExists = getNewTweets();
+                var checkExists = getNewTweets().Last().Id;
             }
             catch (Exception)
             {
                 Dispose();
-                throw new Exception($"Person `{Name}` could not be found on Twitter!");
+                throw new Exception($"No tweets from `{Name}` could be found on Twitter!\nI only track people who tweeted at least once.");
             }
         }
 
@@ -43,12 +43,6 @@ namespace MopsBot.Data.Tracker
             try
             {
                 ITweet[] newTweets = getNewTweets();
-                if (lastMessage == 0)
-                {
-                    lastMessage = newTweets[newTweets.Length - 1].Id;
-                    StaticBase.Trackers["twitter"].SaveJson();
-                    return;
-                }
 
                 foreach (ITweet newTweet in newTweets)
                 {
@@ -82,7 +76,8 @@ namespace MopsBot.Data.Tracker
             if (lastMessage != 0) parameters.SinceId = lastMessage;
             parameters.MaximumNumberOfTweetsToRetrieve = 10;
 
-            return Timeline.GetUserTimeline(Name, parameters).Reverse().ToArray();
+            var tweets = Timeline.GetUserTimeline(Name, parameters);
+            return tweets.Reverse().ToArray();
         }
 
         private Embed createEmbed(ITweet tweet)
