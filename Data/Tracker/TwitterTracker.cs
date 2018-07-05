@@ -29,7 +29,7 @@ namespace MopsBot.Data.Tracker
             //Check if person exists by forcing Exceptions if not.
             try
             {
-                var checkExists = getNewTweets().Last().Id;
+                lastMessage = getNewTweets().Last().Id;
             }
             catch (Exception)
             {
