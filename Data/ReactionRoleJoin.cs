@@ -102,7 +102,7 @@ namespace MopsBot.Data
 
         private async Task JoinRole(ReactionHandlerContext context)
         {
-            var roleID = ulong.Parse(context.message.Embeds.First().Title.Split(new string[]{":"}, StringSplitOptions.None)[1]);
+            var roleID = ulong.Parse(context.message.Embeds.First().Title.Split(new string[]{":"}, StringSplitOptions.None).Last());
             var role = ((ITextChannel)context.channel).Guild.GetRole(roleID);
             var user = await ((ITextChannel)context.channel).Guild.GetUserAsync(context.reaction.UserId);
             await user.AddRoleAsync(role);            
@@ -111,7 +111,7 @@ namespace MopsBot.Data
 
         private async Task LeaveRole(ReactionHandlerContext context)
         {
-            var roleID = ulong.Parse(context.message.Embeds.First().Title.Split(new string[]{":"}, StringSplitOptions.None)[1]);
+            var roleID = ulong.Parse(context.message.Embeds.First().Title.Split(new string[]{":"}, StringSplitOptions.None).Last());
             var role = ((ITextChannel)context.channel).Guild.GetRole(roleID);
             var user = await ((ITextChannel)context.channel).Guild.GetUserAsync(context.reaction.UserId);
             await user.RemoveRoleAsync(role);                
