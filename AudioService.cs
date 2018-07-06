@@ -86,11 +86,11 @@ public class AudioService
                 await stream.FlushAsync().ConfigureAwait(false);
             }
 
-            StaticBase.playlist.RemoveAt(0);
+            StaticBase.Playlist.RemoveAt(0);
             DeleteFiles();
 
-            if(StaticBase.playlist.Count > 0)
-                await SendAudioAsync(guild, channel, StaticBase.playlist[0]);
+            if(StaticBase.Playlist.Count > 0)
+                await SendAudioAsync(guild, channel, StaticBase.Playlist[0]);
         }
     }
 
@@ -106,9 +106,9 @@ public class AudioService
 
             foreach(dynamic entry in entries["entries"]){
                 try{
-                    StaticBase.playlist.Add($"https://www.youtube.com/watch?v={entry["id"]}");
+                    StaticBase.Playlist.Add($"https://www.youtube.com/watch?v={entry["id"]}");
                 }
-                catch(Exception e){
+                catch(Exception){
                     
                 }
             }

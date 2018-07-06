@@ -23,7 +23,7 @@ namespace MopsBot.Module
                     Discord.IUserMessage updateMessage = await Context.Channel.SendMessageAsync("Generating dungeon.");
 
                     Data.Updater.IdleDungeon test = new Data.Updater.IdleDungeon(updateMessage, Context.User.Id, (int)lengthInMinutes);
-                    StaticBase.dungeonCrawler.Add(test);
+                    StaticBase.DungeonCrawler.Add(test);
                 }
                 else
                     await ReplyAsync("Fuck you.");
@@ -66,69 +66,15 @@ namespace MopsBot.Module
             public async Task start([Remainder] string words)
             {
                 string[] wordArray = words.Split(" ");
-                StaticBase.crosswords = new MopsBot.Data.Updater.Crosswords(wordArray);
-                StaticBase.crosswords.setToUpdate(await ReplyAsync(StaticBase.crosswords.drawMap()));
+                StaticBase.Crosswords = new MopsBot.Data.Updater.Crosswords(wordArray);
+                StaticBase.Crosswords.setToUpdate(await ReplyAsync(StaticBase.Crosswords.drawMap()));
             }
             [Command("guess")]
             [Summary("Guess a word.")]
             public async Task guess(string guess)
             {
-                StaticBase.crosswords.guessWord(Context.User.Id, guess);
+                StaticBase.Crosswords.guessWord(Context.User.Id, guess);
                 await Context.Message.DeleteAsync();
-            }
-        }
-        
-        [Group("Blackjack")]
-        [RequireBotPermission(ChannelPermission.SendMessages)]
-        [RequireBotPermission(ChannelPermission.ReadMessageHistory)]
-        [RequireBotPermission(ChannelPermission.ManageMessages)]
-        public class Blackjack : ModuleBase
-        {
-            [Command("join")]
-            [Summary("Joins a game of blackjack")]
-            public async Task join(int betAmount)
-            {
-                if (StaticBase.blackjack == null || !StaticBase.blackjack.active)
-                {
-                    StaticBase.blackjack = new Data.Updater.Blackjack(Context.Client.CurrentUser);
-                    StaticBase.blackjack.toEdit = await ReplyAsync("Table set up. Woof");
-                }
-
-                if (betAmount <= StaticBase.people.Users[Context.User.Id].Score && betAmount > 0)
-                    StaticBase.blackjack.userJoin(Context.User, betAmount);
-
-                else
-                    await ReplyAsync("You can't bet that much.");
-            }
-
-            [Command("start")]
-            [Summary("Starts the game of Blackjack")]
-            public Task start()
-            {
-                if(!StaticBase.blackjack.active)
-                    StaticBase.blackjack.start();
-
-                return Task.CompletedTask;
-            }
-
-            [Command("hit")]
-            [Summary("You get another card")]
-            public Task hit()
-            {
-                if(StaticBase.blackjack.active)
-                    StaticBase.blackjack.drawCard(Context.User, true);
-
-                return Task.CompletedTask;
-            }
-
-            [Command("skip")]
-            [Summary("You skip the round")]
-            public Task skip()
-            {
-                if(StaticBase.blackjack.active)
-                    StaticBase.blackjack.skipRound(Context.User);
-
-                return Task.CompletedTask;
             }
         }
     }

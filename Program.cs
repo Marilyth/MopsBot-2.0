@@ -25,14 +25,14 @@ namespace MopsBot
             new Program().Start().GetAwaiter().GetResult();
 
         }
-        public static DiscordSocketClient client;
+        public static DiscordSocketClient Client;
         public static Dictionary<string, string> Config;
-        public static CommandHandler handler {get; private set;}
-        public static ReactionHandler reactionHandler {get; private set;}
+        public static CommandHandler Handler {get; private set;}
+        public static ReactionHandler ReactionHandler {get; private set;}
 
         public async Task Start()
         {
-            client = new DiscordSocketClient(new DiscordSocketConfig()
+            Client = new DiscordSocketClient(new DiscordSocketConfig()
             {
                 LogLevel = LogSeverity.Info,
             });
@@ -40,24 +40,24 @@ namespace MopsBot
             using(StreamReader sr = new StreamReader(new FileStream("mopsdata//Config.json", FileMode.Open)))
                 Config = JsonConvert.DeserializeObject<Dictionary<string, string>>(sr.ReadToEnd());
 
-            await client.LoginAsync(TokenType.Bot, Config["Discord"]);
-            await client.StartAsync();
+            await Client.LoginAsync(TokenType.Bot, Config["Discord"]);
+            await Client.StartAsync();
 
-            client.Log += Client_Log;
-            client.Ready += onClientReady;
-            client.Disconnected += onClientDC;
+            Client.Log += Client_Log;
+            Client.Ready += onClientReady;
+            Client.Disconnected += onClientDC;
 
-            var map = new ServiceCollection().AddSingleton(client)
-                .AddSingleton(new AudioService())
-                .AddSingleton(new ReliabilityService(client, Client_Log));
+            var map = new ServiceCollection().AddSingleton(Client)
+                // .AddSingleton(new AudioService())
+                .AddSingleton(new ReliabilityService(Client, Client_Log));
 
             var provider = map.BuildServiceProvider();
 
-            handler = new CommandHandler();
-            await handler.Install(provider);
+            Handler = new CommandHandler();
+            await Handler.Install(provider);
 
-            reactionHandler = new ReactionHandler();
-            await reactionHandler.Install(provider);
+            ReactionHandler = new ReactionHandler();
+            ReactionHandler.Install(provider);
 
             await Task.Delay(-1);
         }
@@ -70,6 +70,7 @@ namespace MopsBot
 
         private Task onClientReady()
         {
+            var test = Client;
             Task.Run(() => StaticBase.initTracking());
             Task.Run(() => StaticBase.UpdateGameAsync());
             return Task.CompletedTask;

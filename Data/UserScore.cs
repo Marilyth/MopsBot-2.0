@@ -107,7 +107,7 @@ namespace MopsBot.Data
                 {
                     lines[i] += "■";
                 }
-                lines[i] += $"  ({stat(user)} / {(Program.client.GetUser(sortedDict[i].Key) == null ? "" + sortedDict[i].Key : Program.client.GetUser(sortedDict[i].Key).Username)})";
+                lines[i] += $"  ({stat(user)} / {(Program.Client.GetUser(sortedDict[i].Key) == null ? "" + sortedDict[i].Key : Program.Client.GetUser(sortedDict[i].Key).Username)})";
             }
 
 

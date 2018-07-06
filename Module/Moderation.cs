@@ -1,6 +1,7 @@
 ﻿using Discord.Commands;
 using Discord.WebSocket;
 using Discord;
+using Microsoft.CodeAnalysis.CSharp.Scripting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,51 +21,62 @@ namespace MopsBot.Module
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public class Role : ModuleBase
         {
-            [Command("join")]
-            [Summary("Joins the specified role")]
-            public async Task joinRole([Remainder]string role)
-            {
-                SocketRole pRole = (SocketRole)Context.Guild.Roles.First(x => x.Name.ToLower().Equals(role.ToLower()));
-
-                await ((SocketGuildUser)Context.User).AddRoleAsync(pRole);
-
-                await ReplyAsync($"You are now part of the {pRole.Name} role! Yay!");
+            [Command("CreateInvite", RunMode = RunMode.Async)]
+            [Summary("Creates a reaction-invite message for the specified Role.\nPeople will be able to invite themselves into the role.")]
+            [RequireBotPermission(ChannelPermission.AddReactions)]
+            [RequireBotPermission(ChannelPermission.ManageMessages)]   
+            [RequireBotPermission(ChannelPermission.ReadMessageHistory)]
+            [RequireUserPermission(GuildPermission.ManageRoles)]
+            public async Task createInvite(SocketRole role, bool isGerman = false){
+                var highestRole = ((SocketGuildUser)await Context.Guild.GetCurrentUserAsync()).Roles.OrderByDescending(x => x.Position).First();
+                
+                if(role != null && role.Position < highestRole.Position)
+                    if(isGerman)
+                        await StaticBase.ReactRoleJoin.AddInviteGerman((ITextChannel)Context.Channel, role);
+                    else
+                        await StaticBase.ReactRoleJoin.AddInvite((ITextChannel)Context.Channel, role);
+                else
+                    await ReplyAsync($"**Error**: Role `{role.Name}` could either not be found, or was beyond Mops' permissions.");
             }
 
-            [Command("leave")]
-            [Summary("Leaves the specified role")]
-            [RequireBotPermission(GuildPermission.ManageRoles)]
-            public async Task leaveRole([Remainder]string role)
-            {
-                SocketRole pRole = (SocketRole)Context.Guild.Roles.First(x => x.Name.ToLower().Equals(role.ToLower()));
+            [Command("AddToUser")]
+            [Summary("Adds the specified role, to the specified user, for the specified amount of time.")]
+            [RequireUserPermission(GuildPermission.ManageRoles)]
+            public async Task joinRole(SocketGuildUser person, int durationInMinutes, [Remainder]string role)
+            {var highestRole = ((SocketGuildUser)await Context.Guild.GetCurrentUserAsync()).Roles.OrderByDescending(x => x.Position).First();
+                var requestedRole = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower().Equals(role.ToLower()));
 
-                await ((SocketGuildUser)Context.User).RemoveRoleAsync(pRole);
-
-                await ReplyAsync($"You left the {pRole.Name} role.");
+                if(requestedRole == null || requestedRole.Position >= highestRole.Position){
+                    await ReplyAsync($"**Error**: Role `{role}` could either not be found, or was beyond Mops' permissions.");
+                    return;
+                }
+                await StaticBase.MuteHandler.AddMute(person, Context.Guild.Id, durationInMinutes, role);
+                await ReplyAsync($"``{role}`` Role added to ``{person.Username}`` for **{durationInMinutes}** minutes.");
             }
         }
 
         [Command("poll"), Summary("Creates a poll\nExample: !poll (Am I sexy?) (Yes, No) @Panda @Demon @Snail")]
+        [RequireUserPermission(GuildPermission.Administrator)]
         public async Task Poll([Remainder] string Poll)
         {
             if (!Context.Guild.GetUserAsync(Context.User.Id).Result.GuildPermissions.Administrator)
                 return;
 
             MatchCollection match = Regex.Matches(Poll, @"(?<=\().+?(?=\))");
-            List<IGuildUser> participants = getMentionedUsers((CommandContext)Context);
+            List<IGuildUser> participants = Context.Message.MentionedUserIds.Select(x => Context.Guild.GetUserAsync(x).Result).ToList();
 
-            poll = new Data.Updater.Poll(match[0].Value, match[1].Value.Split(","), participants.ToArray());
+            StaticBase.Poll = new Data.Updater.Poll(match[0].Value, match[1].Value.Split(","), participants.ToArray());
 
             foreach (IGuildUser part in participants)
             {
                 string output = "";
-                for (int i = 0; i < poll.answers.Length; i++)
+                for (int i = 0; i < StaticBase.Poll.answers.Length; i++)
                 {
-                    output += $"\n``{i + 1}`` {poll.answers[i]}";
+                    output += $"\n``{i + 1}`` {StaticBase.Poll.answers[i]}";
                 }
                 try
                 {
-                    await part.GetOrCreateDMChannelAsync().Result.SendMessageAsync($"{Context.User.Username} has created a poll:\n\n📄: {poll.question}\n{output}\n\nTo vote, simply PM me the **Number** of the answer you agree with.");
+                    await part.GetOrCreateDMChannelAsync().Result.SendMessageAsync($"{Context.User.Username} has created a poll:\n\n📄: {StaticBase.Poll.question}\n{output}\n\nTo vote, simply PM me the **Number** of the answer you agree with.");
                 }
                 catch { }
             }
@@ -77,16 +89,16 @@ namespace MopsBot.Module
         {
             if (!Context.Guild.GetUserAsync(Context.User.Id).Result.GuildPermissions.Administrator)
                 return;
-            poll.isPrivate = isPrivate;
-            await ReplyAsync(poll.DrawPlot());
+            StaticBase.Poll.isPrivate = isPrivate;
+            await base.ReplyAsync(StaticBase.Poll.DrawPlot());
 
-            foreach (IGuildUser part in poll.participants)
+            foreach (IGuildUser part in StaticBase.Poll.participants)
             {
-                await part.GetOrCreateDMChannelAsync().Result.SendMessageAsync($"📄:{poll.question}\n\nHas ended without your participation, sorry!");
-                poll.participants.Remove(part);
+                await part.GetOrCreateDMChannelAsync().Result.SendMessageAsync($"📄:{StaticBase.Poll.question}\n\nHas ended without your participation, sorry!");
+                StaticBase.Poll.participants.Remove(part);
             }
 
-            poll = null;
+            StaticBase.Poll = null;
         }
 
         [Group("Giveaway")]
@@ -109,18 +121,23 @@ namespace MopsBot.Module
         [RequireUserPermission(ChannelPermission.ManageChannels)]
         public async Task setPrefix([Remainder]string prefix)
         {
+            if(prefix.StartsWith("?")){
+                await ReplyAsync($"`?` is required for Mops functionality. Cannot change prefix to `{prefix}`");
+                return;
+            }
+
             string oldPrefix;
 
-            if (guildPrefix.ContainsKey(Context.Guild.Id))
+            if (GuildPrefix.ContainsKey(Context.Guild.Id))
             {
-                oldPrefix = guildPrefix[Context.Guild.Id];
-                guildPrefix[Context.Guild.Id] = prefix;
+                oldPrefix = GuildPrefix[Context.Guild.Id];
+                GuildPrefix[Context.Guild.Id] = prefix;
             }
 
             else
             {
                 oldPrefix = "!";
-                guildPrefix.Add(Context.Guild.Id, prefix);
+                GuildPrefix.Add(Context.Guild.Id, prefix);
             }
 
             savePrefix();
@@ -129,13 +146,51 @@ namespace MopsBot.Module
         }
 
         [Command("kill")]
-        [Summary("Stops Mops to adapt to any new changes in code.")]
+        // [Summary("Stops Mops to adapt to any new changes in code.")]
         [RequireBotManage()]
         [Hide]
         public Task kill()
         {
             Environment.Exit(0);
             return Task.CompletedTask;
+        }
+
+        [Command("eval", RunMode = RunMode.Async)]
+        [RequireBotManage()]
+        [Hide]
+        public async Task eval([Remainder]string expression)
+        {
+            try{
+                var imports = Microsoft.CodeAnalysis.Scripting.ScriptOptions.Default.WithReferences(typeof(MopsBot.Program).Assembly, typeof(Discord.Attachment).Assembly).WithImports("MopsBot", "Discord");
+                var script = CSharpScript.Create(expression, globalsType: typeof(MopsBot.Module.Moderation));
+                var result = await script.WithOptions(imports).RunAsync(this);
+                await ReplyAsync(result.ReturnValue.ToString());
+            } catch(Exception e){
+                await ReplyAsync("**Error:** " + e.Message);
+            }
+        }
+
+        [Command("help")]
+        [Hide]
+        public async Task help()
+        {
+            var output = "For more information regarding a specific command, please use ?<command>";
+
+            foreach (var module in Program.Handler.commands.Modules.Where(x=> !x.Preconditions.OfType<HideAttribute>().Any()))
+            {
+                if (module.IsSubmodule && !module.Preconditions.OfType<HideAttribute>().Any())
+                {
+                    output += $"`{module.Name}*` ";
+                }
+                else
+                {
+                    output += $"\n**{module.Name}**: ";
+                    foreach (var command in module.Commands)
+                        if (!command.Preconditions.OfType<HideAttribute>().Any())
+                    output += $"`{command.Name}` ";
+                }
+            }
+            await ReplyAsync(output);
         }
     }
 }

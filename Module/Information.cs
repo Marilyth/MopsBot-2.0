@@ -135,18 +135,19 @@ namespace MopsBot.Module
             return null;
         }
 
-        public static async Task<string> ReadURLAsync(string URL)
+        public static async Task<string> ReadURLAsync(string URL, params KeyValuePair<string, string>[] headers)
         {
-            string s = "";
             var request = (System.Net.HttpWebRequest)System.Net.WebRequest.Create(URL);
+            foreach(var header in headers)
+                request.Headers.Add(header.Key, header.Value);
+
             request.UserAgent = "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)";
             using (var response = await request.GetResponseAsync())
             using (var content = response.GetResponseStream())
             using (var reader = new System.IO.StreamReader(content))
             {
-                s = reader.ReadToEnd();
+                return reader.ReadToEnd();
             }
-            return s;
         }
 
         public static async Task<Gfycat.Gfy> ConvertToGifAsync(string url)

@@ -13,14 +13,18 @@ using MopsBot.Data.Tracker;
 
 namespace MopsBot.Data
 {
-    public abstract class TrackerWrapper {
+    public abstract class TrackerWrapper
+    {
         public abstract void SaveJson();
-        public abstract void removeTracker(string name, ulong channelID);
-        public abstract void addTracker(string name, ulong channelID, string notification="");
-        public abstract Dictionary<string, Tracker.ITracker> getTracker();
-        public abstract HashSet<Tracker.ITracker> getTrackerSet();
-        public abstract string getTracker(ulong channelID);
-        public abstract Type getTrackerType();
+        public abstract bool TryRemoveTracker(string name, ulong channelID);
+        public abstract bool TrySetNotification(string name, ulong channelID, string notificationMessage);
+        public abstract void AddTracker(string name, ulong channelID, string notification = "");
+        public abstract HashSet<Tracker.ITracker> GetTrackerSet();
+        public abstract Dictionary<string, Tracker.ITracker> GetTrackers();
+        public abstract IEnumerable<ITracker> GetTrackers(ulong channelID);
+        public abstract ITracker GetTracker(ulong channelID, string name);
+        public abstract Type GetTrackerType();
+        public abstract void postInitialisation();
 
     }
 
@@ -32,20 +36,52 @@ namespace MopsBot.Data
         public Dictionary<string, T> trackers;
         public TrackerHandler()
         {
+            // using (StreamReader read = new StreamReader(new FileStream($"mopsdata//{typeof(T).Name}.json", FileMode.OpenOrCreate)))
+            // {
+            //     try
+            //     {
+            //         trackers = JsonConvert.DeserializeObject<Dictionary<string, T>>(read.ReadToEnd());
+            //     }
+            //     catch (Exception e)
+            //     {
+            //         Console.WriteLine(e.Message + e.StackTrace);
+            //     }
+            // }
+            // trackers = (trackers == null ? new Dictionary<string, T>() : trackers);
+            // foreach(KeyValuePair<string, T> cur in trackers){
+            //     cur.Value.PostInitialisation();
+            //     cur.Value.OnMinorEventFired += OnMinorEvent;
+            //     cur.Value.OnMajorEventFired += OnMajorEvent;
+            // }
+        }
+
+        public override void postInitialisation()
+        {
             using (StreamReader read = new StreamReader(new FileStream($"mopsdata//{typeof(T).Name}.json", FileMode.OpenOrCreate)))
             {
-                try{
+                try
+                {
                     trackers = JsonConvert.DeserializeObject<Dictionary<string, T>>(read.ReadToEnd());
-                } catch(Exception e){
+                }
+                catch (Exception e)
+                {
                     Console.WriteLine(e.Message + e.StackTrace);
                 }
             }
             trackers = (trackers == null ? new Dictionary<string, T>() : trackers);
-            foreach(KeyValuePair<string, T> cur in trackers){
-                cur.Value.PostInitialisation();
-                cur.Value.OnMinorEventFired += OnMinorEvent;
-                cur.Value.OnMajorEventFired += OnMajorEvent;
+
+            for (int i = trackers.Count - 1; i >= 0; i--)
+            {
+                var cur = trackers[trackers.Keys.ElementAt(i)];
+                cur.PostInitialisation();
+                cur.OnMinorEventFired += OnMinorEvent;
+                cur.OnMajorEventFired += OnMajorEvent;
             }
+            // foreach(KeyValuePair<string, T> cur in trackers){
+            //     cur.Value.PostInitialisation();
+            //     cur.Value.OnMinorEventFired += OnMinorEvent;
+            //     cur.Value.OnMajorEventFired += OnMajorEvent;
+            // }
         }
 
         public override void SaveJson()
@@ -55,63 +91,97 @@ namespace MopsBot.Data
                 write.Write(dictAsJson);
         }
 
-        public override void removeTracker(string name, ulong channelID){
-            if(trackers.ContainsKey(name) && trackers[name].ChannelIds.Contains(channelID)){
-                if(trackers.First().Value.GetType() == typeof(Tracker.TwitchTracker))
-                        foreach(var channel in (trackers[name] as Tracker.TwitchTracker).ToUpdate.Where(x => x.Key.Equals(channelID)))
-                            Program.reactionHandler.clearHandler((IUserMessage)((ITextChannel)Program.client.GetChannel(channelID)).GetMessageAsync(channel.Value).Result).Wait();
+        public override bool TryRemoveTracker(string name, ulong channelID)
+        {
+            if (trackers.ContainsKey(name) && trackers[name].ChannelIds.Contains(channelID))
+            {
+                if (trackers.First().Value.GetType() == typeof(Tracker.TwitchTracker))
+                    foreach (var channel in (trackers[name] as Tracker.TwitchTracker).ToUpdate.Where(x => x.Key.Equals(channelID)))
+                        try
+                        {
+                            Program.ReactionHandler.ClearHandler((IUserMessage)((ITextChannel)Program.Client.GetChannel(channelID)).GetMessageAsync(channel.Value).Result).Wait();
+                        }
+                        catch
+                        {
+                        }
 
-                if(trackers[name].ChannelIds.Count > 1){
+                if (trackers[name].ChannelIds.Count > 1)
+                {
+                    trackers[name].ChannelMessages.Remove(channelID);
                     trackers[name].ChannelIds.Remove(channelID);
-                    if(trackers.First().Value.GetType() == typeof(Tracker.TwitchTracker)){
-                        (trackers[name] as Tracker.TwitchTracker).ChannelMessages.Remove(channelID);
+
+                    if (trackers.First().Value.GetType() == typeof(Tracker.TwitchTracker))
+                    {
+                        (trackers[name] as Tracker.TwitchTracker).ToUpdate.Remove(channelID);
                     }
                 }
 
-                else{
+                else
+                {
                     trackers[name].Dispose();
                     trackers.Remove(name);
                 }
-                
+
                 SaveJson();
+                return true;
             }
+            return false;
         }
 
-        public override void addTracker(string name, ulong channelID, string notification=""){
-            if(trackers.ContainsKey(name)){
-                if(!trackers[name].ChannelIds.Contains(channelID))
+        public override void AddTracker(string name, ulong channelID, string notification = "")
+        {
+            if (trackers.ContainsKey(name))
+            {
+                if (!trackers[name].ChannelIds.Contains(channelID))
                     trackers[name].ChannelIds.Add(channelID);
             }
-            else{
+            else
+            {
                 trackers.Add(name, (T)Activator.CreateInstance(typeof(T), new object[] { name }));
                 trackers[name].ChannelIds.Add(channelID);
                 trackers[name].OnMajorEventFired += OnMajorEvent;
                 trackers[name].OnMinorEventFired += OnMinorEvent;
             }
-            if(trackers.First().Value.GetType() == typeof(Tracker.TwitchTracker)){
-                (trackers[name] as Tracker.TwitchTracker).ChannelMessages.Add(channelID, notification);
-            }
-            else if(trackers.First().Value.GetType() == typeof(Tracker.TwitterTracker)){
-                (trackers[name] as Tracker.TwitterTracker).SetNotification(channelID, notification.Split("|")[0], notification.Split("|")[1]);
-            }
+
+            trackers[name].ChannelMessages.Add(channelID, notification);
 
             SaveJson();
         }
 
-        public override string getTracker(ulong channelID){
-            return string.Join(", ", trackers.Where(x => x.Value.ChannelIds.Contains(channelID)).Select(x => x.Key));
-        }
-        public override Dictionary<string, ITracker> getTracker()
-        {
-            return trackers.Select(x=> new KeyValuePair<string, ITracker>(x.Key, (ITracker)x.Value)).ToDictionary(x=>x.Key, x=>x.Value);
+        public override bool TrySetNotification(string name, ulong channelID, string notificationMessage){
+            var tracker = GetTracker(channelID, name);
+
+            if(tracker != null){
+                tracker.ChannelMessages[channelID] = notificationMessage;
+                SaveJson();
+                return true;
+            }
+
+            return false;
         }
 
-        public override HashSet<ITracker> getTrackerSet()
+        public override IEnumerable<ITracker> GetTrackers(ulong channelID)
+        {
+            return trackers.Select(x => x.Value).Where(x => x.ChannelIds.Contains(channelID));
+        }
+
+        public override Dictionary<string, ITracker> GetTrackers()
+        {
+            return trackers.Select(x => new KeyValuePair<string, ITracker>(x.Key, (ITracker)x.Value)).ToDictionary(x => x.Key, x => x.Value);
+        }
+
+        public override ITracker GetTracker(ulong channelID, string name)
+        {
+            return trackers.FirstOrDefault(x => x.Key.Equals(name) && x.Value.ChannelIds.Contains(channelID)).Value;
+        }
+
+        public override HashSet<ITracker> GetTrackerSet()
         {
             return trackers.Values.Select(x => (ITracker)x).ToHashSet();
         }
 
-        public override Type getTrackerType(){
+        public override Type GetTrackerType()
+        {
             return typeof(T);
         }
 
@@ -122,7 +192,30 @@ namespace MopsBot.Data
         /// <returns>A Task that can be awaited</returns>
         private async Task OnMinorEvent(ulong channelID, Tracker.ITracker parent, string notification)
         {
-            await ((Discord.WebSocket.SocketTextChannel)Program.client.GetChannel(channelID)).SendMessageAsync(notification);
+            if(!Program.Client.ConnectionState.Equals(Discord.ConnectionState.Connected))
+                return;
+            try
+            {
+                await ((Discord.WebSocket.SocketTextChannel)Program.Client.GetChannel(channelID)).SendMessageAsync(notification);
+            }
+            catch
+            {
+                if (Program.Client.GetChannel(channelID) == null){
+                    TryRemoveTracker(parent.Name, channelID);
+                    Console.Out.WriteLine($"Removed Tracker: {parent.Name} Channel {channelID} is missing");
+                }
+                else{
+                    var permission = (await ((IGuildChannel)Program.Client.GetChannel(channelID)).Guild.GetCurrentUserAsync()).GetPermissions( ((IGuildChannel)Program.Client.GetChannel(channelID)));
+                    if(!permission.SendMessages || !permission.ViewChannel || !permission.ReadMessageHistory){
+                        TryRemoveTracker(parent.Name, channelID);
+                        Console.Out.WriteLine($"Removed a tracker for {parent.Name} due to missing Permissions");
+                        if(permission.SendMessages){
+                            await ((ITextChannel)Program.Client.GetChannel(channelID)).SendMessageAsync($"Removed tracker for `{parent.Name}` due to missing Permissions");
+                        }
+                    }           
+                }
+
+            }
         }
 
         /// <summary>
@@ -132,24 +225,57 @@ namespace MopsBot.Data
         /// <returns>A Task that can be awaited</returns>
         private async Task OnMajorEvent(ulong channelID, Embed embed, Tracker.ITracker parent, string notification)
         {
-            if(parent is Tracker.TwitchTracker){
-                Tracker.TwitchTracker parentHandle = parent as Tracker.TwitchTracker;
-
-                if(parentHandle.ToUpdate.ContainsKey(channelID))
-                    await ((IUserMessage)((ITextChannel)Program.client.GetChannel(channelID)).GetMessageAsync(parentHandle.ToUpdate[channelID]).Result).ModifyAsync(x => {
-                        x.Content = notification;
-                        x.Embed = embed;
-                    });
-
+            if(!Program.Client.ConnectionState.Equals(Discord.ConnectionState.Connected))
+                return;
+            try
+            {
+                if (parent is Tracker.TwitchTracker)
+                {
+                    Tracker.TwitchTracker parentHandle = parent as Tracker.TwitchTracker;
+                    if (parentHandle.ToUpdate.ContainsKey(channelID))
+                    {
+                        var message = ((IUserMessage)((ITextChannel)Program.Client.GetChannel(channelID)).GetMessageAsync(parentHandle.ToUpdate[channelID]).Result);
+                        if(message != null)
+                            await message.ModifyAsync(x =>
+                            {
+                                x.Content = notification;
+                                x.Embed = embed;
+                            });
+                        else{
+                            var newMessage = await ((Discord.WebSocket.SocketTextChannel)Program.Client.GetChannel(channelID)).SendMessageAsync(notification, embed: embed);
+                            parentHandle.ToUpdate[channelID]=newMessage.Id;
+                            await parentHandle.setReaction((IUserMessage)message);
+                            SaveJson();
+                        }
+                    }
+                    else
+                    {
+                        var message = await ((Discord.WebSocket.SocketTextChannel)Program.Client.GetChannel(channelID)).SendMessageAsync(notification, embed: embed);
+                        parentHandle.ToUpdate.Add(channelID, message.Id);
+                        await parentHandle.setReaction((IUserMessage)message);
+                        SaveJson();
+                    }
+                }
+                else
+                    await ((Discord.WebSocket.SocketTextChannel)Program.Client.GetChannel(channelID)).SendMessageAsync(notification, embed: embed);
+            }
+            catch
+            {
+                if (Program.Client.GetChannel(channelID) == null){
+                    TryRemoveTracker(parent.Name, channelID);
+                    Console.Out.WriteLine($"Removed Tracker: {parent.Name} Channel {channelID} is missing");
+                }
                 else{
-                    var message = await ((Discord.WebSocket.SocketTextChannel)Program.client.GetChannel(channelID)).SendMessageAsync(notification, embed:embed);
-                    parentHandle.ToUpdate.Add(channelID, message.Id);
-                    await parentHandle.setReaction((IUserMessage)message);
-                    SaveJson();
+                    var permission = (await ((IGuildChannel)Program.Client.GetChannel(channelID)).Guild.GetCurrentUserAsync()).GetPermissions( ((IGuildChannel)Program.Client.GetChannel(channelID)));
+                    if(!permission.SendMessages || !permission.ViewChannel || !permission.ReadMessageHistory || (parent is Tracker.TwitchTracker && (!permission.AddReactions || !permission.ManageMessages))){
+                        TryRemoveTracker(parent.Name, channelID);
+                        Console.Out.WriteLine($"Removed a tracker for {parent.Name} due to missing Permissions");
+                        if(permission.SendMessages){
+                            await ((ITextChannel)Program.Client.GetChannel(channelID)).SendMessageAsync($"Removed tracker for `{parent.Name}` due to missing Permissions");
+                        }
+                    }           
                 }
             }
-            else
-                await ((Discord.WebSocket.SocketTextChannel)Program.client.GetChannel(channelID)).SendMessageAsync(notification, embed:embed);
         }
 
 

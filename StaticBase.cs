@@ -11,6 +11,7 @@ using MopsBot.Data;
 using MopsBot.Data.Tracker;
 using MopsBot.Data.Updater;
 using Tweetinvi;
+using NewsAPI;
 
 namespace MopsBot
 {
@@ -19,18 +20,20 @@ namespace MopsBot
         public static Data.Statistics stats = new Data.Statistics();
         public static Data.UserScore people = new Data.UserScore();
         public static Random ran = new Random();
-        public static List<IdleDungeon> dungeonCrawler = new List<IdleDungeon>();
+        public static List<IdleDungeon> DungeonCrawler = new List<IdleDungeon>();
         public static Gfycat.GfycatClient gfy;
-        public static List<string> playlist = new List<string>();
+        public static List<string> Playlist = new List<string>();
         public static HashSet<ulong> MemberSet;
-        public static Dictionary<ulong, string> guildPrefix;
+        public static Dictionary<ulong, string> GuildPrefix;
         public static Giveaway Giveaways = new Giveaway();
         public static ReactionGiveaway ReactGiveaways;
-        public static Poll poll;
-        public static Blackjack blackjack;
-        public static Crosswords crosswords;
-        public static ClipTracker ClipTracker;
-        public static Dictionary<string, TrackerWrapper> trackers;
+        public static ReactionRoleJoin ReactRoleJoin;
+        public static Poll Poll;
+        public static Crosswords Crosswords;
+        public static Dictionary<string, TrackerWrapper> Trackers;
+        public static MuteTimeHandler MuteHandler;
+        public static NewsApiClient NewsClient;
+
         public static bool init = false;
 
         /// <summary>
@@ -41,22 +44,41 @@ namespace MopsBot
             if (!init)
             {
                 ReactGiveaways = new ReactionGiveaway();
-                
-                Auth.SetUserCredentials(Program.Config["TwitterKey"], Program.Config["TwitterSecret"], 
+                ReactRoleJoin = new ReactionRoleJoin();
+
+                Auth.SetUserCredentials(Program.Config["TwitterKey"], Program.Config["TwitterSecret"],
                                         Program.Config["TwitterToken"], Program.Config["TwitterAccessSecret"]);
                 TweetinviConfig.CurrentThreadSettings.TweetMode = TweetMode.Extended;
                 TweetinviConfig.ApplicationSettings.TweetMode = TweetMode.Extended;
                 gfy = new Gfycat.GfycatClient(Program.Config["GfyID"], Program.Config["GfySecret"]);
+                NewsClient = new NewsApiClient(Program.Config["NewsAPI"]);
 
-                ClipTracker = new ClipTracker();
-                
-                trackers = new Dictionary<string, Data.TrackerWrapper>();
-                trackers["osu"] = new TrackerHandler<OsuTracker>();
-                trackers["overwatch"] = new TrackerHandler<OverwatchTracker>();
-                trackers["twitch"] = new TrackerHandler<TwitchTracker>();
-                trackers["twitter"] = new TrackerHandler<TwitterTracker>();
-                trackers["youtube"] = new TrackerHandler<YoutubeTracker>();
-                trackers["reddit"] = new TrackerHandler<RedditTracker>();
+                using (StreamReader read = new StreamReader(new FileStream($"mopsdata//MuteTimerHandler.json", FileMode.OpenOrCreate)))
+                {
+                    try{
+                        MuteHandler = Newtonsoft.Json.JsonConvert.DeserializeObject<MuteTimeHandler>(read.ReadToEnd());
+                        
+                        if(MuteHandler == null)
+                            MuteHandler = new MuteTimeHandler();
+                        
+                        MuteHandler.SetTimers();
+                    } catch(Exception e){
+                        Console.WriteLine(e.Message + e.StackTrace);
+                    }
+                }
+                Trackers = new Dictionary<string, Data.TrackerWrapper>();
+                Trackers["osu"] = new TrackerHandler<OsuTracker>();
+                Trackers["overwatch"] = new TrackerHandler<OverwatchTracker>();
+                Trackers["twitch"] = new TrackerHandler<TwitchTracker>();
+                Trackers["twitchclips"] = new TrackerHandler<TwitchClipTracker>();
+                Trackers["twitter"] = new TrackerHandler<TwitterTracker>();
+                Trackers["youtube"] = new TrackerHandler<YoutubeTracker>();
+                Trackers["reddit"] = new TrackerHandler<RedditTracker>();
+                Trackers["news"] = new TrackerHandler<NewsTracker>();
+
+                foreach(var tracker in Trackers){
+                    tracker.Value.postInitialisation();
+                }
 
                 init = true;
 
@@ -68,7 +90,7 @@ namespace MopsBot
             using (StreamWriter write = new StreamWriter(new FileStream("mopsdata//guildprefixes.txt", FileMode.Create)))
             {
                 write.AutoFlush = true;
-                foreach (var kv in guildPrefix)
+                foreach (var kv in GuildPrefix)
                 {
                     write.WriteLine($"{kv.Key}|{kv.Value}");
                 }
@@ -111,15 +133,9 @@ namespace MopsBot
             return new List<IGuildUser>(user.Distinct());
         }
 
-        public static async Task UpdateGameAsync(){
-            MemberSet = new HashSet<ulong>();
-            await Program.client.DownloadUsersAsync(Program.client.Guilds);
-            foreach(SocketGuild curGuild in Program.client.Guilds){
-                foreach(SocketGuildUser curUser in curGuild.Users){
-                    MemberSet.Add(curUser.Id);
-                }
-            }
-            await Program.client.SetActivityAsync(new Game($"{MemberSet.Count} people", ActivityType.Listening));
+        public static async Task UpdateGameAsync()
+        {
+            await Program.Client.SetActivityAsync(new Game($"{Program.Client.Guilds.Count} servers", ActivityType.Watching));
         }
     }
 }

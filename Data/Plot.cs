@@ -105,7 +105,7 @@ namespace MopsBot.Data
             prc.WaitForExit();
 
             var dir = new DirectoryInfo("mopsdata//");
-            var files = dir.GetFiles().Where(x => x.Extension.ToLower().Equals($".pdf"));
+            var files = dir.GetFiles().Where(x => x.Name.Contains($"{ID}plot"));
             foreach (var f in files)
                 f.Delete();
 
@@ -158,7 +158,14 @@ namespace MopsBot.Data
             {
                 series.Add(newTitle, new List<OxyPlot.Series.LineSeries>());
                 series[newTitle].Add(new OxyPlot.Series.LineSeries());
-                series[newTitle].Last().Color = OxyColor.FromRgb((byte)StaticBase.ran.Next(30, 220), (byte)StaticBase.ran.Next(30, 220), (byte)StaticBase.ran.Next(30, 220));
+
+                long colour = 1;
+                foreach(char c in newTitle){
+                    colour = (((int)c * colour) % 12829635) + 1973790;
+                }
+                
+                var oxycolour = OxyColor.FromUInt32((uint)colour + 4278190080);
+                series[newTitle].Last().Color = oxycolour;
                 series[newTitle].Last().Title = newTitle;
             }
             else
