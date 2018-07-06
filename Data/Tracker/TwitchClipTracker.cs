@@ -109,10 +109,12 @@ namespace MopsBot.Data.Tracker
                             })){
 
                             TrackedClips.Add(clip.created_at, new KeyValuePair<int, double>(clip.vod.offset, clip.duration));
-                        } else if (clip.vod == null)
+                            clips.clips.Add(clip);
+                        } else if (clip.vod == null){
                             TrackedClips.Add(clip.created_at, new KeyValuePair<int, double>(-60, clip.duration));
-
-                        clips.clips.Add(clip);
+                            clips.clips.Add(clip);
+                        }
+                        
                         StaticBase.Trackers["twitchclips"].SaveJson();
                     }
                     if (!tmpResult._cursor.Equals(""))
