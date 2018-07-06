@@ -15,7 +15,7 @@ namespace MopsBot.Data.Tracker
     public class TwitchClipTracker : ITracker
     {
         public uint ViewThreshold;
-        public List<DateTime> TrackedClips;
+        public Dictionary<DateTime, KeyValuePair<int, double>> TrackedClips;
         public TwitchClipTracker() : base(600000, (ExistingTrackers * 2000 + 500) % 600000)
         {
         }
@@ -24,7 +24,7 @@ namespace MopsBot.Data.Tracker
         {
             Console.Out.WriteLine($"{DateTime.Now} Started TwitchClipTracker for {streamerName}");
             Name = streamerName;
-            TrackedClips = new List<DateTime>();
+            TrackedClips = new Dictionary<DateTime, KeyValuePair<int, double>>();
             ChannelMessages = new Dictionary<ulong, string>();
             ViewThreshold = 2;
 
@@ -46,7 +46,7 @@ namespace MopsBot.Data.Tracker
             try
             {
                 TwitchClipResult clips = await getClips();
-                foreach (var datetime in TrackedClips.ToList())
+                foreach (var datetime in TrackedClips.Keys.ToList())
                 {
                     if (datetime.AddMinutes(30) <= DateTime.UtcNow){
                         TrackedClips.Remove(datetime);
@@ -94,10 +94,25 @@ namespace MopsBot.Data.Tracker
                 var tmpResult = JsonConvert.DeserializeObject<TwitchClipResult>(query, _jsonWriter);
                 if (tmpResult.clips != null)
                 {
-                    foreach (var clip in tmpResult.clips.Where(p => !TrackedClips.Contains(p.created_at) && p.created_at > DateTime.UtcNow.AddMinutes(-30) && p.views >= ViewThreshold))
+                    foreach (var clip in tmpResult.clips.Where(p => !TrackedClips.ContainsKey(p.created_at) && p.created_at > DateTime.UtcNow.AddMinutes(-30) && p.views >= ViewThreshold))
                     {
+                        if(clip.vod != null && !TrackedClips.Any(x => {
+                                double matchingDuration = 0;
+
+                                if(clip.vod.offset < x.Value.Key)
+                                    matchingDuration = (clip.vod.offset + clip.duration > x.Value.Key + x.Value.Value) ? x.Value.Value : clip.vod.offset + clip.duration - x.Value.Key;
+                                else
+                                    matchingDuration = (x.Value.Key + x.Value.Value > clip.vod.offset + clip.duration) ? clip.duration : x.Value.Key + x.Value.Value - clip.vod.offset;
+
+                                double matchingPercentage = matchingDuration / clip.duration;
+                                return matchingPercentage > 0.2;
+                            })){
+
+                            TrackedClips.Add(clip.created_at, new KeyValuePair<int, double>(clip.vod.offset, clip.duration));
+                        } else if (clip.vod == null)
+                            TrackedClips.Add(clip.created_at, new KeyValuePair<int, double>(-60, clip.duration));
+
                         clips.clips.Add(clip);
-                        TrackedClips.Add(clip.created_at);
                         StaticBase.Trackers["twitchclips"].SaveJson();
                     }
                     if (!tmpResult._cursor.Equals(""))
