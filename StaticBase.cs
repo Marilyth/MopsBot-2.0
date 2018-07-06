@@ -30,7 +30,6 @@ namespace MopsBot
         public static ReactionRoleJoin ReactRoleJoin;
         public static Poll Poll;
         public static Crosswords Crosswords;
-        public static ClipTracker ClipTracker;
         public static Dictionary<string, TrackerWrapper> Trackers;
         public static MuteTimeHandler MuteHandler;
         public static NewsApiClient NewsClient;
@@ -53,8 +52,6 @@ namespace MopsBot
                 TweetinviConfig.ApplicationSettings.TweetMode = TweetMode.Extended;
                 gfy = new Gfycat.GfycatClient(Program.Config["GfyID"], Program.Config["GfySecret"]);
                 NewsClient = new NewsApiClient(Program.Config["NewsAPI"]);
-
-                ClipTracker = new ClipTracker();
 
                 using (StreamReader read = new StreamReader(new FileStream($"mopsdata//MuteTimerHandler.json", FileMode.OpenOrCreate)))
                 {
