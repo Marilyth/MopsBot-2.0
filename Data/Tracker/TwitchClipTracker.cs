@@ -154,7 +154,7 @@ namespace MopsBot.Data.Tracker
 
             e.AddField("Length", clip.duration + " seconds", true);
             e.AddField("Views", clip.views, true);
-            e.AddField("Game", clip.game ?? "Nothing", true);
+            e.AddField("Game", (clip.game == null || clip.game.Equals("")) ? "Nothing" : clip.game, true);
             e.AddField("Creator", $"[{clip.curator.name}]({clip.curator.channel_url})", true);
 
             return e.Build();
