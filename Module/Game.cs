@@ -22,7 +22,7 @@ namespace MopsBot.Module
                 if(lengthInMinutes > 0){
                     Discord.IUserMessage updateMessage = await Context.Channel.SendMessageAsync("Generating dungeon.");
 
-                    Data.Updater.IdleDungeon test = new Data.Updater.IdleDungeon(updateMessage, Context.User.Id, (int)lengthInMinutes);
+                    Data.Updater.IdleDungeon test = new Data.Updater.IdleDungeon(updateMessage, (SocketUser)Context.User, (int)lengthInMinutes);
                     StaticBase.DungeonCrawler.Add(test);
                 }
                 else

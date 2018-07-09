@@ -16,18 +16,18 @@ namespace MopsBot.Data.Updater
         public ulong player;
         public System.Diagnostics.Stopwatch time;
         public System.Threading.Timer timer;
-        public IdleDungeon(Discord.IUserMessage pUpdateMessage, ulong ID, int pLength)
+        public IdleDungeon(Discord.IUserMessage pUpdateMessage, Discord.WebSocket.SocketUser user, int pLength)
         {
-            username = Program.Client.GetUser(ID).Username;
+            username = user.Username;
             log = $"00:00 {username} has entered the dungeon.";
-            StaticBase.people.Users[ID].getEquipment(ID);
-            player = ID;
+            StaticBase.people.Users[user.Id].getEquipment(user.Id);
+            player = user.Id;
             ran = new Random();
             updateMessage = pUpdateMessage;
             timer = new System.Threading.Timer(eventHappened, new System.Threading.AutoResetEvent(false), ran.Next(10000, 60000), 100000);
 
             vitality = 7;   
-            foreach(Individual.Items item in StaticBase.people.Users[ID].equipment){
+            foreach(Individual.Items item in StaticBase.people.Users[user.Id].equipment){
                 attack += item.attack;
                 vitality += item.vitality;
             }
