@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using Newtonsoft.Json;
 using MopsBot.Data;
 using MopsBot.Data.Tracker;
 using MopsBot.Data.Updater;
@@ -25,6 +26,7 @@ namespace MopsBot
         public static List<string> Playlist = new List<string>();
         public static HashSet<ulong> MemberSet;
         public static Dictionary<ulong, string> GuildPrefix;
+        public static Dictionary<ulong, Dictionary<string, string>> CustomCommands;
         public static Giveaway Giveaways = new Giveaway();
         public static ReactionGiveaway ReactGiveaways;
         public static ReactionRoleJoin ReactRoleJoin;
@@ -94,6 +96,14 @@ namespace MopsBot
                 {
                     write.WriteLine($"{kv.Key}|{kv.Value}");
                 }
+            }
+        }
+
+        public static void saveCommand()
+        {
+            using (StreamWriter write = new StreamWriter(new FileStream("mopsdata//CustomCommands.json", FileMode.Create)))
+            {
+                write.WriteLine(JsonConvert.SerializeObject(CustomCommands, Formatting.Indented));
             }
         }
 

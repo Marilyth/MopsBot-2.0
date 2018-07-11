@@ -145,6 +145,46 @@ namespace MopsBot.Module
             await ReplyAsync($"Changed prefix from `{oldPrefix}` to `{prefix}`");
         }
 
+        [Command("CreateCommand")]
+        [Summary("Allows you to create a simple response command.\n"+
+                 "Name of user: {User.Username}"+
+                 "Mention of user: {User.Mention}")]
+        [RequireUserPermission(ChannelPermission.ManageChannels)]
+        public async Task CreateCommand(string command, [Remainder] string responseText){
+            if(!StaticBase.CustomCommands.ContainsKey(Context.Guild.Id))
+                StaticBase.CustomCommands.Add(Context.Guild.Id, new Dictionary<string, string>());
+
+            StaticBase.CustomCommands[Context.Guild.Id].Add(command, responseText);
+            StaticBase.saveCommand();
+            await ReplyAsync($"Added new command **{command}**.");
+        }
+
+        [Command("RemoveCommand")]
+        [Summary("Removes the specified custom command.")]
+        [RequireUserPermission(ChannelPermission.ManageChannels)]
+        public async Task RemoveCommand(string command){
+            StaticBase.CustomCommands[Context.Guild.Id].Remove(command);
+            StaticBase.saveCommand();
+            await ReplyAsync($"Removed command **{command}**.");
+        }
+
+        /*[Command("UseCustomCommand", RunMode = RunMode.Async)]
+        [Hide()]
+        public async Task UseCustomCommand(string command){
+            var script = CSharpScript.Create($"return $\"{StaticBase.CustomCommands[Context.Guild.Id][command]}\";", globalsType: typeof(CustomContext));
+            var result = await script.RunAsync(new CustomContext {User = Context.User});
+            await ReplyAsync(result.ReturnValue.ToString());
+        }*/
+
+        [Command("UseCustomCommand", RunMode = RunMode.Async)]
+        [Hide()]
+        public async Task UseCustomCommand(string command){
+            var reply = StaticBase.CustomCommands[Context.Guild.Id][command];
+            reply = reply.Replace("{User.Username}", $"{Context.User.Username}")
+                         .Replace("{User.Mention}", $"{Context.User.Mention}");
+            await ReplyAsync(reply);
+        }
+
         [Command("kill")]
         // [Summary("Stops Mops to adapt to any new changes in code.")]
         [RequireBotManage()]
@@ -190,7 +230,20 @@ namespace MopsBot.Module
                     output += $"`{command.Name}` ";
                 }
             }
+
+            if(StaticBase.CustomCommands.ContainsKey(Context.Guild.Id)){
+                output += "\n**Custom Commands**: ";
+                foreach (var commands in StaticBase.CustomCommands.Where(x => x.Key == Context.Guild.Id)){
+                    foreach (var command in commands.Value)
+                        output += $"`{command.Key}` ";
+                }
+            }
+
             await ReplyAsync(output);
         }
+    }
+
+    public class CustomContext{
+        public IUser User;
     }
 }

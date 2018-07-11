@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Reflection;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Discord.Commands;
 using Discord.WebSocket;
@@ -38,6 +39,7 @@ namespace MopsBot
 
             GuildPrefix = new Dictionary<ulong, string>();
             fillPrefix();
+            loadCustomCommands();
             client.MessageReceived += Client_MessageReceived;
             client.MessageReceived += HandleCommand;
             client.UserJoined += Client_UserJoined;
@@ -137,9 +139,13 @@ namespace MopsBot
             var result = await commands.ExecuteAsync(context, argPos, _provider);
 
             // If the command failed, notify the user
-            if (!result.IsSuccess && !result.ErrorReason.Contains("Unknown command") && !result.ErrorReason.Equals(""))
+            if (!result.IsSuccess && !result.ErrorReason.Equals(""))
             {
-                await message.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}");
+                if(!result.ErrorReason.Contains("Unknown command"))
+                    await message.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}");
+                else{
+                    await commands.Commands.First(x => x.Name.Equals("UseCustomCommand")).ExecuteAsync(context, new List<object>{$"{context.Message.Content.Substring(argPos)}"}, new List<object>{}, _provider);
+                }
             }
         }
 
@@ -217,6 +223,22 @@ namespace MopsBot
             e.Description = description;
 
             return e.Build();
+        }
+
+        private void loadCustomCommands()
+        {
+            
+            using (StreamReader read = new StreamReader(new FileStream($"mopsdata//CustomCommands.json", FileMode.OpenOrCreate)))
+            {
+                try
+                {
+                    CustomCommands = JsonConvert.DeserializeObject<Dictionary<ulong, Dictionary<string, string>>>(read.ReadToEnd()) ?? new Dictionary<ulong, Dictionary<string, string>>();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message + e.StackTrace);
+                }
+            }
         }
 
         private void fillPrefix()
