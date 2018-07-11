@@ -147,7 +147,7 @@ namespace MopsBot.Module
 
         [Command("CreateCommand")]
         [Summary("Allows you to create a simple response command.\n"+
-                 "Name of user: {User.Username}"+
+                 "Name of user: {User.Username}\n"+
                  "Mention of user: {User.Mention}")]
         [RequireUserPermission(ChannelPermission.ManageChannels)]
         public async Task CreateCommand(string command, [Remainder] string responseText){
