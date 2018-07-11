@@ -151,12 +151,21 @@ namespace MopsBot.Module
                  "Mention of user: {User.Mention}")]
         [RequireUserPermission(ChannelPermission.ManageChannels)]
         public async Task CreateCommand(string command, [Remainder] string responseText){
-            if(!StaticBase.CustomCommands.ContainsKey(Context.Guild.Id))
+            if(!StaticBase.CustomCommands.ContainsKey(Context.Guild.Id)){
                 StaticBase.CustomCommands.Add(Context.Guild.Id, new Dictionary<string, string>());
+            }
 
-            StaticBase.CustomCommands[Context.Guild.Id].Add(command, responseText);
+            if(!StaticBase.CustomCommands[Context.Guild.Id].ContainsKey(command)){
+                StaticBase.CustomCommands[Context.Guild.Id].Add(command, responseText);
+                await ReplyAsync($"Added new command **{command}**.");
+            }
+
+            else{
+                StaticBase.CustomCommands[Context.Guild.Id][command] = responseText;
+                await ReplyAsync($"Replaced command **{command}**.");
+            }
+
             StaticBase.saveCommand();
-            await ReplyAsync($"Added new command **{command}**.");
         }
 
         [Command("RemoveCommand")]
@@ -164,7 +173,11 @@ namespace MopsBot.Module
         [RequireUserPermission(ChannelPermission.ManageChannels)]
         public async Task RemoveCommand(string command){
             if(StaticBase.CustomCommands[Context.Guild.Id].ContainsKey(command)){
-                StaticBase.CustomCommands[Context.Guild.Id].Remove(command);
+                if(StaticBase.CustomCommands[Context.Guild.Id].Count == 1)
+                    StaticBase.CustomCommands.Remove(Context.Guild.Id);
+                else
+                    StaticBase.CustomCommands[Context.Guild.Id].Remove(command);
+
                 StaticBase.saveCommand();
                 await ReplyAsync($"Removed command **{command}**.");
             } else {
