@@ -163,9 +163,13 @@ namespace MopsBot.Module
         [Summary("Removes the specified custom command.")]
         [RequireUserPermission(ChannelPermission.ManageChannels)]
         public async Task RemoveCommand(string command){
-            StaticBase.CustomCommands[Context.Guild.Id].Remove(command);
-            StaticBase.saveCommand();
-            await ReplyAsync($"Removed command **{command}**.");
+            if(StaticBase.CustomCommands[Context.Guild.Id].ContainsKey(command)){
+                StaticBase.CustomCommands[Context.Guild.Id].Remove(command);
+                StaticBase.saveCommand();
+                await ReplyAsync($"Removed command **{command}**.");
+            } else {
+                await ReplyAsync($"Command **{command}** not found.");
+            }
         }
 
         /*[Command("UseCustomCommand", RunMode = RunMode.Async)]
