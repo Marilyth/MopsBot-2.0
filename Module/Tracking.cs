@@ -255,7 +255,7 @@ namespace MopsBot.Module
                     await ReplyAsync("Stopped keeping track of " + streamerName + "'s streams!");
                 else
                     await ReplyAsync($"Could not find tracker for `{streamerName}`\n"+
-                                     $"Currently tracked Streamers are: ``{String.Join(", ", StaticBase.Trackers["twitch"].GetTrackers(Context.Channel.Id).Select(x => x.Name))}``");
+                                     $"Currently tracked Streamers are: ``{String.Join(", ", StaticBase.Trackers["twitchclips"].GetTrackers(Context.Channel.Id).Select(x => x.Name))}``");
             }
 
             [Command("GetTrackers")]
