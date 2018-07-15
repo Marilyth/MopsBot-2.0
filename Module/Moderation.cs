@@ -219,9 +219,21 @@ namespace MopsBot.Module
         {
             try{
                 var imports = Microsoft.CodeAnalysis.Scripting.ScriptOptions.Default.WithReferences(typeof(MopsBot.Program).Assembly, typeof(Discord.Attachment).Assembly).WithImports("MopsBot", "Discord");
+                var preCompilationTime = DateTime.Now.Ticks / 10000;
                 var script = CSharpScript.Create(expression, globalsType: typeof(MopsBot.Module.Moderation));
+                script.Compile();
+                var preExecutionTime = DateTime.Now.Ticks / 10000;
                 var result = await script.WithOptions(imports).RunAsync(this);
-                await ReplyAsync(result.ReturnValue.ToString());
+                var postExecutionTime = DateTime.Now.Ticks / 10000;
+
+                var embed = new EmbedBuilder();
+                embed.Author = new EmbedAuthorBuilder().WithName(Context.User.Username).WithIconUrl(Context.User.GetAvatarUrl());
+                embed.WithDescription($"```csharp\n{expression}```").WithTitle("Evaluation of code");
+                embed.AddField("Compilation time", $"{preExecutionTime - preCompilationTime}ms", true);
+                embed.AddField("Execution time", $"{postExecutionTime - preExecutionTime}ms", true);
+                embed.AddField("Return value", result.ReturnValue?.ToString() ?? "`null or void`");
+
+                await ReplyAsync("", embed: embed.Build());
             } catch(Exception e){
                 await ReplyAsync("**Error:** " + e.Message);
             }
