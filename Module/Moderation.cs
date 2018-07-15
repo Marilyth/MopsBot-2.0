@@ -220,10 +220,10 @@ namespace MopsBot.Module
             try{
                 var imports = Microsoft.CodeAnalysis.Scripting.ScriptOptions.Default.WithReferences(typeof(MopsBot.Program).Assembly, typeof(Discord.Attachment).Assembly).WithImports("MopsBot", "Discord");
                 var preCompilationTime = DateTime.Now.Ticks / 10000;
-                var script = CSharpScript.Create(expression, globalsType: typeof(MopsBot.Module.Moderation));
+                var script = CSharpScript.Create(expression, globalsType: typeof(MopsBot.Module.Moderation)).WithOptions(imports);
                 script.Compile();
                 var preExecutionTime = DateTime.Now.Ticks / 10000;
-                var result = await script.WithOptions(imports).RunAsync(this);
+                var result = await script.RunAsync(this);
                 var postExecutionTime = DateTime.Now.Ticks / 10000;
 
                 var embed = new EmbedBuilder();
