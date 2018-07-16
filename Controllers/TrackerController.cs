@@ -62,13 +62,13 @@ namespace MopsBot.Api.Controllers
             allTrackers = allTrackers.
                 Where(x => allTypes || parameters["type"].Contains(x.Key)).ToDictionary(x => x.Key, x => x.Value);
 
-            foreach(var key in allTrackers.Keys)
+            foreach (var key in allTrackers.Keys)
                 allResults = allResults.Concat(allTrackers[key].GetTrackerSet().
-                    Where(x => allChannels || 
+                    Where(x => allChannels ||
                     parameters["channel"].Any(y => x.ChannelIds.Contains(ulong.Parse(y)))))
                     .ToHashSet();
 
-            var result = allResults.GroupBy(x => x.GetType()).ToDictionary(x => x.Key.Name, 
+            var result = allResults.GroupBy(x => x.GetType()).ToDictionary(x => x.Key.Name,
                 x => x.ToDictionary(y => y.Name, y => y.ChannelIds.
                 Where(z => allChannels || parameters["channel"].Contains(z.ToString()))));
 
@@ -110,9 +110,13 @@ namespace MopsBot.Api.Controllers
         [HttpGet("add/{channel}/{type}/{name}/{notification}")]
         public IActionResult AddNewTracker(ulong channel, string type, string name, string notification)
         {
-            try{
+            Response.Headers.Add("Access-Control-Allow-Origin", "http://5.45.104.29");
+            try
+            {
                 StaticBase.Trackers[type].AddTracker(name, channel, notification);
-            } catch(Exception e){
+            }
+            catch (Exception e)
+            {
                 return new ObjectResult(e.InnerException?.Message ?? e.Message);
             }
             return new ObjectResult("Success");
@@ -121,10 +125,14 @@ namespace MopsBot.Api.Controllers
         [HttpGet("remove/{channel}/{type}/{name}")]
         public IActionResult RemoveTracker(ulong channel, string type, string name)
         {
-            try{
+            Response.Headers.Add("Access-Control-Allow-Origin", "http://5.45.104.29");
+            try
+            {
                 var result = StaticBase.Trackers[type].TryRemoveTracker(name, channel);
                 return new ObjectResult(result);
-            } catch(Exception e){
+            }
+            catch (Exception e)
+            {
                 return new ObjectResult(e.Message);
             }
         }

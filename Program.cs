@@ -26,8 +26,8 @@ namespace MopsBot
         }
         public static DiscordSocketClient Client;
         public static Dictionary<string, string> Config;
-        public static CommandHandler Handler {get; private set;}
-        public static ReactionHandler ReactionHandler {get; private set;}
+        public static CommandHandler Handler { get; private set; }
+        public static ReactionHandler ReactionHandler { get; private set; }
 
         public async Task Start()
         {
@@ -37,7 +37,7 @@ namespace MopsBot
                 AlwaysDownloadUsers = true
             });
 
-            using(StreamReader sr = new StreamReader(new FileStream("mopsdata//Config.json", FileMode.Open)))
+            using (StreamReader sr = new StreamReader(new FileStream("mopsdata//Config.json", FileMode.Open)))
                 Config = JsonConvert.DeserializeObject<Dictionary<string, string>>(sr.ReadToEnd());
 
             await Client.LoginAsync(TokenType.Bot, Config["Discord"]);
@@ -84,6 +84,12 @@ namespace MopsBot
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
                 .UseUrls("http://0.0.0.0:5000/")
+                .ConfigureServices(x => x.AddCors(options => options.AddPolicy("AllowAllHeaders",
+                    builder =>
+                    {
+                        builder.WithOrigins("*")
+                               .AllowAnyHeader();
+                    })))
                 .UseKestrel()
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseIISIntegration()
