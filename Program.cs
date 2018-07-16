@@ -21,9 +21,8 @@ namespace MopsBot
     {
         public static void Main(string[] args)
         {
-            // Task.Run(() => BuildWebHost(args).Run());
+            Task.Run(() => BuildWebHost(args).Run());
             new Program().Start().GetAwaiter().GetResult();
-
         }
         public static DiscordSocketClient Client;
         public static Dictionary<string, string> Config;
@@ -35,6 +34,7 @@ namespace MopsBot
             Client = new DiscordSocketClient(new DiscordSocketConfig()
             {
                 LogLevel = LogSeverity.Info,
+                AlwaysDownloadUsers = true
             });
 
             using(StreamReader sr = new StreamReader(new FileStream("mopsdata//Config.json", FileMode.Open)))

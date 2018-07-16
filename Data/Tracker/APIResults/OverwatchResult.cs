@@ -329,7 +329,7 @@ namespace MopsBot.Data.Tracker.APIResults
         public Location kr { get; set; }
 
         public Location getNotNull(){
-            return eu != null ? eu : kr != null ? kr : us;
+            return eu ?? us ?? kr;
         }
     }
 }

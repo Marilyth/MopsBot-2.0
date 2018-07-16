@@ -107,37 +107,26 @@ namespace MopsBot.Api.Controllers
             return new ObjectResult(result);
         }
 
-        [HttpPost("{channel}/{type}/{identificator}")]
-        public IActionResult AddTracker(ulong channel, string type, string identificator)
+        [HttpGet("add/{channel}/{type}/{name}/{notification}")]
+        public IActionResult AddNewTracker(ulong channel, string type, string name, string notification)
         {
-
-            var result = new Dictionary<string, string>();
-            var fields = typeof(StaticBase).GetFields().Where(x => x.FieldType.Name.Contains("TrackerHandler"));
-            foreach (var field in fields)
-            {
-
-                try
-                {
-                    Type t = typeof(TrackerHandler<>).MakeGenericType(field.FieldType.GenericTypeArguments.First());
-                    var obj = Convert.ChangeType(field.GetValue(null), t);
-                    string name = obj.GetType().GetMethod("getTrackerType").Invoke(obj, new object[0]).ToString();
-                    if (name.Contains(type))
-                    {
-                        if (!obj.GetType().GetMethod("testIdentificator").Invoke(obj, new[] { (object)identificator }).Equals(true))
-                            return NotFound(identificator);
-
-                    }
-                }
-                catch (Exception e)
-                {
-                    System.Console.Out.WriteLine(e);
-                };
-
+            try{
+                StaticBase.Trackers[type].AddTracker(name, channel, notification);
+            } catch(Exception e){
+                return new ObjectResult(e.InnerException?.Message ?? e.Message);
             }
+            return new ObjectResult("Success");
+        }
 
-            if (!result.Any())
-                return BadRequest();
-            return new ObjectResult(result);
+        [HttpGet("remove/{channel}/{type}/{name}")]
+        public IActionResult RemoveTracker(ulong channel, string type, string name)
+        {
+            try{
+                var result = StaticBase.Trackers[type].TryRemoveTracker(name, channel);
+                return new ObjectResult(result);
+            } catch(Exception e){
+                return new ObjectResult(e.Message);
+            }
         }
     }
 }

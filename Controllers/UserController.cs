@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
+using Newtonsoft.Json;
 using MopsBot.Data.Individual;
+using System.Threading.Tasks;
 
 namespace MopsBot.Api.Controllers
 {
@@ -29,7 +31,18 @@ namespace MopsBot.Api.Controllers
                 return NotFound();
             }
             return new ObjectResult(item);
+        }
 
+        [HttpGet("guilds/{id}", Name = "GetUserGuilds")]
+        public async Task<IActionResult> GetGuilds(ulong id)
+        {   
+            var infoDict = new Dictionary<ulong, Discord.GuildPermissions>();
+            var client = Program.Client;
+            foreach(var guild in client.Guilds){
+                if(guild.GetUser(id) != null)
+                    infoDict.Add(guild.Id, guild.GetUser(id).GuildPermissions);
+            }
+            return new ObjectResult(JsonConvert.SerializeObject(infoDict, Formatting.Indented));
         }
     }
 }
