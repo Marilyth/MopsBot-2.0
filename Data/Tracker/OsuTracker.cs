@@ -93,7 +93,7 @@ namespace MopsBot.Data.Tracker
         {
             string query = await MopsBot.Module.Information.ReadURLAsync($"https://osu.ppy.sh/api/get_scores?b={beatmapID}&{mode}&u={Name}&limit=1&k={Program.Config["Osu"]}");
 
-            return JsonConvert.DeserializeObject<List<APIResults.Score>>(query)[0];
+            return JsonConvert.DeserializeObject<List<APIResults.Score>>(query).OrderByDescending(x => DateTime.Parse(x.date)).FirstOrDefault();
         }
 
         public async Task<APIResults.Beatmap> fetchBeatmap(string beatmapID, string mode = "m=0")
