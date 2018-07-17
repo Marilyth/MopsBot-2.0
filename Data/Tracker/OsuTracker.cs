@@ -143,7 +143,7 @@ namespace MopsBot.Data.Tracker
 
             e.AddField("Score", scoreInformation.score + $" ({scoreInformation.maxcombo}x)", true);
             e.AddField("Acc", calcAcc(scoreInformation, int.Parse(beatmapInformation.mode)) + $"% {scoreInformation.rank}", true);
-            e.AddField("PP for play", Math.Round(double.Parse(scoreInformation.pp, CultureInfo.InvariantCulture), 2) + $" (+{ppChange})", true);
+            e.AddField("PP for play", Math.Round(double.Parse(scoreInformation.pp ?? "NaN", CultureInfo.InvariantCulture), 2) + $" (+{ppChange})", true);
             e.AddField("Rank", userInformation.pp_rank, true);
 
             return e.Build();
