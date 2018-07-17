@@ -101,12 +101,18 @@ namespace MopsBot.Data
         public async Task AddVote(ReactionHandlerContext context, string option)
         {
             var poll = Polls[context.channel.Id].First(x => x.MessageID.Equals(context.message.Id));
-            if(!poll.Voters.Contains(context.reaction.UserId)){
+            if(!poll.Voters.ContainsKey(context.reaction.UserId)){
                 poll.AddValue(option, 1);
-                poll.Voters.Add(context.reaction.UserId);
-                SaveJson();
-                await updateMessage(context, poll);
+                poll.Voters.Add(context.reaction.UserId, option);
             }
+            else{
+                poll.AddValue(option, 1);
+                poll.AddValue(poll.Voters[context.reaction.UserId], -1);
+                poll.Voters[context.reaction.UserId] = option;
+            }
+
+            SaveJson();
+            await updateMessage(context, poll);
         }
 
         private async Task DeletePoll(ReactionHandlerContext context)
@@ -167,7 +173,7 @@ namespace MopsBot.Data
 
     public class Poll
     {
-        public HashSet<ulong> Voters;
+        public Dictionary<ulong, string> Voters;
         public string[] Options;
         public string Question;
         public ulong MessageID;
@@ -177,7 +183,7 @@ namespace MopsBot.Data
         {
             Options = options;
             Question = question;
-            Voters = new HashSet<ulong>();
+            Voters = new Dictionary<ulong, string>();
         }
 
         public void CreateChart(bool alreadyExists = true){
