@@ -62,7 +62,7 @@ namespace MopsBot.Data
         {
             EmbedBuilder e = new EmbedBuilder();
             e.Title = poll.Question + $" Poll";
-            e.Description = $"To vote for an option, press the corresponding letter reactions.\n" +
+            e.Description = $"To vote for an option, press the corresponding digit reactions.\n" +
                             "If you can manage channels, you may delete this poll by pressing the 🗑 Icon.";
             e.Color = Color.Blue;
             e.WithCurrentTimestamp();
@@ -92,6 +92,7 @@ namespace MopsBot.Data
             }
 
             poll.MessageID = message.Id;
+            poll.CreateChart();
             await updateMessage(message, poll);
 
             SaveJson();
