@@ -92,7 +92,7 @@ namespace MopsBot.Data
             }
 
             poll.MessageID = message.Id;
-            poll.CreateChart();
+            poll.CreateChart(false);
             await updateMessage(message, poll);
 
             SaveJson();
