@@ -55,17 +55,6 @@ namespace MopsBot
         /// <returns>A Task that can be awaited</returns>
         private async Task Client_MessageReceived(SocketMessage arg)
         {
-            //Poll
-            if (arg.Channel is Discord.IDMChannel && StaticBase.Poll != null)
-            {
-                if (StaticBase.Poll.participants.ToList().Select(x => x.Id).Contains(arg.Author.Id))
-                {
-                    StaticBase.Poll.AddValue(StaticBase.Poll.answers[int.Parse(arg.Content) - 1], arg.Author.Id);
-                    await arg.Channel.SendMessageAsync("Vote accepted!");
-                    StaticBase.Poll.participants.RemoveAll(x => x.Id == arg.Author.Id);
-                }
-            }
-
             //Daily Statistics & User Experience
             if (!arg.Author.IsBot && !arg.Content.StartsWith("!"))
             {

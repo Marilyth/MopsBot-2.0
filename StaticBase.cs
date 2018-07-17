@@ -30,7 +30,7 @@ namespace MopsBot
         public static Giveaway Giveaways = new Giveaway();
         public static ReactionGiveaway ReactGiveaways;
         public static ReactionRoleJoin ReactRoleJoin;
-        public static Poll Poll;
+        public static ReactionPoll Poll;
         public static Crosswords Crosswords;
         public static Dictionary<string, TrackerWrapper> Trackers;
         public static MuteTimeHandler MuteHandler;
@@ -47,6 +47,7 @@ namespace MopsBot
             {
                 ReactGiveaways = new ReactionGiveaway();
                 ReactRoleJoin = new ReactionRoleJoin();
+                Poll = new ReactionPoll();
 
                 Auth.SetUserCredentials(Program.Config["TwitterKey"], Program.Config["TwitterSecret"],
                                         Program.Config["TwitterToken"], Program.Config["TwitterAccessSecret"]);

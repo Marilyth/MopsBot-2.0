@@ -55,50 +55,12 @@ namespace MopsBot.Module
             }
         }
 
-        [Command("poll"), Summary("Creates a poll\nExample: !poll (Am I sexy?) (Yes, No) @Panda @Demon @Snail")]
+        [Command("poll"), Summary("Creates a poll\nExample: !poll \"What should I play\" \"Dark Souls\" \"Osu!\" \"WoW\"")]
         [RequireUserPermission(GuildPermission.Administrator)]
-        public async Task Poll([Remainder] string Poll)
+        public async Task Poll(string title, params string[] options)
         {
-            if (!Context.Guild.GetUserAsync(Context.User.Id).Result.GuildPermissions.Administrator)
-                return;
-
-            MatchCollection match = Regex.Matches(Poll, @"(?<=\().+?(?=\))");
-            List<IGuildUser> participants = Context.Message.MentionedUserIds.Select(x => Context.Guild.GetUserAsync(x).Result).ToList();
-
-            StaticBase.Poll = new Data.Updater.Poll(match[0].Value, match[1].Value.Split(","), participants.ToArray());
-
-            foreach (IGuildUser part in participants)
-            {
-                string output = "";
-                for (int i = 0; i < StaticBase.Poll.answers.Length; i++)
-                {
-                    output += $"\n``{i + 1}`` {StaticBase.Poll.answers[i]}";
-                }
-                try
-                {
-                    await part.GetOrCreateDMChannelAsync().Result.SendMessageAsync($"{Context.User.Username} has created a poll:\n\n📄: {StaticBase.Poll.question}\n{output}\n\nTo vote, simply PM me the **Number** of the answer you agree with.");
-                }
-                catch { }
-            }
-
-            await Context.Channel.SendMessageAsync("Poll started, Participants notified!");
-        }
-
-        [Command("pollEnd"), Summary("Ends the poll and returns the results.")]
-        public async Task PollEnd(bool isPrivate = true)
-        {
-            if (!Context.Guild.GetUserAsync(Context.User.Id).Result.GuildPermissions.Administrator)
-                return;
-            StaticBase.Poll.isPrivate = isPrivate;
-            await base.ReplyAsync(StaticBase.Poll.DrawPlot());
-
-            foreach (IGuildUser part in StaticBase.Poll.participants)
-            {
-                await part.GetOrCreateDMChannelAsync().Result.SendMessageAsync($"📄:{StaticBase.Poll.question}\n\nHas ended without your participation, sorry!");
-                StaticBase.Poll.participants.Remove(part);
-            }
-
-            StaticBase.Poll = null;
+            Data.Poll poll = new Data.Poll(title, options);
+            await StaticBase.Poll.AddPoll((ITextChannel)Context.Channel, poll);
         }
 
         [Group("Giveaway")]
