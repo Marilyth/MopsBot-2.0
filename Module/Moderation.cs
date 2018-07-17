@@ -24,14 +24,15 @@ namespace MopsBot.Module
             [Command("CreateInvite", RunMode = RunMode.Async)]
             [Summary("Creates a reaction-invite message for the specified Role.\nPeople will be able to invite themselves into the role.")]
             [RequireBotPermission(ChannelPermission.AddReactions)]
-            [RequireBotPermission(ChannelPermission.ManageMessages)]   
+            [RequireBotPermission(ChannelPermission.ManageMessages)]
             [RequireBotPermission(ChannelPermission.ReadMessageHistory)]
             [RequireUserPermission(GuildPermission.ManageRoles)]
-            public async Task createInvite(SocketRole role, bool isGerman = false){
+            public async Task createInvite(SocketRole role, bool isGerman = false)
+            {
                 var highestRole = ((SocketGuildUser)await Context.Guild.GetCurrentUserAsync()).Roles.OrderByDescending(x => x.Position).First();
-                
-                if(role != null && role.Position < highestRole.Position)
-                    if(isGerman)
+
+                if (role != null && role.Position < highestRole.Position)
+                    if (isGerman)
                         await StaticBase.ReactRoleJoin.AddInviteGerman((ITextChannel)Context.Channel, role);
                     else
                         await StaticBase.ReactRoleJoin.AddInvite((ITextChannel)Context.Channel, role);
@@ -43,10 +44,12 @@ namespace MopsBot.Module
             [Summary("Adds the specified role, to the specified user, for the specified amount of time.")]
             [RequireUserPermission(GuildPermission.ManageRoles)]
             public async Task joinRole(SocketGuildUser person, int durationInMinutes, [Remainder]string role)
-            {var highestRole = ((SocketGuildUser)await Context.Guild.GetCurrentUserAsync()).Roles.OrderByDescending(x => x.Position).First();
+            {
+                var highestRole = ((SocketGuildUser)await Context.Guild.GetCurrentUserAsync()).Roles.OrderByDescending(x => x.Position).First();
                 var requestedRole = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower().Equals(role.ToLower()));
 
-                if(requestedRole == null || requestedRole.Position >= highestRole.Position){
+                if (requestedRole == null || requestedRole.Position >= highestRole.Position)
+                {
                     await ReplyAsync($"**Error**: Role `{role}` could either not be found, or was beyond Mops' permissions.");
                     return;
                 }
@@ -56,17 +59,26 @@ namespace MopsBot.Module
         }
 
         [Command("poll"), Summary("Creates a poll\nExample: !poll \"What should I play\" \"Dark Souls\" \"Osu!\" \"WoW\"")]
-        [RequireUserPermission(GuildPermission.Administrator)]
+        [RequireUserPermission(GuildPermission.ManageChannels)]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
+        [RequireBotPermission(ChannelPermission.AddReactions)]
+        [RequireBotPermission(ChannelPermission.ManageMessages)]
+        [RequireBotPermission(ChannelPermission.ReadMessageHistory)]
         public async Task Poll(string title, params string[] options)
         {
-            Data.Poll poll = new Data.Poll(title, options);
-            await StaticBase.Poll.AddPoll((ITextChannel)Context.Channel, poll);
+            if (options.Length <= 10)
+            {
+                Data.Poll poll = new Data.Poll(title, options);
+                await StaticBase.Poll.AddPoll((ITextChannel)Context.Channel, poll);
+            }
+            else
+                await ReplyAsync("Can't have more than 10 options per poll.");
         }
 
         [Group("Giveaway")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         [RequireBotPermission(ChannelPermission.AddReactions)]
-        [RequireBotPermission(ChannelPermission.ManageMessages)]   
+        [RequireBotPermission(ChannelPermission.ManageMessages)]
         [RequireBotPermission(ChannelPermission.ReadMessageHistory)]
         public class Giveaway : ModuleBase
         {
@@ -83,7 +95,8 @@ namespace MopsBot.Module
         [RequireUserPermission(ChannelPermission.ManageChannels)]
         public async Task setPrefix([Remainder]string prefix)
         {
-            if(prefix.StartsWith("?")){
+            if (prefix.StartsWith("?"))
+            {
                 await ReplyAsync($"`?` is required for Mops functionality. Cannot change prefix to `{prefix}`");
                 return;
             }
@@ -108,21 +121,25 @@ namespace MopsBot.Module
         }
 
         [Command("CreateCommand")]
-        [Summary("Allows you to create a simple response command.\n"+
-                 "Name of user: {User.Username}\n"+
+        [Summary("Allows you to create a simple response command.\n" +
+                 "Name of user: {User.Username}\n" +
                  "Mention of user: {User.Mention}")]
         [RequireUserPermission(ChannelPermission.ManageChannels)]
-        public async Task CreateCommand(string command, [Remainder] string responseText){
-            if(!StaticBase.CustomCommands.ContainsKey(Context.Guild.Id)){
+        public async Task CreateCommand(string command, [Remainder] string responseText)
+        {
+            if (!StaticBase.CustomCommands.ContainsKey(Context.Guild.Id))
+            {
                 StaticBase.CustomCommands.Add(Context.Guild.Id, new Dictionary<string, string>());
             }
 
-            if(!StaticBase.CustomCommands[Context.Guild.Id].ContainsKey(command)){
+            if (!StaticBase.CustomCommands[Context.Guild.Id].ContainsKey(command))
+            {
                 StaticBase.CustomCommands[Context.Guild.Id].Add(command, responseText);
                 await ReplyAsync($"Added new command **{command}**.");
             }
 
-            else{
+            else
+            {
                 StaticBase.CustomCommands[Context.Guild.Id][command] = responseText;
                 await ReplyAsync($"Replaced command **{command}**.");
             }
@@ -133,16 +150,20 @@ namespace MopsBot.Module
         [Command("RemoveCommand")]
         [Summary("Removes the specified custom command.")]
         [RequireUserPermission(ChannelPermission.ManageChannels)]
-        public async Task RemoveCommand(string command){
-            if(StaticBase.CustomCommands[Context.Guild.Id].ContainsKey(command)){
-                if(StaticBase.CustomCommands[Context.Guild.Id].Count == 1)
+        public async Task RemoveCommand(string command)
+        {
+            if (StaticBase.CustomCommands[Context.Guild.Id].ContainsKey(command))
+            {
+                if (StaticBase.CustomCommands[Context.Guild.Id].Count == 1)
                     StaticBase.CustomCommands.Remove(Context.Guild.Id);
                 else
                     StaticBase.CustomCommands[Context.Guild.Id].Remove(command);
 
                 StaticBase.saveCommand();
                 await ReplyAsync($"Removed command **{command}**.");
-            } else {
+            }
+            else
+            {
                 await ReplyAsync($"Command **{command}** not found.");
             }
         }
@@ -157,7 +178,8 @@ namespace MopsBot.Module
 
         [Command("UseCustomCommand", RunMode = RunMode.Async)]
         [Hide()]
-        public async Task UseCustomCommand(string command){
+        public async Task UseCustomCommand(string command)
+        {
             var reply = StaticBase.CustomCommands[Context.Guild.Id][command];
             reply = reply.Replace("{User.Username}", $"{Context.User.Username}")
                          .Replace("{User.Mention}", $"{Context.User.Mention}");
@@ -179,7 +201,8 @@ namespace MopsBot.Module
         [Hide]
         public async Task eval([Remainder]string expression)
         {
-            try{
+            try
+            {
                 var imports = Microsoft.CodeAnalysis.Scripting.ScriptOptions.Default.WithReferences(typeof(MopsBot.Program).Assembly, typeof(Discord.Attachment).Assembly).WithImports("MopsBot", "Discord");
                 var preCompilationTime = DateTime.Now.Ticks / 10000;
                 var script = CSharpScript.Create(expression, globalsType: typeof(MopsBot.Module.Moderation)).WithOptions(imports);
@@ -196,7 +219,9 @@ namespace MopsBot.Module
                 embed.AddField("Return value", result.ReturnValue?.ToString() ?? "`null or void`");
 
                 await ReplyAsync("", embed: embed.Build());
-            } catch(Exception e){
+            }
+            catch (Exception e)
+            {
                 await ReplyAsync("**Error:** " + e.Message);
             }
         }
@@ -207,7 +232,7 @@ namespace MopsBot.Module
         {
             var output = "For more information regarding a specific command, please use ?<command>";
 
-            foreach (var module in Program.Handler.commands.Modules.Where(x=> !x.Preconditions.OfType<HideAttribute>().Any()))
+            foreach (var module in Program.Handler.commands.Modules.Where(x => !x.Preconditions.OfType<HideAttribute>().Any()))
             {
                 if (module.IsSubmodule && !module.Preconditions.OfType<HideAttribute>().Any())
                 {
@@ -218,13 +243,15 @@ namespace MopsBot.Module
                     output += $"\n**{module.Name}**: ";
                     foreach (var command in module.Commands)
                         if (!command.Preconditions.OfType<HideAttribute>().Any())
-                    output += $"`{command.Name}` ";
+                            output += $"`{command.Name}` ";
                 }
             }
 
-            if(StaticBase.CustomCommands.ContainsKey(Context.Guild.Id)){
+            if (StaticBase.CustomCommands.ContainsKey(Context.Guild.Id))
+            {
                 output += "\n**Custom Commands**: ";
-                foreach (var commands in StaticBase.CustomCommands.Where(x => x.Key == Context.Guild.Id)){
+                foreach (var commands in StaticBase.CustomCommands.Where(x => x.Key == Context.Guild.Id))
+                {
                     foreach (var command in commands.Value)
                         output += $"`{command.Key}` ";
                 }
@@ -234,7 +261,8 @@ namespace MopsBot.Module
         }
     }
 
-    public class CustomContext{
+    public class CustomContext
+    {
         public IUser User;
     }
 }
