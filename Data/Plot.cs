@@ -40,17 +40,30 @@ namespace MopsBot.Data
             viewerChart.Axes.Add(new OxyPlot.Axes.CategoryAxis(){
                 Key = ID,
                 ItemsSource = Categories.Keys,
-                FontSize = 24
+                FontSize = 24,
+                AxislineColor = OxyColor.FromRgb(125, 125, 155),
+                TicklineColor = OxyColor.FromRgb(125, 125, 155)
             });
+
+            viewerChart.Axes.Add(new OxyPlot.Axes.LinearAxis
+            {
+                Position = OxyPlot.Axes.AxisPosition.Left,
+                TicklineColor = OxyColor.FromRgb(125, 125, 155),
+                Minimum = 0,
+                FontSize = 24,
+                AxislineStyle = LineStyle.Solid,
+                AxislineColor = OxyColor.FromRgb(125, 125, 155)
+            });
+
             viewerChart.LegendFontSize = 24;
             viewerChart.LegendPosition = LegendPosition.BottomCenter;
 
             columnSeries = new OxyPlot.Series.ColumnSeries(){
                 ItemsSource = new List<OxyPlot.Series.ColumnItem>(Categories.Values.Select(x => new OxyPlot.Series.ColumnItem(x))), 
-                LabelPlacement = OxyPlot.Series.LabelPlacement.Inside, 
+                //LabelPlacement = OxyPlot.Series.LabelPlacement.Outside, 
                 FontSize = 24,
-                LabelFormatString = "{0}",
-                FillColor = OxyColor.FromRgb(35, 35, 35)
+                //LabelFormatString = "{0}",
+                FillColor = OxyColor.FromRgb(190, 192, 187)
             };
             viewerChart.Series.Add(columnSeries);
         }
