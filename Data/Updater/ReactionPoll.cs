@@ -60,8 +60,6 @@ namespace MopsBot.Data
 
         public async Task AddPoll(ITextChannel channel, Poll poll)
         {
-            poll.CreateChart(false);
-
             EmbedBuilder e = new EmbedBuilder();
             e.Title = poll.Question + $" Poll";
             e.Description = $"To vote for an option, press the corresponding letter reactions.\n" +
@@ -69,7 +67,7 @@ namespace MopsBot.Data
             e.Color = Color.Blue;
             e.WithCurrentTimestamp();
             e.WithFooter(x => x.WithIconUrl("http://thebullelephant.com/wp-content/uploads/2016/10/poll-box-1.png").WithText("Poll"));
-            e.WithImageUrl(poll.GetChartURI());
+            //e.WithImageUrl(poll.GetChartURI());
 
             StringBuilder optionText = new StringBuilder();
             for (int i = 0; i < poll.Options.Length; i++)
@@ -94,6 +92,7 @@ namespace MopsBot.Data
             }
 
             poll.MessageID = message.Id;
+            await updateMessage(message, poll);
 
             SaveJson();
         }
@@ -138,6 +137,19 @@ namespace MopsBot.Data
             });
         }
 
+        private async Task updateMessage(IUserMessage message, Poll poll)
+        {
+            var e = message.Embeds.First().ToEmbedBuilder();
+
+            e.WithImageUrl(poll.GetChartURI());
+            
+
+            await message.ModifyAsync(x =>
+            {
+                x.Embed = e.Build();
+            });
+        }
+
         public static Dictionary<int, Emoji> EmojiDict = new Dictionary<int, Emoji>{
             {0, new Emoji("\u0030\u20E3")},
             {1, new Emoji("\u0031\u20E3")},
@@ -168,7 +180,7 @@ namespace MopsBot.Data
         }
 
         public void CreateChart(bool alreadyExists = true){
-            chart = new BarPlot(Question, alreadyExists, Options);
+            chart = new BarPlot(Question+MessageID, alreadyExists, Options);
         }
 
         public void AddValue(string option, double value){
