@@ -61,7 +61,7 @@ namespace MopsBot.Data
         public async Task AddPoll(ITextChannel channel, Poll poll)
         {
             EmbedBuilder e = new EmbedBuilder();
-            e.Title = poll.Question + $" Poll";
+            e.Title = poll.Question;
             e.Description = $"To vote for an option, press the corresponding digit reactions.\n" +
                             "If you can manage channels, you may delete this poll by pressing the 🗑 Icon.";
             e.Color = Color.Blue;
@@ -187,7 +187,7 @@ namespace MopsBot.Data
         }
 
         public void CreateChart(bool alreadyExists = true){
-            chart = new BarPlot(Question+MessageID, alreadyExists, Options);
+            chart = new BarPlot(Question.Replace("?", "") + MessageID, alreadyExists, Options);
         }
 
         public void AddValue(string option, double value){
