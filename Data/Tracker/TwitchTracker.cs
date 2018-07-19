@@ -95,7 +95,7 @@ namespace MopsBot.Data.Tracker
                             TimeoutCount = 0;
                             IsOnline = false;
                             Console.Out.WriteLine($"{DateTime.Now} {Name} went Offline");
-                            viewerGraph.RemovePlot();
+                            viewerGraph.Dispose();
                             viewerGraph = new Plot(Name, "Time In Minutes", "Viewers", false);
                             foreach (var channelMessage in ToUpdate)
                                 await Program.ReactionHandler.ClearHandler((IUserMessage)await ((ITextChannel)Program.Client.GetChannel(channelMessage.Key)).GetMessageAsync(channelMessage.Value));
@@ -109,7 +109,6 @@ namespace MopsBot.Data.Tracker
                     {
                         IsOnline = true;
                         CurGame = StreamerStatus.stream.game;
-                        viewerGraph.SwitchTitle(CurGame);
 
                         foreach (ulong channel in ChannelMessages.Keys)
                             await OnMinorChangeTracked(channel, ChannelMessages[channel]);
@@ -121,12 +120,11 @@ namespace MopsBot.Data.Tracker
 
                 if (isStreaming)
                 {
-                    viewerGraph.AddValue(StreamerStatus.stream.viewers);
+                    viewerGraph.AddValue(CurGame, StreamerStatus.stream.viewers);
                     if (CurGame.CompareTo(StreamerStatus.stream.game) != 0)
                     {
                         CurGame = StreamerStatus.stream.game;
-                        viewerGraph.SwitchTitle(CurGame);
-                        viewerGraph.AddValue(StreamerStatus.stream.viewers);
+                        viewerGraph.AddValue(CurGame, StreamerStatus.stream.viewers);
 
                         foreach (ulong channel in ChannelMessages.Keys)
                             await OnMinorChangeTracked(channel, $"{Name} switched games to **{CurGame}**");
@@ -227,6 +225,12 @@ namespace MopsBot.Data.Tracker
                 foreach (ulong channel in ChannelIds)
                     await OnMajorChangeTracked(channel, createEmbed());
             }
+        }
+
+        public new void Dispose(){
+            Dispose(true);
+            GC.SuppressFinalize(this);
+            viewerGraph.RemovePlot();
         }
     }
 }

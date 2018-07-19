@@ -145,35 +145,23 @@ namespace MopsBot.Data
     public class Plot
     {
         private PlotModel viewerChart;
-        private Dictionary<string, List<OxyPlot.Series.LineSeries>> lineSeries;
-        private Dictionary<string, OxyPlot.Series.BarSeries> barSeries;
-        public int columnCount;
-        public double lastValue;
-        public string ID, xAxis, yAxis, CurTitle;
+        private List<OxyPlot.Series.LineSeries> lineSeries;
+        public List<KeyValuePair<string, double>> PlotPoints;
+        public int CurX;
+        public string ID;
 
         public Plot(string name, string xName = "x", string yName = "y", bool keepTrack = false)
         {
             ID = name;
-            xAxis = xName;
-            yAxis = yName;
-            initPlot();
+            PlotPoints = new List<KeyValuePair<string, double>>();
+            initPlot(xName, yName);
             if (keepTrack)
             {
                 readPlotPoints();
             }
         }
 
-        public Plot(string name, bool keepTrack = false)
-        {
-            ID = name;
-            initPlot();
-            if (keepTrack)
-            {
-                readPlotPoints();
-            }
-        }
-
-        private void initPlot()
+        private void initPlot(string xAxis, string yAxis)
         {
             viewerChart = new PlotModel();
             viewerChart.TextColor = OxyColor.FromRgb(175, 175, 175);
@@ -204,25 +192,15 @@ namespace MopsBot.Data
             viewerChart.LegendFontSize = 24;
             viewerChart.LegendPosition = LegendPosition.BottomCenter;
 
-            lineSeries = new Dictionary<string, List<OxyPlot.Series.LineSeries>>();
+            lineSeries = new List<OxyPlot.Series.LineSeries>();
         }
 
         private void writePlotPoints()
         {
-            using (StreamWriter write = new StreamWriter(new FileStream($"mopsdata//plots//{ID}plot.txt", FileMode.Create)))
+            using (StreamWriter write = new StreamWriter(new FileStream($"mopsdata//plots//{ID}plot.json", FileMode.Create)))
             {
-                write.WriteLine(columnCount);
-                foreach (var title in lineSeries.Keys)
-                {
-                    foreach (var lineseries in lineSeries[title])
-                    {
-                        write.WriteLine($"TITLE={title}");
-                        foreach (var point in lineseries.Points)
-                        {
-                            write.WriteLine($"{point.X}:{point.Y}");
-                        }
-                    }
-                }
+                string plot = Newtonsoft.Json.JsonConvert.SerializeObject(PlotPoints, Newtonsoft.Json.Formatting.Indented);
+                write.WriteLine(plot);
             }
         }
 
@@ -256,70 +234,52 @@ namespace MopsBot.Data
 
         private void readPlotPoints()
         {
-            using (StreamReader read = new StreamReader(new FileStream($"mopsdata//plots//{ID}plot.txt", FileMode.OpenOrCreate)))
+            using (StreamReader read = new StreamReader(new FileStream($"mopsdata//plots//{ID}plot.json", FileMode.OpenOrCreate)))
             {
-                columnCount = int.Parse(read.ReadLine() ?? "0");
-                string currentGame = "";
-                string s = "";
-                while ((s = read.ReadLine()) != null)
-                {
-                    if (s.StartsWith("TITLE"))
-                    {
-                        currentGame = s.Split("=")[1];
-                        SwitchTitle(currentGame);
-                    }
-                    else{
-                        lineSeries[currentGame].Last().Points.Add(new DataPoint(double.Parse(s.Split(":")[0]), double.Parse(s.Split(":")[1])));
-                        lastValue = double.Parse(s.Split(":")[1]);
-                    }
-                }
-                CurTitle = currentGame;
+                PlotPoints = Newtonsoft.Json.JsonConvert.DeserializeObject<List<KeyValuePair<string, double>>>(read.ReadToEnd());
+            }
+
+            PlotPoints = PlotPoints ?? new List<KeyValuePair<string, double>>();
+
+            foreach(var plotPoint in PlotPoints){
+                AddValue(plotPoint.Key, plotPoint.Value, false);
             }
         }
 
         /// <summary>
-        /// Adds a Value to the plot, to its' current Title
+        /// Adds a Value to the plot, under the given name
         /// </summary>
         /// <param name="value">The Value to add to the plot</param>
-        public void AddValue(double value)
+        public void AddValue(string name, double value, bool savePlot = true)
         {
-            columnCount++;
-            lineSeries[CurTitle].Last().Points.Add(new DataPoint(columnCount, value));
-            lastValue = value;
-            writePlotPoints();
-        }
+            if(lineSeries.LastOrDefault()?.Title?.Equals(name) ?? false)
+                lineSeries.Last().Points.Add(new DataPoint(++CurX, value));
 
-        /// <summary>
-        /// Switches the current title plot points are added to automatically.
-        /// Adds it to the legend and changes colour.
-        /// </summary>
-        /// <param name="newTitle">The Title to switch to</param>
-        public void SwitchTitle(string newTitle, bool backToZero = false)
-        {
-            if (!lineSeries.ContainsKey(newTitle))
-            {
-                lineSeries.Add(newTitle, new List<OxyPlot.Series.LineSeries>());
-                lineSeries[newTitle].Add(new OxyPlot.Series.LineSeries());
+            else{
+                var series = new OxyPlot.Series.LineSeries();
 
                 long colour = 1;
-                foreach(char c in newTitle){
+                foreach(char c in name){
                     colour = (((int)c * colour) % 12829635) + 1973790;
                 }
                 
                 var oxycolour = OxyColor.FromUInt32((uint)colour + 4278190080);
-                lineSeries[newTitle].Last().Color = oxycolour;
-                lineSeries[newTitle].Last().Title = newTitle;
-            }
-            else
-            {
-                lineSeries[newTitle].Add(new OxyPlot.Series.LineSeries());
-                lineSeries[newTitle].Last().Color = lineSeries[newTitle].First().Color;
+                series.Color = oxycolour;
+
+                if(!lineSeries.Any(x => x.Title?.Equals(name) ?? false))
+                    series.Title = name;
+                
+                series.StrokeThickness = 3;
+                series.Points.Add(new DataPoint(CurX, lineSeries.LastOrDefault()?.Points.Last().Y ?? 0));
+                series.Points.Add(new DataPoint(++CurX, value));
+                viewerChart.Series.Add(series);
+                lineSeries.Add(series);
             }
 
-            lineSeries[newTitle].Last().StrokeThickness = 3;
-            viewerChart.Series.Add(lineSeries[newTitle].Last());
-            CurTitle = newTitle;
-            columnCount--;
+            if(savePlot){
+                PlotPoints.Add(new KeyValuePair<string, double>(name, value));
+                writePlotPoints();
+            }
         }
 
         /// <summary>
@@ -328,7 +288,7 @@ namespace MopsBot.Data
         public void RemovePlot(){
             viewerChart = null;
             lineSeries = null;
-            var file = new FileInfo($"mopsdata//plots//{ID}plot.txt");
+            var file = new FileInfo($"mopsdata//plots//{ID}plot.json");
             file.Delete();
             var dir = new DirectoryInfo("mopsdata//");
             var files = dir.GetFiles().Where(x => x.Extension.ToLower().Equals($"{ID}plot.pdf"));
@@ -337,11 +297,9 @@ namespace MopsBot.Data
         }
 
         public void Recolour(){
-            foreach(var game in lineSeries){
+            foreach(var series in lineSeries){
                 OxyColor newColour = OxyColor.FromRgb((byte)StaticBase.ran.Next(30, 220), (byte)StaticBase.ran.Next(30, 220), (byte)StaticBase.ran.Next(30, 220));
-                foreach(var gameReoccurence in game.Value){
-                    gameReoccurence.Color = newColour;
-                }
+                series.Color = newColour;
             }
         }
 
@@ -370,6 +328,10 @@ namespace MopsBot.Data
             string output = "```" + string.Join("\n", lines) + "```";
 
             return output;
+        }
+
+        public void Dispose(){
+            RemovePlot();
         }
     }
 }

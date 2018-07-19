@@ -73,16 +73,6 @@ namespace MopsBot.Module
             }
         }
 
-        [Command("dayDiagram")]
-        [Summary("Returns the total characters send for the past limit days")]
-        [RequireBotPermission(ChannelPermission.SendMessages)]
-        public async Task dayDiagram(int limit)
-        {
-            EmbedBuilder e = new EmbedBuilder();
-            e.ImageUrl = StaticBase.stats.DrawDiagram(limit);
-            await ReplyAsync("", embed: e.Build());
-        }
-
         [Command("getStats")]
         [Summary("Returns your experience and all that stuff")]
         [RequireBotPermission(ChannelPermission.SendMessages)]

@@ -18,7 +18,6 @@ namespace MopsBot
 {
     public class StaticBase
     {
-        public static Data.Statistics stats = new Data.Statistics();
         public static Data.UserScore people = new Data.UserScore();
         public static Random ran = new Random();
         public static List<IdleDungeon> DungeonCrawler = new List<IdleDungeon>();

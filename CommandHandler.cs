@@ -59,7 +59,6 @@ namespace MopsBot
             if (!arg.Author.IsBot && !arg.Content.StartsWith("!"))
             {
                 StaticBase.people.AddStat(arg.Author.Id, arg.Content.Length, "experience");
-                StaticBase.stats.AddValue(arg.Content.Length);
             }
         }
 
