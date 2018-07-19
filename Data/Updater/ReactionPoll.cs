@@ -122,6 +122,8 @@ namespace MopsBot.Data
             {
                 await Program.ReactionHandler.ClearHandler(context.message);
 
+                Polls[context.channel.Id].First(x => x.MessageID == context.message.Id).Dispose();
+
                 if (Polls[context.channel.Id].Count > 1)
                     Polls[context.channel.Id].RemoveAll(x => x.MessageID == context.message.Id);
                 else
@@ -196,6 +198,10 @@ namespace MopsBot.Data
 
         public string GetChartURI(){
             return chart.DrawPlot();
+        }
+
+        public void Dispose(){
+            chart?.RemovePlot();
         }
     }
 }
