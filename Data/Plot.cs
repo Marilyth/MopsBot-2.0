@@ -258,7 +258,7 @@ namespace MopsBot.Data
         {
             using (StreamReader read = new StreamReader(new FileStream($"mopsdata//plots//{ID}plot.txt", FileMode.OpenOrCreate)))
             {
-                columnCount = int.Parse(read.ReadLine());
+                columnCount = int.Parse(read.ReadLine() ?? "0");
                 string currentGame = "";
                 string s = "";
                 while ((s = read.ReadLine()) != null)
