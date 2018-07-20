@@ -93,7 +93,7 @@ namespace MopsBot.Data
     {
 
         //Key: Channel ID, Value: (Key: Message ID, Value: User IDs)
-        public Dictionary<ulong, Dictionary<ulong, HashSet<ulong>>> Giveaways = new Dictionary<ulong, Dictionary<ulong, HashSet<ulong>>>();
+        public Dictionary<ulong, Dictionary<ulong, List<ulong>>> Giveaways = new Dictionary<ulong, Dictionary<ulong, List<ulong>>>();
 
         public ReactionGiveaway()
         {
@@ -101,7 +101,7 @@ namespace MopsBot.Data
             {
                 try
                 {
-                    Giveaways = JsonConvert.DeserializeObject<Dictionary<ulong, Dictionary<ulong, HashSet<ulong>>>>(read.ReadToEnd());
+                    Giveaways = JsonConvert.DeserializeObject<Dictionary<ulong, Dictionary<ulong, List<ulong>>>>(read.ReadToEnd());
                     foreach (var channel in Giveaways)
                     {
                         foreach (var message in channel.Value)
@@ -115,21 +115,21 @@ namespace MopsBot.Data
 
                                 //Task.Run(async () =>
                                 //{
-                                    foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("✅"), 100).First().Result.Where(x => !x.IsBot))
-                                    {
-                                        JoinGiveaway(user.Id, textmessage);
-                                        textmessage.RemoveReactionAsync(new Emoji("✅"), user);
-                                    }
-                                    foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("❎"), 100).First().Result.Where(x => !x.IsBot))
-                                    {
-                                        LeaveGiveaway(user.Id, textmessage);
-                                        textmessage.RemoveReactionAsync(new Emoji("❎"), user);
-                                    }
-                                    foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("🎁"), 100).First().Result.Where(x => !x.IsBot))
-                                    {
-                                        DrawGiveaway(user.Id, textmessage);
-                                        textmessage.RemoveReactionAsync(new Emoji("🎁"), user);
-                                    }
+                                foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("✅"), 100).First().Result.Where(x => !x.IsBot))
+                                {
+                                    JoinGiveaway(user.Id, textmessage);
+                                    textmessage.RemoveReactionAsync(new Emoji("✅"), user);
+                                }
+                                foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("❎"), 100).First().Result.Where(x => !x.IsBot))
+                                {
+                                    LeaveGiveaway(user.Id, textmessage);
+                                    textmessage.RemoveReactionAsync(new Emoji("❎"), user);
+                                }
+                                foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("🎁"), 100).First().Result.Where(x => !x.IsBot))
+                                {
+                                    DrawGiveaway(user.Id, textmessage);
+                                    textmessage.RemoveReactionAsync(new Emoji("🎁"), user);
+                                }
                                 //});
                             }
                             catch (Exception e)
@@ -144,7 +144,7 @@ namespace MopsBot.Data
                     Console.WriteLine(e.Message + e.StackTrace);
                 }
             }
-            Giveaways = Giveaways ?? new Dictionary<ulong, Dictionary<ulong, HashSet<ulong>>>();
+            Giveaways = Giveaways ?? new Dictionary<ulong, Dictionary<ulong, List<ulong>>>();
         }
 
         public void SaveJson()
@@ -174,8 +174,8 @@ namespace MopsBot.Data
             await Program.ReactionHandler.AddHandler(message, new Emoji("❎"), LeaveGiveaway);
             await Program.ReactionHandler.AddHandler(message, new Emoji("🎁"), DrawGiveaway);
 
-            Dictionary<ulong, HashSet<ulong>> messages = new Dictionary<ulong, HashSet<ulong>>();
-            HashSet<ulong> participants = new HashSet<ulong>();
+            Dictionary<ulong, List<ulong>> messages = new Dictionary<ulong, List<ulong>>();
+            List<ulong> participants = new List<ulong>();
             participants.Add(creator.Id);
 
             messages.Add(message.Id, participants);
@@ -197,7 +197,7 @@ namespace MopsBot.Data
 
         private async Task JoinGiveaway(ulong userId, IUserMessage message)
         {
-            if (!Giveaways[message.Id][message.Id].First().Equals(userId))
+            if (!Giveaways[message.Id][message.Id].First().Equals(userId) && !Giveaways[message.Id][message.Id].Contains(userId))
             {
                 Giveaways[message.Channel.Id][message.Id].Add(userId);
                 SaveJson();
@@ -232,7 +232,7 @@ namespace MopsBot.Data
                 await Program.ReactionHandler.ClearHandler(context.Message);
 
                 ulong winner = Giveaways[context.Channel.Id][context.Message.Id].Count > 1 ? Giveaways[context.Channel.Id][context.Message.Id]
-                               .ToList()[StaticBase.ran.Next(1, Giveaways[context.Channel.Id][context.Message.Id].Count)]
+                               [StaticBase.ran.Next(1, Giveaways[context.Channel.Id][context.Message.Id].Count)]
                                : context.Reaction.UserId;
 
                 await context.Channel.SendMessageAsync($"{context.Channel.GetUserAsync(winner).Result.Mention} won the "
@@ -251,7 +251,7 @@ namespace MopsBot.Data
                 await Program.ReactionHandler.ClearHandler(message);
 
                 ulong winner = Giveaways[message.Channel.Id][message.Id].Count > 1 ? Giveaways[message.Channel.Id][message.Id]
-                               .ToList()[StaticBase.ran.Next(1, Giveaways[message.Channel.Id][message.Id].Count)]
+                               [StaticBase.ran.Next(1, Giveaways[message.Channel.Id][message.Id].Count)]
                                : userId;
 
                 await message.Channel.SendMessageAsync($"{message.Channel.GetUserAsync(winner).Result.Mention} won the "
