@@ -113,24 +113,24 @@ namespace MopsBot.Data
                                 Program.ReactionHandler.AddHandler(textmessage, new Emoji("❎"), LeaveGiveaway).Wait();
                                 Program.ReactionHandler.AddHandler(textmessage, new Emoji("🎁"), DrawGiveaway).Wait();
 
-                                Task.Run(async () =>
-                                {
+                                //Task.Run(async () =>
+                                //{
                                     foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("✅"), 100).First().Result.Where(x => !x.IsBot))
                                     {
-                                        await JoinGiveaway(user.Id, textmessage);
-                                        await textmessage.RemoveReactionAsync(new Emoji("✅"), user);
+                                        JoinGiveaway(user.Id, textmessage);
+                                        textmessage.RemoveReactionAsync(new Emoji("✅"), user);
                                     }
                                     foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("❎"), 100).First().Result.Where(x => !x.IsBot))
                                     {
-                                        await LeaveGiveaway(user.Id, textmessage);
-                                        await textmessage.RemoveReactionAsync(new Emoji("❎"), user);
+                                        LeaveGiveaway(user.Id, textmessage);
+                                        textmessage.RemoveReactionAsync(new Emoji("❎"), user);
                                     }
                                     foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("🎁"), 100).First().Result.Where(x => !x.IsBot))
                                     {
-                                        await DrawGiveaway(user.Id, textmessage);
-                                        await textmessage.RemoveReactionAsync(new Emoji("🎁"), user);
+                                        DrawGiveaway(user.Id, textmessage);
+                                        textmessage.RemoveReactionAsync(new Emoji("🎁"), user);
                                     }
-                                });
+                                //});
                             }
                             catch (Exception e)
                             {
