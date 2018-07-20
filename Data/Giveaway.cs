@@ -247,12 +247,16 @@ namespace MopsBot.Data
             {
                 await Program.ReactionHandler.ClearHandler(context.Message);
 
-                ulong winner = Giveaways[context.Channel.Id][context.Message.Id].Count > 1 ? Giveaways[context.Channel.Id][context.Message.Id]
+                ulong winnerId = Giveaways[context.Channel.Id][context.Message.Id].Count > 1 ? Giveaways[context.Channel.Id][context.Message.Id]
                                [StaticBase.ran.Next(1, Giveaways[context.Channel.Id][context.Message.Id].Count)]
                                : context.Reaction.UserId;
 
-                await context.Channel.SendMessageAsync($"{context.Channel.GetUserAsync(winner).Result.Mention} won the "
+                IUser winner = await context.Channel.GetUserAsync(winnerId);
+                await context.Channel.SendMessageAsync($"{winner.Mention} won the "
                                                       + $"`{context.Message.Embeds.First().Title}`");
+
+                var embed = context.Message.Embeds.First().ToEmbedBuilder().WithDescription(winner.Mention + " won the giveaway!");
+                await context.Message.ModifyAsync(x => x.Embed = embed.Build());
 
                 if (Giveaways[context.Channel.Id].Count == 1) Giveaways.Remove(context.Channel.Id);
                 else Giveaways[context.Channel.Id].Remove(context.Message.Id);
@@ -266,12 +270,16 @@ namespace MopsBot.Data
             {
                 await Program.ReactionHandler.ClearHandler(message);
 
-                ulong winner = Giveaways[message.Channel.Id][message.Id].Count > 1 ? Giveaways[message.Channel.Id][message.Id]
+                ulong winnerId = Giveaways[message.Channel.Id][message.Id].Count > 1 ? Giveaways[message.Channel.Id][message.Id]
                                [StaticBase.ran.Next(1, Giveaways[message.Channel.Id][message.Id].Count)]
                                : userId;
 
-                await message.Channel.SendMessageAsync($"{message.Channel.GetUserAsync(winner).Result.Mention} won the "
+                IUser winner = await message.Channel.GetUserAsync(winnerId);
+                await message.Channel.SendMessageAsync($"{winner.Mention} won the "
                                                       + $"`{message.Embeds.First().Title}`");
+                
+                var embed = message.Embeds.First().ToEmbedBuilder().WithDescription(winner.Mention + " won the giveaway!");
+                await message.ModifyAsync(x => x.Embed = embed.Build());
 
                 if (Giveaways[message.Channel.Id].Count == 1) Giveaways.Remove(message.Channel.Id);
                 else Giveaways[message.Channel.Id].Remove(message.Id);
