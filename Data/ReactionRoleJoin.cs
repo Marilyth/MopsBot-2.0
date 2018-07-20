@@ -24,32 +24,43 @@ namespace MopsBot.Data
                 try
                 {
                     RoleInvites = JsonConvert.DeserializeObject<Dictionary<ulong, HashSet<ulong>>>(read.ReadToEnd());
-                    if (RoleInvites == null){
+                    if (RoleInvites == null)
+                    {
                         RoleInvites = new Dictionary<ulong, HashSet<ulong>>();
                     }
                     foreach (var channel in RoleInvites)
                     {
                         foreach (var message in channel.Value)
                         {
-                            var textmessage = (IUserMessage)((ITextChannel)Program.Client.GetChannel(channel.Key)).GetMessageAsync(message).Result;
-                            Program.ReactionHandler.AddHandler(textmessage, new Emoji("✅"), JoinRole).Wait();
-                            Program.ReactionHandler.AddHandler(textmessage, new Emoji("❎"), LeaveRole).Wait();
-                            Program.ReactionHandler.AddHandler(textmessage, new Emoji("🗑"), DeleteInvite).Wait();
+                            try
+                            {
+                                var textmessage = (IUserMessage)((ITextChannel)Program.Client.GetChannel(channel.Key)).GetMessageAsync(message).Result;
+                                Program.ReactionHandler.AddHandler(textmessage, new Emoji("✅"), JoinRole).Wait();
+                                Program.ReactionHandler.AddHandler(textmessage, new Emoji("❎"), LeaveRole).Wait();
+                                Program.ReactionHandler.AddHandler(textmessage, new Emoji("🗑"), DeleteInvite).Wait();
 
-                            Task.Run(async () => {
-                                foreach(var user in textmessage.GetReactionUsersAsync(new Emoji("✅"), 100).First().Result.Where(x => !x.IsBot)){
-                                    await JoinRole(user.Id, textmessage);
-                                    await textmessage.RemoveReactionAsync(new Emoji("✅"), user);
+                                //Task.Run(async () => {
+                                foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("✅"), 100).First().Result.Where(x => !x.IsBot))
+                                {
+                                    JoinRole(user.Id, textmessage);
+                                    textmessage.RemoveReactionAsync(new Emoji("✅"), user);
                                 }
-                                foreach(var user in textmessage.GetReactionUsersAsync(new Emoji("❎"), 100).First().Result.Where(x => !x.IsBot)){
-                                    await LeaveRole(user.Id, textmessage);
-                                    await textmessage.RemoveReactionAsync(new Emoji("❎"), user);
+                                foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("❎"), 100).First().Result.Where(x => !x.IsBot))
+                                {
+                                    LeaveRole(user.Id, textmessage);
+                                    textmessage.RemoveReactionAsync(new Emoji("❎"), user);
                                 }
-                                foreach(var user in textmessage.GetReactionUsersAsync(new Emoji("🗑"), 100).First().Result.Where(x => !x.IsBot)){
-                                    await textmessage.RemoveReactionAsync(new Emoji("🗑"), user);
-                                    await DeleteInvite(user.Id, textmessage);
+                                foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("🗑"), 100).First().Result.Where(x => !x.IsBot))
+                                {
+                                    textmessage.RemoveReactionAsync(new Emoji("🗑"), user);
+                                    DeleteInvite(user.Id, textmessage);
                                 }
-                            });
+                                //});
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine(e.Message);
+                            }
                         }
                     }
                 }
@@ -82,7 +93,8 @@ namespace MopsBot.Data
             await Program.ReactionHandler.AddHandler(message, new Emoji("🗑"), DeleteInvite);
 
             if (RoleInvites.ContainsKey(channel.Id)) RoleInvites[channel.Id].Add(message.Id);
-            else {
+            else
+            {
                 RoleInvites.Add(channel.Id, new HashSet<ulong>());
                 RoleInvites[channel.Id].Add(message.Id);
             }
@@ -107,7 +119,8 @@ namespace MopsBot.Data
             await Program.ReactionHandler.AddHandler(message, new Emoji("🗑"), DeleteInvite);
 
             if (RoleInvites.ContainsKey(channel.Id)) RoleInvites[channel.Id].Add(message.Id);
-            else {
+            else
+            {
                 RoleInvites.Add(channel.Id, new HashSet<ulong>());
                 RoleInvites[channel.Id].Add(message.Id);
             }
@@ -117,38 +130,38 @@ namespace MopsBot.Data
 
         private async Task JoinRole(ReactionHandlerContext context)
         {
-            var roleID = ulong.Parse(context.Message.Embeds.First().Title.Split(new string[]{":"}, StringSplitOptions.None).Last());
+            var roleID = ulong.Parse(context.Message.Embeds.First().Title.Split(new string[] { ":" }, StringSplitOptions.None).Last());
             var role = ((ITextChannel)context.Channel).Guild.GetRole(roleID);
             var user = await ((ITextChannel)context.Channel).Guild.GetUserAsync(context.Reaction.UserId);
-            await user.AddRoleAsync(role);            
-            await updateMessage(context, (SocketRole) role);
+            await user.AddRoleAsync(role);
+            await updateMessage(context, (SocketRole)role);
         }
 
         private async Task JoinRole(ulong userId, IUserMessage message)
         {
-            var roleID = ulong.Parse(message.Embeds.First().Title.Split(new string[]{":"}, StringSplitOptions.None).Last());
+            var roleID = ulong.Parse(message.Embeds.First().Title.Split(new string[] { ":" }, StringSplitOptions.None).Last());
             var role = ((ITextChannel)message.Channel).Guild.GetRole(roleID);
             var user = await ((ITextChannel)message.Channel).Guild.GetUserAsync(userId);
-            await user.AddRoleAsync(role);            
-            await updateMessage(message, (SocketRole) role);
+            await user.AddRoleAsync(role);
+            await updateMessage(message, (SocketRole)role);
         }
 
         private async Task LeaveRole(ReactionHandlerContext context)
         {
-            var roleID = ulong.Parse(context.Message.Embeds.First().Title.Split(new string[]{":"}, StringSplitOptions.None).Last());
+            var roleID = ulong.Parse(context.Message.Embeds.First().Title.Split(new string[] { ":" }, StringSplitOptions.None).Last());
             var role = ((ITextChannel)context.Channel).Guild.GetRole(roleID);
             var user = await ((ITextChannel)context.Channel).Guild.GetUserAsync(context.Reaction.UserId);
-            await user.RemoveRoleAsync(role);                
-            await updateMessage(context, (SocketRole) role);
+            await user.RemoveRoleAsync(role);
+            await updateMessage(context, (SocketRole)role);
         }
 
         private async Task LeaveRole(ulong userId, IUserMessage message)
         {
-            var roleID = ulong.Parse(message.Embeds.First().Title.Split(new string[]{":"}, StringSplitOptions.None).Last());
+            var roleID = ulong.Parse(message.Embeds.First().Title.Split(new string[] { ":" }, StringSplitOptions.None).Last());
             var role = ((ITextChannel)message.Channel).Guild.GetRole(roleID);
             var user = await ((ITextChannel)message.Channel).Guild.GetUserAsync(userId);
-            await user.RemoveRoleAsync(role);                
-            await updateMessage(message, (SocketRole) role);
+            await user.RemoveRoleAsync(role);
+            await updateMessage(message, (SocketRole)role);
         }
 
         private async Task DeleteInvite(ReactionHandlerContext context)
@@ -158,13 +171,13 @@ namespace MopsBot.Data
             {
                 await Program.ReactionHandler.ClearHandler(context.Message);
 
-                if(RoleInvites[context.Channel.Id].Count > 1)
+                if (RoleInvites[context.Channel.Id].Count > 1)
                     RoleInvites[context.Channel.Id].Remove(context.Message.Id);
                 else
                     RoleInvites.Remove(context.Channel.Id);
 
                 await context.Message.DeleteAsync();
-                
+
                 SaveJson();
             }
         }
@@ -176,13 +189,13 @@ namespace MopsBot.Data
             {
                 await Program.ReactionHandler.ClearHandler(message);
 
-                if(RoleInvites[message.Channel.Id].Count > 1)
+                if (RoleInvites[message.Channel.Id].Count > 1)
                     RoleInvites[message.Channel.Id].Remove(message.Id);
                 else
                     RoleInvites.Remove(message.Channel.Id);
 
                 await message.DeleteAsync();
-                
+
                 SaveJson();
             }
         }
