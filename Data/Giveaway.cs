@@ -134,7 +134,7 @@ namespace MopsBot.Data
                             }
                             catch (Exception e)
                             {
-                                Console.WriteLine($"[ERROR] by ReactionGiveaway at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+                                Console.WriteLine($"[ERROR] by ReactionGiveaway for [{channel}][{message}] at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
                             }
                         }
                     }
