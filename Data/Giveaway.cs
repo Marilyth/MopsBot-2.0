@@ -102,42 +102,6 @@ namespace MopsBot.Data
                 try
                 {
                     Giveaways = JsonConvert.DeserializeObject<Dictionary<ulong, Dictionary<ulong, List<ulong>>>>(read.ReadToEnd());
-                    foreach (var channel in Giveaways)
-                    {
-                        foreach (var message in channel.Value)
-                        {
-                            try
-                            {
-                                var textmessage = (IUserMessage)((ITextChannel)Program.Client.GetChannel(channel.Key)).GetMessageAsync(message.Key).Result;
-                                Program.ReactionHandler.AddHandler(textmessage, new Emoji("✅"), JoinGiveaway).Wait();
-                                Program.ReactionHandler.AddHandler(textmessage, new Emoji("❎"), LeaveGiveaway).Wait();
-                                Program.ReactionHandler.AddHandler(textmessage, new Emoji("🎁"), DrawGiveaway).Wait();
-
-                                //Task.Run(async () =>
-                                //{
-                                foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("✅"), 100).First().Result.Where(x => !x.IsBot))
-                                {
-                                    JoinGiveaway(user.Id, textmessage);
-                                    textmessage.RemoveReactionAsync(new Emoji("✅"), user);
-                                }
-                                foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("❎"), 100).First().Result.Where(x => !x.IsBot))
-                                {
-                                    LeaveGiveaway(user.Id, textmessage);
-                                    textmessage.RemoveReactionAsync(new Emoji("❎"), user);
-                                }
-                                foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("🎁"), 100).First().Result.Where(x => !x.IsBot))
-                                {
-                                    DrawGiveaway(user.Id, textmessage);
-                                    textmessage.RemoveReactionAsync(new Emoji("🎁"), user);
-                                }
-                                //});
-                            }
-                            catch (Exception e)
-                            {
-                                Console.WriteLine($"[ERROR] by ReactionGiveaway for [{channel}][{message}] at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
-                            }
-                        }
-                    }
                 }
                 catch (Exception e)
                 {
@@ -145,6 +109,56 @@ namespace MopsBot.Data
                 }
             }
             Giveaways = Giveaways ?? new Dictionary<ulong, Dictionary<ulong, List<ulong>>>();
+
+            foreach (var channel in Giveaways.ToList())
+            {
+                foreach (var message in channel.Value.ToList())
+                {
+                    try
+                    {
+                        var textmessage = (IUserMessage)((ITextChannel)Program.Client.GetChannel(channel.Key)).GetMessageAsync(message.Key).Result;
+                        Program.ReactionHandler.AddHandler(textmessage, new Emoji("✅"), JoinGiveaway).Wait();
+                        Program.ReactionHandler.AddHandler(textmessage, new Emoji("❎"), LeaveGiveaway).Wait();
+                        Program.ReactionHandler.AddHandler(textmessage, new Emoji("🎁"), DrawGiveaway).Wait();
+
+                        //Task.Run(async () =>
+                        //{
+                        foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("✅"), 100).First().Result.Where(x => !x.IsBot))
+                        {
+                            JoinGiveaway(user.Id, textmessage);
+                            textmessage.RemoveReactionAsync(new Emoji("✅"), user);
+                        }
+                        foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("❎"), 100).First().Result.Where(x => !x.IsBot))
+                        {
+                            LeaveGiveaway(user.Id, textmessage);
+                            textmessage.RemoveReactionAsync(new Emoji("❎"), user);
+                        }
+                        foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("🎁"), 100).First().Result.Where(x => !x.IsBot))
+                        {
+                            DrawGiveaway(user.Id, textmessage);
+                            textmessage.RemoveReactionAsync(new Emoji("🎁"), user);
+                        }
+                        //});
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine($"[ERROR] by ReactionGiveaway for [{channel.Key}][{message.Key}] at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+
+                        if ((e.Message.Contains("Object reference not set to an instance of an object.") || e.Message.Contains("Value cannot be null.")) 
+                            && Program.Client.ConnectionState.Equals(ConnectionState.Connected))
+                        {
+                            Console.WriteLine($"Removing Giveaway due to missing message: [{channel.Key}][{message.Key}]");
+
+                            if (channel.Value.Count > 1)
+                                channel.Value.Remove(message.Key);
+                            else
+                                Giveaways.Remove(channel.Key);
+
+                            SaveJson();
+                        }
+                    }
+                }
+            }
         }
 
         public void SaveJson()

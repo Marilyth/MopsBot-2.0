@@ -24,49 +24,62 @@ namespace MopsBot.Data
                 try
                 {
                     RoleInvites = JsonConvert.DeserializeObject<Dictionary<ulong, HashSet<ulong>>>(read.ReadToEnd());
-                    if (RoleInvites == null)
-                    {
-                        RoleInvites = new Dictionary<ulong, HashSet<ulong>>();
-                    }
-                    foreach (var channel in RoleInvites)
-                    {
-                        foreach (var message in channel.Value)
-                        {
-                            try
-                            {
-                                var textmessage = (IUserMessage)((ITextChannel)Program.Client.GetChannel(channel.Key)).GetMessageAsync(message).Result;
-                                Program.ReactionHandler.AddHandler(textmessage, new Emoji("✅"), JoinRole).Wait();
-                                Program.ReactionHandler.AddHandler(textmessage, new Emoji("❎"), LeaveRole).Wait();
-                                Program.ReactionHandler.AddHandler(textmessage, new Emoji("🗑"), DeleteInvite).Wait();
-
-                                //Task.Run(async () => {
-                                foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("✅"), 100).First().Result.Where(x => !x.IsBot))
-                                {
-                                    JoinRole(user.Id, textmessage);
-                                    textmessage.RemoveReactionAsync(new Emoji("✅"), user);
-                                }
-                                foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("❎"), 100).First().Result.Where(x => !x.IsBot))
-                                {
-                                    LeaveRole(user.Id, textmessage);
-                                    textmessage.RemoveReactionAsync(new Emoji("❎"), user);
-                                }
-                                foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("🗑"), 100).First().Result.Where(x => !x.IsBot))
-                                {
-                                    textmessage.RemoveReactionAsync(new Emoji("🗑"), user);
-                                    DeleteInvite(user.Id, textmessage);
-                                }
-                                //});
-                            }
-                            catch (Exception e)
-                            {
-                                Console.WriteLine($"[ERROR] by ReactionRoleJoin for [{channel}][{message}] at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
-                            }
-                        }
-                    }
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine(e.Message + e.StackTrace);
+                }
+            }
+
+            if (RoleInvites == null)
+            {
+                RoleInvites = new Dictionary<ulong, HashSet<ulong>>();
+            }
+            foreach (var channel in RoleInvites.ToList())
+            {
+                foreach (var message in channel.Value.ToList())
+                {
+                    try
+                    {
+                        var textmessage = (IUserMessage)((ITextChannel)Program.Client.GetChannel(channel.Key)).GetMessageAsync(message).Result;
+                        Program.ReactionHandler.AddHandler(textmessage, new Emoji("✅"), JoinRole).Wait();
+                        Program.ReactionHandler.AddHandler(textmessage, new Emoji("❎"), LeaveRole).Wait();
+                        Program.ReactionHandler.AddHandler(textmessage, new Emoji("🗑"), DeleteInvite).Wait();
+
+                        //Task.Run(async () => {
+                        foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("✅"), 100).First().Result.Where(x => !x.IsBot))
+                        {
+                            JoinRole(user.Id, textmessage);
+                            textmessage.RemoveReactionAsync(new Emoji("✅"), user);
+                        }
+                        foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("❎"), 100).First().Result.Where(x => !x.IsBot))
+                        {
+                            LeaveRole(user.Id, textmessage);
+                            textmessage.RemoveReactionAsync(new Emoji("❎"), user);
+                        }
+                        foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("🗑"), 100).First().Result.Where(x => !x.IsBot))
+                        {
+                            textmessage.RemoveReactionAsync(new Emoji("🗑"), user);
+                            DeleteInvite(user.Id, textmessage);
+                        }
+                        //});
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine($"[ERROR] by ReactionRoleJoin for [{channel.Key}][{message}] at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+                        if ((e.Message.Contains("Object reference not set to an instance of an object.") || e.Message.Contains("Value cannot be null."))
+                            && Program.Client.ConnectionState.Equals(ConnectionState.Connected))
+                        {
+                            Console.WriteLine($"Removing Giveaway due to missing message: [{channel.Key}][{message}]");
+
+                            if (channel.Value.Count > 1)
+                                channel.Value.Remove(message);
+                            else
+                                RoleInvites.Remove(channel.Key);
+
+                            SaveJson();
+                        }
+                    }
                 }
             }
         }
