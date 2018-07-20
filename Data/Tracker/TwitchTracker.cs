@@ -206,7 +206,7 @@ namespace MopsBot.Data.Tracker
 
         private async Task recolour(ReactionHandlerContext context)
         {
-            if (((IGuildUser)await context.reaction.Channel.GetUserAsync(context.reaction.UserId)).GetPermissions((IGuildChannel)context.channel).ManageChannel)
+            if (((IGuildUser)await context.Reaction.Channel.GetUserAsync(context.Reaction.UserId)).GetPermissions((IGuildChannel)context.Channel).ManageChannel)
             {
                 viewerGraph.Recolour();
 
@@ -217,7 +217,7 @@ namespace MopsBot.Data.Tracker
 
         private async Task switchThumbnail(ReactionHandlerContext context)
         {
-            if (((IGuildUser)await context.reaction.Channel.GetUserAsync(context.reaction.UserId)).GetPermissions((IGuildChannel)context.channel).ManageChannel)
+            if (((IGuildUser)await context.Reaction.Channel.GetUserAsync(context.Reaction.UserId)).GetPermissions((IGuildChannel)context.Channel).ManageChannel)
             {
                 isThumbnailLarge = !isThumbnailLarge;
                 StaticBase.Trackers["twitch"].SaveJson();

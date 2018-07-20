@@ -174,11 +174,11 @@ namespace MopsBot.Data
 
         private async Task JoinGiveaway(ReactionHandlerContext context)
         {
-            if (!Giveaways[context.channel.Id][context.message.Id].First().Equals(context.reaction.UserId))
+            if (!Giveaways[context.Channel.Id][context.Message.Id].First().Equals(context.Reaction.UserId))
             {
-                Giveaways[context.channel.Id][context.message.Id].Add(context.reaction.UserId);
+                Giveaways[context.Channel.Id][context.Message.Id].Add(context.Reaction.UserId);
                 SaveJson();
-                await updateMessage(context.message);
+                await updateMessage(context.Message);
             }
         }
 
@@ -194,11 +194,11 @@ namespace MopsBot.Data
 
         private async Task LeaveGiveaway(ReactionHandlerContext context)
         {
-            if (!Giveaways[context.channel.Id][context.message.Id].First().Equals(context.reaction.UserId))
+            if (!Giveaways[context.Channel.Id][context.Message.Id].First().Equals(context.Reaction.UserId))
             {
-                Giveaways[context.channel.Id][context.message.Id].Remove(context.reaction.UserId);
+                Giveaways[context.Channel.Id][context.Message.Id].Remove(context.Reaction.UserId);
                 SaveJson();
-                await updateMessage(context.message);
+                await updateMessage(context.Message);
             }
         }
 
@@ -214,19 +214,19 @@ namespace MopsBot.Data
 
         private async Task DrawGiveaway(ReactionHandlerContext context)
         {
-            if (context.reaction.UserId.Equals(Giveaways[context.channel.Id][context.message.Id].First()))
+            if (context.Reaction.UserId.Equals(Giveaways[context.Channel.Id][context.Message.Id].First()))
             {
-                await Program.ReactionHandler.ClearHandler(context.message);
+                await Program.ReactionHandler.ClearHandler(context.Message);
 
-                ulong winner =  Giveaways[context.channel.Id][context.message.Id].Count > 1 ? Giveaways[context.channel.Id][context.message.Id]
-                               .ToList()[StaticBase.ran.Next(1, Giveaways[context.channel.Id][context.message.Id].Count)]
-                               : context.reaction.UserId;
+                ulong winner =  Giveaways[context.Channel.Id][context.Message.Id].Count > 1 ? Giveaways[context.Channel.Id][context.Message.Id]
+                               .ToList()[StaticBase.ran.Next(1, Giveaways[context.Channel.Id][context.Message.Id].Count)]
+                               : context.Reaction.UserId;
 
-                await context.channel.SendMessageAsync($"{context.channel.GetUserAsync(winner).Result.Mention} won the "
-                                                      + $"`{context.message.Embeds.First().Title}`");
+                await context.Channel.SendMessageAsync($"{context.Channel.GetUserAsync(winner).Result.Mention} won the "
+                                                      + $"`{context.Message.Embeds.First().Title}`");
 
-                if(Giveaways[context.channel.Id].Count == 1) Giveaways.Remove(context.channel.Id);
-                else Giveaways[context.channel.Id].Remove(context.message.Id);
+                if(Giveaways[context.Channel.Id].Count == 1) Giveaways.Remove(context.Channel.Id);
+                else Giveaways[context.Channel.Id].Remove(context.Message.Id);
                 SaveJson();
             }
         }

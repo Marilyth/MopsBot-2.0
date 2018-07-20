@@ -100,15 +100,15 @@ namespace MopsBot.Data
 
         public async Task AddVote(ReactionHandlerContext context, string option)
         {
-            var poll = Polls[context.channel.Id].First(x => x.MessageID.Equals(context.message.Id));
-            if(!poll.Voters.ContainsKey(context.reaction.UserId)){
+            var poll = Polls[context.Channel.Id].First(x => x.MessageID.Equals(context.Message.Id));
+            if(!poll.Voters.ContainsKey(context.Reaction.UserId)){
                 poll.AddValue(option, 1);
-                poll.Voters.Add(context.reaction.UserId, option);
+                poll.Voters.Add(context.Reaction.UserId, option);
             }
             else{
                 poll.AddValue(option, 1);
-                poll.AddValue(poll.Voters[context.reaction.UserId], -1);
-                poll.Voters[context.reaction.UserId] = option;
+                poll.AddValue(poll.Voters[context.Reaction.UserId], -1);
+                poll.Voters[context.Reaction.UserId] = option;
             }
 
             SaveJson();
@@ -117,17 +117,17 @@ namespace MopsBot.Data
 
         private async Task DeletePoll(ReactionHandlerContext context)
         {
-            var user = await ((ITextChannel)context.channel).Guild.GetUserAsync(context.reaction.UserId);
+            var user = await ((ITextChannel)context.Channel).Guild.GetUserAsync(context.Reaction.UserId);
             if (user.GuildPermissions.ManageChannels)
             {
-                await Program.ReactionHandler.ClearHandler(context.message);
+                await Program.ReactionHandler.ClearHandler(context.Message);
 
-                Polls[context.channel.Id].First(x => x.MessageID == context.message.Id).Dispose();
+                Polls[context.Channel.Id].First(x => x.MessageID == context.Message.Id).Dispose();
 
-                if (Polls[context.channel.Id].Count > 1)
-                    Polls[context.channel.Id].RemoveAll(x => x.MessageID == context.message.Id);
+                if (Polls[context.Channel.Id].Count > 1)
+                    Polls[context.Channel.Id].RemoveAll(x => x.MessageID == context.Message.Id);
                 else
-                    Polls.Remove(context.channel.Id);
+                    Polls.Remove(context.Channel.Id);
 
                 SaveJson();
             }
@@ -135,12 +135,12 @@ namespace MopsBot.Data
 
         private async Task updateMessage(ReactionHandlerContext context, Poll poll)
         {
-            var e = context.message.Embeds.First().ToEmbedBuilder();
+            var e = context.Message.Embeds.First().ToEmbedBuilder();
 
             e.WithImageUrl(poll.GetChartURI());
             
 
-            await context.message.ModifyAsync(x =>
+            await context.Message.ModifyAsync(x =>
             {
                 x.Embed = e.Build();
             });

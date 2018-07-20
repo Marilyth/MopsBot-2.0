@@ -8,18 +8,18 @@ using System.Linq;
 
 namespace MopsBot{
     public class ReactionHandlerContext{
-        public ISocketMessageChannel channel;
-        public Cacheable<IUserMessage, ulong> messageCache;
-        public IUserMessage cachedMessage {get {return messageCache.GetOrDownloadAsync().Result;}}
-        public IUserMessage message {get {return messageCache.DownloadAsync().Result;}}
-        public IEmote emote;
-        public SocketReaction reaction;
+        public ISocketMessageChannel Channel;
+        public Cacheable<IUserMessage, ulong> MessageCache;
+        public IUserMessage CachedMessage {get {return MessageCache.GetOrDownloadAsync().Result;}}
+        public IUserMessage Message {get {return MessageCache.DownloadAsync().Result;}}
+        public IEmote Emote;
+        public SocketReaction Reaction;
     }
     public class ReactionHandler{
         private DiscordSocketClient client;
         private IServiceProvider _provider;
         private Dictionary<IUserMessage, Dictionary<IEmote, Func<ReactionHandlerContext, Task>>> messageFunctions;
-        public static IEmote defaultEmote = new Emoji("DEFAULT");
+        public static IEmote DefaultEmote = new Emoji("DEFAULT");
 
         public void Install(IServiceProvider provider){
             _provider = provider;
@@ -36,22 +36,22 @@ namespace MopsBot{
             
             IUserMessage message = await messageCache.DownloadAsync();
             ReactionHandlerContext context = new ReactionHandlerContext();
-            context.channel = channel;
-            context.messageCache = messageCache;
-            context.emote = reaction.Emote;
-            context.reaction = reaction;
+            context.Channel = channel;
+            context.MessageCache = messageCache;
+            context.Emote = reaction.Emote;
+            context.Reaction = reaction;
             Task.Run(async () => {
             if(messageFunctions.Any(x => x.Key.Id.Equals(message.Id))){
                 if(messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.ContainsKey(reaction.Emote))
                     await messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value[reaction.Emote](context);
-                else if(messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.ContainsKey(defaultEmote))
-                    await messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value[defaultEmote](context);
+                else if(messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.ContainsKey(DefaultEmote))
+                    await messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value[DefaultEmote](context);
                 await message.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
             }});
         }
 
         public async Task AddHandler(IUserMessage message, Func<ReactionHandlerContext, Task> function, bool clear=false){
-            await AddHandler(message, defaultEmote, function, clear);
+            await AddHandler(message, DefaultEmote, function, clear);
         }
 
         public async Task AddHandler(IUserMessage message, IEmote emote, Func<ReactionHandlerContext, Task> function, bool clear=false){
@@ -62,7 +62,7 @@ namespace MopsBot{
             else   
                 messageFunctions.Add(message, new Dictionary<IEmote, Func<ReactionHandlerContext, Task>>{{emote, function}});
             // await populate(message);
-            if(!emote.Equals(defaultEmote))
+            if(!emote.Equals(DefaultEmote))
                 await message.AddReactionAsync(emote);
         }
 
