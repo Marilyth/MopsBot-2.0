@@ -20,15 +20,16 @@ namespace MopsBot.Data
         /// </summary>
         public UserScore()
         {
-            StreamReader read = new StreamReader(new FileStream("mopsdata//scores.txt", FileMode.OpenOrCreate));
-            string fs = "";
-            while ((fs = read.ReadLine()) != null)
+            using (StreamReader read = new StreamReader(new FileStream("mopsdata//scores.txt", FileMode.OpenOrCreate)))
             {
-                string[] s = fs.Split(':');
-                Individual.User user = new Individual.User(int.Parse(s[1]), int.Parse(s[2]), int.Parse(s[3]), int.Parse(s[4]), int.Parse(s[5]));
-                Users.Add(ulong.Parse(s[0]), user);
+                string fs = "";
+                while ((fs = read.ReadLine()) != null)
+                {
+                    string[] s = fs.Split(':');
+                    Individual.User user = new Individual.User(int.Parse(s[1]), int.Parse(s[2]), int.Parse(s[3]), int.Parse(s[4]), int.Parse(s[5]));
+                    Users.Add(ulong.Parse(s[0]), user);
+                }
             }
-            read.Dispose();
         }
 
         /// <summary>
@@ -36,15 +37,14 @@ namespace MopsBot.Data
         /// </summary>
         public void WriteScore()
         {
-            StreamWriter write = new StreamWriter(new FileStream("mopsdata//scores.txt", FileMode.Create));
-            write.AutoFlush = true;
-            foreach (var that in Users)
+            using (StreamWriter write = new StreamWriter(new FileStream("mopsdata//scores.txt", FileMode.Create)))
             {
-                var user = that.Value;
-                write.WriteLine($"{that.Key}:{user.Score}:{user.Experience}:{user.punched}:{user.hugged}:{user.kissed}");
+                foreach (var that in Users)
+                {
+                    var user = that.Value;
+                    write.WriteLine($"{that.Key}:{user.Score}:{user.Experience}:{user.punched}:{user.hugged}:{user.kissed}");
+                }
             }
-
-            write.Dispose();
         }
 
         /// <summary>

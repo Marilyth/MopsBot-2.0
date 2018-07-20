@@ -31,7 +31,7 @@ namespace MopsBot.Data.Individual
         {
             Score = userScore;
         }
-        
+
         private Func<int, int> levelCalc = x => (200 * (x * x));
 
         public int calcLevel()
@@ -43,7 +43,7 @@ namespace MopsBot.Data.Individual
             }
             return (i - 1);
         }
-        
+
         public string calcNextLevel()
         {
             int Level = calcLevel();
@@ -77,32 +77,31 @@ namespace MopsBot.Data.Individual
         {
             equipment = new List<Items>();
 
-            StreamReader read = new StreamReader(new FileStream("mopsdata//dungeonItems.txt", FileMode.OpenOrCreate));
-
-            string fs = "";
-            string fullFile = read.ReadToEnd();
-
-            if (!fullFile.Contains(ID.ToString()))
+            using (StreamReader read = new StreamReader(new FileStream("mopsdata//dungeonItems.txt", FileMode.OpenOrCreate)))
             {
-                equipment.Add(new Items("Fists"));
-                saveEquipment(ID);
+                string fullFile = read.ReadToEnd();
+
+                if (!fullFile.Contains(ID.ToString()))
+                {
+                    equipment.Add(new Items("Fists"));
+                    saveEquipment(ID);
+                }
             }
 
-            read.Dispose();
-            read = new StreamReader(new FileStream("mopsdata//dungeonItems.txt", FileMode.OpenOrCreate));
-
-            while (!(fs = read.ReadLine()).Contains(ID.ToString()))
+            using (StreamReader read = new StreamReader(new FileStream("mopsdata//dungeonItems.txt", FileMode.OpenOrCreate)))
             {
+                string fs = "";
+                while (!(fs = read.ReadLine()).Contains(ID.ToString()))
+                {
 
+                }
+
+                string[] items = fs.Split(':');
+                items = items.Skip(1).ToArray();
+
+                foreach (string item in items)
+                    equipment.Add(new Items(item));
             }
-
-            string[] items = fs.Split(':');
-            items = items.Skip(1).ToArray();
-
-            foreach (string item in items)
-                equipment.Add(new Items(item));
-
-            read.Dispose();
         }
 
         public void saveEquipment(ulong ID)

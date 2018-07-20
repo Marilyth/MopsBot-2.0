@@ -136,7 +136,7 @@ namespace MopsBot.Module
             using (var content = response.GetResponseStream())
             using (var reader = new System.IO.StreamReader(content))
             {
-                return reader.ReadToEnd();
+                return await reader.ReadToEndAsync();
             }
         }
 
