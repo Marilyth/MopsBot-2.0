@@ -187,7 +187,8 @@ namespace MopsBot.Data
 
         private async Task JoinGiveaway(ReactionHandlerContext context)
         {
-            if (!Giveaways[context.Channel.Id][context.Message.Id].First().Equals(context.Reaction.UserId))
+            if (!Giveaways[context.Channel.Id][context.Message.Id].First().Equals(context.Reaction.UserId)
+                && !Giveaways[context.Channel.Id][context.Message.Id].Contains(context.Reaction.UserId))
             {
                 Giveaways[context.Channel.Id][context.Message.Id].Add(context.Reaction.UserId);
                 SaveJson();
@@ -197,7 +198,8 @@ namespace MopsBot.Data
 
         private async Task JoinGiveaway(ulong userId, IUserMessage message)
         {
-            if (!Giveaways[message.Id][message.Id].First().Equals(userId) && !Giveaways[message.Id][message.Id].Contains(userId))
+            if (!Giveaways[message.Channel.Id][message.Id].First().Equals(userId)
+               && !Giveaways[message.Channel.Id][message.Id].Contains(userId))
             {
                 Giveaways[message.Channel.Id][message.Id].Add(userId);
                 SaveJson();
