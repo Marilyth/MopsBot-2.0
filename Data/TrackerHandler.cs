@@ -44,7 +44,7 @@ namespace MopsBot.Data
             //     }
             //     catch (Exception e)
             //     {
-            //         Console.WriteLine(e.Message + e.StackTrace);
+            //         Console.WriteLine("\n" + e.Message + e.StackTrace);
             //     }
             // }
             // trackers = (trackers == null ? new Dictionary<string, T>() : trackers);
@@ -65,7 +65,7 @@ namespace MopsBot.Data
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e.Message + e.StackTrace);
+                    Console.WriteLine("\n" + e.Message + e.StackTrace);
                 }
             }
             trackers = (trackers == null ? new Dictionary<string, T>() : trackers);

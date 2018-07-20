@@ -47,7 +47,7 @@ namespace MopsBot.Data
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e.Message + e.StackTrace);
+                    Console.WriteLine("\n" + e.Message + e.StackTrace);
                 }
             }
         }

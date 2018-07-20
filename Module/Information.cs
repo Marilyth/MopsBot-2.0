@@ -49,7 +49,7 @@ namespace MopsBot.Module
             }
             catch (Exception e)
             {
-                Console.WriteLine($"[ERROR] by define at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+                Console.WriteLine("\n" + $"[ERROR] by define at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
             }
         }
 
@@ -68,7 +68,7 @@ namespace MopsBot.Module
             }
             catch (Exception e)
             {
-                Console.WriteLine($"[ERROR] by translate at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+                Console.WriteLine("\n" + $"[ERROR] by translate at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
                 await ReplyAsync("Error happened");
             }
         }
@@ -120,7 +120,7 @@ namespace MopsBot.Module
             }
             catch (Exception e)
             {
-                Console.WriteLine($"[ERROR] by GetRandomWordAsync at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+                Console.WriteLine("\n" + $"[ERROR] by GetRandomWordAsync at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
             }
             return null;
         }

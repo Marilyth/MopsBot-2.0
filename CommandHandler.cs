@@ -226,7 +226,7 @@ namespace MopsBot
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e.Message + e.StackTrace);
+                    Console.WriteLine("\n" + e.Message + e.StackTrace);
                 }
             }
         }
@@ -251,7 +251,7 @@ namespace MopsBot
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine($"[ERROR] by GuildPrefixes at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+                        Console.WriteLine("\n" + $"[ERROR] by GuildPrefixes at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
                     }
                 }
             }

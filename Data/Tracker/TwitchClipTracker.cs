@@ -65,7 +65,7 @@ namespace MopsBot.Data.Tracker
             }
             catch (Exception e)
             {
-                Console.WriteLine($"[Error] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+                Console.WriteLine("\n" + $"[Error] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
             }
         }
 
@@ -126,7 +126,7 @@ namespace MopsBot.Data.Tracker
             }
             catch (Exception e)
             {
-                Console.WriteLine($"[ERROR] by TwitchClipTracker for {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+                Console.WriteLine("\n" + $"[ERROR] by TwitchClipTracker for {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
                 return new TwitchClipResult();
             }
         }
