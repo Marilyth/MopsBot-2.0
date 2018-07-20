@@ -35,6 +35,21 @@ namespace MopsBot.Data
                             Program.ReactionHandler.AddHandler(textmessage, new Emoji("✅"), JoinRole).Wait();
                             Program.ReactionHandler.AddHandler(textmessage, new Emoji("❎"), LeaveRole).Wait();
                             Program.ReactionHandler.AddHandler(textmessage, new Emoji("🗑"), DeleteInvite).Wait();
+
+                            Task.Run(async () => {
+                                foreach(var user in textmessage.GetReactionUsersAsync(new Emoji("✅"), 100).First().Result.Where(x => !x.IsBot)){
+                                    await JoinRole(user.Id, textmessage);
+                                    await textmessage.RemoveReactionAsync(new Emoji("✅"), user);
+                                }
+                                foreach(var user in textmessage.GetReactionUsersAsync(new Emoji("❎"), 100).First().Result.Where(x => !x.IsBot)){
+                                    await LeaveRole(user.Id, textmessage);
+                                    await textmessage.RemoveReactionAsync(new Emoji("❎"), user);
+                                }
+                                foreach(var user in textmessage.GetReactionUsersAsync(new Emoji("🗑"), 100).First().Result.Where(x => !x.IsBot)){
+                                    await textmessage.RemoveReactionAsync(new Emoji("🗑"), user);
+                                    await DeleteInvite(user.Id, textmessage);
+                                }
+                            });
                         }
                     }
                 }
@@ -109,6 +124,15 @@ namespace MopsBot.Data
             await updateMessage(context, (SocketRole) role);
         }
 
+        private async Task JoinRole(ulong userId, IUserMessage message)
+        {
+            var roleID = ulong.Parse(message.Embeds.First().Title.Split(new string[]{":"}, StringSplitOptions.None).Last());
+            var role = ((ITextChannel)message.Channel).Guild.GetRole(roleID);
+            var user = await ((ITextChannel)message.Channel).Guild.GetUserAsync(userId);
+            await user.AddRoleAsync(role);            
+            await updateMessage(message, (SocketRole) role);
+        }
+
         private async Task LeaveRole(ReactionHandlerContext context)
         {
             var roleID = ulong.Parse(context.message.Embeds.First().Title.Split(new string[]{":"}, StringSplitOptions.None).Last());
@@ -116,6 +140,15 @@ namespace MopsBot.Data
             var user = await ((ITextChannel)context.channel).Guild.GetUserAsync(context.reaction.UserId);
             await user.RemoveRoleAsync(role);                
             await updateMessage(context, (SocketRole) role);
+        }
+
+        private async Task LeaveRole(ulong userId, IUserMessage message)
+        {
+            var roleID = ulong.Parse(message.Embeds.First().Title.Split(new string[]{":"}, StringSplitOptions.None).Last());
+            var role = ((ITextChannel)message.Channel).Guild.GetRole(roleID);
+            var user = await ((ITextChannel)message.Channel).Guild.GetUserAsync(userId);
+            await user.RemoveRoleAsync(role);                
+            await updateMessage(message, (SocketRole) role);
         }
 
         private async Task DeleteInvite(ReactionHandlerContext context)
@@ -136,6 +169,24 @@ namespace MopsBot.Data
             }
         }
 
+        private async Task DeleteInvite(ulong userId, IUserMessage message)
+        {
+            var user = await ((ITextChannel)message.Channel).Guild.GetUserAsync(userId);
+            if (user.GuildPermissions.ManageRoles)
+            {
+                await Program.ReactionHandler.ClearHandler(message);
+
+                if(RoleInvites[message.Channel.Id].Count > 1)
+                    RoleInvites[message.Channel.Id].Remove(message.Id);
+                else
+                    RoleInvites.Remove(message.Channel.Id);
+
+                await message.DeleteAsync();
+                
+                SaveJson();
+            }
+        }
+
         private async Task updateMessage(ReactionHandlerContext context, SocketRole role)
         {
             var e = context.message.Embeds.First().ToEmbedBuilder();
@@ -149,6 +200,24 @@ namespace MopsBot.Data
             }
 
             await context.message.ModifyAsync(x =>
+            {
+                x.Embed = e.Build();
+            });
+        }
+
+        private async Task updateMessage(IUserMessage message, SocketRole role)
+        {
+            var e = message.Embeds.First().ToEmbedBuilder();
+
+            e.Color = role.Color;
+            e.Title = e.Title.Contains("Einladung") ? $"{role.Name} Einladung :{role.Id}" : $"{role.Name} Role Invite :{role.Id}";
+            foreach (EmbedFieldBuilder field in e.Fields)
+            {
+                if (field.Name.Equals("Members in role") || field.Name.Equals("Mitgliederanzahl der Rolle"))
+                    field.Value = role.Members.Count();
+            }
+
+            await message.ModifyAsync(x =>
             {
                 x.Embed = e.Build();
             });

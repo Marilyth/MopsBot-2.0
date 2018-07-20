@@ -108,6 +108,21 @@ namespace MopsBot.Data
                             Program.ReactionHandler.AddHandler(textmessage, new Emoji("✅"), JoinGiveaway).Wait();
                             Program.ReactionHandler.AddHandler(textmessage, new Emoji("❎"), LeaveGiveaway).Wait();
                             Program.ReactionHandler.AddHandler(textmessage, new Emoji("🎁"), DrawGiveaway).Wait();
+
+                            Task.Run(async () => {
+                                foreach(var user in textmessage.GetReactionUsersAsync(new Emoji("✅"), 100).First().Result.Where(x => !x.IsBot)){
+                                    await JoinGiveaway(user.Id, textmessage);
+                                    await textmessage.RemoveReactionAsync(new Emoji("✅"), user);
+                                }
+                                foreach(var user in textmessage.GetReactionUsersAsync(new Emoji("❎"), 100).First().Result.Where(x => !x.IsBot)){
+                                    await LeaveGiveaway(user.Id, textmessage);
+                                    await textmessage.RemoveReactionAsync(new Emoji("❎"), user);
+                                }
+                                foreach(var user in textmessage.GetReactionUsersAsync(new Emoji("🎁"), 100).First().Result.Where(x => !x.IsBot)){
+                                    await DrawGiveaway(user.Id, textmessage);
+                                    await textmessage.RemoveReactionAsync(new Emoji("🎁"), user);
+                                }
+                            });
                         }
                     }
                 }
@@ -163,7 +178,17 @@ namespace MopsBot.Data
             {
                 Giveaways[context.channel.Id][context.message.Id].Add(context.reaction.UserId);
                 SaveJson();
-                await updateMessage(context);
+                await updateMessage(context.message);
+            }
+        }
+
+        private async Task JoinGiveaway(ulong userId, IUserMessage message)
+        {
+            if (!Giveaways[message.Id][message.Id].First().Equals(userId))
+            {
+                Giveaways[message.Channel.Id][message.Id].Add(userId);
+                SaveJson();
+                await updateMessage(message);
             }
         }
 
@@ -173,7 +198,17 @@ namespace MopsBot.Data
             {
                 Giveaways[context.channel.Id][context.message.Id].Remove(context.reaction.UserId);
                 SaveJson();
-                await updateMessage(context);
+                await updateMessage(context.message);
+            }
+        }
+
+        private async Task LeaveGiveaway(ulong userId, IUserMessage message)
+        {
+            if (!Giveaways[message.Channel.Id][message.Id].First().Equals(userId))
+            {
+                Giveaways[message.Channel.Id][message.Id].Remove(userId);
+                SaveJson();
+                await updateMessage(message);
             }
         }
 
@@ -196,23 +231,42 @@ namespace MopsBot.Data
             }
         }
 
-        private async Task updateMessage(ReactionHandlerContext context)
+        private async Task DrawGiveaway(ulong userId, IUserMessage message)
         {
-            var e = context.message.Embeds.First().ToEmbedBuilder();
+            if (userId.Equals(Giveaways[message.Channel.Id][message.Id].First()))
+            {
+                await Program.ReactionHandler.ClearHandler(message);
+
+                ulong winner =  Giveaways[message.Channel.Id][message.Id].Count > 1 ? Giveaways[message.Channel.Id][message.Id]
+                               .ToList()[StaticBase.ran.Next(1, Giveaways[message.Channel.Id][message.Id].Count)]
+                               : userId;
+
+                await message.Channel.SendMessageAsync($"{message.Channel.GetUserAsync(winner).Result.Mention} won the "
+                                                      + $"`{message.Embeds.First().Title}`");
+
+                if(Giveaways[message.Channel.Id].Count == 1) Giveaways.Remove(message.Channel.Id);
+                else Giveaways[message.Channel.Id].Remove(message.Id);
+                SaveJson();
+            }
+        }
+
+        private async Task updateMessage(IUserMessage message)
+        {
+            var e = message.Embeds.First().ToEmbedBuilder();
 
             e.Color = new Color(100, 100, 0);
 
             foreach (EmbedFieldBuilder field in e.Fields)
             {
                 if (field.Name.Equals("Participants"))
-                    field.Value = Giveaways[context.channel.Id][context.message.Id].Count -1;
+                    field.Value = Giveaways[message.Channel.Id][message.Id].Count -1;
                 else
-                    field.Value = Giveaways[context.channel.Id][context.message.Id].Count > 1 ? 
-                                  Math.Round((1.0 / (Giveaways[context.channel.Id][context.message.Id].Count - 1)) * 100, 2) + "%"
+                    field.Value = Giveaways[message.Channel.Id][message.Id].Count > 1 ? 
+                                  Math.Round((1.0 / (Giveaways[message.Channel.Id][message.Id].Count - 1)) * 100, 2) + "%"
                                   : Double.NaN.ToString();
             }
 
-            await context.message.ModifyAsync(x =>
+            await message.ModifyAsync(x =>
             {
                 x.Embed = e.Build();
             });
