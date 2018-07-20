@@ -44,9 +44,12 @@ namespace MopsBot
         {
             if (!init)
             {
-                ReactGiveaways = new ReactionGiveaway();
-                ReactRoleJoin = new ReactionRoleJoin();
-                Poll = new ReactionPoll();
+                Task.Run(() =>
+                {
+                    ReactGiveaways = new ReactionGiveaway();
+                    ReactRoleJoin = new ReactionRoleJoin();
+                    Poll = new ReactionPoll();
+                });
 
                 Auth.SetUserCredentials(Program.Config["TwitterKey"], Program.Config["TwitterSecret"],
                                         Program.Config["TwitterToken"], Program.Config["TwitterAccessSecret"]);
@@ -57,14 +60,17 @@ namespace MopsBot
 
                 using (StreamReader read = new StreamReader(new FileStream($"mopsdata//MuteTimerHandler.json", FileMode.OpenOrCreate)))
                 {
-                    try{
+                    try
+                    {
                         MuteHandler = Newtonsoft.Json.JsonConvert.DeserializeObject<MuteTimeHandler>(read.ReadToEnd());
-                        
-                        if(MuteHandler == null)
+
+                        if (MuteHandler == null)
                             MuteHandler = new MuteTimeHandler();
-                        
+
                         MuteHandler.SetTimers();
-                    } catch(Exception e){
+                    }
+                    catch (Exception e)
+                    {
                         Console.WriteLine(e.Message + e.StackTrace);
                     }
                 }
@@ -78,8 +84,9 @@ namespace MopsBot
                 Trackers["reddit"] = new TrackerHandler<RedditTracker>();
                 Trackers["news"] = new TrackerHandler<NewsTracker>();
 
-                foreach(var tracker in Trackers){
-                    tracker.Value.postInitialisation();
+                foreach (var tracker in Trackers)
+                {
+                    Task.Run(() => tracker.Value.postInitialisation());
                 }
 
                 init = true;
