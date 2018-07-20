@@ -59,7 +59,7 @@ namespace MopsBot.Data
                             }
                             catch (Exception e)
                             {
-                                Console.WriteLine(e.Message);
+                                Console.WriteLine($"[ERROR] by ReactionRoleJoin at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
                             }
                         }
                     }

@@ -251,7 +251,7 @@ namespace MopsBot
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine(e.Message);
+                        Console.WriteLine($"[ERROR] by GuildPrefixes at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
                     }
                 }
             }
