@@ -44,7 +44,7 @@ namespace MopsBot.Data
             //     }
             //     catch (Exception e)
             //     {
-            //         Console.WriteLine("\n" + e.Message + e.StackTrace);
+            //         Console.WriteLine("\n" +  e.Message + e.StackTrace);
             //     }
             // }
             // trackers = (trackers == null ? new Dictionary<string, T>() : trackers);
@@ -65,7 +65,7 @@ namespace MopsBot.Data
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("\n" + e.Message + e.StackTrace);
+                    Console.WriteLine("\n" +  e.Message + e.StackTrace);
                 }
             }
             trackers = (trackers == null ? new Dictionary<string, T>() : trackers);
@@ -205,7 +205,7 @@ namespace MopsBot.Data
                 if (Program.Client.GetChannel(channelID) == null || (await ((IGuildChannel)Program.Client.GetChannel(channelID)).Guild.GetCurrentUserAsync()) == null)
                 {
                     TryRemoveTracker(sender.Name, channelID);
-                    Console.Out.WriteLine($"Removed Tracker: {sender.Name} Channel {channelID} is missing");
+                    Console.WriteLine("\n" + $"Removed Tracker: {sender.Name} Channel {channelID} is missing");
                 }
                 else
                 {
@@ -213,7 +213,7 @@ namespace MopsBot.Data
                     if (!permission.SendMessages || !permission.ViewChannel || !permission.ReadMessageHistory)
                     {
                         TryRemoveTracker(sender.Name, channelID);
-                        Console.Out.WriteLine($"Removed a tracker for {sender.Name} due to missing Permissions");
+                        Console.WriteLine("\n" + $"Removed a tracker for {sender.Name} due to missing Permissions");
                         if (permission.SendMessages)
                         {
                             await ((ITextChannel)Program.Client.GetChannel(channelID)).SendMessageAsync($"Removed tracker for `{sender.Name}` due to missing Permissions");
@@ -272,7 +272,7 @@ namespace MopsBot.Data
                 if (Program.Client.GetChannel(channelID) == null || (await ((IGuildChannel)Program.Client.GetChannel(channelID)).Guild.GetCurrentUserAsync()) == null)
                 {
                     TryRemoveTracker(sender.Name, channelID);
-                    Console.Out.WriteLine($"Removed Tracker: {sender.Name} Channel {channelID} is missing");
+                    Console.WriteLine("\n" + $"Removed Tracker: {sender.Name} Channel {channelID} is missing");
                 }
                 //Check if permissions were modified, to an extend of making the tracker unusable
                 else
@@ -281,7 +281,7 @@ namespace MopsBot.Data
                     if (!permission.SendMessages || !permission.ViewChannel || !permission.ReadMessageHistory || (sender is Tracker.TwitchTracker && (!permission.AddReactions || !permission.ManageMessages)))
                     {
                         TryRemoveTracker(sender.Name, channelID);
-                        Console.Out.WriteLine($"Removed a tracker for {sender.Name} due to missing Permissions");
+                        Console.WriteLine("\n" + $"Removed a tracker for {sender.Name} due to missing Permissions");
                         if (permission.SendMessages)
                         {
                             await ((ITextChannel)Program.Client.GetChannel(channelID)).SendMessageAsync($"Removed tracker for `{sender.Name}` due to missing Permissions");

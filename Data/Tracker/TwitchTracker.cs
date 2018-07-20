@@ -39,7 +39,7 @@ namespace MopsBot.Data.Tracker
                 {
                     // if(Program.Client.GetChannel(channelMessage.Key)==null){
                     //     StaticBase.Trackers["twitch"].TryRemoveTracker(Name, channelMessage.Key);
-                    //     Console.Out.WriteLine($"remove tracker for {Name} in channel: {channelMessage.Key}");  
+                    //     Console.WriteLine("\n" + $"remove tracker for {Name} in channel: {channelMessage.Key}");  
                     // }
                     //
                     // the Tracker Should be removed on the first Event Call
@@ -58,7 +58,7 @@ namespace MopsBot.Data.Tracker
         {
             viewerGraph = new Plot(streamerName, "Time In Minutes", "Viewers", false);
 
-            Console.Out.WriteLine($"{DateTime.Now} Started Twitchtracker for {streamerName}");
+            Console.WriteLine("\n" + $"{DateTime.Now} Started Twitchtracker for {streamerName}");
             ToUpdate = new Dictionary<ulong, ulong>();
             ChannelMessages = new Dictionary<ulong, string>();
             Name = streamerName;
@@ -94,7 +94,7 @@ namespace MopsBot.Data.Tracker
                         {
                             TimeoutCount = 0;
                             IsOnline = false;
-                            Console.Out.WriteLine($"{DateTime.Now} {Name} went Offline");
+                            Console.WriteLine("\n" + $"{DateTime.Now} {Name} went Offline");
                             viewerGraph.Dispose();
                             viewerGraph = new Plot(Name, "Time In Minutes", "Viewers", false);
                             foreach (var channelMessage in ToUpdate)
@@ -137,7 +137,7 @@ namespace MopsBot.Data.Tracker
             }
             catch (Exception e)
             {
-                Console.WriteLine("\n" + $"[Error] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+                Console.WriteLine("\n" +  $"[Error] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
             }
         }
 

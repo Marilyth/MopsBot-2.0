@@ -139,7 +139,7 @@ namespace MopsBot.Data.Updater
                 placeWord(word, wordDirection, x, y);
             
 
-                Console.WriteLine("\n" + word + " going " + wordDirection.ToString());
+                Console.WriteLine("\n" +  word + " going " + wordDirection.ToString());
             }
         }
 

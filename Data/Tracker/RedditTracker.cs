@@ -42,7 +42,7 @@ namespace MopsBot.Data.Tracker
             catch (Exception)
             {
                 Dispose();
-                Console.WriteLine("\n" + "");
+                Console.WriteLine("\n" +  "");
                 throw new Exception($"No results were found for Subreddit `{Name.Split(" ")[0]}`" +
                                     $"{(Name.Split(" ").Length > 1 ? $" with restriction(s) `{Name.Split(" ")[1]}`." : ".")}");
             }
@@ -74,7 +74,7 @@ namespace MopsBot.Data.Tracker
             }
             catch (Exception e)
             {
-                Console.WriteLine("\n" + $"[ERROR] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+                Console.WriteLine("\n" +  $"[ERROR] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
             }
         }
 

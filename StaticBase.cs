@@ -71,7 +71,7 @@ namespace MopsBot
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine("\n" + e.Message + e.StackTrace);
+                        Console.WriteLine("\n" +  e.Message + e.StackTrace);
                     }
                 }
                 Trackers = new Dictionary<string, Data.TrackerWrapper>();

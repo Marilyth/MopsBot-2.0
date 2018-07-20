@@ -38,7 +38,7 @@ namespace MopsBot.Api.Controllers
                 }
                 catch (Exception e)
                 {
-                    System.Console.Out.WriteLine(e);
+                    System.Console.WriteLine("\n" + e);
                 };
 
             }
@@ -97,7 +97,7 @@ namespace MopsBot.Api.Controllers
                 }
                 catch (Exception e)
                 {
-                    System.Console.Out.WriteLine(e);
+                    System.Console.WriteLine("\n" + e);
                 };
 
             }

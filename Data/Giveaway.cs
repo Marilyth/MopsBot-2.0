@@ -26,7 +26,7 @@ namespace MopsBot.Data
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("\n" + e.Message + e.StackTrace);
+                    Console.WriteLine("\n" +  e.Message + e.StackTrace);
                 }
             }
             Giveaways = Giveaways ?? new Dictionary<string, HashSet<ulong>>();
@@ -105,7 +105,7 @@ namespace MopsBot.Data
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("\n" + e.Message + e.StackTrace);
+                    Console.WriteLine("\n" +  e.Message + e.StackTrace);
                 }
             }
             Giveaways = Giveaways ?? new Dictionary<ulong, Dictionary<ulong, List<ulong>>>();
@@ -142,12 +142,12 @@ namespace MopsBot.Data
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine("\n" + $"[ERROR] by ReactionGiveaway for [{channel.Key}][{message.Key}] at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+                        Console.WriteLine("\n" +  $"[ERROR] by ReactionGiveaway for [{channel.Key}][{message.Key}] at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
 
                         if ((e.Message.Contains("Object reference not set to an instance of an object.") || e.Message.Contains("Value cannot be null.")) 
                             && Program.Client.ConnectionState.Equals(ConnectionState.Connected))
                         {
-                            Console.WriteLine("\n" + $"Removing Giveaway due to missing message: [{channel.Key}][{message.Key}]");
+                            Console.WriteLine("\n" +  $"Removing Giveaway due to missing message: [{channel.Key}][{message.Key}]");
 
                             if (channel.Value.Count > 1)
                                 channel.Value.Remove(message.Key);

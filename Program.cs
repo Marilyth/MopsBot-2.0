@@ -64,7 +64,7 @@ namespace MopsBot
 
         private Task Client_Log(LogMessage msg)
         {
-            Console.WriteLine("\n" + msg.ToString());
+            Console.WriteLine("\n" +  msg.ToString());
             return Task.CompletedTask;
         }
 
