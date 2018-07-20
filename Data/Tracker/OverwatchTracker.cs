@@ -151,7 +151,8 @@ namespace MopsBot.Data.Tracker
 
             e.AddField("General", $"Time played: {stats.game_stats.time_played}hrs" +
                             $"\nLevel: {stats.overall_stats.level + (100 * stats.overall_stats.prestige)}" +
-                            $"\nWon Games: {stats.overall_stats.wins}", true);
+                            $"\nWon Games: {stats.overall_stats.wins}" +
+                            $"\n Endorsement Level: {stats.overall_stats.endorsement_level}", true);
 
             if(info.getNotNull().stats.competitive != null){
                 author.IconUrl = info.getNotNull().stats.competitive.overall_stats.tier_image;
@@ -159,6 +160,7 @@ namespace MopsBot.Data.Tracker
                             $"\nWin Rate: {info.getNotNull().stats.competitive.overall_stats.win_rate}%" +
                             $"\nRank: {info.getNotNull().stats.competitive.overall_stats.comprank}", true);
             }
+
 
             e.AddField("Most Played", mostPlayed.Item2);
 
@@ -203,7 +205,7 @@ namespace MopsBot.Data.Tracker
             }
 
             e.AddField("Sessions most played Hero", $"{mostPlayed.Item2}");
-            if (mostPlayed.Item1.Equals("Ana") || mostPlayed.Item1.Equals("Moira") || mostPlayed.Item1.Equals("Orisa") || mostPlayed.Item1.Equals("Doomfist") || mostPlayed.Item1.Equals("Sombra"))
+            if (mostPlayed.Item1.Equals("Ana") || mostPlayed.Item1.Equals("Moira") || mostPlayed.Item1.Equals("Orisa") || mostPlayed.Item1.Equals("Doomfist") || mostPlayed.Item1.Equals("Sombra") || mostPlayed.Item1.Equals("Brigitte"))
                 e.ImageUrl = $"https://blzgdapipro-a.akamaihd.net/hero/{mostPlayed.Item1.ToLower()}/full-portrait.png";
             else
                 e.ImageUrl = $"https://blzgdapipro-a.akamaihd.net/media/thumbnail/{mostPlayed.Item1.ToLower()}-gameplay.jpg";
@@ -254,6 +256,10 @@ namespace MopsBot.Data.Tracker
                     changedStats.Add("Comp Games won", compNew.wins.ToString() +
                                     $" (+{compNew.wins - compOld.wins})");
                 }
+            }
+
+            if(quickNew.endorsement_level != quickOld.endorsement_level){
+                changedStats.Add("Endorsement Level", quickNew.endorsement_level.ToString());
             }
 
             return changedStats;
