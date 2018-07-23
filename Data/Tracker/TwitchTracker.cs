@@ -69,7 +69,6 @@ namespace MopsBot.Data.Tracker
                 string query = MopsBot.Module.Information.ReadURLAsync($"https://api.twitch.tv/kraken/channels/{Name}?client_id={Program.Config["Twitch"]}").Result;
                 Channel checkExists = JsonConvert.DeserializeObject<Channel>(query);
                 var test = checkExists.broadcaster_language;
-                Console.WriteLine("\n" + $"{DateTime.Now} Started a new {this.GetType().Name} for {Name}\nChannels: {string.Join(",", ChannelIds)}");
             }
             catch (Exception)
             {

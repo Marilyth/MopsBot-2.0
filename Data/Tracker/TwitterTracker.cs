@@ -30,7 +30,6 @@ namespace MopsBot.Data.Tracker
             try
             {
                 lastMessage = getNewTweets().Last().Id;
-                Console.WriteLine("\n" + $"{DateTime.Now} Started a new {this.GetType().Name} for {Name}\nChannels: {string.Join(",", ChannelIds)}");
             }
             catch (Exception)
             {

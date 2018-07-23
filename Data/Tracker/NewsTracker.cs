@@ -41,7 +41,6 @@ namespace MopsBot.Data.Tracker
                     throw new Exception();
 
                 LastNews = test.PublishedAt.ToString();
-                Console.WriteLine("\n" + $"{DateTime.Now} Started a new {this.GetType().Name} for {Name}\nChannels: {string.Join(",", ChannelIds)}");
             }
             catch (Exception)
             {

@@ -147,6 +147,7 @@ namespace MopsBot.Data
             }
 
             trackers[name].ChannelMessages.Add(channelID, notification);
+            Console.WriteLine("\n" + $"{DateTime.Now} Started a new {typeof(T).Name} for {name}\nChannels: {string.Join(",", trackers[name].ChannelIds)}\nMessage: {notification}");
 
             SaveJson();
         }

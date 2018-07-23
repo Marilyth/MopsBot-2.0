@@ -37,7 +37,6 @@ namespace MopsBot.Data.Tracker
             {
                 var checkExists = overwatchInformation().Result;
                 var test = checkExists.eu;
-                Console.WriteLine("\n" + $"{DateTime.Now} Started a new {this.GetType().Name} for {Name}\nChannels: {string.Join(",", ChannelIds)}");
             }
             catch (Exception)
             {
