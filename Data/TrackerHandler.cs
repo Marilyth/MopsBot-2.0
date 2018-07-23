@@ -213,7 +213,7 @@ namespace MopsBot.Data
                     if (!permission.SendMessages || !permission.ViewChannel || !permission.ReadMessageHistory)
                     {
                         TryRemoveTracker(sender.Name, channelID);
-                        Console.WriteLine("\n" + $"Removed a tracker for {sender.Name} due to missing Permissions");
+                        Console.WriteLine("\n" + $"Removed a tracker for {sender.Name} from Channel {channelID} due to missing Permissions");
                         if (permission.SendMessages)
                         {
                             await ((ITextChannel)Program.Client.GetChannel(channelID)).SendMessageAsync($"Removed tracker for `{sender.Name}` due to missing Permissions");
@@ -281,7 +281,7 @@ namespace MopsBot.Data
                     if (!permission.SendMessages || !permission.ViewChannel || !permission.ReadMessageHistory || (sender is Tracker.TwitchTracker && (!permission.AddReactions || !permission.ManageMessages)))
                     {
                         TryRemoveTracker(sender.Name, channelID);
-                        Console.WriteLine("\n" + $"Removed a tracker for {sender.Name} due to missing Permissions");
+                        Console.WriteLine("\n" + $"Removed a tracker for {sender.Name} from Channel {channelID} due to missing Permissions");
                         if (permission.SendMessages)
                         {
                             await ((ITextChannel)Program.Client.GetChannel(channelID)).SendMessageAsync($"Removed tracker for `{sender.Name}` due to missing Permissions");
