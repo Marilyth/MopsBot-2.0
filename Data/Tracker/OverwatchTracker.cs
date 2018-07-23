@@ -290,7 +290,7 @@ namespace MopsBot.Data.Tracker
                     break;
             }
 
-            if (difference[sortedList[0].Key] > 0)
+            if (difference[sortedList[0].Key] > 0.005)
                 return Tuple.Create(sortedList[0].Key, leaderboard);
 
             return Tuple.Create("CannotFetchArcade", "CannotFetchArcade");
@@ -309,7 +309,7 @@ namespace MopsBot.Data.Tracker
                     break;
             }
 
-            if (playtime[sortedList[0].Key] > 0)
+            if (playtime[sortedList[0].Key] > 0.005)
                 return Tuple.Create(sortedList[0].Key, leaderboard);
 
             return Tuple.Create("CannotFetchArcade", "CannotFetchArcade");
