@@ -13,11 +13,16 @@ namespace MopsBot.Data.Tracker
 {
     public class OsuTracker : ITracker
     {
-        public Dictionary<string, double> allPP;
+        private Dictionary<string, double> allPP;
         public double PPThreshold;
 
         public OsuTracker() : base(60000, (ExistingTrackers * 2000 + 500) % 60000)
         {
+            allPP = new Dictionary<string, double>();
+            allPP.Add("m=0", 0);
+            allPP.Add("m=1", 0);
+            allPP.Add("m=2", 0);
+            allPP.Add("m=3", 0);
         }
 
         public OsuTracker(string name) : base(60000)
@@ -51,15 +56,26 @@ namespace MopsBot.Data.Tracker
                 {
                     APIResults.OsuResult userInformation = await fetchUser(pp.Key);
                     if (userInformation == null) return;
+                    if (pp.Value == 0){
+                        allPP[pp.Key] = allPP[pp.Key] = double.Parse(userInformation.pp_raw ?? "0", CultureInfo.InvariantCulture);
+                        continue;
+                    }
 
                     if (pp.Value > 0 && pp.Value + PPThreshold <= double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture))
                     {
                         var recentScores = await fetchRecent(pp.Key);
+
+                        if(recentScores == null){
+                            allPP[pp.Key] = double.Parse(userInformation.pp_raw ?? "0", CultureInfo.InvariantCulture);
+                            StaticBase.Trackers["osu"].SaveJson();
+                            return;
+                        }
+                        
                         APIResults.RecentScore scoreInformation = recentScores.First(x => !x.rank.Equals("F"));
 
                         APIResults.Beatmap beatmapInformation = await fetchBeatmap(scoreInformation.beatmap_id, pp.Key);
 
-                        foreach (ulong channel in ChannelIds)
+                        foreach (ulong channel in ChannelIds.ToList())
                         {
                             await OnMajorChangeTracked(channel, createEmbed(userInformation, beatmapInformation, await fetchScore(scoreInformation.beatmap_id, pp.Key),
                                                        Math.Round(double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture) - pp.Value, 2), pp.Key), ChannelMessages[channel]);
