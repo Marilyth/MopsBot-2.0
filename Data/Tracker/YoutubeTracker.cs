@@ -33,6 +33,7 @@ namespace MopsBot.Data.Tracker
             {
                 var checkExists = fetchChannel().Result;
                 Name = checkExists.items[0].id;
+                Console.WriteLine("\n" + $"{DateTime.Now} Started a new {this.GetType().Name} for {Name}\nChannels: {string.Join(",", ChannelIds)}");
             }
             catch (Exception)
             {

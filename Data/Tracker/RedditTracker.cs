@@ -38,6 +38,7 @@ namespace MopsBot.Data.Tracker
                 var test = fetchPosts().Result;
                 if (test.data.children.Count == 0)
                     throw new Exception("");
+                Console.WriteLine("\n" + $"{DateTime.Now} Started a new {this.GetType().Name} for {Name}\nChannels: {string.Join(",", ChannelIds)}");
             }
             catch (Exception)
             {
