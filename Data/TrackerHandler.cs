@@ -91,15 +91,15 @@ namespace MopsBot.Data
                 write.Write(dictAsJson);
         }
 
-        public override bool TryRemoveTracker(string name, ulong channelID)
+        public override bool TryRemoveTracker(string name, ulong channelId)
         {
-            if (trackers.ContainsKey(name) && trackers[name].ChannelIds.Contains(channelID))
+            if (trackers.ContainsKey(name) && trackers[name].ChannelIds.Contains(channelId))
             {
                 if (trackers.First().Value.GetType() == typeof(Tracker.TwitchTracker))
-                    foreach (var channel in (trackers[name] as Tracker.TwitchTracker).ToUpdate.Where(x => x.Key.Equals(channelID)))
+                    foreach (var channel in (trackers[name] as Tracker.TwitchTracker).ToUpdate.Where(x => x.Key.Equals(channelId)))
                         try
                         {
-                            Program.ReactionHandler.ClearHandler((IUserMessage)((ITextChannel)Program.Client.GetChannel(channelID)).GetMessageAsync(channel.Value).Result).Wait();
+                            Program.ReactionHandler.ClearHandler((IUserMessage)((ITextChannel)Program.Client.GetChannel(channelId)).GetMessageAsync(channel.Value).Result).Wait();
                         }
                         catch
                         {
@@ -107,19 +107,22 @@ namespace MopsBot.Data
 
                 if (trackers[name].ChannelIds.Count > 1)
                 {
-                    trackers[name].ChannelMessages.Remove(channelID);
-                    trackers[name].ChannelIds.Remove(channelID);
+                    trackers[name].ChannelMessages.Remove(channelId);
+                    trackers[name].ChannelIds.Remove(channelId);
 
                     if (trackers.First().Value.GetType() == typeof(Tracker.TwitchTracker))
                     {
-                        (trackers[name] as Tracker.TwitchTracker).ToUpdate.Remove(channelID);
+                        (trackers[name] as Tracker.TwitchTracker).ToUpdate.Remove(channelId);
                     }
+
+                    Console.WriteLine("\n" + $"{DateTime.Now} Removed a {trackers.First().Value.GetType().Name} for {name}\nChannel: {channelId}");
                 }
 
                 else
                 {
                     trackers[name].Dispose();
                     trackers.Remove(name);
+                    Console.WriteLine("\n" + $"{DateTime.Now} Removed a {trackers.First().Value.GetType().Name} for {name}\nChannel: {channelId}; Last channel left.");
                 }
 
                 SaveJson();

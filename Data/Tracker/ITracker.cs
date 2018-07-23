@@ -35,7 +35,6 @@ namespace MopsBot.Data.Tracker
             ChannelMessages = new Dictionary<ulong, string>();
             checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false),
                                                                                 gap, interval);
-            Console.WriteLine("\n" + $"{DateTime.Now} Started a {this.GetType().Name}");
         }
 
         public virtual void PostInitialisation()
