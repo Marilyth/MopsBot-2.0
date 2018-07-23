@@ -79,7 +79,7 @@ namespace MopsBot.Module
             {
                 Trackers["osu"].AddTracker(OsuUser, Context.Channel.Id);
 
-                await ReplyAsync("Keeping track of " + OsuUser + "'s plays above `0.1pp` gain, from now on!\n You can change the lower pp boundary by using the `Osu SetPPBounds` subcommand!");
+                await ReplyAsync("Keeping track of " + OsuUser + "'s plays above `0.1pp` gain, from now on!\nYou can change the lower pp boundary by using the `Osu SetPPBounds` subcommand!");
             }
 
             [Command("UnTrack")]
