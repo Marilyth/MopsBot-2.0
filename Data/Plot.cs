@@ -21,7 +21,7 @@ namespace MopsBot.Data
         {
             ID = name;
             Categories = new Dictionary<string, double>();
-            foreach(var category in categories)
+            foreach (var category in categories)
                 Categories.Add(category, 0);
 
             initPlot();
@@ -37,7 +37,8 @@ namespace MopsBot.Data
             viewerChart.TextColor = OxyColor.FromRgb(175, 175, 175);
             viewerChart.PlotAreaBorderThickness = new OxyThickness(0);
 
-            viewerChart.Axes.Add(new OxyPlot.Axes.CategoryAxis(){
+            viewerChart.Axes.Add(new OxyPlot.Axes.CategoryAxis()
+            {
                 Key = ID,
                 ItemsSource = Categories.Keys,
                 FontSize = 24,
@@ -58,8 +59,9 @@ namespace MopsBot.Data
             viewerChart.LegendFontSize = 24;
             viewerChart.LegendPosition = LegendPosition.BottomCenter;
 
-            columnSeries = new OxyPlot.Series.ColumnSeries(){
-                ItemsSource = new List<OxyPlot.Series.ColumnItem>(Categories.Values.Select(x => new OxyPlot.Series.ColumnItem(x))), 
+            columnSeries = new OxyPlot.Series.ColumnSeries()
+            {
+                ItemsSource = new List<OxyPlot.Series.ColumnItem>(Categories.Values.Select(x => new OxyPlot.Series.ColumnItem(x))),
                 //LabelPlacement = OxyPlot.Series.LabelPlacement.Outside, 
                 FontSize = 24,
                 //LabelFormatString = "{0}",
@@ -90,20 +92,22 @@ namespace MopsBot.Data
                 pdfExporter.Export(viewerChart, stream);
             }
 
-            var prc = new System.Diagnostics.Process();
-            prc.StartInfo.FileName = "convert";
-            prc.StartInfo.Arguments = $"-set density 300 \"mopsdata//{ID}barplot.pdf\" \"//var//www//html//StreamCharts//{ID}barplot.png\"";
+            using (var prc = new System.Diagnostics.Process())
+            {
+                prc.StartInfo.FileName = "convert";
+                prc.StartInfo.Arguments = $"-set density 300 \"mopsdata//{ID}barplot.pdf\" \"//var//www//html//StreamCharts//{ID}barplot.png\"";
 
-            prc.Start();
+                prc.Start();
 
-            prc.WaitForExit();
+                prc.WaitForExit();
+            }
 
             var dir = new DirectoryInfo("mopsdata//");
             var files = dir.GetFiles().Where(x => x.Name.Contains($"{ID}barplot"));
             foreach (var f in files)
                 f.Delete();
 
-            return $"http://5.45.104.29/StreamCharts/{ID.Replace(" ", "%20")}barplot.png?rand={StaticBase.ran.Next(0,999999999)}";
+            return $"http://5.45.104.29/StreamCharts/{ID.Replace(" ", "%20")}barplot.png?rand={StaticBase.ran.Next(0, 999999999)}";
         }
 
         private void readPlotPoints()
@@ -127,7 +131,8 @@ namespace MopsBot.Data
         /// <summary>
         /// Removes all files created by the plot class to function.
         /// </summary>
-        public void RemovePlot(){
+        public void RemovePlot()
+        {
             viewerChart = null;
             columnSeries = null;
             var file = new FileInfo($"mopsdata//plots//{ID}barplot.json");
@@ -216,20 +221,22 @@ namespace MopsBot.Data
                 pdfExporter.Export(viewerChart, stream);
             }
 
-            var prc = new System.Diagnostics.Process();
-            prc.StartInfo.FileName = "convert";
-            prc.StartInfo.Arguments = $"-set density 300 \"mopsdata//{ID}plot.pdf\" \"//var//www//html//StreamCharts//{ID}plot.png\"";
+            using (var prc = new System.Diagnostics.Process())
+            {
+                prc.StartInfo.FileName = "convert";
+                prc.StartInfo.Arguments = $"-set density 300 \"mopsdata//{ID}plot.pdf\" \"//var//www//html//StreamCharts//{ID}plot.png\"";
 
-            prc.Start();
+                prc.Start();
 
-            prc.WaitForExit();
+                prc.WaitForExit();
+            }
 
             var dir = new DirectoryInfo("mopsdata//");
             var files = dir.GetFiles().Where(x => x.Name.Contains($"{ID}plot"));
             foreach (var f in files)
                 f.Delete();
 
-            return $"http://5.45.104.29/StreamCharts/{ID}plot.png?rand={StaticBase.ran.Next(0,999999999)}";
+            return $"http://5.45.104.29/StreamCharts/{ID}plot.png?rand={StaticBase.ran.Next(0, 999999999)}";
         }
 
         private void readPlotPoints()
@@ -241,7 +248,8 @@ namespace MopsBot.Data
 
             PlotPoints = PlotPoints ?? new List<KeyValuePair<string, double>>();
 
-            foreach(var plotPoint in PlotPoints){
+            foreach (var plotPoint in PlotPoints)
+            {
                 AddValue(plotPoint.Key, plotPoint.Value, false);
             }
         }
@@ -252,23 +260,25 @@ namespace MopsBot.Data
         /// <param name="value">The Value to add to the plot</param>
         public void AddValue(string name, double value, bool savePlot = true)
         {
-            if(lineSeries.LastOrDefault()?.Title?.Equals(name) ?? false)
+            if (lineSeries.LastOrDefault()?.Title?.Equals(name) ?? false)
                 lineSeries.Last().Points.Add(new DataPoint(++CurX, value));
 
-            else{
+            else
+            {
                 var series = new OxyPlot.Series.LineSeries();
 
                 long colour = 1;
-                foreach(char c in name){
+                foreach (char c in name)
+                {
                     colour = (((int)c * colour) % 12829635) + 1973790;
                 }
-                
+
                 var oxycolour = OxyColor.FromUInt32((uint)colour + 4278190080);
                 series.Color = oxycolour;
 
-                if(!lineSeries.Any(x => x.Title?.Equals(name) ?? false))
+                if (!lineSeries.Any(x => x.Title?.Equals(name) ?? false))
                     series.Title = name;
-                
+
                 series.StrokeThickness = 3;
                 series.Points.Add(new DataPoint(CurX, lineSeries.LastOrDefault()?.Points.Last().Y ?? 0));
                 series.Points.Add(new DataPoint(++CurX, value));
@@ -276,7 +286,8 @@ namespace MopsBot.Data
                 lineSeries.Add(series);
             }
 
-            if(savePlot){
+            if (savePlot)
+            {
                 PlotPoints.Add(new KeyValuePair<string, double>(name, value));
                 writePlotPoints();
             }
@@ -285,7 +296,8 @@ namespace MopsBot.Data
         /// <summary>
         /// Removes all files created by the plot class to function.
         /// </summary>
-        public void RemovePlot(){
+        public void RemovePlot()
+        {
             viewerChart = null;
             lineSeries = null;
             var file = new FileInfo($"mopsdata//plots//{ID}plot.json");
@@ -296,8 +308,10 @@ namespace MopsBot.Data
                 f.Delete();
         }
 
-        public void Recolour(){
-            foreach(var series in lineSeries){
+        public void Recolour()
+        {
+            foreach (var series in lineSeries)
+            {
                 OxyColor newColour = OxyColor.FromRgb((byte)StaticBase.ran.Next(30, 220), (byte)StaticBase.ran.Next(30, 220), (byte)StaticBase.ran.Next(30, 220));
                 series.Color = newColour;
             }
@@ -330,7 +344,8 @@ namespace MopsBot.Data
             return output;
         }
 
-        public void Dispose(){
+        public void Dispose()
+        {
             RemovePlot();
         }
     }
