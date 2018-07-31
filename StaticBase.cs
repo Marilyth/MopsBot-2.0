@@ -55,7 +55,10 @@ namespace MopsBot
                                         Program.Config["TwitterToken"], Program.Config["TwitterAccessSecret"]);
                 TweetinviConfig.CurrentThreadSettings.TweetMode = TweetMode.Extended;
                 TweetinviConfig.ApplicationSettings.TweetMode = TweetMode.Extended;
+                Tweetinvi.ExceptionHandler.SwallowWebExceptions = false;
+
                 gfy = new Gfycat.GfycatClient(Program.Config["GfyID"], Program.Config["GfySecret"]);
+                
                 NewsClient = new NewsApiClient(Program.Config["NewsAPI"]);
 
                 using (StreamReader read = new StreamReader(new FileStream($"mopsdata//MuteTimerHandler.json", FileMode.OpenOrCreate)))
