@@ -6,7 +6,7 @@ using Discord;
 using Discord.WebSocket;
 using Discord.Commands;
 using Newtonsoft.Json;
-using MopsBot.Data.Tracker.APIResults;
+using MopsBot.Data.Tracker.APIResults.TwitchClip;
 using System.Threading.Tasks;
 using System.Xml;
 
@@ -31,7 +31,7 @@ namespace MopsBot.Data.Tracker
             try
             {
                 string query = MopsBot.Module.Information.ReadURLAsync($"https://api.twitch.tv/kraken/channels/{Name}?client_id={Program.Config["Twitch"]}").Result;
-                Channel checkExists = JsonConvert.DeserializeObject<Channel>(query);
+                APIResults.Twitch.Channel checkExists = JsonConvert.DeserializeObject<APIResults.Twitch.Channel>(query);
                 var test = checkExists.broadcaster_language;
             }
             catch (Exception)

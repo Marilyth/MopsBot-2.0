@@ -48,11 +48,9 @@ namespace MopsBot
         }
 
         /// <summary>
-        /// Manages polls and experience gain whenever a message is recieved
-        /// Also keeps track of how many characters have been sent each day
+        /// Manages experience gain whenever a message is recieved
         /// </summary>
         /// <param name="arg">The recieved message</param>
-        /// <returns>A Task that can be awaited</returns>
         private async Task Client_MessageReceived(SocketMessage arg)
         {
             //Daily Statistics & User Experience
@@ -63,10 +61,9 @@ namespace MopsBot
         }
 
         /// <summary>
-        /// Greets User when he joins a Guild
+        /// Greets a user when he joins a Guild
         /// </summary>
         /// <param name="User">The User who joined</param>
-        /// <returns>A Task that can be awaited</returns>
         private async Task Client_UserJoined(SocketGuildUser User)
         {
             //PhunkRoyalServer Begruessung
@@ -77,11 +74,12 @@ namespace MopsBot
                 $"\n\nHave a very mopsig day\nDein heimlicher Verehrer Mops");
         }
 
-        private async Task UserCountChanged(SocketGuildUser User)
-        {
-            await StaticBase.UpdateGameAsync();
-        }
-
+        /// <summary>
+        /// Called whenever a guild has been joined or left
+        /// 
+        /// Updates the activity showing the number of guilds Mops is in
+        /// </summary>
+        /// <param name="guild">The guild joined or left</param>
         private async Task GuildCountChanged(SocketGuild guild)
         {
             await StaticBase.UpdateGameAsync();
@@ -91,7 +89,6 @@ namespace MopsBot
         /// Checks if message is a command, and executes it
         /// </summary>
         /// <param name="parameterMessage">The message to check</param>
-        /// <returns>A Task that can be awaited</returns>
         public async Task HandleCommand(SocketMessage parameterMessage)
         {
             // Don't handle the command if it is a system message
@@ -143,7 +140,6 @@ namespace MopsBot
         /// Creates help message as well as command information, and sends it
         /// </summary>
         /// <param name="msg">The message recieved</param>
-        /// <returns>A Task that can be awaited</returns>
         public async Task getCommands(SocketMessage msg, string prefix)
         {
             var output = "";
@@ -203,6 +199,12 @@ namespace MopsBot
                 await msg.Channel.SendMessageAsync("", embed: embed);
         }
 
+        /// <summary>
+        /// Creates the embed that is sent whenever ?command is called
+        /// </summary>
+        /// <param name="command">The command to create the embed for</param>
+        /// <param name="usage">The usage example to include in the embed</param>
+        /// <param name="description">The desciption to include in the embed</param>
         private Embed createHelpEmbed(string command, string usage, string description){
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0x0099ff);
@@ -215,6 +217,9 @@ namespace MopsBot
             return e.Build();
         }
 
+        /// <summary>
+        /// Reads all custom commands and saves them as a Dictionary
+        /// </summary>
         private void loadCustomCommands()
         {
             
@@ -231,6 +236,9 @@ namespace MopsBot
             }
         }
 
+        /// <summary>
+        /// Reads all guild prefixes and saves them as a dictionary
+        /// </summary>
         private void fillPrefix()
         {
             string s = "";

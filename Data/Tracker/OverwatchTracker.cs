@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using MopsBot.Data.Tracker.APIResults;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
+using MopsBot.Data.Tracker.APIResults.Overwatch;
 
 namespace MopsBot.Data.Tracker
 {

@@ -7,7 +7,7 @@ using Discord.Commands;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using MopsBot.Data.Tracker.APIResults.RedditResult;
+using MopsBot.Data.Tracker.APIResults.Reddit;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 

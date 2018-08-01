@@ -38,7 +38,7 @@ namespace MopsBot
         public static bool init = false;
 
         /// <summary>
-        /// Initialises the Twitch, Twitter and Overwatch trackers
+        /// Initialises and loads all trackers
         /// </summary>
         public static void initTracking()
         {
@@ -97,6 +97,9 @@ namespace MopsBot
             }
         }
 
+        /// <summary>
+        /// Writes all guildprefixes into a file.
+        /// </summary>
         public static void savePrefix()
         {
             using (StreamWriter write = new StreamWriter(new FileStream("mopsdata//guildprefixes.txt", FileMode.Create)))
@@ -109,6 +112,9 @@ namespace MopsBot
             }
         }
 
+        /// <summary>
+        /// Writes all custom commands into a file.
+        /// </summary>
         public static void saveCommand()
         {
             using (StreamWriter write = new StreamWriter(new FileStream("mopsdata//CustomCommands.json", FileMode.Create)))
@@ -117,42 +123,10 @@ namespace MopsBot
             }
         }
 
-        public static void disconnected()
-        {
-            /*
-            if(init){
-                streamTracks.Dispose();
-                twitterTracks.Dispose();
-                ClipTracker.Dispose();
-                OverwatchTracks.Dispose();
-            }*/
-        }
-
         /// <summary>
-        /// Finds out who was mentioned in a command
+        /// Updates the guild count, by displaying it as an activity.
         /// </summary>
-        /// <param name="Context">The CommandContext containing the command message </param>
-        /// <returns>A List of IGuildUsers representing the mentioned Users</returns>
-        public static List<IGuildUser> getMentionedUsers(CommandContext Context)
-        {
-            List<IGuildUser> user = Context.Message.MentionedUserIds.Select(id => Context.Guild.GetUserAsync(id).Result).ToList();
-
-            foreach (var a in Context.Message.MentionedRoleIds.Select(id => Context.Guild.GetRole(id)))
-            {
-                user.AddRange(Context.Guild.GetUsersAsync().Result.Where(u => u.RoleIds.Contains(a.Id)));
-            }
-
-            if (Context.Message.Tags.Select(t => t.Type).Contains(TagType.EveryoneMention))
-            {
-                user.AddRange(Context.Guild.GetUsersAsync().Result);
-            }
-            if (Context.Message.Tags.Select(t => t.Type).Contains(TagType.HereMention))
-            {
-                user.AddRange(Context.Guild.GetUsersAsync().Result.Where(u => u.Status.Equals(UserStatus.Online)));
-            }
-            return new List<IGuildUser>(user.Distinct());
-        }
-
+        /// <returns>A Task that sets the activity</returns>
         public static async Task UpdateGameAsync()
         {
             await Program.Client.SetActivityAsync(new Game($"{Program.Client.Guilds.Count} servers", ActivityType.Watching));

@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
-using MopsBot.Data.Tracker.APIResults;
+using MopsBot.Data.Tracker.APIResults.Youtube;
 using System.Xml;
 
 namespace MopsBot.Data.Tracker
@@ -76,9 +76,9 @@ namespace MopsBot.Data.Tracker
             try
             {
                 YoutubeResult curStats = await fetchVideos();
-                APIResults.Item[] newVideos = curStats.items.ToArray();
+                Item[] newVideos = curStats.items.ToArray();
 
-                foreach (APIResults.Item video in newVideos)
+                foreach (Item video in newVideos)
                 {
                     foreach (ulong channel in ChannelIds)
                     {

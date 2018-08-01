@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace MopsBot.Data.Tracker.APIResults
+namespace MopsBot.Data.Tracker.APIResults.Youtube
 {
     public class PageInfo
     {

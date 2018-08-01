@@ -12,7 +12,6 @@ namespace MopsBot.Data
     /// <summary>
     /// A class containing all Updaters
     /// </summary>
-
     public class UpdaterHander<T> where T: Updater.IUpdater
     {
         private Dictionary<String, T> updaters;

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.IO;
 using Newtonsoft.Json;
 
-namespace MopsBot.Data.Tracker.APIResults
+namespace MopsBot.Data.Tracker.APIResults.Twitch
 {
     public class TwitchResult
     {

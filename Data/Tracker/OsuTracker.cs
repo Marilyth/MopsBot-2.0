@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using System.Threading.Tasks;
+using MopsBot.Data.Tracker.APIResults.Osu;
 
 namespace MopsBot.Data.Tracker
 {
@@ -54,7 +55,7 @@ namespace MopsBot.Data.Tracker
             {
                 foreach (var pp in allPP.ToList())
                 {
-                    APIResults.OsuResult userInformation = await fetchUser(pp.Key);
+                    OsuResult userInformation = await fetchUser(pp.Key);
                     if (userInformation == null) return;
                     if (pp.Value == 0){
                         allPP[pp.Key] = allPP[pp.Key] = double.Parse(userInformation.pp_raw ?? "0", CultureInfo.InvariantCulture);
@@ -71,9 +72,9 @@ namespace MopsBot.Data.Tracker
                             return;
                         }
                         
-                        APIResults.RecentScore scoreInformation = recentScores.First(x => !x.rank.Equals("F"));
+                        RecentScore scoreInformation = recentScores.First(x => !x.rank.Equals("F"));
 
-                        APIResults.Beatmap beatmapInformation = await fetchBeatmap(scoreInformation.beatmap_id, pp.Key);
+                        Beatmap beatmapInformation = await fetchBeatmap(scoreInformation.beatmap_id, pp.Key);
 
                         foreach (ulong channel in ChannelIds.ToList())
                         {
@@ -91,36 +92,36 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public async Task<APIResults.OsuResult> fetchUser(string mode = "m=0")
+        public async Task<OsuResult> fetchUser(string mode = "m=0")
         {
             string query = await MopsBot.Module.Information.ReadURLAsync($"https://osu.ppy.sh/api/get_user?u={Name}&{mode}&event_days=31&k={Program.Config["Osu"]}");
 
-            return JsonConvert.DeserializeObject<APIResults.OsuResult>(query.Substring(1, query.Length - 2));
+            return JsonConvert.DeserializeObject<OsuResult>(query.Substring(1, query.Length - 2));
         }
 
-        public async Task<List<APIResults.RecentScore>> fetchRecent(string mode = "m=0")
+        public async Task<List<RecentScore>> fetchRecent(string mode = "m=0")
         {
             string query = await MopsBot.Module.Information.ReadURLAsync($"https://osu.ppy.sh/api/get_user_recent?u={Name}&limit=50&{mode}&k={Program.Config["Osu"]}");
 
-            return JsonConvert.DeserializeObject<List<APIResults.RecentScore>>(query);
+            return JsonConvert.DeserializeObject<List<RecentScore>>(query);
         }
 
-        public async Task<APIResults.Score> fetchScore(string beatmapID, string mode = "m=0")
+        public async Task<Score> fetchScore(string beatmapID, string mode = "m=0")
         {
             string query = await MopsBot.Module.Information.ReadURLAsync($"https://osu.ppy.sh/api/get_scores?b={beatmapID}&{mode}&u={Name}&limit=1&k={Program.Config["Osu"]}");
 
-            return JsonConvert.DeserializeObject<List<APIResults.Score>>(query).OrderByDescending(x => DateTime.Parse(x.date)).FirstOrDefault();
+            return JsonConvert.DeserializeObject<List<Score>>(query).OrderByDescending(x => DateTime.Parse(x.date)).FirstOrDefault();
         }
 
-        public async Task<APIResults.Beatmap> fetchBeatmap(string beatmapID, string mode = "m=0")
+        public async Task<Beatmap> fetchBeatmap(string beatmapID, string mode = "m=0")
         {
             string query = await MopsBot.Module.Information.ReadURLAsync($"https://osu.ppy.sh/api/get_beatmaps?b={beatmapID}&{mode}&a=1&k={Program.Config["Osu"]}");
 
-            return JsonConvert.DeserializeObject<APIResults.Beatmap>(query.Substring(1, query.Length - 2));
+            return JsonConvert.DeserializeObject<Beatmap>(query.Substring(1, query.Length - 2));
         }
 
-        private Embed createEmbed(APIResults.OsuResult userInformation, APIResults.Beatmap beatmapInformation,
-                                        APIResults.Score scoreInformation, double ppChange, string mode = "m=0")
+        private Embed createEmbed(OsuResult userInformation, Beatmap beatmapInformation,
+                                        Score scoreInformation, double ppChange, string mode = "m=0")
         {
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0x6441A4);
@@ -165,7 +166,7 @@ namespace MopsBot.Data.Tracker
             return e.Build();
         }
 
-        private double calcAcc(APIResults.Score scoreInformation, int mode)
+        private double calcAcc(Score scoreInformation, int mode)
         {
             double pointsOfHits = 0, numberOfHits = 0, accuracy = 0, fruitsCaught = 0, numberOfFruits = 0;
             int count50 = int.Parse(scoreInformation.count50);

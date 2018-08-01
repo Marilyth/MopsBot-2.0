@@ -10,6 +10,7 @@ using System.Linq;
 using Newtonsoft.Json;
 using System.Net.NetworkInformation;
 using System.Net.Http;
+using System.Xml.Serialization;
 
 namespace MopsBot.Module
 {
@@ -106,6 +107,17 @@ namespace MopsBot.Module
                     break;
             }
             await ReplyAsync(StaticBase.people.DrawDiagram(limit, sortParameter));
+        }
+
+        [Command("Wolfram")]
+        [Summary("Sends a query to wolfram alpha.")]
+        public async Task wolf([Remainder]string query){
+            var result = await ReadURLAsync($"https://api.wolframalpha.com/v2/query?input={query}&format=image,plaintext&output=JSON&appid={Program.Config["WolframAlpha"]}");
+            var jsonResult = JsonConvert.DeserializeObject<Data.Tracker.APIResults.Wolfram.WolframResult>(result);
+            for(int i = 0; i < 2; i++){
+                var embed = new EmbedBuilder().WithTitle(jsonResult.queryresult.pods[i].title).WithDescription(query).WithImageUrl(jsonResult.queryresult.pods[i].subpods.First()?.img.src);
+                await ReplyAsync("", embed: embed.Build());
+            }
         }
 
         public async static Task<dynamic> GetRandomWordAsync()

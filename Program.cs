@@ -28,8 +28,8 @@ namespace MopsBot
         public static Dictionary<string, string> Config;
         public static CommandHandler Handler { get; private set; }
         public static ReactionHandler ReactionHandler { get; private set; }
-
-        public async Task Start()
+        
+        private async Task Start()
         {
             Client = new DiscordSocketClient(new DiscordSocketConfig()
             {
@@ -45,7 +45,6 @@ namespace MopsBot
 
             Client.Log += Client_Log;
             Client.Ready += onClientReady;
-            Client.Disconnected += onClientDC;
 
             var map = new ServiceCollection().AddSingleton(Client)
                 // .AddSingleton(new AudioService())
@@ -74,11 +73,6 @@ namespace MopsBot
             Task.Run(() => StaticBase.initTracking());
             Task.Run(() => StaticBase.UpdateGameAsync());
             return Task.CompletedTask;
-        }
-
-        private async Task onClientDC(Exception e)
-        {
-            await Task.Run(() => StaticBase.disconnected());
         }
 
         public static IWebHost BuildWebHost(string[] args) =>

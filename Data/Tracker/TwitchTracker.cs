@@ -5,7 +5,7 @@ using Discord;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using MopsBot.Data.Tracker.APIResults;
+using MopsBot.Data.Tracker.APIResults.Twitch;
 using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
@@ -15,7 +15,7 @@ namespace MopsBot.Data.Tracker
     public class TwitchTracker : ITracker
     {
         private Plot viewerGraph;
-        private APIResults.TwitchResult StreamerStatus;
+        private TwitchResult StreamerStatus;
         public Dictionary<ulong, ulong> ToUpdate;
         public Boolean IsOnline;
         public string CurGame;
@@ -151,7 +151,7 @@ namespace MopsBot.Data.Tracker
 
             TwitchResult tmpResult = JsonConvert.DeserializeObject<TwitchResult>(query, _jsonWriter);
 
-            if (tmpResult.stream == null) tmpResult.stream = new APIResults.Stream();
+            if (tmpResult.stream == null) tmpResult.stream = new APIResults.Twitch.Stream();
             if (tmpResult.stream.game == "" || tmpResult.stream.game == null) tmpResult.stream.game = "Nothing";
 
             return tmpResult;
@@ -167,7 +167,7 @@ namespace MopsBot.Data.Tracker
             };
 
             TwitchResult tmpResult = JsonConvert.DeserializeObject<TwitchResult>(query, _jsonWriter);
-            if (tmpResult.stream == null) tmpResult.stream = new APIResults.Stream();
+            if (tmpResult.stream == null) tmpResult.stream = new APIResults.Twitch.Stream();
             if (tmpResult.stream.game == "" || tmpResult.stream.game == null) tmpResult.stream.game = "Nothing";
 
             return tmpResult;
