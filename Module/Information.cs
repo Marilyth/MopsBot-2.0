@@ -112,10 +112,11 @@ namespace MopsBot.Module
         [Command("Wolfram", RunMode=RunMode.Async)]
         [Summary("Sends a query to wolfram alpha.")]
         public async Task wolf([Remainder]string query){
-            var result = await ReadURLAsync($"https://api.wolframalpha.com/v2/query?input={query}&format=image,plaintext&output=JSON&appid={Program.Config["WolframAlpha"]}");
+            var result = await ReadURLAsync($"https://api.wolframalpha.com/v2/query?input={query}&format=image,plaintext&podstate=Step-by-step%20solution&output=JSON&appid={Program.Config["WolframAlpha"]}");
             var jsonResult = JsonConvert.DeserializeObject<Data.Tracker.APIResults.Wolfram.WolframResult>(result);
-            for(int i = 0; i < 2; i++){
-                var embed = new EmbedBuilder().WithTitle(jsonResult.queryresult.pods[i].title).WithDescription(query).WithImageUrl(jsonResult.queryresult.pods[i].subpods.First()?.img.src);
+            for(int i = 0; i < 2 && i < jsonResult.queryresult.pods.Count; i++){
+                var image = jsonResult.queryresult.pods[i].subpods.FirstOrDefault(x => x.title=="Possible intermediate steps")?.img.src ?? jsonResult.queryresult.pods[i].subpods.First()?.img.src;
+                var embed = new EmbedBuilder().WithTitle(jsonResult.queryresult.pods[i].title).WithDescription(query).WithImageUrl(image);
                 await ReplyAsync("", embed: embed.Build());
             }
         }
