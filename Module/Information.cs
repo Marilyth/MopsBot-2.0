@@ -109,7 +109,7 @@ namespace MopsBot.Module
             await ReplyAsync(StaticBase.people.DrawDiagram(limit, sortParameter));
         }
 
-        [Command("Wolfram")]
+        [Command("Wolfram", RunMode=RunMode.Async)]
         [Summary("Sends a query to wolfram alpha.")]
         public async Task wolf([Remainder]string query){
             var result = await ReadURLAsync($"https://api.wolframalpha.com/v2/query?input={query}&format=image,plaintext&output=JSON&appid={Program.Config["WolframAlpha"]}");
