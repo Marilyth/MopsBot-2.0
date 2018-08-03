@@ -10,8 +10,8 @@ namespace MopsBot{
     public class ReactionHandlerContext{
         public ISocketMessageChannel Channel;
         public Cacheable<IUserMessage, ulong> MessageCache;
-        public IUserMessage CachedMessage {get {return MessageCache.GetOrDownloadAsync().Result;}}
-        public IUserMessage Message {get {return MessageCache.DownloadAsync().Result;}}
+        public IUserMessage Message {get {return MessageCache.GetOrDownloadAsync().Result;}}
+        public IUserMessage DownloadMessage {get {return MessageCache.DownloadAsync().Result;}}
         public IEmote Emote;
         public SocketReaction Reaction;
     }
