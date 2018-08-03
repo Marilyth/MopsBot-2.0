@@ -45,7 +45,7 @@ namespace MopsBot{
             if(reaction.UserId.Equals(client.CurrentUser.Id))
                 return;
             
-            IUserMessage message = await messageCache.DownloadAsync();
+            IUserMessage message = await messageCache.GetOrDownloadAsync();
             ReactionHandlerContext context = new ReactionHandlerContext();
             context.Channel = channel;
             context.MessageCache = messageCache;
