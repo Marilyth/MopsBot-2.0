@@ -53,11 +53,11 @@ namespace MopsBot
         /// <param name="arg">The recieved message</param>
         private async Task Client_MessageReceived(SocketMessage arg)
         {
-            //Daily Statistics & User Experience
+            /*Daily Statistics & User Experience
             if (!arg.Author.IsBot && !arg.Content.StartsWith("!"))
             {
                 StaticBase.people.AddStat(arg.Author.Id, arg.Content.Length, "experience");
-            }
+            }*/
         }
 
         /// <summary>
@@ -107,7 +107,7 @@ namespace MopsBot
             // Determine if the message has a valid prefix, adjust argPos 
             if (!(message.HasMentionPrefix(client.CurrentUser, ref argPos) || message.HasStringPrefix(prefix, ref argPos) || message.HasCharPrefix('?', ref argPos))) return;
 
-            StaticBase.people.AddStat(parameterMessage.Author.Id, 0, "experience");
+            //StaticBase.people.AddStat(parameterMessage.Author.Id, 0, "experience");
 
             if (char.IsWhiteSpace(message.Content[argPos]))
                 argPos += 1;

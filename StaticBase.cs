@@ -18,9 +18,9 @@ namespace MopsBot
 {
     public class StaticBase
     {
-        public static Data.UserScore people = new Data.UserScore();
+        //public static Data.UserScore people = new Data.UserScore();
         public static Random ran = new Random();
-        public static List<IdleDungeon> DungeonCrawler = new List<IdleDungeon>();
+        //public static List<IdleDungeon> DungeonCrawler = new List<IdleDungeon>();
         public static Gfycat.GfycatClient gfy;
         public static List<string> Playlist = new List<string>();
         public static HashSet<ulong> MemberSet;
@@ -30,7 +30,7 @@ namespace MopsBot
         public static ReactionGiveaway ReactGiveaways;
         public static ReactionRoleJoin ReactRoleJoin;
         public static ReactionPoll Poll;
-        public static Crosswords Crosswords;
+        //public static Crosswords Crosswords;
         public static Dictionary<string, TrackerWrapper> Trackers;
         public static MuteTimeHandler MuteHandler;
         public static NewsApiClient NewsClient;

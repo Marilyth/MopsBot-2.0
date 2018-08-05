@@ -74,6 +74,7 @@ namespace MopsBot.Module
             }
         }
 
+        /*
         [Command("getStats")]
         [Summary("Returns your experience and all that stuff")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
@@ -108,6 +109,7 @@ namespace MopsBot.Module
             }
             await ReplyAsync(StaticBase.people.DrawDiagram(limit, sortParameter));
         }
+        */
 
         [Command("Wolfram", RunMode=RunMode.Async)]
         [Summary("Sends a query to wolfram alpha.")]

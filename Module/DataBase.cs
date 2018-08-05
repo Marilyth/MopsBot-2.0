@@ -1,4 +1,4 @@
-﻿using System;
+﻿/*using System;
 using Discord.Commands;
 using Discord.WebSocket;
 using Discord;
@@ -57,3 +57,4 @@ namespace MopsBot.Module
         }
     }
 }
+*/

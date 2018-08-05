@@ -13,6 +13,7 @@ namespace MopsBot.Api.Controllers
         public UserController(){
 
         }
+        /*
         [HttpGet]
         public IEnumerable<KeyValuePair<ulong,User>> GetAll()
         {
@@ -33,7 +34,7 @@ namespace MopsBot.Api.Controllers
                 return NotFound();
             }
             return new ObjectResult(item);
-        }
+        }*/
 
         [HttpGet("guilds/{id}", Name = "GetUserGuilds")]
         public async Task<IActionResult> GetGuilds(ulong id)
