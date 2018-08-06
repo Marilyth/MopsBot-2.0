@@ -498,6 +498,42 @@ namespace MopsBot.Module
                     await ReplyAsync($"Could not find tracker for `{RegionRealmName}`\n"+
                                      $"Currently tracked article queries are: ``{String.Join(", ", StaticBase.Trackers["wow"].GetTrackers(Context.Channel.Id).Select(x => x.Name))}``");
             }
+
+            [Command("ChangeEQTrack")]
+            [Summary("Notifies on change of equipment.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task EnableEQTrack(string RegionRealmName)
+            {
+                WoWTracker tracker = (WoWTracker)StaticBase.Trackers["wow"].GetTracker(Context.Channel.Id, RegionRealmName);
+                tracker.trackEquipment = !tracker.trackEquipment;
+                
+                StaticBase.Trackers["wow"].SaveJson();
+                await ReplyAsync($"Changed EQTrack for `{RegionRealmName}` to `{tracker.trackEquipment}`");
+            }
+
+            [Command("ChangeStatTrack")]
+            [Summary("Notifies on change of stats.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task EnableStatTrack(string RegionRealmName)
+            {
+                WoWTracker tracker = (WoWTracker)StaticBase.Trackers["wow"].GetTracker(Context.Channel.Id, RegionRealmName);
+                tracker.trackStats = !tracker.trackStats;
+                
+                StaticBase.Trackers["wow"].SaveJson();
+                await ReplyAsync($"Changed StatTrack for `{RegionRealmName}` to `{tracker.trackStats}`");
+            }
+
+            [Command("ChangeFeedTrack")]
+            [Summary("Notifies on change of feed.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task EnableFeedTrack(string RegionRealmName)
+            {
+                WoWTracker tracker = (WoWTracker)StaticBase.Trackers["wow"].GetTracker(Context.Channel.Id, RegionRealmName);
+                tracker.trackFeed = !tracker.trackFeed;
+                
+                StaticBase.Trackers["wow"].SaveJson();
+                await ReplyAsync($"Changed EQTrack for `{RegionRealmName}` to `{tracker.trackFeed}`");
+            }
         }
         
         /*[Command("trackClips")]
