@@ -180,8 +180,8 @@ namespace MopsBot.Data.Tracker
 
             if (oldStats.Level < WoWChar.Level)
                 changes["Level"] += $"Level: {WoWChar.Level} (+{WoWChar.Level - oldStats.Level})\n";
-            if (oldStats.Items.AverageItemLevel < WoWChar.Items.AverageItemLevel)
-                changes["Level"] += $"ILevel: {WoWChar.Items.AverageItemLevel} (+{WoWChar.Items.AverageItemLevel - oldStats.Items.AverageItemLevel})";
+            //if (oldStats.Items.AverageItemLevel < WoWChar.Items.AverageItemLevel)
+            //    changes["Level"] += $"ILevel: {WoWChar.Items.AverageItemLevel} (+{WoWChar.Items.AverageItemLevel - oldStats.Items.AverageItemLevel})";
 
             if (string.IsNullOrEmpty(changes["Level"]))
                 changes.Remove("Level");
