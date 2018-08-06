@@ -66,9 +66,6 @@ namespace MopsBot.Data.Tracker
             {
                 Character newStats = WoWClient.GetCharacter(WoWRegion, Realm, WoWName, CharacterOptions.GetEverything);
 
-                if(WoWName.Equals("Strandmaus"))
-                    oldStats = WoWClient.GetCharacter(Region.EU, "Azshara", "Lilily", CharacterOptions.GetEverything);
-
                 if (newStats.Level > oldStats.Level)
                 {
                     foreach (ulong channel in ChannelIds)
