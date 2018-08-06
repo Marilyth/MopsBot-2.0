@@ -316,8 +316,8 @@ namespace MopsBot.Data.Tracker
                     changes.Remove("Loot");
 
                 changes["Achievements"] = "";
-                var oldAchievementDict = oldStats.Feed.Where(x => x.Type.Equals("ACHIEVEMENT") || x.Type.Equals("BOSSKILL")).ToDictionary(x => x.Achievement.Id);
-                var newAchievementDict = WoWChar.Feed.Where(x => x.Type.Equals("ACHIEVEMENT") || x.Type.Equals("BOSSKILL")).ToDictionary(x => x.Achievement.Id);
+                var oldAchievementDict = oldStats.Feed.Where(x => x.Type.Equals("ACHIEVEMENT") || x.Type.Equals("BOSSKILL") || x.Type.Equals("CRITERIA")).ToDictionary(x => x.Achievement.Id);
+                var newAchievementDict = WoWChar.Feed.Where(x => x.Type.Equals("ACHIEVEMENT") || x.Type.Equals("BOSSKILL") || x.Type.Equals("CRITERIA")).ToDictionary(x => x.Achievement.Id);
                 foreach (var item in newAchievementDict)
                 {
                     if (!oldAchievementDict.ContainsKey(item.Key))
