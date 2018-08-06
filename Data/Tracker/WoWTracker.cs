@@ -13,6 +13,7 @@ using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 using WowDotNetAPI;
 using WowDotNetAPI.Models;
+using System.Text.RegularExpressions;
 
 namespace MopsBot.Data.Tracker
 {
@@ -66,11 +67,12 @@ namespace MopsBot.Data.Tracker
             {
                 Character newStats = WoWClient.GetCharacter(WoWRegion, Realm, WoWName, CharacterOptions.GetEverything);
 
-                if (newStats.Level > oldStats.Level)
+                var changes = getChangedStats(newStats);
+                if (changes.Count > 0)
                 {
                     foreach (ulong channel in ChannelIds)
                     {
-                        await OnMajorChangeTracked(channel, createEmbed(newStats, getChangedStats(newStats)), ChannelMessages[channel]);
+                        await OnMajorChangeTracked(channel, createEmbed(newStats, changes), ChannelMessages[channel]);
                     }
                 }
                 oldStats = newStats;
