@@ -446,6 +446,59 @@ namespace MopsBot.Module
                                      $"Currently tracked article queries are: ``{String.Join(", ", StaticBase.Trackers["news"].GetTrackers(Context.Channel.Id).Select(x => x.Name))}``");
             }
         }
+
+        [Group("WoW")]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
+        public class WoW : ModuleBase
+        {
+            [Command("Track")]
+            [Summary("Keeps track of changes in stats of the specified WoW player.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task Track(string Region, string Realm, string Name, [Remainder]string notificationMessage = "")
+            {
+                Trackers["wow"].AddTracker(String.Join("|", new string[] { Region, Realm, Name }), Context.Channel.Id);
+                await ReplyAsync($"Keeping track of `{Name}`'s stats in `{Realm}` from now on.\nTo untrack, please use <Region>|<Realm>|<Name> as parameter.");
+            }
+
+            [Command("UnTrack")]
+            [Summary("Stops tracking stats of the specified player.\nRequires Manage channel permissions.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task UnTrack([Remainder]string RegionRealmName)
+            {
+                if(Trackers["wow"].TryRemoveTracker(RegionRealmName, Context.Channel.Id))
+                    await ReplyAsync("Stopped keeping track of " + RegionRealmName + "'s stats!");
+                else
+                    await ReplyAsync($"Could not find tracker for `{RegionRealmName}`\n"+
+                                     $"Currently tracked WoW players are: ``{String.Join(", ", StaticBase.Trackers["wow"].GetTrackers(Context.Channel.Id).Select(x => x.Name))}``");
+            }
+
+            [Command("GetTrackers")]
+            [Summary("Returns the WoW players that are tracked in the current channel.")]
+            public async Task getTrackers()
+            {
+                await ReplyAsync("Following players are currently being tracked:\n``" + String.Join(", ", StaticBase.Trackers["news"].GetTrackers(Context.Channel.Id).Select(x => x.Name)) + "``");
+            }
+
+            [Command("GetStats")]
+            [Summary("Returns the WoW players' stats.")]
+            public async Task getStats(string Region, string Realm, string Name)
+            {
+                await ReplyAsync("Stats for player:", embed: WoWTracker.createStatEmbed(Region, Realm, Name));
+            }
+
+            [Command("SetNotification")]
+            [Summary("Sets the notification text that is used each time a change in stats was found.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task SetNotification(string RegionRealmName, [Remainder]string notification)
+            {
+                if(StaticBase.Trackers["wow"].TrySetNotification(RegionRealmName, Context.Channel.Id, notification)){
+                    await ReplyAsync($"Changed notification for `{RegionRealmName}` to `{notification}`");
+                }
+                else
+                    await ReplyAsync($"Could not find tracker for `{RegionRealmName}`\n"+
+                                     $"Currently tracked article queries are: ``{String.Join(", ", StaticBase.Trackers["wow"].GetTrackers(Context.Channel.Id).Select(x => x.Name))}``");
+            }
+        }
         
         /*[Command("trackClips")]
         [Summary("Keeps track of clips from streams of the specified Streamer, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]

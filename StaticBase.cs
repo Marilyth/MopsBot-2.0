@@ -13,6 +13,7 @@ using MopsBot.Data.Tracker;
 using MopsBot.Data.Updater;
 using Tweetinvi;
 using NewsAPI;
+using WowDotNetAPI;
 
 namespace MopsBot
 {
@@ -61,6 +62,8 @@ namespace MopsBot
                 
                 NewsClient = new NewsApiClient(Program.Config["NewsAPI"]);
 
+                WoWTracker.WoWClient = new WowExplorer(Region.EU, Locale.en_GB, Program.Config["WoWKey"]);
+
                 using (StreamReader read = new StreamReader(new FileStream($"mopsdata//MuteTimerHandler.json", FileMode.OpenOrCreate)))
                 {
                     try
@@ -86,6 +89,7 @@ namespace MopsBot
                 Trackers["youtube"] = new TrackerHandler<YoutubeTracker>();
                 Trackers["reddit"] = new TrackerHandler<RedditTracker>();
                 Trackers["news"] = new TrackerHandler<NewsTracker>();
+                Trackers["wow"] = new TrackerHandler<WoWTracker>();
 
                 foreach (var tracker in Trackers)
                 {
