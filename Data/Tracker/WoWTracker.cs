@@ -3,17 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using Discord;
 using Discord.WebSocket;
-using Discord.Commands;
-using Tweetinvi;
-using Tweetinvi.Models;
 using System.Text;
 using System.Threading.Tasks;
+using System.Reflection;
 using Newtonsoft.Json;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 using WowDotNetAPI;
 using WowDotNetAPI.Models;
-using System.Text.RegularExpressions;
 
 namespace MopsBot.Data.Tracker
 {
@@ -102,20 +99,23 @@ namespace MopsBot.Data.Tracker
             e.ThumbnailUrl = "http://render-eu.worldofwarcraft.com/character/" + WoWChar.Thumbnail + $"?rand={StaticBase.ran.Next(0, 99999999)}";
             e.ImageUrl = "https://render-eu.worldofwarcraft.com/character/" + WoWChar.Thumbnail.Replace("avatar", "main") + $"?rand={StaticBase.ran.Next(0, 99999999)}";
 
-            foreach (var kvp in changedStats){
+            foreach (var kvp in changedStats)
+            {
                 Dictionary<string, string> subDict = new Dictionary<string, string>();
                 var entries = kvp.Value.Split("\n");
                 int characters = 0;
 
-                foreach(string entry in entries){
+                foreach (string entry in entries)
+                {
                     characters += entry.Length + 2;
-                    if(subDict.ContainsKey(kvp.Key + (characters >= 1024 ? ((characters / 1024) + 1).ToString() : "")))
+                    if (subDict.ContainsKey(kvp.Key + (characters >= 1024 ? ((characters / 1024) + 1).ToString() : "")))
                         subDict[kvp.Key + (characters >= 1024 ? ((characters / 1024) + 1).ToString() : "")] += entry + "\n";
                     else
                         subDict[kvp.Key + (characters >= 1024 ? ((characters / 1024) + 1).ToString() : "")] = entry + "\n";
                 }
 
-                foreach(var entryKvp in subDict){
+                foreach (var entryKvp in subDict)
+                {
                     e.AddField(entryKvp.Key, entryKvp.Value, true);
                 }
             }
@@ -144,20 +144,23 @@ namespace MopsBot.Data.Tracker
             e.ThumbnailUrl = "http://render-eu.worldofwarcraft.com/character/" + WoWChar.Thumbnail + $"?rand={StaticBase.ran.Next(0, 99999999)}";
             e.ImageUrl = "https://render-eu.worldofwarcraft.com/character/" + WoWChar.Thumbnail.Replace("avatar", "main") + $"?rand={StaticBase.ran.Next(0, 99999999)}";
 
-            foreach (var kvp in getStats(WoWChar)){
+            foreach (var kvp in getStats(WoWChar))
+            {
                 Dictionary<string, string> subDict = new Dictionary<string, string>();
                 var entries = kvp.Value.Split("\n");
                 int characters = 0;
 
-                foreach(string entry in entries){
+                foreach (string entry in entries)
+                {
                     characters += entry.Length + 2;
-                    if(subDict.ContainsKey(kvp.Key + (characters >= 1024 ? ((characters / 1024) + 1).ToString() : "")))
+                    if (subDict.ContainsKey(kvp.Key + (characters >= 1024 ? ((characters / 1024) + 1).ToString() : "")))
                         subDict[kvp.Key + (characters >= 1024 ? ((characters / 1024) + 1).ToString() : "")] += entry + "\n";
                     else
                         subDict[kvp.Key + (characters >= 1024 ? ((characters / 1024) + 1).ToString() : "")] = entry + "\n";
                 }
 
-                foreach(var entryKvp in subDict){
+                foreach (var entryKvp in subDict)
+                {
                     e.AddField(entryKvp.Key, entryKvp.Value, true);
                 }
             }
@@ -171,31 +174,27 @@ namespace MopsBot.Data.Tracker
 
             stats["Level"] = $"Level: {WoWChar.Level}\n";
             stats["Level"] += $"ILevel: {WoWChar.Items.AverageItemLevel}";
+            stats["Stats"] = "";
+            stats["Equipment"] = "";
 
-            stats["Stats"] = $"Stamina: {WoWChar.Stats.Stamina}\n";
-            stats["Stats"] += $"Strength: {WoWChar.Stats.Strength}\n";
-            stats["Stats"] += $"Intellect: {WoWChar.Stats.Intellect}\n";
-            stats["Stats"] += $"Agility: {WoWChar.Stats.Agility}\n";
+            var statDict = WoWChar.Stats.GetType()
+                    .GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                    .ToDictionary(prop => prop.Name, prop => Convert.ToDouble(prop.GetValue(WoWChar.Stats, null)));
 
-            stats["Equipment"] = WoWChar.Items.Back != null ? $"[{WoWChar.Items.Back?.Name}](http://www.wowhead.com/item={WoWChar.Items.Back?.Id}) Back\n" : "";
-            stats["Equipment"] += WoWChar.Items.Chest != null ? $"[{WoWChar.Items.Chest?.Name}](http://www.wowhead.com/item={WoWChar.Items.Chest?.Id}) Chest\n" : "";
-            stats["Equipment"] += WoWChar.Items.Feet != null ? $"[{WoWChar.Items.Feet?.Name}](http://www.wowhead.com/item={WoWChar.Items.Feet?.Id}) Feed\n" : "";
-            stats["Equipment"] += WoWChar.Items.Finger1 != null ? $"[{WoWChar.Items.Finger1?.Name}](http://www.wowhead.com/item={WoWChar.Items.Finger1?.Id}) Finger1\n" : "";
-            stats["Equipment"] += WoWChar.Items.Finger2 != null ? $"[{WoWChar.Items.Finger2?.Name}](http://www.wowhead.com/item={WoWChar.Items.Finger2?.Id}) Finger2\n" : "";
-            stats["Equipment"] += WoWChar.Items.Hands != null ? $"[{WoWChar.Items.Hands.Name}](http://www.wowhead.com/item={WoWChar.Items.Hands.Id}) Hands\n" : "";
-            stats["Equipment"] += WoWChar.Items.Head != null ? $"[{WoWChar.Items.Head?.Name}](http://www.wowhead.com/item={WoWChar.Items.Head?.Id}) Head\n" : "";
-            stats["Equipment"] += WoWChar.Items.Legs != null ? $"[{WoWChar.Items.Legs?.Name}](http://www.wowhead.com/item={WoWChar.Items.Legs?.Id}) Legs\n" : "";
-            stats["Equipment"] += WoWChar.Items.MainHand != null ? $"[{WoWChar.Items.MainHand?.Name}](http://www.wowhead.com/item={WoWChar.Items.MainHand?.Id}) MainHand\n" : "";
-            stats["Equipment"] += WoWChar.Items.Neck != null ? $"[{WoWChar.Items.Neck?.Name}](http://www.wowhead.com/item={WoWChar.Items.Neck?.Id}) Neck\n" : "";
-            stats["Equipment"] += WoWChar.Items.OffHand != null ? $"[{WoWChar.Items.OffHand?.Name}](http://www.wowhead.com/item={WoWChar.Items.OffHand?.Id}) OffHand\n" : "";
-            stats["Equipment"] += WoWChar.Items.Ranged != null ? $"[{WoWChar.Items.Ranged?.Name}](http://www.wowhead.com/item={WoWChar.Items.Ranged?.Id}) Ranged\n" : "";
-            stats["Equipment"] += WoWChar.Items.Shirt != null ? $"[{WoWChar.Items.Shirt?.Name}](http://www.wowhead.com/item={WoWChar.Items.Shirt?.Id}) Shirt\n" : "";
-            stats["Equipment"] += WoWChar.Items.Shoulder != null ? $"[{WoWChar.Items.Shoulder?.Name}](http://www.wowhead.com/item={WoWChar.Items.Shoulder?.Id}) Shoulder\n" : "";
-            stats["Equipment"] += WoWChar.Items.Tabard != null ? $"[{WoWChar.Items.Tabard?.Name}](http://www.wowhead.com/item={WoWChar.Items.Tabard?.Id}) Tabard\n" : "";
-            stats["Equipment"] += WoWChar.Items.Trinket1 != null ? $"[{WoWChar.Items.Trinket1?.Name}](http://www.wowhead.com/item={WoWChar.Items.Trinket1?.Id}) Trinket1\n" : "";
-            stats["Equipment"] += WoWChar.Items.Trinket2 != null ? $"[{WoWChar.Items.Trinket2?.Name}](http://www.wowhead.com/item={WoWChar.Items.Trinket2?.Id}) Trinket2\n" : "";
-            stats["Equipment"] += WoWChar.Items.Waist != null ? $"[{WoWChar.Items.Waist?.Name}](http://www.wowhead.com/item={WoWChar.Items.Waist?.Id}) Waist\n" : "";
-            stats["Equipment"] += WoWChar.Items.Wrist != null ? $"[{WoWChar.Items.Wrist?.Name}](http://www.wowhead.com/item={WoWChar.Items.Wrist?.Id}) Wrist\n" : "";
+            foreach (var kvp in statDict)
+            {
+                stats["Stats"] += $"{kvp.Key}: {kvp.Value}\n";
+            }
+
+            var itemDict = WoWChar.Items.GetType()
+                    .GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                    .Where(x => x.GetValue(WoWChar.Items) is CharacterItem)
+                    .ToDictionary(prop => prop.Name, prop => (CharacterItem)prop.GetValue(WoWChar.Items));
+
+            foreach (var kvp in itemDict)
+            {
+                stats["Equipment"] += $"[{kvp.Value.Name}](http://www.wowhead.com/item={kvp.Value.Id}) **{((rarity)kvp.Value.Quality).ToString()}** {kvp.Key}\n";
+            }
 
             return stats;
         }
@@ -220,21 +219,18 @@ namespace MopsBot.Data.Tracker
             {
                 changes["Stats"] = "";
 
-                if (!oldStats.Stats.Stamina.Equals(WoWChar.Stats.Stamina))
+                var newDict = WoWChar.Stats.GetType()
+                    .GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                    .ToDictionary(prop => prop.Name, prop => Convert.ToDouble(prop.GetValue(WoWChar.Stats, null)));
+
+                var oldDict = oldStats.Stats.GetType()
+                    .GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                    .ToDictionary(prop => prop.Name, prop => Convert.ToDouble(prop.GetValue(oldStats.Stats, null)));
+
+                foreach (var kvp in newDict)
                 {
-                    changes["Stats"] += $"Stamina: {WoWChar.Stats.Stamina} ({(oldStats.Stats.Stamina < WoWChar.Stats.Stamina ? "+" : "")}{WoWChar.Stats.Stamina - oldStats.Stats.Stamina})\n";
-                }
-                if (!oldStats.Stats.Strength.Equals(WoWChar.Stats.Strength))
-                {
-                    changes["Stats"] += $"Strength: {WoWChar.Stats.Strength} ({(oldStats.Stats.Strength < WoWChar.Stats.Strength ? "+" : "")}{WoWChar.Stats.Strength - oldStats.Stats.Strength})\n";
-                }
-                if (!oldStats.Stats.Intellect.Equals(WoWChar.Stats.Intellect))
-                {
-                    changes["Stats"] += $"Intellect: {WoWChar.Stats.Intellect} ({(oldStats.Stats.Intellect < WoWChar.Stats.Intellect ? "+" : "")}{WoWChar.Stats.Intellect - oldStats.Stats.Intellect})\n";
-                }
-                if (!oldStats.Stats.Agility.Equals(WoWChar.Stats.Agility))
-                {
-                    changes["Stats"] += $"Agility: {WoWChar.Stats.Agility} ({(oldStats.Stats.Agility < WoWChar.Stats.Agility ? "+" : "")}{WoWChar.Stats.Agility - oldStats.Stats.Agility})\n";
+                    if (kvp.Value != oldDict[kvp.Key])
+                        changes["Stats"] += $"{kvp.Key}: {kvp.Value} ({(oldDict[kvp.Key] < kvp.Value ? "+" : "")}{kvp.Value - oldDict[kvp.Key]})\n";
                 }
 
                 if (string.IsNullOrEmpty(changes["Stats"]))
@@ -246,81 +242,22 @@ namespace MopsBot.Data.Tracker
             {
                 changes["Equipment"] = "";
 
-                if (!oldStats.Items.Back?.Id.Equals(WoWChar.Items.Back?.Id) ?? false)
+                var newDict = WoWChar.Items.GetType()
+                    .GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                    .Where(x => x.GetValue(WoWChar.Items) is CharacterItem)
+                    .ToDictionary(prop => prop.Name, prop => (CharacterItem)prop.GetValue(WoWChar.Items));
+
+
+                var oldDict = oldStats.Items.GetType()
+                    .GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                    .Where(x => x.GetValue(oldStats.Items) is CharacterItem)
+                    .ToDictionary(prop => prop.Name, prop => (CharacterItem)prop.GetValue(oldStats.Items));
+
+
+                foreach (var kvp in newDict)
                 {
-                    changes["Equipment"] += $"[{WoWChar.Items.Back.Name}](http://www.wowhead.com/item={WoWChar.Items.Back.Id}) Back\n";
-                }
-                if (!oldStats.Items.Chest?.Id.Equals(WoWChar.Items.Chest?.Id) ?? false)
-                {
-                    changes["Equipment"] += $"[{WoWChar.Items.Chest.Name}](http://www.wowhead.com/item={WoWChar.Items.Chest.Id}) Chest\n";
-                }
-                if (!oldStats.Items.Feet?.Id.Equals(WoWChar.Items.Feet?.Id) ?? false)
-                {
-                    changes["Equipment"] += $"[{WoWChar.Items.Feet.Name}](http://www.wowhead.com/item={WoWChar.Items.Feet.Id}) Feet\n";
-                }
-                if (!oldStats.Items.Finger1?.Id.Equals(WoWChar.Items.Finger1?.Id) ?? false)
-                {
-                    changes["Equipment"] += $"[{WoWChar.Items.Finger1.Name}](http://www.wowhead.com/item={WoWChar.Items.Finger1.Id}) Finger-1\n";
-                }
-                if (!oldStats.Items.Finger2?.Id.Equals(WoWChar.Items.Finger2?.Id) ?? false)
-                {
-                    changes["Equipment"] += $"[{WoWChar.Items.Finger2.Name}](http://www.wowhead.com/item={WoWChar.Items.Finger2.Id}) Finger-2\n";
-                }
-                if (!oldStats.Items.Hands?.Id.Equals(WoWChar.Items.Hands?.Id) ?? false)
-                {
-                    changes["Equipment"] += $"[{WoWChar.Items.Hands.Name}](http://www.wowhead.com/item={WoWChar.Items.Hands.Id}) Hands\n";
-                }
-                if (!oldStats.Items.Head?.Id.Equals(WoWChar.Items.Head?.Id) ?? false)
-                {
-                    changes["Equipment"] += $"[{WoWChar.Items.Head.Name}](http://www.wowhead.com/item={WoWChar.Items.Head.Id}) Head\n";
-                }
-                if (!oldStats.Items.Legs?.Id.Equals(WoWChar.Items.Legs?.Id) ?? false)
-                {
-                    changes["Equipment"] += $"[{WoWChar.Items.Legs.Name}](http://www.wowhead.com/item={WoWChar.Items.Legs.Id}) Legs\n";
-                }
-                if (!oldStats.Items.MainHand?.Id.Equals(WoWChar.Items.MainHand?.Id) ?? false)
-                {
-                    changes["Equipment"] += $"[{WoWChar.Items.MainHand.Name}](http://www.wowhead.com/item={WoWChar.Items.MainHand.Id}) Main Hand\n";
-                }
-                if (!oldStats.Items.OffHand?.Id.Equals(WoWChar.Items.OffHand?.Id) ?? false)
-                {
-                    changes["Equipment"] += $"[{WoWChar.Items.OffHand.Name}](http://www.wowhead.com/item={WoWChar.Items.OffHand.Id}) Off Hand\n";
-                }
-                if (!oldStats.Items.Neck?.Id.Equals(WoWChar.Items.Neck?.Id) ?? false)
-                {
-                    changes["Equipment"] += $"[{WoWChar.Items.Neck.Name}](http://www.wowhead.com/item={WoWChar.Items.Neck.Id}) Neck\n";
-                }
-                if (!oldStats.Items.Ranged?.Id.Equals(WoWChar.Items.Ranged?.Id) ?? false)
-                {
-                    changes["Equipment"] += $"[{WoWChar.Items.Ranged.Name}](http://www.wowhead.com/item={WoWChar.Items.Ranged.Id}) Ranged\n";
-                }
-                if (!oldStats.Items.Shirt?.Id.Equals(WoWChar.Items.Shirt?.Id) ?? false)
-                {
-                    changes["Equipment"] += $"[{WoWChar.Items.Shirt.Name}](http://www.wowhead.com/item={WoWChar.Items.Shirt.Id}) Shirt\n";
-                }
-                if (!oldStats.Items.Shoulder?.Id.Equals(WoWChar.Items.Shoulder?.Id) ?? false)
-                {
-                    changes["Equipment"] += $"[{WoWChar.Items.Shoulder.Name}](http://www.wowhead.com/item={WoWChar.Items.Shoulder.Id}) Shoulder\n";
-                }
-                if (!oldStats.Items.Tabard?.Id.Equals(WoWChar.Items.Tabard?.Id) ?? false)
-                {
-                    changes["Equipment"] += $"[{WoWChar.Items.Tabard.Name}](http://www.wowhead.com/item={WoWChar.Items.Tabard.Id}) Tabard\n";
-                }
-                if (!oldStats.Items.Trinket1?.Id.Equals(WoWChar.Items.Trinket1?.Id) ?? false)
-                {
-                    changes["Equipment"] += $"[{WoWChar.Items.Trinket1.Name}](http://www.wowhead.com/item={WoWChar.Items.Trinket1.Id}) Trinket-1\n";
-                }
-                if (!oldStats.Items.Trinket2?.Id.Equals(WoWChar.Items.Trinket2?.Id) ?? false)
-                {
-                    changes["Equipment"] += $"[{WoWChar.Items.Trinket2.Name}](http://www.wowhead.com/item={WoWChar.Items.Trinket2.Id}) Trinket-2\n";
-                }
-                if (!oldStats.Items.Waist?.Id.Equals(WoWChar.Items.Waist?.Id) ?? false)
-                {
-                    changes["Equipment"] += $"[{WoWChar.Items.Waist.Name}](http://www.wowhead.com/item={WoWChar.Items.Waist.Id}) Waist\n";
-                }
-                if (!oldStats.Items.Wrist?.Id.Equals(WoWChar.Items.Wrist?.Id) ?? false)
-                {
-                    changes["Equipment"] += $"[{WoWChar.Items.Wrist.Name}](http://www.wowhead.com/item={WoWChar.Items.Wrist.Id}) Wrist\n";
+                    if (kvp.Value.Id != oldDict[kvp.Key].Id)
+                        changes["Equipment"] += $"[{kvp.Value.Name}](http://www.wowhead.com/item={kvp.Value.Id}) **{((rarity)kvp.Value.Quality).ToString()}** {kvp.Key}\n";
                 }
 
                 if (string.IsNullOrEmpty(changes["Equipment"]))
@@ -362,7 +299,8 @@ namespace MopsBot.Data.Tracker
         }
     }
 
-    public enum rarity{
+    public enum rarity
+    {
         Poor = 0,
         Common = 1,
         Uncommon = 2,
