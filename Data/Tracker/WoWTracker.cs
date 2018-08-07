@@ -331,14 +331,14 @@ namespace MopsBot.Data.Tracker
             if (trackFeed)
             {
                 changes["Loot"] = "";
-                var oldLootDict = oldStats.Feed.Where(x => x.Type.Equals("LOOT")).ToDictionary(x => x.ItemId);
-                var newLootDict = WoWChar.Feed.Where(x => x.Type.Equals("LOOT")).ToDictionary(x => x.ItemId);
+                var oldLootDict = oldStats.Feed.Where(x => x.Type.Equals("LOOT")).ToDictionary(x => x.Timestamp);
+                var newLootDict = WoWChar.Feed.Where(x => x.Type.Equals("LOOT")).ToDictionary(x => x.Timestamp);
                 foreach (var item in newLootDict)
                 {
                     if (!oldLootDict.ContainsKey(item.Key))
                     {
                         var equipment = WoWClient.GetItem(item.Value.ItemId);
-                        changes["Loot"] += $"[{equipment.Name}](http://www.wowhead.com/item={item.Key})\n";
+                        changes["Loot"] += $"[{equipment.Name}](http://www.wowhead.com/item={item.Key}) **{((rarity)equipment.Quality).ToString()}**\n";
                     }
                 }
                 if (string.IsNullOrEmpty(changes["Loot"]))
@@ -360,5 +360,16 @@ namespace MopsBot.Data.Tracker
 
             return changes;
         }
+    }
+
+    public enum rarity{
+        Poor = 0,
+        Common = 1,
+        Uncommon = 2,
+        Rare = 3,
+        Epic = 4,
+        Legendary = 5,
+        Artifact = 6,
+        Heirloom = 7
     }
 }
