@@ -256,7 +256,7 @@ namespace MopsBot.Data.Tracker
 
                 foreach (var kvp in newDict)
                 {
-                    if (kvp.Value.Id != oldDict[kvp.Key].Id)
+                    if (!oldDict.ContainsKey(kvp.Key) || kvp.Value.Id != oldDict[kvp.Key].Id)
                         changes["Equipment"] += $"[{kvp.Value.Name}](http://www.wowhead.com/item={kvp.Value.Id}) **{((rarity)kvp.Value.Quality).ToString()}** {kvp.Key}\n";
                 }
 
