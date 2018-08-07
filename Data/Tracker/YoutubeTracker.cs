@@ -47,6 +47,10 @@ namespace MopsBot.Data.Tracker
             var lastStringDateTime = XmlConvert.ToString(lastDateTime.AddSeconds(1), XmlDateTimeSerializationMode.Utc);
             string query = await MopsBot.Module.Information.ReadURLAsync($"https://www.googleapis.com/youtube/v3/search?key={Program.Config["Youtube"]}&channelId={Name}&part=snippet,id&order=date&maxResults=20&publishedAfter={lastStringDateTime}");
 
+            var tmp = Program.Config["Youtube"];
+            Program.Config["Youtube"] = Program.Config["Youtube2"];
+            Program.Config["Youtube2"] = tmp;
+
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {
                 NullValueHandling = NullValueHandling.Ignore
@@ -60,6 +64,9 @@ namespace MopsBot.Data.Tracker
         private async Task<YoutubeChannelResult> fetchChannel()
         {
             string query = await MopsBot.Module.Information.ReadURLAsync($"https://www.googleapis.com/youtube/v3/channels?part=snippet&id={Name}&key={Program.Config["Youtube"]}");
+            var tmp = Program.Config["Youtube"];
+            Program.Config["Youtube"] = Program.Config["Youtube2"];
+            Program.Config["Youtube2"] = tmp;
 
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {
