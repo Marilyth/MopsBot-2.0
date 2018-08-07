@@ -476,7 +476,7 @@ namespace MopsBot.Module
             [Summary("Returns the WoW players that are tracked in the current channel.")]
             public async Task getTrackers()
             {
-                await ReplyAsync("Following players are currently being tracked:\n``" + String.Join(", ", StaticBase.Trackers["news"].GetTrackers(Context.Channel.Id).Select(x => x.Name)) + "``");
+                await ReplyAsync("Following players are currently being tracked:\n``" + String.Join(", ", StaticBase.Trackers["wow"].GetTrackers(Context.Channel.Id).Select(x => x.Name)) + "``");
             }
 
             [Command("GetStats")]
