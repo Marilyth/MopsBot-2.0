@@ -102,7 +102,7 @@ namespace MopsBot.Data.Tracker
             e.ThumbnailUrl = "http://render-eu.worldofwarcraft.com/character/" + WoWChar.Thumbnail + $"?rand={StaticBase.ran.Next(0, 99999999)}";
             e.ImageUrl = "https://render-eu.worldofwarcraft.com/character/" + WoWChar.Thumbnail.Replace("avatar", "main") + $"?rand={StaticBase.ran.Next(0, 99999999)}";
 
-            foreach (var kvp in getStats(WoWChar)){
+            foreach (var kvp in changedStats){
                 Dictionary<string, string> subDict = new Dictionary<string, string>();
                 var entries = kvp.Value.Split("\n");
                 int characters = 0;
@@ -338,7 +338,7 @@ namespace MopsBot.Data.Tracker
                     if (!oldLootDict.ContainsKey(item.Key))
                     {
                         var equipment = WoWClient.GetItem(item.Value.ItemId);
-                        changes["Loot"] += $"[{equipment.Name}](http://www.wowhead.com/item={item.Key}) **{((rarity)equipment.Quality).ToString()}**\n";
+                        changes["Loot"] += $"[{equipment.Name}](http://www.wowhead.com/item={equipment.Id}) **{((rarity)equipment.Quality).ToString()}**\n";
                     }
                 }
                 if (string.IsNullOrEmpty(changes["Loot"]))
