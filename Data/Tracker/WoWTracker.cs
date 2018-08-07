@@ -130,7 +130,7 @@ namespace MopsBot.Data.Tracker
             e.ImageUrl = "https://render-eu.worldofwarcraft.com/character/" + WoWChar.Thumbnail.Replace("avatar", "main");
 
             foreach (var kvp in getStats(WoWChar))
-                e.AddField(kvp.Key, kvp.Value.Substring(0, 1024), true);
+                e.AddField(kvp.Key, kvp.Value.Substring(0, 1024 > kvp.Value.Length ? kvp.Value.Length : 1024), true);
 
             return e.Build();
         }
