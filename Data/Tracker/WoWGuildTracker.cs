@@ -103,7 +103,7 @@ namespace MopsBot.Data.Tracker
                         catch{}
 
                         var e = new EmbedBuilder();
-                        e.WithAuthor(character?.Name ?? item.Value.Character, character != null ? "http://render-eu.worldofwarcraft.com/character/" + character.Thumbnail + $"?rand={StaticBase.ran.Next(0, 99999999)}" : null).WithTimestamp(DateTimeOffset.FromUnixTimeMilliseconds(item.Value.Timestamp))
+                        e.WithAuthor(character?.Name ?? item.Value?.Character ?? "Something went wrong", character != null ? "http://render-eu.worldofwarcraft.com/character/" + character?.Thumbnail ?? "Whoops" + $"?rand={StaticBase.ran.Next(0, 99999999)}" : null).WithTimestamp(DateTimeOffset.FromUnixTimeMilliseconds(item.Value?.Timestamp ?? DateTime.UtcNow.Ticks))
                             .WithThumbnailUrl("https://render-eu.worldofwarcraft.com/icons/56/" + equipment.Icon + ".jpg").WithTitle("Item Acquired")
                             .WithFooter("World of Warcraft", "https://nerdygamergirls.files.wordpress.com/2015/03/featured-image-wow-logo-221x221.png?w=1920&h=768&crop=1")
                             .WithDescription($"Player {character.Name} got the Item:\n[{equipment.Name}](http://www.wowhead.com/item={equipment.Id}) **{((rarity)equipment.Quality).ToString()}**\n");
@@ -130,7 +130,7 @@ namespace MopsBot.Data.Tracker
                         catch{}
 
                         var e = new EmbedBuilder();
-                        e.WithAuthor(character?.Name ?? item.Value.Character, character != null ? "http://render-eu.worldofwarcraft.com/character/" + character.Thumbnail + $"?rand={StaticBase.ran.Next(0, 99999999)}" : null).WithTimestamp(DateTimeOffset.FromUnixTimeMilliseconds(item.Value.Timestamp))
+                        e.WithAuthor(character?.Name ?? item.Value?.Character ?? "Something went wrong", character != null ? "http://render-eu.worldofwarcraft.com/character/" + character?.Thumbnail ?? "Whoops" + $"?rand={StaticBase.ran.Next(0, 99999999)}" : null).WithTimestamp(DateTimeOffset.FromUnixTimeMilliseconds(item.Value?.Timestamp ?? DateTime.UtcNow.Ticks))
                             .WithThumbnailUrl("https://render-eu.worldofwarcraft.com/icons/56/" + item.Value.Achievement.Icon + ".jpg").WithTitle("Achievement Acquired")
                             .WithFooter("World of Warcraft", "https://nerdygamergirls.files.wordpress.com/2015/03/featured-image-wow-logo-221x221.png?w=1920&h=768&crop=1")
                             .WithDescription($"Player {character.Name} got the Achievement:\n[{item.Value.Achievement.Title}](http://www.wowhead.com/achievement={item.Value.Achievement.Id}) **{item.Value.Achievement.Points} Points**\n");
