@@ -103,7 +103,6 @@ namespace MopsBot.Data.Tracker
                             .WithDescription($"Player {character.Name} got the Item:\n[{equipment.Name}](http://www.wowhead.com/item={equipment.Id}) **{((rarity)equipment.Quality).ToString()}**\n");
                         
                         newsEmbeds.Add(e.Build());
-                        break;
                     }
                 }
             }
@@ -125,7 +124,6 @@ namespace MopsBot.Data.Tracker
                             .WithDescription($"Player {character.Name} got the Achievement:\n[{item.Value.Achievement.Title}](http://www.wowhead.com/achievement={item.Value.Achievement.Id}) **{item.Value.Achievement.Points} Points**\n");
                         
                         newsEmbeds.Add(e.Build());
-                        break;
                     }
                 }
             }
