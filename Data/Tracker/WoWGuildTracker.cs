@@ -101,7 +101,7 @@ namespace MopsBot.Data.Tracker
 
                         var e = new EmbedBuilder();
                         e.WithAuthor(character.Name, "http://render-eu.worldofwarcraft.com/character/" + character.Thumbnail + $"?rand={StaticBase.ran.Next(0, 99999999)}").WithCurrentTimestamp()
-                            .WithThumbnailUrl("https://render-eu.worldofwarcraft.com/icons/56/" + equipment.Icon + ".jpg").WithTitle("Item Aquired")
+                            .WithThumbnailUrl("https://render-eu.worldofwarcraft.com/icons/56/" + equipment.Icon + ".jpg").WithTitle("Item Acquired")
                             .WithFooter("World of Warcraft", "https://nerdygamergirls.files.wordpress.com/2015/03/featured-image-wow-logo-221x221.png?w=1920&h=768&crop=1")
                             .WithDescription($"Player {character.Name} got the Item:\n[{equipment.Name}](http://www.wowhead.com/item={equipment.Id}) **{((rarity)equipment.Quality).ToString()}**\n");
                         
@@ -123,7 +123,7 @@ namespace MopsBot.Data.Tracker
 
                         var e = new EmbedBuilder();
                         e.WithAuthor(character.Name, "http://render-eu.worldofwarcraft.com/character/" + character.Thumbnail + $"?rand={StaticBase.ran.Next(0, 99999999)}").WithCurrentTimestamp()
-                            .WithThumbnailUrl("https://render-eu.worldofwarcraft.com/icons/56/" + item.Value.Achievement.Icon + ".jpg").WithTitle("Achievement Aquired")
+                            .WithThumbnailUrl("https://render-eu.worldofwarcraft.com/icons/56/" + item.Value.Achievement.Icon + ".jpg").WithTitle("Achievement Acquired")
                             .WithFooter("World of Warcraft", "https://nerdygamergirls.files.wordpress.com/2015/03/featured-image-wow-logo-221x221.png?w=1920&h=768&crop=1")
                             .WithDescription($"Player {character.Name} got the Achievement:\n[{item.Value.Achievement.Title}](http://www.wowhead.com/achievement={item.Value.Achievement.Id}) **{item.Value.Achievement.Points} Points**\n");
                         
