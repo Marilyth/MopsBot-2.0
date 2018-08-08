@@ -62,9 +62,6 @@ namespace MopsBot.Data.Tracker
             {
                 Guild newStats = WoWTracker.WoWClient.GetGuild(WoWRegion, Realm, GuildName, GuildOptions.GetEverything);
 
-                if(GuildName.Equals("Memento"))
-                    oldStats = WoWTracker.WoWClient.GetGuild(WoWRegion, Realm, "UnknownError", GuildOptions.GetEverything);
-
                 var changes = getNewsFeed(newStats);
                 if (changes.Count > 0)
                 {
