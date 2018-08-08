@@ -90,6 +90,7 @@ namespace MopsBot
                 Trackers["reddit"] = new TrackerHandler<RedditTracker>();
                 Trackers["news"] = new TrackerHandler<NewsTracker>();
                 Trackers["wow"] = new TrackerHandler<WoWTracker>();
+                Trackers["wowguild"] = new TrackerHandler<WoWGuildTracker>();
 
                 foreach (var tracker in Trackers)
                 {

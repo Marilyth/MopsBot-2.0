@@ -298,7 +298,10 @@ namespace MopsBot.Data.Tracker
             return changes;
         }
     }
+}
 
+namespace MopsBot.Data.Tracker
+{
     public enum rarity
     {
         Poor = 0,
