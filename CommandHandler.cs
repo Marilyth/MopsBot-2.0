@@ -126,10 +126,12 @@ namespace MopsBot
             // If the command failed, notify the user
             if (!result.IsSuccess && !result.ErrorReason.Equals(""))
             {
-                if(!result.ErrorReason.Contains("Unknown command") && !result.ErrorReason.Contains("Object reference not set to an instance of an object"))
-                    await message.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}");
-                else if(result.ErrorReason.Contains("Object reference not set to an instance of an object"))
+                if(result.ErrorReason.Contains("Object reference not set to an instance of an object"))
                     await message.Channel.SendMessageAsync($"**Error:** Mops just restarted and needs to initialise things first.\nTry again in a minute!");
+                else if(result.ErrorReason.Contains("The input text has too many parameters"))
+                    await message.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}\nIf your parameter contains spaces, please wrap it around quotation marks like this: `\"A Parameter\"`.");
+                else if(!result.ErrorReason.Contains("Unknown command"))
+                    await message.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}");
                 else{
                     await commands.Commands.First(x => x.Name.Equals("UseCustomCommand")).ExecuteAsync(context, new List<object>{$"{context.Message.Content.Substring(argPos)}"}, new List<object>{}, _provider);
                 }

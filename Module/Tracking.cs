@@ -454,29 +454,29 @@ namespace MopsBot.Module
             [Command("Track")]
             [Summary("Keeps track of changes in stats of the specified WoW player.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task Track(string Region, string Realm, string Name, [Remainder]string notificationMessage = "")
+            public async Task Track(string Region, string Realm, string Name)
             {
                 Trackers["wow"].AddTracker(String.Join("|", new string[] { Region, Realm, Name }), Context.Channel.Id);
-                await ReplyAsync($"Keeping track of `{Name}`'s stats in `{Realm}` from now on.\nTo untrack, please use <Region>|<Realm>|<Name> as parameter.");
+                await ReplyAsync($"Keeping track of `{Name}`'s stats in `{Realm}` from now on.");
             }
 
             [Command("UnTrack")]
             [Summary("Stops tracking stats of the specified player.\nRequires Manage channel permissions.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task UnTrack([Remainder]string RegionRealmName)
+            public async Task UnTrack(string Region, string Realm, string Name)
             {
-                if(Trackers["wow"].TryRemoveTracker(RegionRealmName, Context.Channel.Id))
-                    await ReplyAsync("Stopped keeping track of " + RegionRealmName + "'s stats!");
+                if(Trackers["wow"].TryRemoveTracker(string.Join("|", Region, Realm, Name), Context.Channel.Id))
+                    await ReplyAsync($"Stopped keeping track of `{Region} {Realm} {Name}`'s stats!");
                 else
-                    await ReplyAsync($"Could not find tracker for `{RegionRealmName}`\n"+
-                                     $"Currently tracked WoW players are: ``{String.Join(", ", StaticBase.Trackers["wow"].GetTrackers(Context.Channel.Id).Select(x => x.Name))}``");
+                    await ReplyAsync($"Could not find tracker for `{Region} {Realm} {Name}`\n"+
+                                     $"Currently tracked WoW players are: ``{String.Join(", ", StaticBase.Trackers["wow"].GetTrackers(Context.Channel.Id).Select(x => x.Name.Replace("|", " ")))}``");
             }
 
             [Command("GetTrackers")]
             [Summary("Returns the WoW players that are tracked in the current channel.")]
             public async Task getTrackers()
             {
-                await ReplyAsync("Following players are currently being tracked:\n``" + String.Join(", ", StaticBase.Trackers["wow"].GetTrackers(Context.Channel.Id).Select(x => x.Name)) + "``");
+                await ReplyAsync("Following players are currently being tracked:\n``" + String.Join(", ", StaticBase.Trackers["wow"].GetTrackers(Context.Channel.Id).Select(x => x.Name.Replace("|", " "))) + "``");
             }
 
             [Command("GetStats")]
@@ -486,53 +486,53 @@ namespace MopsBot.Module
                 await ReplyAsync("Stats for player:", embed: WoWTracker.createStatEmbed(Region, Realm, Name));
             }
 
-            [Command("SetNotification")]
+            /*[Command("SetNotification")]
             [Summary("Sets the notification text that is used each time a change in stats was found.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(string RegionRealmName, [Remainder]string notification)
+            public async Task SetNotification(string Region, string Realm, string Name, [Remainder]string notification)
             {
-                if(StaticBase.Trackers["wow"].TrySetNotification(RegionRealmName, Context.Channel.Id, notification)){
-                    await ReplyAsync($"Changed notification for `{RegionRealmName}` to `{notification}`");
+                if(StaticBase.Trackers["wow"].TrySetNotification(string.Join("|", Region, Realm, Name), Context.Channel.Id, notification)){
+                    await ReplyAsync($"Changed notification for `{Region} {Realm} {Name}` to `{notification}`");
                 }
                 else
-                    await ReplyAsync($"Could not find tracker for `{RegionRealmName}`\n"+
-                                     $"Currently tracked players are: ``{String.Join(", ", StaticBase.Trackers["wow"].GetTrackers(Context.Channel.Id).Select(x => x.Name))}``");
-            }
+                    await ReplyAsync($"Could not find tracker for `{Region} {Realm} {Name}`\n"+
+                                     $"Currently tracked players are: ``{String.Join(", ", StaticBase.Trackers["wow"].GetTrackers(Context.Channel.Id).Select(x => x.Name.Replace("|", " ")))}``");
+            }*/
 
             [Command("ChangeEQTrack")]
             [Summary("Notifies on change of equipment.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task EnableEQTrack(string RegionRealmName)
+            public async Task EnableEQTrack(string Region, string Realm, string Name)
             {
-                WoWTracker tracker = (WoWTracker)StaticBase.Trackers["wow"].GetTracker(Context.Channel.Id, RegionRealmName);
+                WoWTracker tracker = (WoWTracker)StaticBase.Trackers["wow"].GetTracker(Context.Channel.Id, string.Join("|", Region, Realm, Name));
                 tracker.trackEquipment = !tracker.trackEquipment;
                 
                 StaticBase.Trackers["wow"].SaveJson();
-                await ReplyAsync($"Changed EQTrack for `{RegionRealmName}` to `{tracker.trackEquipment}`");
+                await ReplyAsync($"Changed EQTrack for `{Region} {Realm} {Name}` to `{tracker.trackEquipment}`");
             }
 
             [Command("ChangeStatTrack")]
             [Summary("Notifies on change of stats.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task EnableStatTrack(string RegionRealmName)
+            public async Task EnableStatTrack(string Region, string Realm, string Name)
             {
-                WoWTracker tracker = (WoWTracker)StaticBase.Trackers["wow"].GetTracker(Context.Channel.Id, RegionRealmName);
+                WoWTracker tracker = (WoWTracker)StaticBase.Trackers["wow"].GetTracker(Context.Channel.Id, string.Join("|", Region, Realm, Name));
                 tracker.trackStats = !tracker.trackStats;
                 
                 StaticBase.Trackers["wow"].SaveJson();
-                await ReplyAsync($"Changed StatTrack for `{RegionRealmName}` to `{tracker.trackStats}`");
+                await ReplyAsync($"Changed StatTrack for `{Region} {Realm} {Name}` to `{tracker.trackStats}`");
             }
 
             [Command("ChangeFeedTrack")]
             [Summary("Notifies on change of feed.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task EnableFeedTrack(string RegionRealmName)
+            public async Task EnableFeedTrack(string Region, string Realm, string Name)
             {
-                WoWTracker tracker = (WoWTracker)StaticBase.Trackers["wow"].GetTracker(Context.Channel.Id, RegionRealmName);
+                WoWTracker tracker = (WoWTracker)StaticBase.Trackers["wow"].GetTracker(Context.Channel.Id, string.Join("|", Region, Realm, Name));
                 tracker.trackFeed = !tracker.trackFeed;
                 
                 StaticBase.Trackers["wow"].SaveJson();
-                await ReplyAsync($"Changed FeedTrack for `{RegionRealmName}` to `{tracker.trackFeed}`");
+                await ReplyAsync($"Changed FeedTrack for `{Region} {Realm} {Name}` to `{tracker.trackFeed}`");
             }
         }
         
@@ -543,66 +543,66 @@ namespace MopsBot.Module
             [Command("Track")]
             [Summary("Keeps track of changes in news of the specified WoW guild.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task Track(string Region, string Realm, string Name, [Remainder]string notificationMessage = "")
+            public async Task Track(string Region, string Realm, string Name)
             {
                 Trackers["wowguild"].AddTracker(String.Join("|", new string[] { Region, Realm, Name }), Context.Channel.Id);
-                await ReplyAsync($"Keeping track of `{Name}`'s news in `{Realm}` from now on.\nTo untrack, please use <Region>|<Realm>|<Name> as parameter.");
+                await ReplyAsync($"Keeping track of `{Name}`'s news in `{Realm}` from now on.");
             }
 
             [Command("UnTrack")]
             [Summary("Stops tracking stats of the specified Guild.\nRequires Manage channel permissions.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task UnTrack([Remainder]string RegionRealmName)
+            public async Task UnTrack(string Region, string Realm, string Name)
             {
-                if(Trackers["wowguild"].TryRemoveTracker(RegionRealmName, Context.Channel.Id))
-                    await ReplyAsync("Stopped keeping track of " + RegionRealmName + "'s stats!");
+                if(Trackers["wowguild"].TryRemoveTracker(string.Join("|", Region, Realm, Name), Context.Channel.Id))
+                    await ReplyAsync("Stopped keeping track of " + string.Join("|", Region, Realm, Name) + "'s news!");
                 else
-                    await ReplyAsync($"Could not find tracker for `{RegionRealmName}`\n"+
-                                     $"Currently tracked WoW Guilds are: ``{String.Join(", ", StaticBase.Trackers["wowguild"].GetTrackers(Context.Channel.Id).Select(x => x.Name))}``");
+                    await ReplyAsync($"Could not find tracker for `{Region} {Realm} {Name}`\n"+
+                                     $"Currently tracked WoW Guilds are: ``{String.Join(", ", StaticBase.Trackers["wowguild"].GetTrackers(Context.Channel.Id).Select(x => x.Name.Replace("|", " ")))}``");
             }
 
             [Command("GetTrackers")]
             [Summary("Returns the WoW Guilds that are tracked in the current channel.")]
             public async Task getTrackers()
             {
-                await ReplyAsync("Following guilds are currently being tracked:\n``" + String.Join(", ", StaticBase.Trackers["wowguild"].GetTrackers(Context.Channel.Id).Select(x => x.Name)) + "``");
+                await ReplyAsync("Following guilds are currently being tracked:\n``" + String.Join(", ", StaticBase.Trackers["wowguild"].GetTrackers(Context.Channel.Id).Select(x => x.Name.Replace("|", " "))) + "``");
             }
 
-            [Command("SetNotification")]
+            /*[Command("SetNotification")]
             [Summary("Sets the notification text that is used each time a change in news was found.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(string RegionRealmName, [Remainder]string notification)
+            public async Task SetNotification(string Region, string Realm, string Name, [Remainder]string notification)
             {
-                if(StaticBase.Trackers["wowguild"].TrySetNotification(RegionRealmName, Context.Channel.Id, notification)){
-                    await ReplyAsync($"Changed notification for `{RegionRealmName}` to `{notification}`");
+                if(StaticBase.Trackers["wowguild"].TrySetNotification(string.Join("|", Region, Realm, Name), Context.Channel.Id, notification)){
+                    await ReplyAsync($"Changed notification for `{Region} {Realm} {Name}` to `{notification}`");
                 }
                 else
-                    await ReplyAsync($"Could not find tracker for `{RegionRealmName}`\n"+
+                    await ReplyAsync($"Could not find tracker for `{Region} {Realm} {Name}`\n"+
                                      $"Currently tracked guilds are: ``{String.Join(", ", StaticBase.Trackers["wowguild"].GetTrackers(Context.Channel.Id).Select(x => x.Name))}``");
-            }
+            }*/
 
             [Command("ChangeLootTrack")]
             [Summary("Notifies when member gains loot.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task EnableEQTrack(string RegionRealmName)
+            public async Task EnableEQTrack(string Region, string Realm, string Name)
             {
-                WoWGuildTracker tracker = (WoWGuildTracker)StaticBase.Trackers["wowguild"].GetTracker(Context.Channel.Id, RegionRealmName);
+                WoWGuildTracker tracker = (WoWGuildTracker)StaticBase.Trackers["wowguild"].GetTracker(Context.Channel.Id, string.Join("|", Region, Realm, Name));
                 tracker.trackLoot = !tracker.trackLoot;
                 
                 StaticBase.Trackers["wowguild"].SaveJson();
-                await ReplyAsync($"Changed EQTrack for `{RegionRealmName}` to `{tracker.trackLoot}`");
+                await ReplyAsync($"Changed EQTrack for `{Region} {Realm} {Name}` to `{tracker.trackLoot}`");
             }
 
             [Command("ChangeAchievementTrack")]
             [Summary("Notifies on gained achievements.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task EnableStatTrack(string RegionRealmName)
+            public async Task EnableStatTrack(string Region, string Realm, string Name)
             {
-                WoWGuildTracker tracker = (WoWGuildTracker)StaticBase.Trackers["wowguild"].GetTracker(Context.Channel.Id, RegionRealmName);
+                WoWGuildTracker tracker = (WoWGuildTracker)StaticBase.Trackers["wowguild"].GetTracker(Context.Channel.Id, string.Join("|", Region, Realm, Name));
                 tracker.trackAchievements = !tracker.trackAchievements;
                 
                 StaticBase.Trackers["wowguild"].SaveJson();
-                await ReplyAsync($"Changed StatTrack for `{RegionRealmName}` to `{tracker.trackAchievements}`");
+                await ReplyAsync($"Changed StatTrack for `{Region} {Realm} {Name}` to `{tracker.trackAchievements}`");
             }
         }
         /*[Command("trackClips")]
