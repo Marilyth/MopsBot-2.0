@@ -18,11 +18,11 @@ namespace MopsBot.Data.Tracker
     {
         public long lastMessage;
 
-        public TwitterTracker() : base(300000, (ExistingTrackers * 2000 + 500) % 300000)
+        public TwitterTracker() : base(600000, (ExistingTrackers * 2000 + 500) % 600000)
         {
         }
 
-        public TwitterTracker(string twitterName) : base(300000)
+        public TwitterTracker(string twitterName) : base(600000)
         {
             Name = twitterName;
 
@@ -116,7 +116,6 @@ namespace MopsBot.Data.Tracker
             // Some methods are not RateLimited. Invoking such a method will result in the queryRateLimits to be null
             if (queryRateLimits != null)
             {
-                Console.WriteLine($"Calls left: {queryRateLimits.Remaining}, Resets at {queryRateLimits.ResetDateTime.ToLongTimeString()}");
                 if (queryRateLimits.Remaining > 0)
                 {
                     // We have enough resource to execute the query
