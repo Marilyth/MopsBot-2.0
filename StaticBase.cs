@@ -57,6 +57,8 @@ namespace MopsBot
                 TweetinviConfig.CurrentThreadSettings.TweetMode = TweetMode.Extended;
                 TweetinviConfig.ApplicationSettings.TweetMode = TweetMode.Extended;
                 Tweetinvi.ExceptionHandler.SwallowWebExceptions = false;
+                Tweetinvi.RateLimit.RateLimitTrackerMode = RateLimitTrackerMode.TrackOnly;
+                TweetinviEvents.QueryBeforeExecute += Data.Tracker.TwitterTracker.QueryBeforeExecute;
 
                 gfy = new Gfycat.GfycatClient(Program.Config["GfyID"], Program.Config["GfySecret"]);
                 

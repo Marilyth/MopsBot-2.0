@@ -48,11 +48,12 @@ namespace MopsBot.Data.Tracker
                 {
                     foreach (ulong channel in ChannelIds)
                     {
-                        if (newTweet.InReplyToScreenName == null && !newTweet.IsRetweet){
+                        if (newTweet.InReplyToScreenName == null && !newTweet.IsRetweet)
+                        {
                             if (!ChannelMessages[channel].Split("|")[0].Equals("NONE"))
                                 await OnMajorChangeTracked(channel, createEmbed(newTweet), ChannelMessages[channel].Split("|")[0]);
                         }
-                        else if(!ChannelMessages[channel].Split("|")[1].Equals("NONE"))
+                        else if (!ChannelMessages[channel].Split("|")[1].Equals("NONE"))
                             await OnMajorChangeTracked(channel, createEmbed(newTweet), ChannelMessages[channel].Split("|")[1]);
                     }
                 }
@@ -66,7 +67,7 @@ namespace MopsBot.Data.Tracker
             }
             catch (Exception e)
             {
-                Console.WriteLine("\n" +  $"[ERROR] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+                Console.WriteLine("\n" + $"[ERROR] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
             }
         }
 
@@ -107,6 +108,25 @@ namespace MopsBot.Data.Tracker
             e.Description = tweet.FullText;
 
             return e.Build();
+        }
+
+        public static void QueryBeforeExecute(object sender, Tweetinvi.Events.QueryBeforeExecuteEventArgs args)
+        {
+            var queryRateLimits = RateLimit.GetQueryRateLimit(args.QueryURL);
+            // Some methods are not RateLimited. Invoking such a method will result in the queryRateLimits to be null
+            if (queryRateLimits != null)
+            {
+                Console.WriteLine($"Calls left: {queryRateLimits.Remaining}, Resets at {queryRateLimits.ResetDateTime.ToLongTimeString()}");
+                if (queryRateLimits.Remaining > 0)
+                {
+                    // We have enough resource to execute the query
+                    return;
+                }
+
+                // Strategy #1 : Wait for RateLimits to be available
+                Console.WriteLine("Waiting for RateLimits until : {0}", queryRateLimits.ResetDateTime.ToLongTimeString());
+                args.Cancel = true;
+            }
         }
     }
 }
