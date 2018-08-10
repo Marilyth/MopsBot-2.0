@@ -107,34 +107,42 @@ namespace MopsBot.Api.Controllers
             return new ObjectResult(result);
         }
 
-        [HttpGet("add/{channel}/{type}/{name}/{notification}")]
-        public IActionResult AddNewTracker(ulong channel, string type, string name, string notification)
+        [HttpGet("add/{token}/{channel}/{type}/{name}/{notification}")]
+        public IActionResult AddNewTracker(string token, ulong channel, string type, string name, string notification)
         {
-            Response.Headers.Add("Access-Control-Allow-Origin", "http://5.45.104.29");
-            try
+            if (token.Equals(Program.Config["MopsAPI"]))
             {
-                StaticBase.Trackers[type].AddTracker(name, channel, notification);
+                Response.Headers.Add("Access-Control-Allow-Origin", "http://5.45.104.29");
+                try
+                {
+                    StaticBase.Trackers[type].AddTracker(name, channel, notification);
+                }
+                catch (Exception e)
+                {
+                    return new ObjectResult(e.InnerException?.Message ?? e.Message);
+                }
+                return new ObjectResult("Success");
             }
-            catch (Exception e)
-            {
-                return new ObjectResult(e.InnerException?.Message ?? e.Message);
-            }
-            return new ObjectResult("Success");
+            return new ObjectResult("Wrong token");
         }
 
-        [HttpGet("remove/{channel}/{type}/{name}")]
-        public IActionResult RemoveTracker(ulong channel, string type, string name)
+        [HttpGet("remove/{token}/{channel}/{type}/{name}")]
+        public IActionResult RemoveTracker(string token, ulong channel, string type, string name)
         {
-            Response.Headers.Add("Access-Control-Allow-Origin", "http://5.45.104.29");
-            try
+            if (token.Equals(Program.Config["MopsAPI"]))
             {
-                var result = StaticBase.Trackers[type].TryRemoveTracker(name, channel);
-                return new ObjectResult(result);
+                Response.Headers.Add("Access-Control-Allow-Origin", "http://5.45.104.29");
+                try
+                {
+                    var result = StaticBase.Trackers[type].TryRemoveTracker(name, channel);
+                    return new ObjectResult(result);
+                }
+                catch (Exception e)
+                {
+                    return new ObjectResult(e.Message);
+                }
             }
-            catch (Exception e)
-            {
-                return new ObjectResult(e.Message);
-            }
+            return new ObjectResult("Wrong token");
         }
     }
 }
