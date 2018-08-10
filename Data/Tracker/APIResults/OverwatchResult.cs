@@ -88,6 +88,7 @@ namespace MopsBot.Data.Tracker.APIResults.Overwatch
         public Hero orisa { get; set; }
         public Hero moira { get; set; }
         public Hero brigitte { get; set; }
+        public Hero wrecking_ball { get; set; }
 
 
         public Dictionary<string, Hero> heroesToDict(){
@@ -119,7 +120,8 @@ namespace MopsBot.Data.Tracker.APIResults.Overwatch
                 {"Moira", moira},
                 {"Symmetra", symmetra},
                 {"Zenyatta", zenyatta},
-                {"Brigitte", brigitte}
+                {"Brigitte", brigitte},
+                {"Wrecking Ball", wrecking_ball}
             };
         }
     }
@@ -159,6 +161,7 @@ namespace MopsBot.Data.Tracker.APIResults.Overwatch
         public double genji { get; set; }
         public double mccree { get; set; }
         public double brigitte {get; set; }
+        public double wrecking_ball {get; set; }
 
         public Dictionary<string, double> heroesToDict(){
             return new Dictionary<string, double>
@@ -189,7 +192,8 @@ namespace MopsBot.Data.Tracker.APIResults.Overwatch
                 {"Moira", moira},
                 {"Symmetra", symmetra},
                 {"Zenyatta", zenyatta},
-                {"Brigitte", brigitte}
+                {"Brigitte", brigitte},
+                {"Wrecking Ball", wrecking_ball}
             };
         }
     }
