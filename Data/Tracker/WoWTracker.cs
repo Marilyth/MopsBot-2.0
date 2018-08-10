@@ -84,7 +84,7 @@ namespace MopsBot.Data.Tracker
         {
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0x6441A4);
-            e.Title = "WoW Stat Changes";
+            e.Title = "WoW Session Summary";
             e.Timestamp = DateTime.UtcNow;
 
             EmbedFooterBuilder footer = new EmbedFooterBuilder();
