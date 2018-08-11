@@ -166,11 +166,11 @@ namespace MopsBot.Data.Tracker
             e.AddField("Most Played", mostPlayed.Item2);
 
             if (mostPlayed.Item1.Equals("Ana") || mostPlayed.Item1.Equals("Moira") || mostPlayed.Item1.Equals("Orisa") || 
-                mostPlayed.Item1.Equals("Doomfist") || mostPlayed.Item1.Equals("Sombra") || mostPlayed.Item1.Equals("Wrecking Ball") ||
+                mostPlayed.Item1.Equals("Doomfist") || mostPlayed.Item1.Equals("Sombra") || mostPlayed.Item1.Equals("Wrecking-Ball") ||
                 mostPlayed.Item1.Equals("Brigitte"))
-                e.ImageUrl = $"https://blzgdapipro-a.akamaihd.net/hero/{mostPlayed.Item1.ToLower().Replace(" ", "%20")}/full-portrait.png";
+                e.ImageUrl = $"https://blzgdapipro-a.akamaihd.net/hero/{mostPlayed.Item1.ToLower()}/full-portrait.png";
             else
-                e.ImageUrl = $"https://blzgdapipro-a.akamaihd.net/media/thumbnail/{mostPlayed.Item1.ToLower().Replace(" ", "%20")}-gameplay.jpg";
+                e.ImageUrl = $"https://blzgdapipro-a.akamaihd.net/media/thumbnail/{mostPlayed.Item1.ToLower()}-gameplay.jpg";
 
             return e.Build();
         }
@@ -209,10 +209,10 @@ namespace MopsBot.Data.Tracker
 
             e.AddField("Sessions most played Hero", $"{mostPlayed.Item2}");
             if (mostPlayed.Item1.Equals("Ana") || mostPlayed.Item1.Equals("Moira") || mostPlayed.Item1.Equals("Orisa") || mostPlayed.Item1.Equals("Doomfist") || 
-                mostPlayed.Item1.Equals("Sombra") || mostPlayed.Item1.Equals("Brigitte") || mostPlayed.Item1.Equals("Wrecking Ball"))
-                e.ImageUrl = $"https://blzgdapipro-a.akamaihd.net/hero/{mostPlayed.Item1.ToLower().Replace(" ", "%20")}/full-portrait.png";
+                mostPlayed.Item1.Equals("Sombra") || mostPlayed.Item1.Equals("Brigitte") || mostPlayed.Item1.Equals("Wrecking-Ball"))
+                e.ImageUrl = $"https://blzgdapipro-a.akamaihd.net/hero/{mostPlayed.Item1.ToLower()}/full-portrait.png";
             else
-                e.ImageUrl = $"https://blzgdapipro-a.akamaihd.net/media/thumbnail/{mostPlayed.Item1.ToLower().Replace(" ", "%20")}-gameplay.jpg";
+                e.ImageUrl = $"https://blzgdapipro-a.akamaihd.net/media/thumbnail/{mostPlayed.Item1.ToLower()}-gameplay.jpg";
 
             return e.Build();
         }

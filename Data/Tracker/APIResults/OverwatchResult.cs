@@ -121,7 +121,7 @@ namespace MopsBot.Data.Tracker.APIResults.Overwatch
                 {"Symmetra", symmetra},
                 {"Zenyatta", zenyatta},
                 {"Brigitte", brigitte},
-                {"Wrecking Ball", wrecking_ball}
+                {"Wrecking-Ball", wrecking_ball}
             };
         }
     }
@@ -193,7 +193,7 @@ namespace MopsBot.Data.Tracker.APIResults.Overwatch
                 {"Symmetra", symmetra},
                 {"Zenyatta", zenyatta},
                 {"Brigitte", brigitte},
-                {"Wrecking Ball", wrecking_ball}
+                {"Wrecking-Ball", wrecking_ball}
             };
         }
     }
