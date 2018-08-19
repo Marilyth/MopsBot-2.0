@@ -58,7 +58,7 @@ namespace MopsBot.Module
             }
         }
 
-        [Command("poll"), Summary("Creates a poll\nExample: !poll \"What should I play\" \"Dark Souls\" \"Osu!\" \"WoW\"")]
+        [Command("poll", RunMode=RunMode.Async), Summary("Creates a poll\nExample: !poll \"What should I play\" \"Dark Souls\" \"Osu!\" \"WoW\"")]
         [RequireUserPermission(GuildPermission.ManageChannels)]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         [RequireBotPermission(ChannelPermission.AddReactions)]
@@ -82,7 +82,7 @@ namespace MopsBot.Module
         [RequireBotPermission(ChannelPermission.ReadMessageHistory)]
         public class Giveaway : ModuleBase
         {
-            [Command("create")]
+            [Command("create", RunMode = RunMode.Async)]
             [Summary("Creates giveaway.")]
             public async Task create([Remainder]string game)
             {
