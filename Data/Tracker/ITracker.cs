@@ -10,6 +10,8 @@ using OxyPlot;
 using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
+using MongoDB.Bson.Serialization.Options;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace MopsBot.Data.Tracker
 {
@@ -25,7 +27,10 @@ namespace MopsBot.Data.Tracker
         public delegate Task MinorEventHandler(ulong channelID, ITracker self, string notificationText);
         public delegate Task MainEventHandler(ulong channelID, Embed embed, ITracker self, string notificationText = "");
         public HashSet<ulong> ChannelIds;
+        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfArrays)]
         public Dictionary<ulong, string> ChannelMessages;
+
+        [BsonId]
         public string Name;
 
         public ITracker(int interval, int gap = 5000)

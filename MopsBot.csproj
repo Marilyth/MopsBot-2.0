@@ -19,6 +19,9 @@
     <PackageReference Include="NewsAPI" Version="0.5.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="2.8.2"/>
     <PackageReference Include="WowDotNetAPI" Version="4.0.8" />
+    <PackageReference Include="MongoDB.Driver.Core" Version="2.7.0" />
+    <PackageReference Include="MongoDB.Bson" Version="2.7.0" />
+    <PackageReference Include="MongoDB.Driver" Version="2.7.0" />
   </ItemGroup>
 
   <ItemGroup>

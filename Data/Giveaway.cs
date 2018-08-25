@@ -9,6 +9,8 @@ using Discord.WebSocket;
 using Microsoft.Win32.SafeHandles;
 using System.Runtime.InteropServices;
 using Newtonsoft.Json;
+using MongoDB.Bson.Serialization.Options;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace MopsBot.Data
 {
@@ -93,6 +95,7 @@ namespace MopsBot.Data
     {
 
         //Key: Channel ID, Value: (Key: Message ID, Value: User IDs)
+        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfArrays)]
         public Dictionary<ulong, Dictionary<ulong, List<ulong>>> Giveaways = new Dictionary<ulong, Dictionary<ulong, List<ulong>>>();
 
         public ReactionGiveaway()

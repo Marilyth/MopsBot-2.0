@@ -9,12 +9,15 @@ using Discord.WebSocket;
 using Microsoft.Win32.SafeHandles;
 using System.Runtime.InteropServices;
 using Newtonsoft.Json;
+using MongoDB.Bson.Serialization.Options;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace MopsBot.Data
 {
     public class ReactionPoll
     {
         //Key: Channel ID, Value: Message IDs
+        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfArrays)]
         public Dictionary<ulong, List<Poll>> Polls = new Dictionary<ulong, List<Poll>>();
 
         public ReactionPoll()
@@ -175,6 +178,7 @@ namespace MopsBot.Data
 
     public class Poll
     {
+        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfArrays)]
         public Dictionary<ulong, string> Voters;
         public string[] Options;
         public string Question;

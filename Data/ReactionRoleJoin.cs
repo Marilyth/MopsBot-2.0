@@ -9,12 +9,15 @@ using Discord.WebSocket;
 using Microsoft.Win32.SafeHandles;
 using System.Runtime.InteropServices;
 using Newtonsoft.Json;
+using MongoDB.Bson.Serialization.Options;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace MopsBot.Data
 {
     public class ReactionRoleJoin
     {
         //Key: Channel ID, Value: Message IDs
+        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfArrays)]
         public Dictionary<ulong, HashSet<ulong>> RoleInvites = new Dictionary<ulong, HashSet<ulong>>();
 
         public ReactionRoleJoin()

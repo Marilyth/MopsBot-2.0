@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using MopsBot.Module.Preconditions;
 using System.Text.RegularExpressions;
+using MopsBot.Data.Tracker;
 using static MopsBot.StaticBase;
 
 namespace MopsBot.Module
@@ -194,6 +195,41 @@ namespace MopsBot.Module
         {
             Environment.Exit(0);
             return Task.CompletedTask;
+        }
+
+        [Command("createdb", RunMode = RunMode.Async)]
+        [RequireBotManage()]
+        [Hide]
+        public async Task createdb()
+        {
+            var database = DataBase;
+            foreach(var tracker in Trackers.Values){
+                var type = tracker.GetTrackerType();
+                if(tracker.GetTrackerSet().Count > 0){
+                    var collection = DataBase.GetCollection<ITracker>(type.Name);
+                    collection.InsertMany(tracker.GetTrackerSet());
+                }
+                else{
+                    await DataBase.CreateCollectionAsync(type.Name);
+                }
+            }
+
+            var giveawayCollection = DataBase.GetCollection<KeyValuePair<ulong, List<KeyValuePair<ulong, List<ulong>>>>>("ReactionGiveaways");
+            foreach(var giveaway in ReactGiveaways.Giveaways){
+                await giveawayCollection.InsertOneAsync(KeyValuePair.Create(giveaway.Key, giveaway.Value.ToList()));
+            }
+
+            var rolejoinCollection = DataBase.GetCollection<KeyValuePair<ulong, HashSet<ulong>>>("ReactionRoleInvites");
+            rolejoinCollection.InsertMany(ReactRoleJoin.RoleInvites.ToList());
+
+            var pollCollection = DataBase.GetCollection<KeyValuePair<ulong, List<Data.Poll>>>("ReactionPolls");
+            pollCollection.InsertMany(StaticBase.Poll.Polls.ToList());
+
+            var prefixCollection = DataBase.GetCollection<KeyValuePair<ulong, string>>("GuildPrefixes");
+            prefixCollection.InsertMany(GuildPrefix.ToList());
+
+            var customCollection = DataBase.GetCollection<KeyValuePair<ulong, Dictionary<string, string>>>("Custom_Commands");
+            customCollection.InsertMany(CustomCommands.ToList());
         }
 
         [Command("eval", RunMode = RunMode.Async)]

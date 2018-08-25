@@ -14,6 +14,9 @@ using MopsBot.Data.Updater;
 using Tweetinvi;
 using NewsAPI;
 using WowDotNetAPI;
+using MongoDB.Driver;
+using MongoDB.Bson.Serialization.Options;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace MopsBot
 {
@@ -24,10 +27,12 @@ namespace MopsBot
         //public static List<IdleDungeon> DungeonCrawler = new List<IdleDungeon>();
         public static Gfycat.GfycatClient gfy;
         public static List<string> Playlist = new List<string>();
-        public static HashSet<ulong> MemberSet;
+
+        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfArrays)]
         public static Dictionary<ulong, string> GuildPrefix;
+        
+        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfArrays)]
         public static Dictionary<ulong, Dictionary<string, string>> CustomCommands;
-        public static Giveaway Giveaways = new Giveaway();
         public static ReactionGiveaway ReactGiveaways;
         public static ReactionRoleJoin ReactRoleJoin;
         public static ReactionPoll Poll;
@@ -35,6 +40,7 @@ namespace MopsBot
         public static Dictionary<string, TrackerWrapper> Trackers;
         public static MuteTimeHandler MuteHandler;
         public static NewsApiClient NewsClient;
+        public static IMongoDatabase DataBase = new MongoClient("mongodb://5.45.104.29:27017").GetDatabase("Mops");
 
         public static bool init = false;
 

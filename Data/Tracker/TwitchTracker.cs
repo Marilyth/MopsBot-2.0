@@ -9,6 +9,8 @@ using MopsBot.Data.Tracker.APIResults.Twitch;
 using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
+using MongoDB.Bson.Serialization.Options;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace MopsBot.Data.Tracker
 {
@@ -16,6 +18,8 @@ namespace MopsBot.Data.Tracker
     {
         private Plot viewerGraph;
         private TwitchResult StreamerStatus;
+
+        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfArrays)]
         public Dictionary<ulong, ulong> ToUpdate;
         public Boolean IsOnline;
         public string CurGame;
