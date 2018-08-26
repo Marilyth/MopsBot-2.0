@@ -61,7 +61,7 @@ namespace MopsBot.Data.Tracker
                 if (newTweets.Length != 0)
                 {
                     lastMessage = newTweets[newTweets.Length - 1].Id;
-                    StaticBase.Trackers["twitter"].UpdateDBAsync(this);
+                    await StaticBase.Trackers["twitter"].UpdateDBAsync(this);
                 }
 
             }

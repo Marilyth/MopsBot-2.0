@@ -96,7 +96,7 @@ namespace MopsBot.Data.Tracker
                 if (newVideos.Length > 0)
                 {
                     LastTime = XmlConvert.ToString(newVideos[0].snippet.publishedAt, XmlDateTimeSerializationMode.Utc);
-                    StaticBase.Trackers["youtube"].UpdateDBAsync(this);
+                    await StaticBase.Trackers["youtube"].UpdateDBAsync(this);
                 }
             }
             catch (Exception e)

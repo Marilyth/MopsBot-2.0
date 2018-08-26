@@ -237,7 +237,7 @@ namespace MopsBot.Data
             {
                 if (Program.Client.GetChannel(channelID) == null || (await ((IGuildChannel)Program.Client.GetChannel(channelID)).Guild.GetCurrentUserAsync()) == null)
                 {
-                    TryRemoveTrackerAsync(sender.Name, channelID);
+                    await TryRemoveTrackerAsync(sender.Name, channelID);
                     Console.WriteLine("\n" + $"Removed Tracker: {sender.Name} Channel {channelID} is missing");
                 }
                 else
@@ -245,7 +245,7 @@ namespace MopsBot.Data
                     var permission = (await ((IGuildChannel)Program.Client.GetChannel(channelID)).Guild.GetCurrentUserAsync()).GetPermissions(((IGuildChannel)Program.Client.GetChannel(channelID)));
                     if (!permission.SendMessages || !permission.ViewChannel || !permission.ReadMessageHistory)
                     {
-                        TryRemoveTrackerAsync(sender.Name, channelID);
+                        await TryRemoveTrackerAsync(sender.Name, channelID);
                         Console.WriteLine("\n" + $"Removed a tracker for {sender.Name} from Channel {channelID} due to missing Permissions");
                         if (permission.SendMessages)
                         {
@@ -304,7 +304,7 @@ namespace MopsBot.Data
                 //Check if channel still exists, or existing only in cache
                 if (Program.Client.GetChannel(channelID) == null || (await ((IGuildChannel)Program.Client.GetChannel(channelID)).Guild.GetCurrentUserAsync()) == null)
                 {
-                    TryRemoveTrackerAsync(sender.Name, channelID);
+                    await TryRemoveTrackerAsync(sender.Name, channelID);
                     Console.WriteLine("\n" + $"Removed Tracker: {sender.Name} Channel {channelID} is missing");
                 }
                 //Check if permissions were modified, to an extend of making the tracker unusable
@@ -313,7 +313,7 @@ namespace MopsBot.Data
                     var permission = (await ((IGuildChannel)Program.Client.GetChannel(channelID)).Guild.GetCurrentUserAsync()).GetPermissions(((IGuildChannel)Program.Client.GetChannel(channelID)));
                     if (!permission.SendMessages || !permission.ViewChannel || !permission.ReadMessageHistory || (sender is Tracker.TwitchTracker && (!permission.AddReactions || !permission.ManageMessages)))
                     {
-                        TryRemoveTrackerAsync(sender.Name, channelID);
+                        await TryRemoveTrackerAsync(sender.Name, channelID);
                         Console.WriteLine("\n" + $"Removed a tracker for {sender.Name} from Channel {channelID} due to missing Permissions");
                         if (permission.SendMessages)
                         {
