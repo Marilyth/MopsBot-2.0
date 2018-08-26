@@ -40,7 +40,7 @@ namespace MopsBot
         public static Dictionary<string, TrackerWrapper> Trackers;
         public static MuteTimeHandler MuteHandler;
         public static NewsApiClient NewsClient;
-        public static MongoClient DataBaseClient = new MongoClient("mongodb://localhost:27017");
+        public static MongoClient DataBaseClient = new MongoClient($"mongodb://admin:{Program.Config["MopsAPI"]}@5.45.104.29:27017");
         public static IMongoDatabase DataBase = DataBaseClient.GetDatabase("Mops");
 
         public static bool init = false;

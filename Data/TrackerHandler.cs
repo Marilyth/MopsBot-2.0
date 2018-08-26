@@ -10,6 +10,7 @@ using Microsoft.Win32.SafeHandles;
 using System.Runtime.InteropServices;
 using Newtonsoft.Json;
 using MopsBot.Data.Tracker;
+using MongoDB.Driver;
 
 namespace MopsBot.Data
 {
@@ -71,6 +72,9 @@ namespace MopsBot.Data
                     Console.WriteLine("\n" +  e.Message + e.StackTrace);
                 }
             }
+            //var collection = StaticBase.DataBase.GetCollection<T>(typeof(T).Name).FindSync<T>(x => true).ToList();
+            //trackers = collection.ToDictionary(x => x.Name);
+
             trackers = (trackers == null ? new Dictionary<string, T>() : trackers);
 
             for (int i = trackers.Count - 1; i >= 0; i--)
@@ -100,7 +104,7 @@ namespace MopsBot.Data
             using (StreamWriter write = new StreamWriter(new FileStream($"mopsdata//{typeof(T).Name}.json", FileMode.Create)))
                 write.Write(dictAsJson);
 
-            await StaticBase.DataBase.GetCollection<ITracker>(typeof(T).Name).ReplaceOneAsync(new MongoDB.Driver.FilterDefinitionBuilder<ITracker>().Where(x => x.Name.Equals(tracker.Name)), tracker);
+            await StaticBase.DataBase.GetCollection<ITracker>(typeof(T).Name).ReplaceOneAsync(x => x.Name.Equals(tracker.Name), tracker);
         }
 
         protected override async Task InsertToDBAsync(ITracker tracker)
@@ -110,7 +114,7 @@ namespace MopsBot.Data
         
         protected override async Task RemoveFromDBAsync(ITracker tracker)
         {
-            await StaticBase.DataBase.GetCollection<T>(typeof(T).Name).DeleteOneAsync(new MongoDB.Driver.FilterDefinitionBuilder<T>().Where(x => x.Name.Equals(tracker.Name)));
+            await StaticBase.DataBase.GetCollection<T>(typeof(T).Name).DeleteOneAsync(x => x.Name.Equals(tracker.Name));
         }
 
         public override async Task<bool> TryRemoveTrackerAsync(string name, ulong channelId)
