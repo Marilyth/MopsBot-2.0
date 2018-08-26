@@ -19,7 +19,7 @@ namespace MopsBot.Data.Tracker
         private Plot viewerGraph;
         private TwitchResult StreamerStatus;
 
-        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfArrays)]
+        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
         public Dictionary<ulong, ulong> ToUpdate;
         public Boolean IsOnline;
         public string CurGame;
@@ -116,7 +116,7 @@ namespace MopsBot.Data.Tracker
                         foreach (ulong channel in ChannelMessages.Keys)
                             await OnMinorChangeTracked(channel, ChannelMessages[channel]);
                     }
-                    StaticBase.Trackers["twitch"].SaveJson();
+                    StaticBase.Trackers["twitch"].UpdateDBAsync(this);
                 }
                 else
                     TimeoutCount = 0;
@@ -131,7 +131,7 @@ namespace MopsBot.Data.Tracker
 
                         foreach (ulong channel in ChannelMessages.Keys)
                             await OnMinorChangeTracked(channel, $"{Name} switched games to **{CurGame}**");
-                        StaticBase.Trackers["twitch"].SaveJson();
+                        StaticBase.Trackers["twitch"].UpdateDBAsync(this);
                     }
 
                     foreach (ulong channel in ChannelIds)
@@ -223,7 +223,7 @@ namespace MopsBot.Data.Tracker
             if (((IGuildUser)await context.Reaction.Channel.GetUserAsync(context.Reaction.UserId)).GetPermissions((IGuildChannel)context.Channel).ManageChannel)
             {
                 isThumbnailLarge = !isThumbnailLarge;
-                StaticBase.Trackers["twitch"].SaveJson();
+                StaticBase.Trackers["twitch"].UpdateDBAsync(this);
 
                 foreach (ulong channel in ChannelIds)
                     await OnMajorChangeTracked(channel, createEmbed());

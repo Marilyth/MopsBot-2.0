@@ -17,7 +17,7 @@ namespace MopsBot.Data
     public class ReactionPoll
     {
         //Key: Channel ID, Value: Message IDs
-        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfArrays)]
+        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
         public Dictionary<ulong, List<Poll>> Polls = new Dictionary<ulong, List<Poll>>();
 
         public ReactionPoll()
@@ -178,7 +178,7 @@ namespace MopsBot.Data
 
     public class Poll
     {
-        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfArrays)]
+        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
         public Dictionary<ulong, string> Voters;
         public string[] Options;
         public string Question;

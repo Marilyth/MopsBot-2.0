@@ -17,7 +17,7 @@ namespace MopsBot.Data
     public class ReactionRoleJoin
     {
         //Key: Channel ID, Value: Message IDs
-        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfArrays)]
+        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
         public Dictionary<ulong, HashSet<ulong>> RoleInvites = new Dictionary<ulong, HashSet<ulong>>();
 
         public ReactionRoleJoin()

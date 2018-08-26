@@ -95,7 +95,7 @@ namespace MopsBot.Data
     {
 
         //Key: Channel ID, Value: (Key: Message ID, Value: User IDs)
-        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfArrays)]
+        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
         public Dictionary<ulong, Dictionary<ulong, List<ulong>>> Giveaways = new Dictionary<ulong, Dictionary<ulong, List<ulong>>>();
 
         public ReactionGiveaway()

@@ -50,7 +50,7 @@ namespace MopsBot.Data.Tracker
                 {
                     if (datetime.AddMinutes(30) <= DateTime.UtcNow){
                         TrackedClips.Remove(datetime);
-                        StaticBase.Trackers["twitchclips"].SaveJson();
+                        StaticBase.Trackers["twitchclips"].UpdateDBAsync(this);
                     }
                 }
 
@@ -115,7 +115,7 @@ namespace MopsBot.Data.Tracker
                             clips.clips.Add(clip);
                         }
                         
-                        StaticBase.Trackers["twitchclips"].SaveJson();
+                        StaticBase.Trackers["twitchclips"].UpdateDBAsync(this);
                     }
                     if (!tmpResult._cursor.Equals(""))
                     {

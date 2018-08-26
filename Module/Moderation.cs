@@ -202,7 +202,9 @@ namespace MopsBot.Module
         [Hide]
         public async Task createdb()
         {
-            var database = DataBase;
+            await DataBaseClient.DropDatabaseAsync("Mops");
+            DataBase = DataBaseClient.GetDatabase("Mops");
+            
             foreach(var tracker in Trackers.Values){
                 var type = tracker.GetTrackerType();
                 if(tracker.GetTrackerSet().Count > 0){

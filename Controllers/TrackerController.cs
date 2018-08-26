@@ -115,7 +115,7 @@ namespace MopsBot.Api.Controllers
                 Response.Headers.Add("Access-Control-Allow-Origin", "http://5.45.104.29");
                 try
                 {
-                    StaticBase.Trackers[type].AddTracker(name, channel, notification);
+                    StaticBase.Trackers[type].AddTrackerAsync(name, channel, notification);
                 }
                 catch (Exception e)
                 {
@@ -134,7 +134,7 @@ namespace MopsBot.Api.Controllers
                 Response.Headers.Add("Access-Control-Allow-Origin", "http://5.45.104.29");
                 try
                 {
-                    var result = StaticBase.Trackers[type].TryRemoveTracker(name, channel);
+                    var result = StaticBase.Trackers[type].TryRemoveTrackerAsync(name, channel);
                     return new ObjectResult(result);
                 }
                 catch (Exception e)

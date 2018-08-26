@@ -28,10 +28,10 @@ namespace MopsBot
         public static Gfycat.GfycatClient gfy;
         public static List<string> Playlist = new List<string>();
 
-        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfArrays)]
+        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
         public static Dictionary<ulong, string> GuildPrefix;
         
-        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfArrays)]
+        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
         public static Dictionary<ulong, Dictionary<string, string>> CustomCommands;
         public static ReactionGiveaway ReactGiveaways;
         public static ReactionRoleJoin ReactRoleJoin;
@@ -40,7 +40,8 @@ namespace MopsBot
         public static Dictionary<string, TrackerWrapper> Trackers;
         public static MuteTimeHandler MuteHandler;
         public static NewsApiClient NewsClient;
-        public static IMongoDatabase DataBase = new MongoClient("mongodb://5.45.104.29:27017").GetDatabase("Mops");
+        public static MongoClient DataBaseClient = new MongoClient("mongodb://localhost:27017");
+        public static IMongoDatabase DataBase = DataBaseClient.GetDatabase("Mops");
 
         public static bool init = false;
 

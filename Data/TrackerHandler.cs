@@ -15,10 +15,13 @@ namespace MopsBot.Data
 {
     public abstract class TrackerWrapper
     {
+        public abstract Task UpdateDBAsync(ITracker tracker);
         public abstract void SaveJson();
-        public abstract bool TryRemoveTracker(string name, ulong channelID);
-        public abstract bool TrySetNotification(string name, ulong channelID, string notificationMessage);
-        public abstract void AddTracker(string name, ulong channelID, string notification = "");
+        protected abstract Task RemoveFromDBAsync(ITracker tracker);
+        protected abstract Task InsertToDBAsync(ITracker tracker);
+        public abstract Task<bool> TryRemoveTrackerAsync(string name, ulong channelID);
+        public abstract Task<bool> TrySetNotificationAsync(string name, ulong channelID, string notificationMessage);
+        public abstract Task AddTrackerAsync(string name, ulong channelID, string notification = "");
         public abstract HashSet<Tracker.ITracker> GetTrackerSet();
         public abstract Dictionary<string, Tracker.ITracker> GetTrackers();
         public abstract IEnumerable<ITracker> GetTrackers(ulong channelID);
@@ -91,7 +94,26 @@ namespace MopsBot.Data
                 write.Write(dictAsJson);
         }
 
-        public override bool TryRemoveTracker(string name, ulong channelId)
+        public override async Task UpdateDBAsync(ITracker tracker)
+        {
+            string dictAsJson = JsonConvert.SerializeObject(trackers, Formatting.Indented);
+            using (StreamWriter write = new StreamWriter(new FileStream($"mopsdata//{typeof(T).Name}.json", FileMode.Create)))
+                write.Write(dictAsJson);
+
+            await StaticBase.DataBase.GetCollection<ITracker>(typeof(T).Name).ReplaceOneAsync(new MongoDB.Driver.FilterDefinitionBuilder<ITracker>().Where(x => x.Name.Equals(tracker.Name)), tracker);
+        }
+
+        protected override async Task InsertToDBAsync(ITracker tracker)
+        {
+            await StaticBase.DataBase.GetCollection<ITracker>(typeof(T).Name).InsertOneAsync(tracker);
+        }
+        
+        protected override async Task RemoveFromDBAsync(ITracker tracker)
+        {
+            await StaticBase.DataBase.GetCollection<T>(typeof(T).Name).DeleteOneAsync(new MongoDB.Driver.FilterDefinitionBuilder<T>().Where(x => x.Name.Equals(tracker.Name)));
+        }
+
+        public override async Task<bool> TryRemoveTrackerAsync(string name, ulong channelId)
         {
             if (trackers.ContainsKey(name) && trackers[name].ChannelIds.Contains(channelId))
             {
@@ -115,23 +137,25 @@ namespace MopsBot.Data
                         (trackers[name] as Tracker.TwitchTracker).ToUpdate.Remove(channelId);
                     }
 
+                    await UpdateDBAsync(trackers[name]);
                     Console.WriteLine("\n" + $"{DateTime.Now} Removed a {trackers.First().Value.GetType().Name} for {name}\nChannel: {channelId}");
                 }
 
                 else
                 {
+                    await RemoveFromDBAsync(trackers[name]);
                     trackers[name].Dispose();
                     trackers.Remove(name);
+                    SaveJson();
                     Console.WriteLine("\n" + $"{DateTime.Now} Removed a {trackers.First().Value.GetType().Name} for {name}\nChannel: {channelId}; Last channel left.");
                 }
 
-                SaveJson();
                 return true;
             }
             return false;
         }
 
-        public override void AddTracker(string name, ulong channelID, string notification = "")
+        public override async Task AddTrackerAsync(string name, ulong channelID, string notification = "")
         {
             if (trackers.ContainsKey(name))
             {
@@ -144,22 +168,23 @@ namespace MopsBot.Data
                 trackers[name].ChannelIds.Add(channelID);
                 trackers[name].OnMajorEventFired += OnMajorEvent;
                 trackers[name].OnMinorEventFired += OnMinorEvent;
+                await InsertToDBAsync(trackers[name]);
             }
 
             trackers[name].ChannelMessages.Add(channelID, notification);
             Console.WriteLine("\n" + $"{DateTime.Now} Started a new {typeof(T).Name} for {name}\nChannels: {string.Join(",", trackers[name].ChannelIds)}\nMessage: {notification}");
-
-            SaveJson();
+            
+            await UpdateDBAsync(trackers[name]);
         }
 
-        public override bool TrySetNotification(string name, ulong channelID, string notificationMessage)
+        public override async Task<bool> TrySetNotificationAsync(string name, ulong channelID, string notificationMessage)
         {
             var tracker = GetTracker(channelID, name);
 
             if (tracker != null)
             {
                 tracker.ChannelMessages[channelID] = notificationMessage;
-                SaveJson();
+                await UpdateDBAsync(tracker);
                 return true;
             }
 
@@ -208,7 +233,7 @@ namespace MopsBot.Data
             {
                 if (Program.Client.GetChannel(channelID) == null || (await ((IGuildChannel)Program.Client.GetChannel(channelID)).Guild.GetCurrentUserAsync()) == null)
                 {
-                    TryRemoveTracker(sender.Name, channelID);
+                    TryRemoveTrackerAsync(sender.Name, channelID);
                     Console.WriteLine("\n" + $"Removed Tracker: {sender.Name} Channel {channelID} is missing");
                 }
                 else
@@ -216,7 +241,7 @@ namespace MopsBot.Data
                     var permission = (await ((IGuildChannel)Program.Client.GetChannel(channelID)).Guild.GetCurrentUserAsync()).GetPermissions(((IGuildChannel)Program.Client.GetChannel(channelID)));
                     if (!permission.SendMessages || !permission.ViewChannel || !permission.ReadMessageHistory)
                     {
-                        TryRemoveTracker(sender.Name, channelID);
+                        TryRemoveTrackerAsync(sender.Name, channelID);
                         Console.WriteLine("\n" + $"Removed a tracker for {sender.Name} from Channel {channelID} due to missing Permissions");
                         if (permission.SendMessages)
                         {
@@ -256,7 +281,7 @@ namespace MopsBot.Data
                             var newMessage = await ((Discord.WebSocket.SocketTextChannel)Program.Client.GetChannel(channelID)).SendMessageAsync(notification, embed: embed);
                             tracker.ToUpdate[channelID] = newMessage.Id;
                             await tracker.setReaction((IUserMessage)message);
-                            SaveJson();
+                            await UpdateDBAsync(tracker);
                         }
                     }
                     else
@@ -264,7 +289,7 @@ namespace MopsBot.Data
                         var message = await ((Discord.WebSocket.SocketTextChannel)Program.Client.GetChannel(channelID)).SendMessageAsync(notification, embed: embed);
                         tracker.ToUpdate.Add(channelID, message.Id);
                         await tracker.setReaction((IUserMessage)message);
-                        SaveJson();
+                        await UpdateDBAsync(tracker);
                     }
                 }
                 else
@@ -275,7 +300,7 @@ namespace MopsBot.Data
                 //Check if channel still exists, or existing only in cache
                 if (Program.Client.GetChannel(channelID) == null || (await ((IGuildChannel)Program.Client.GetChannel(channelID)).Guild.GetCurrentUserAsync()) == null)
                 {
-                    TryRemoveTracker(sender.Name, channelID);
+                    TryRemoveTrackerAsync(sender.Name, channelID);
                     Console.WriteLine("\n" + $"Removed Tracker: {sender.Name} Channel {channelID} is missing");
                 }
                 //Check if permissions were modified, to an extend of making the tracker unusable
@@ -284,7 +309,7 @@ namespace MopsBot.Data
                     var permission = (await ((IGuildChannel)Program.Client.GetChannel(channelID)).Guild.GetCurrentUserAsync()).GetPermissions(((IGuildChannel)Program.Client.GetChannel(channelID)));
                     if (!permission.SendMessages || !permission.ViewChannel || !permission.ReadMessageHistory || (sender is Tracker.TwitchTracker && (!permission.AddReactions || !permission.ManageMessages)))
                     {
-                        TryRemoveTracker(sender.Name, channelID);
+                        TryRemoveTrackerAsync(sender.Name, channelID);
                         Console.WriteLine("\n" + $"Removed a tracker for {sender.Name} from Channel {channelID} due to missing Permissions");
                         if (permission.SendMessages)
                         {

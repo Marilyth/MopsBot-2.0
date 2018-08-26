@@ -27,7 +27,7 @@ namespace MopsBot.Data.Tracker
         public delegate Task MinorEventHandler(ulong channelID, ITracker self, string notificationText);
         public delegate Task MainEventHandler(ulong channelID, Embed embed, ITracker self, string notificationText = "");
         public HashSet<ulong> ChannelIds;
-        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfArrays)]
+        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
         public Dictionary<ulong, string> ChannelMessages;
 
         [BsonId]
