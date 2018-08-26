@@ -61,19 +61,19 @@ namespace MopsBot.Data
 
         public override void postInitialisation()
         {
-            using (StreamReader read = new StreamReader(new FileStream($"mopsdata//{typeof(T).Name}.json", FileMode.OpenOrCreate)))
-            {
-                try
-                {
-                    trackers = JsonConvert.DeserializeObject<Dictionary<string, T>>(read.ReadToEnd());
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine("\n" +  e.Message + e.StackTrace);
-                }
-            }
-            //var collection = StaticBase.DataBase.GetCollection<T>(typeof(T).Name).FindSync<T>(x => true).ToList();
-            //trackers = collection.ToDictionary(x => x.Name);
+            //using (StreamReader read = new StreamReader(new FileStream($"mopsdata//{typeof(T).Name}.json", FileMode.OpenOrCreate)))
+            //{
+                //try
+                //{
+                    //trackers = JsonConvert.DeserializeObject<Dictionary<string, T>>(read.ReadToEnd());
+                //}
+                //catch (Exception e)
+                //{
+                    //Console.WriteLine("\n" +  e.Message + e.StackTrace);
+                //}
+            //}
+            var collection = StaticBase.DataBase.GetCollection<T>(typeof(T).Name).FindSync<T>(x => true).ToList();
+            trackers = collection.ToDictionary(x => x.Name);
 
             trackers = (trackers == null ? new Dictionary<string, T>() : trackers);
 
