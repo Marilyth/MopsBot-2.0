@@ -25,7 +25,7 @@ namespace MopsBot.Module
             await ReplyAsync(((SocketGuildUser)Context.User).JoinedAt.Value.Date.ToString("d"));
         }
 
-        [Command("joinServer")]
+        [Command("invite")]
         [Summary("Provides link to make me join your Server")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public async Task joinServer()
