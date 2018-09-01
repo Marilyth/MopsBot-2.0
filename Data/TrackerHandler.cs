@@ -304,8 +304,8 @@ namespace MopsBot.Data
                 //Check if channel still exists, or existing only in cache
                 if (Program.Client.GetChannel(channelID) == null || (await ((IGuildChannel)Program.Client.GetChannel(channelID)).Guild.GetCurrentUserAsync()) == null)
                 {
-                    await TryRemoveTrackerAsync(sender.Name, channelID);
-                    Console.WriteLine("\n" + $"Removed Tracker: {sender.Name} Channel {channelID} is missing");
+                    //await TryRemoveTrackerAsync(sender.Name, channelID);
+                    Console.WriteLine("\n" + $"Removed {typeof(T).Name}: {sender.Name} Channel {channelID} is missing");
                 }
                 //Check if permissions were modified, to an extend of making the tracker unusable
                 else
@@ -314,7 +314,7 @@ namespace MopsBot.Data
                     if (!permission.SendMessages || !permission.ViewChannel || !permission.ReadMessageHistory || (sender is Tracker.TwitchTracker && (!permission.AddReactions || !permission.ManageMessages)))
                     {
                         await TryRemoveTrackerAsync(sender.Name, channelID);
-                        Console.WriteLine("\n" + $"Removed a tracker for {sender.Name} from Channel {channelID} due to missing Permissions");
+                        Console.WriteLine("\n" + $"Removed a {typeof(T).Name} for {sender.Name} from Channel {channelID} due to missing Permissions");
                         if (permission.SendMessages)
                         {
                             await ((ITextChannel)Program.Client.GetChannel(channelID)).SendMessageAsync($"Removed tracker for `{sender.Name}` due to missing Permissions");
