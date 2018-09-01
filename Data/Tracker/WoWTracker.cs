@@ -268,8 +268,8 @@ namespace MopsBot.Data.Tracker
             if (trackFeed)
             {
                 changes["Loot"] = "";
-                var oldLootDict = oldStats.Feed.Where(x => x.Type.Equals("LOOT")).ToDictionary(x => x.Timestamp);
-                var newLootDict = WoWChar.Feed.Where(x => x.Type.Equals("LOOT")).ToDictionary(x => x.Timestamp);
+                var oldLootDict = oldStats.Feed.Where(x => x.Type.Equals("LOOT")).ToDictionary(x => x.Timestamp + x.ItemId);
+                var newLootDict = WoWChar.Feed.Where(x => x.Type.Equals("LOOT")).ToDictionary(x => x.Timestamp + x.ItemId);
                 foreach (var item in newLootDict)
                 {
                     if (!oldLootDict.ContainsKey(item.Key))
@@ -282,8 +282,8 @@ namespace MopsBot.Data.Tracker
                     changes.Remove("Loot");
 
                 changes["Achievements"] = "";
-                var oldAchievementDict = oldStats.Feed.Where(x => x.Type.Equals("ACHIEVEMENT") || x.Type.Equals("BOSSKILL") || x.Type.Equals("CRITERIA")).ToDictionary(x => x.Achievement.Id);
-                var newAchievementDict = WoWChar.Feed.Where(x => x.Type.Equals("ACHIEVEMENT") || x.Type.Equals("BOSSKILL") || x.Type.Equals("CRITERIA")).ToDictionary(x => x.Achievement.Id);
+                var oldAchievementDict = oldStats.Feed.Where(x => x.Type.Equals("ACHIEVEMENT") || x.Type.Equals("BOSSKILL") || x.Type.Equals("CRITERIA")).ToDictionary(x => x.Achievement.Id + x.Timestamp);
+                var newAchievementDict = WoWChar.Feed.Where(x => x.Type.Equals("ACHIEVEMENT") || x.Type.Equals("BOSSKILL") || x.Type.Equals("CRITERIA")).ToDictionary(x => x.Achievement.Id + x.Timestamp);
                 foreach (var item in newAchievementDict)
                 {
                     if (!oldAchievementDict.ContainsKey(item.Key))
