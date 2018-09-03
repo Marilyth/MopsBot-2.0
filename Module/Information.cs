@@ -145,7 +145,7 @@ namespace MopsBot.Module
             var request = (System.Net.HttpWebRequest)System.Net.WebRequest.Create(URL);
             foreach(var header in headers)
                 request.Headers.Add(header.Key, header.Value);
-
+            request.KeepAlive = false;
             request.UserAgent = "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)";
             using (var response = await request.GetResponseAsync())
             using (var content = response.GetResponseStream())
