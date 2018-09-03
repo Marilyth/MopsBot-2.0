@@ -89,6 +89,4 @@ namespace MopsBot.Module{
                 Program.reactionHandler.addHandler(context.cachedMessage, new Emoji("🔁"), test3Funciton);
         }
     }
-
-    //bla
 }*/

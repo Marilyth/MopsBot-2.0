@@ -87,7 +87,7 @@ namespace MopsBot.Data.Tracker
 
                 foreach (Item video in newVideos)
                 {
-                    foreach (ulong channel in ChannelIds)
+                    foreach (ulong channel in ChannelIds.ToList())
                     {
                         await OnMajorChangeTracked(channel, await createEmbed(video), ChannelMessages[channel]);
                     }

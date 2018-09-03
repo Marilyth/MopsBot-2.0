@@ -46,7 +46,7 @@ namespace MopsBot.Data.Tracker
 
                 foreach (ITweet newTweet in newTweets)
                 {
-                    foreach (ulong channel in ChannelIds)
+                    foreach (ulong channel in ChannelIds.ToList())
                     {
                         if (newTweet.InReplyToScreenName == null && !newTweet.IsRetweet)
                         {

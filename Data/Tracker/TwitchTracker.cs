@@ -134,7 +134,7 @@ namespace MopsBot.Data.Tracker
                         await StaticBase.Trackers["twitch"].UpdateDBAsync(this);
                     }
 
-                    foreach (ulong channel in ChannelIds)
+                    foreach (ulong channel in ChannelIds.ToList())
                         await OnMajorChangeTracked(channel, createEmbed());
                 }
             }
