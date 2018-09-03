@@ -53,11 +53,11 @@ namespace MopsBot
         /// <param name="arg">The recieved message</param>
         private async Task Client_MessageReceived(SocketMessage arg)
         {
-            /*Daily Statistics & User Experience
-            if (!arg.Author.IsBot && !arg.Content.StartsWith("!"))
+            //User Experience
+            if (!arg.Author.IsBot)
             {
-                StaticBase.people.AddStat(arg.Author.Id, arg.Content.Length, "experience");
-            }*/
+                await StaticBase.Users.ModifyStatAsync(arg.Author.Id, x => x.Experience += arg.Content.Length);
+            }
         }
 
         /// <summary>

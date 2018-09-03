@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
-using MopsBot.Data.Individual;
+using MopsBot.Data.Entities;
 using MopsBot.Data;
 using MopsBot.Data.Tracker;
 using Newtonsoft.Json;

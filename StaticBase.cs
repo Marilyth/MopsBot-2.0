@@ -22,7 +22,7 @@ namespace MopsBot
 {
     public class StaticBase
     {
-        //public static Data.UserScore people = new Data.UserScore();
+        public static Data.UserHandler Users;
         public static Random ran = new Random();
         //public static List<IdleDungeon> DungeonCrawler = new List<IdleDungeon>();
         public static Gfycat.GfycatClient gfy;
@@ -40,8 +40,8 @@ namespace MopsBot
         public static Dictionary<string, TrackerWrapper> Trackers;
         public static MuteTimeHandler MuteHandler;
         public static NewsApiClient NewsClient;
-        public static MongoClient DataBaseClient = new MongoClient($"mongodb://Mayfunction:{Program.Config["MopsAPI"]}@5.45.104.29:27017");
-        public static IMongoDatabase DataBase = DataBaseClient.GetDatabase("Mops");
+        public static MongoClient DatabaseClient = new MongoClient($"mongodb://Mayfunction:{Program.Config["MopsAPI"]}@5.45.104.29:27017");
+        public static IMongoDatabase Database = DatabaseClient.GetDatabase("Mops");
 
         public static bool init = false;
 
@@ -54,6 +54,7 @@ namespace MopsBot
             {
                 Task.Run(() =>
                 {
+                    Users = new UserHandler();
                     ReactGiveaways = new ReactionGiveaway();
                     ReactRoleJoin = new ReactionRoleJoin();
                     Poll = new ReactionPoll();
@@ -89,6 +90,7 @@ namespace MopsBot
                         Console.WriteLine("\n" +  e.Message + e.StackTrace);
                     }
                 }
+                
                 Trackers = new Dictionary<string, Data.TrackerWrapper>();
                 Trackers["osu"] = new TrackerHandler<OsuTracker>();
                 Trackers["overwatch"] = new TrackerHandler<OverwatchTracker>();

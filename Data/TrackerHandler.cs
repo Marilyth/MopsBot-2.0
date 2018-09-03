@@ -72,7 +72,7 @@ namespace MopsBot.Data
                     //Console.WriteLine("\n" +  e.Message + e.StackTrace);
                 //}
             //}
-            var collection = StaticBase.DataBase.GetCollection<T>(typeof(T).Name).FindSync<T>(x => true).ToList();
+            var collection = StaticBase.Database.GetCollection<T>(typeof(T).Name).FindSync<T>(x => true).ToList();
             trackers = collection.ToDictionary(x => x.Name);
 
             trackers = (trackers == null ? new Dictionary<string, T>() : trackers);
@@ -104,17 +104,17 @@ namespace MopsBot.Data
             using (StreamWriter write = new StreamWriter(new FileStream($"mopsdata//{typeof(T).Name}.json", FileMode.Create)))
                 write.Write(dictAsJson);
 
-            await StaticBase.DataBase.GetCollection<ITracker>(typeof(T).Name).ReplaceOneAsync(x => x.Name.Equals(tracker.Name), tracker);
+            await StaticBase.Database.GetCollection<ITracker>(typeof(T).Name).ReplaceOneAsync(x => x.Name.Equals(tracker.Name), tracker);
         }
 
         protected override async Task InsertToDBAsync(ITracker tracker)
         {
-            await StaticBase.DataBase.GetCollection<ITracker>(typeof(T).Name).InsertOneAsync(tracker);
+            await StaticBase.Database.GetCollection<ITracker>(typeof(T).Name).InsertOneAsync(tracker);
         }
         
         protected override async Task RemoveFromDBAsync(ITracker tracker)
         {
-            await StaticBase.DataBase.GetCollection<T>(typeof(T).Name).DeleteOneAsync(x => x.Name.Equals(tracker.Name));
+            await StaticBase.Database.GetCollection<T>(typeof(T).Name).DeleteOneAsync(x => x.Name.Equals(tracker.Name));
         }
 
         public override async Task<bool> TryRemoveTrackerAsync(string name, ulong channelId)

@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 using Newtonsoft.Json;
-using MopsBot.Data.Individual;
+using MopsBot.Data.Entities;
 using System.Threading.Tasks;
 
 namespace MopsBot.Api.Controllers

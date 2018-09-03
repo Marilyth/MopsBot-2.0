@@ -74,43 +74,6 @@ namespace MopsBot.Module
             }
         }
 
-        /*
-        [Command("getStats")]
-        [Summary("Returns your experience and all that stuff")]
-        [RequireBotPermission(ChannelPermission.SendMessages)]
-        public async Task getStats()
-        {
-            await ReplyAsync(StaticBase.people.Users[Context.User.Id].statsToString());
-        }
-
-        [Command("ranking")]
-        [Summary("Returns the top limit ranks of level\nOr if specified {experience, money, hug, punch, kiss}")]
-        [RequireBotPermission(ChannelPermission.SendMessages)]
-        public async Task ranking(int limit, string stat = "level")
-        {
-            Func<MopsBot.Data.Individual.User, int> sortParameter = x => x.calcLevel();
-            switch (stat.ToLower())
-            {
-                case "experience":
-                    sortParameter = x => x.Experience;
-                    break;
-                case "money":
-                    sortParameter = x => x.Score;
-                    break;
-                case "hug":
-                    sortParameter = x => x.hugged;
-                    break;
-                case "punch":
-                    sortParameter = x => x.punched;
-                    break;
-                case "kiss":
-                    sortParameter = x => x.kissed;
-                    break;
-            }
-            await ReplyAsync(StaticBase.people.DrawDiagram(limit, sortParameter));
-        }
-        */
-
         [Command("Wolfram", RunMode=RunMode.Async)]
         [Summary("Sends a query to wolfram alpha.")]
         public async Task wolf([Remainder]string query){

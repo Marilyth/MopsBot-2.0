@@ -202,35 +202,35 @@ namespace MopsBot.Module
         [Hide]
         public async Task createdb()
         {
-            await DataBaseClient.DropDatabaseAsync("Mops");
-            DataBase = DataBaseClient.GetDatabase("Mops");
+            await DatabaseClient.DropDatabaseAsync("Mops");
+            Database = DatabaseClient.GetDatabase("Mops");
             
             foreach(var tracker in Trackers.Values){
                 var type = tracker.GetTrackerType();
                 if(tracker.GetTrackerSet().Count > 0){
-                    var collection = DataBase.GetCollection<ITracker>(type.Name);
+                    var collection = Database.GetCollection<ITracker>(type.Name);
                     collection.InsertMany(tracker.GetTrackerSet());
                 }
                 else{
-                    await DataBase.CreateCollectionAsync(type.Name);
+                    await Database.CreateCollectionAsync(type.Name);
                 }
             }
 
-            var giveawayCollection = DataBase.GetCollection<KeyValuePair<ulong, List<KeyValuePair<ulong, List<ulong>>>>>("ReactionGiveaways");
+            var giveawayCollection = Database.GetCollection<KeyValuePair<ulong, List<KeyValuePair<ulong, List<ulong>>>>>("ReactionGiveaways");
             foreach(var giveaway in ReactGiveaways.Giveaways){
                 await giveawayCollection.InsertOneAsync(KeyValuePair.Create(giveaway.Key, giveaway.Value.ToList()));
             }
 
-            var rolejoinCollection = DataBase.GetCollection<KeyValuePair<ulong, HashSet<ulong>>>("ReactionRoleInvites");
+            var rolejoinCollection = Database.GetCollection<KeyValuePair<ulong, HashSet<ulong>>>("ReactionRoleInvites");
             rolejoinCollection.InsertMany(ReactRoleJoin.RoleInvites.ToList());
 
-            var pollCollection = DataBase.GetCollection<KeyValuePair<ulong, List<Data.Poll>>>("ReactionPolls");
+            var pollCollection = Database.GetCollection<KeyValuePair<ulong, List<Data.Poll>>>("ReactionPolls");
             pollCollection.InsertMany(StaticBase.Poll.Polls.ToList());
 
-            var prefixCollection = DataBase.GetCollection<KeyValuePair<ulong, string>>("GuildPrefixes");
+            var prefixCollection = Database.GetCollection<KeyValuePair<ulong, string>>("GuildPrefixes");
             prefixCollection.InsertMany(GuildPrefix.ToList());
 
-            var customCollection = DataBase.GetCollection<KeyValuePair<ulong, Dictionary<string, string>>>("Custom_Commands");
+            var customCollection = Database.GetCollection<KeyValuePair<ulong, Dictionary<string, string>>>("Custom_Commands");
             customCollection.InsertMany(CustomCommands.ToList());
         }
 
