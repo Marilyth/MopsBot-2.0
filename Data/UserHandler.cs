@@ -19,7 +19,7 @@ namespace MopsBot.Data
         private Dictionary<ulong, User> Users = new Dictionary<ulong, User>();
 
         /// <summary>
-        /// Reads data from text file, and fills Dictionary of Users with it
+        /// Reads data from the database, and fills Dictionary of Users with it
         /// </summary>
         public UserHandler()
         {
