@@ -68,14 +68,15 @@ namespace MopsBot.Data.Updater
                     Health -= enemyDamage - userHealing;
                     Log.Add($"The {Enemy.Name} [{NextEnemyMove.Name}] you for {enemyDamage} damage.");
 
-                    if(Enemy.Health < 0){
+                    if(Enemy.Health <= 0){
                         await Program.ReactionHandler.ClearHandler(Message);
                         await Message.ModifyAsync(x => x.Embed = WinEmbed());
 
                         List<Entities.Item> loot = Enemy.GetLoot();
                         Log = new List<string>();
-                        Log.Add($"You gained {Enemy.Health * Enemy.Damage * 10}");
-                        Log.Add($"You gained {Enemy.Health}$");
+                        var tmpEnemy = StaticBase.Database.GetCollection<Entities.Enemy>("Enemies").FindSync(x => x.Name == Enemy.Name).First();
+                        Log.Add($"You gained {tmpEnemy.Health * tmpEnemy.Damage * 10} Experience");
+                        Log.Add($"You gained {tmpEnemy.Health}$");
                         if(loot.Count > 0) Log.Add($"You gained Loot: {string.Join(", ", loot.Select(x => string.Format("[{0}]", x.Name)))}");
                         await User.ModifyAsync(x => {x.Experience += Enemy.Health * Enemy.Damage * 10; 
                                                      x.Inventory = x.Inventory ?? new List<int>(){0};
