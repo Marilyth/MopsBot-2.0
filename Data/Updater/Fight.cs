@@ -78,10 +78,10 @@ namespace MopsBot.Data.Updater
                         Log.Add($"You gained {tmpEnemy.Health * tmpEnemy.Damage * 10} Experience");
                         Log.Add($"You gained {tmpEnemy.Health}$");
                         if(loot.Count > 0) Log.Add($"You gained Loot: {string.Join(", ", loot.Select(x => string.Format("[{0}]", x.Name)))}");
-                        await User.ModifyAsync(x => {x.Experience += Enemy.Health * Enemy.Damage * 10; 
+                        await User.ModifyAsync(x => {x.Experience += tmpEnemy.Health * tmpEnemy.Damage * 10; 
                                                      x.Inventory = x.Inventory ?? new List<int>(){0};
                                                      x.Inventory.AddRange(loot.Select(y => y.Id));
-                                                     x.Money += Enemy.Health;});
+                                                     x.Money += tmpEnemy.Health;});
 
                         await Message.ModifyAsync(x => x.Embed = WinEmbed());
                         return;
