@@ -56,7 +56,7 @@ namespace MopsBot
             //User Experience
             if (!arg.Author.IsBot)
             {
-                await StaticBase.Users.ModifyStatAsync(arg.Author.Id, x => x.Experience += arg.Content.Length);
+                await StaticBase.Users.ModifyUserAsync(arg.Author.Id, x => x.Experience += arg.Content.Length);
             }
         }
 

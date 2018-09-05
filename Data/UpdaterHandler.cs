@@ -29,6 +29,5 @@ namespace MopsBot.Data
             updaters.Remove(key);
             item.Dispose();
         }
-
     }
 }   

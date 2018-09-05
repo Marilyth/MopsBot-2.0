@@ -18,7 +18,7 @@ namespace MopsBot.Module
         {
             if (!person.Id.Equals(Context.User.Id))
             {
-                await StaticBase.Users.ModifyStatAsync(person.Id, x => x.Hugged++);
+                await StaticBase.Users.ModifyUserAsync(person.Id, x => x.Hugged++);
                 await ReplyAsync($"Aww, **{person.Username}** got hugged by **{Context.User.Username}**.\n" +
                                  $"They have already been hugged {StaticBase.Users.GetUser(person.Id).Hugged} times!");
             }
@@ -33,7 +33,7 @@ namespace MopsBot.Module
         {
             if (!person.Id.Equals(Context.User.Id))
             {
-                await StaticBase.Users.ModifyStatAsync(person.Id, x => x.Kissed++);
+                await StaticBase.Users.ModifyUserAsync(person.Id, x => x.Kissed++);
                 await ReplyAsync($"Mwaaah, **{person.Username}** got kissed by **{Context.User.Username}**.\n" +
                                  $"They have already been kissed {StaticBase.Users.GetUser(person.Id).Kissed} times!");
             }
@@ -48,7 +48,7 @@ namespace MopsBot.Module
         {
             if (!person.Id.Equals(Context.User.Id))
             {
-                await StaticBase.Users.ModifyStatAsync(person.Id, x => x.Punched++);
+                await StaticBase.Users.ModifyUserAsync(person.Id, x => x.Punched++);
                 await ReplyAsync($"DAAMN! **{person.Username}** just got fucked up by **{Context.User.Username}**.\n" +
                                  $"That's {StaticBase.Users.GetUser(person.Id).Punched} times, they have been fucked up now.");
             }

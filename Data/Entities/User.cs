@@ -11,12 +11,14 @@ using Discord;
 
 namespace MopsBot.Data.Entities
 {
+    [BsonIgnoreExtraElements]
     public class User
     {
         [BsonId]
         public ulong Id;
         public int Money, Experience, Punched, Hugged, Kissed;
-        public Item Weapon, Armor;
+        public int WeaponId;
+        public List<int> Inventory;
 
         public User(ulong pId)
         {
@@ -30,6 +32,10 @@ namespace MopsBot.Data.Entities
 
         public int CalcCurLevel(){
             return (int)Math.Sqrt(Experience/200.0);
+        }
+
+        public async Task ModifyAsync(Action<User> modification){
+            await StaticBase.Users.ModifyUserAsync(Id, modification);
         }
 
         private string DrawProgressBar()
@@ -58,11 +64,6 @@ namespace MopsBot.Data.Entities
             e.AddField("Level", $"{CalcCurLevel()} ({Experience}/{CalcExperience(CalcCurLevel() + 1)}xp)\n{DrawProgressBar()}", true);
             e.AddField("Interactions", $"**Kissed** {Kissed} times\n**Hugged** {Hugged} times\n**Punched** {Punched} times", true);
             e.AddField("Money", Money, false);
-            
-            if(Armor != null || Weapon != null){
-                e.AddField("Armor", $"{Armor?.Name ?? "None"} (**atk**:{Armor?.Damage ?? 0}, **def**:{Armor?.Defence ?? 0})");
-                e.AddField("Weapon", $"{Weapon?.Name ?? "None"} (**atk**:{Weapon?.Damage ?? 0}, **def**:{Weapon?.Defence ?? 0})");
-            }
 
             return e.Build();
         }

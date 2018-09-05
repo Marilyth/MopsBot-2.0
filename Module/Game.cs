@@ -1,4 +1,4 @@
-﻿/*using System;
+﻿using System;
 using Discord.Commands;
 using Discord.WebSocket;
 using Discord;
@@ -6,57 +6,46 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MongoDB.Driver;
 
 namespace MopsBot.Module
 {
     public class Game : ModuleBase
     {
-        [Group("dungeon")]
+        [Group("Fight")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public class Dungeon : ModuleBase
+        [RequireBotPermission(ChannelPermission.ManageMessages)]
+        public class FightGame : ModuleBase
         {
-            [Command("start")]
-            [Summary("Crawl through a dungeon")]
-            public async Task start(uint lengthInMinutes)
-            {
-                if(lengthInMinutes > 0){
-                    Discord.IUserMessage updateMessage = await Context.Channel.SendMessageAsync("Generating dungeon.");
-
-                    Data.Updater.IdleDungeon test = new Data.Updater.IdleDungeon(updateMessage, (SocketUser)Context.User, (int)lengthInMinutes);
-                    StaticBase.DungeonCrawler.Add(test);
-                }
-                else
-                    await ReplyAsync("Fuck you.");
+            [Command("Start")]
+            [Summary("Starts a fight with the specified Enemy.")]
+            public async Task Start([Remainder]string enemy){
+                var message = await ReplyAsync("Generating fight.");
+                new Data.Updater.Fight(Context.User.Id, enemy, message);
             }
 
-            [Command("buy")]
-            [Summary("Buy equipment")]
-            public async Task buy(int valueOfItem)
-            {
-                var user = StaticBase.people.Users[Context.User.Id];
-                if(valueOfItem <= user.Score)
-                {
-                    user.getEquipment(Context.User.Id);
-                    user.equipment.Add(new Data.AllItems().getItem(valueOfItem));
-                    await ReplyAsync($"Successfully purchased **{new Data.AllItems().getItem(valueOfItem).name}**");
-                    user.saveEquipment(Context.User.Id);
-                    StaticBase.people.AddStat(Context.User.Id, -valueOfItem, "score");
-                }
+            [Command("Enemies")]
+            [Summary("Lists all available enemies, or specific information on one enemy.")]
+            public async Task Enemies([Remainder]string enemy = null){
+                if(enemy == null)
+                    await ReplyAsync(string.Join(", ", StaticBase.Database.GetCollection<Data.Entities.Enemy>("Enemies").FindSync(x => true).ToList().Select(y => y.Name)));
                 else
-                    await ReplyAsync("Not enough money.");
+                    await ReplyAsync("", embed: StaticBase.Database.GetCollection<Data.Entities.Enemy>("Enemies").FindSync(x => x.Name.Equals(enemy)).First().StatEmbed());
             }
 
-            [Command("stock")]
-            [Summary("See all items you could buy")]
-            public async Task stock()
-            {
-                var eligable = new Data.AllItems().getEligable(StaticBase.people.Users[Context.User.Id].Score).Select(x => $"${x.Value}: **{x.Key}**");
-                string output = String.Join("\n", eligable);
-                await ReplyAsync(output.Count() > 0 ? output : "There is nothing you could buy.");
+            [Command("Write")]
+            [Summary("Lists all available enemies, or specific information on one enemy.")]
+            public async Task write(){
+                Data.Entities.ItemMove moveTest = new Data.Entities.ItemMove(){Name = "Slash", DamageModifier = 1, RageConsumption = 0, DefenceModifier = 1};
+                Data.Entities.Item test = new Data.Entities.Item(){Id = 1, Name = "Sword", BaseDamage = 2, BaseDefence = 1, Moveset = new List<Data.Entities.ItemMove>(){moveTest}};
+                Data.Entities.Enemy enemyTest = new Data.Entities.Enemy(){Name = "Skeleton", Damage = 2, Defence = 1, Health = 20, MoveList = new List<Data.Entities.ItemMove>(){moveTest}, LootChance = new Dictionary<int, int>(){{1, 50}}};
+
+                StaticBase.Database.GetCollection<Data.Entities.Item>("Items").InsertOne(test);
+                StaticBase.Database.GetCollection<Data.Entities.Enemy>("Enemies").InsertOne(enemyTest);
             }
         }
 
-        [Group("salad")]
+        /*[Group("salad")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         [RequireBotPermission(ChannelPermission.ManageMessages)]
         public class Salad : ModuleBase
@@ -76,7 +65,6 @@ namespace MopsBot.Module
                 StaticBase.Crosswords.guessWord(Context.User.Id, guess);
                 await Context.Message.DeleteAsync();
             }
-        }
+        }*/
     }
 }
-*/

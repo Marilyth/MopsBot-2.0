@@ -22,9 +22,10 @@ namespace MopsBot
 {
     public class StaticBase
     {
+        public static MongoClient DatabaseClient = new MongoClient($"{Program.Config["DatabaseURL"]}");
+        public static IMongoDatabase Database = DatabaseClient.GetDatabase("Mops");
         public static Data.UserHandler Users;
         public static Random ran = new Random();
-        //public static List<IdleDungeon> DungeonCrawler = new List<IdleDungeon>();
         public static Gfycat.GfycatClient gfy;
         public static List<string> Playlist = new List<string>();
 
@@ -40,8 +41,6 @@ namespace MopsBot
         public static Dictionary<string, TrackerWrapper> Trackers;
         public static MuteTimeHandler MuteHandler;
         public static NewsApiClient NewsClient;
-        public static MongoClient DatabaseClient = new MongoClient($"{Program.Config["DatabaseURL"]}");
-        public static IMongoDatabase Database = DatabaseClient.GetDatabase("Mops");
 
         public static bool init = false;
 
