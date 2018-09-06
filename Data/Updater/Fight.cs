@@ -145,6 +145,12 @@ namespace MopsBot.Data.Updater
             e.WithAuthor(Program.Client.GetUser(User.Id).Username, Program.Client.GetUser(User.Id).GetAvatarUrl());
             e.WithThumbnailUrl(Enemy.ImageUrl);
 
+            e.AddField("Stats", $"HP: {Health}/{User.CalcCurLevel() + Weapon.BaseDefence + 10}\n" + 
+                                $"Rage: {Rage}!!!", true);
+
+            e.AddField("Enemy Stats", $"HP: {Enemy.Health}\n" + 
+                                      $"Rage: {Enemy.Rage}!!!", true);
+
             e.AddField("Log", $"```css\n{string.Join("\n\n", Log)}```");
 
             return e.Build();
@@ -155,6 +161,12 @@ namespace MopsBot.Data.Updater
 
             e.WithAuthor(Program.Client.GetUser(User.Id).Username, Program.Client.GetUser(User.Id).GetAvatarUrl());
             e.WithThumbnailUrl(Enemy.ImageUrl);
+
+            e.AddField("Stats", $"HP: {Health}/{User.CalcCurLevel() + Weapon.BaseDefence + 10}\n" + 
+                                $"Rage: {Rage}!!!", true);
+
+            e.AddField("Enemy Stats", $"HP: {Enemy.Health}\n" + 
+                                      $"Rage: {Enemy.Rage}!!!", true);
 
             e.AddField("Log", $"```css\n{string.Join("\n\n", Log)}```");
 
