@@ -44,14 +44,14 @@ namespace MopsBot.Data
             await StaticBase.Database.GetCollection<User>(COLLECTIONNAME).InsertOneAsync(Users[Id]);
         }
 
-        public async Task ModifyStatAsync(ulong Id, Action<User> action){
+        public async Task ModifyUserAsync(ulong Id, Action<User> modification){
             if(Users.ContainsKey(Id)){
-                action(Users[Id]);
+                modification(Users[Id]);
                 await UpdateDBAsync(Id);
             }
             else{
                 Users[Id] = new User(Id);
-                action(Users[Id]);
+                modification(Users[Id]);
                 await AddToDBAsync(Id);
             }
         }
