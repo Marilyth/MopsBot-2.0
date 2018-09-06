@@ -26,7 +26,7 @@ namespace MopsBot.Data.Entities
             MoveList = MoveList.OrderByDescending(x => x.RageConsumption).ToList();
             foreach(var move in MoveList){
                 if(Rage >= move.RageConsumption){
-                    var roll = StaticBase.ran.Next(0, 3);
+                    var roll = StaticBase.ran.Next(0, 2);
 
                     if(roll == 0){
                         return move;
