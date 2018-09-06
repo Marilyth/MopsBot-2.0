@@ -54,10 +54,13 @@ namespace MopsBot.Data.Updater
                     Rage -= Weapon.Moveset[option].RageConsumption;
                     Enemy.Rage -= (int)(NextEnemyMove.RageConsumption);
 
-                    var userDamage = (int)(Weapon.Moveset[option].DamageModifier * Weapon.BaseDamage - NextEnemyMove.HealthModifier - NextEnemyMove.DefenceModifier * Enemy.Damage + NextEnemyMove.DamageModifier * Enemy.Damage * Weapon.Moveset[option].DeflectModifier);
-                    var enemyDamage = (int)(NextEnemyMove.DamageModifier * Enemy.Damage - Weapon.Moveset[option].HealthModifier - Weapon.Moveset[option].DefenceModifier * Weapon.BaseDefence + Weapon.Moveset[option].DamageModifier * Weapon.BaseDamage * NextEnemyMove.DeflectModifier);
+                    var userDamage = (int)(Weapon.Moveset[option].DamageModifier * Weapon.BaseDamage - NextEnemyMove.DefenceModifier * Enemy.Damage + NextEnemyMove.DamageModifier * Enemy.Damage * Weapon.Moveset[option].DeflectModifier);
+                    var enemyDamage = (int)(NextEnemyMove.DamageModifier * Enemy.Damage - Weapon.Moveset[option].DefenceModifier * Weapon.BaseDefence + Weapon.Moveset[option].DamageModifier * Weapon.BaseDamage * NextEnemyMove.DeflectModifier);
                     if(enemyDamage < 0) enemyDamage = 0;
                     if(userDamage < 0) userDamage = 0;
+                    
+                    enemyDamage -= (int)Weapon.Moveset[option].HealthModifier;
+                    userDamage -= (int)NextEnemyMove.HealthModifier;
 
                     if(userDamage >= 0)
                         Log.Add($"You [{Weapon.Moveset[option].Name}] the {Enemy.Name} for {userDamage} damage.");
