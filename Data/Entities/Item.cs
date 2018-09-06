@@ -44,7 +44,7 @@ namespace MopsBot.Data.Entities
                 if(DefenceModifier != 0) stats.Add(DefenceModifier * BaseDefence + "def");
                 if(HealthModifier != 0) stats.Add(HealthModifier + "hp");
                 
-                return $"[**{Name}**]: {string.Join(", ", stats)}, Rage Cost: {RageConsumption}";
+                return $"[**{Name}**]: {string.Join(", ", stats)} `Rage Cost`: {RageConsumption}";
         }
     }
 }

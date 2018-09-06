@@ -58,14 +58,14 @@ namespace MopsBot.Data.Updater
                     var enemyDamage = (int)(NextEnemyMove.DamageModifier * Enemy.Damage - Weapon.Moveset[option].DefenceModifier * Weapon.BaseDefence + Weapon.Moveset[option].DamageModifier * Weapon.BaseDamage * NextEnemyMove.DeflectModifier);
                     if(enemyDamage < 0) enemyDamage = 0;
                     if(userDamage < 0) userDamage = 0;
-                    
+
                     enemyDamage -= (int)Weapon.Moveset[option].HealthModifier;
                     userDamage -= (int)NextEnemyMove.HealthModifier;
 
                     if(userDamage >= 0)
                         Log.Add($"You [{Weapon.Moveset[option].Name}] the {Enemy.Name} for {userDamage} damage.");
                     else
-                        Log.Add($"The {Enemy.Name} [{Weapon.Moveset[option].Name}] itself for {userDamage * (-1)} health.");
+                        Log.Add($"The {Enemy.Name} [{NextEnemyMove.Name}] itself for {userDamage * (-1)} health.");
                     if(enemyDamage < 0)
                         Log.Add($"You [{Weapon.Moveset[option].Name}] yourself for {enemyDamage * (-1)} health.");
                     else
