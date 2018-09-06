@@ -23,6 +23,7 @@ namespace MopsBot.Data.Entities
         public List<ItemMove> MoveList;
 
         public ItemMove GetNextMove(){
+            MoveList = MoveList.OrderByDescending(x => x.RageConsumption).ToList();
             foreach(var move in MoveList){
                 if(Rage >= move.RageConsumption){
                     var roll = StaticBase.ran.Next(0, 3);
@@ -33,7 +34,7 @@ namespace MopsBot.Data.Entities
                 }
             }
 
-            return MoveList.First();
+            return MoveList.Last();
         }
 
         public Embed StatEmbed(){
