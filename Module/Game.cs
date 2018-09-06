@@ -28,9 +28,43 @@ namespace MopsBot.Module
             [Summary("Lists all available enemies, or specific information on one enemy.")]
             public async Task Enemies([Remainder]string enemy = null){
                 if(enemy == null)
-                    await ReplyAsync(string.Join(", ", StaticBase.Database.GetCollection<Data.Entities.Enemy>("Enemies").FindSync(x => true).ToList().Select(y => y.Name)));
+                    await ReplyAsync(string.Join(", ", StaticBase.Database.GetCollection<Data.Entities.Enemy>("Enemies").FindSync(x => true).ToList().Select(y => string.Format("`{0}`", y.Name))));
                 else
                     await ReplyAsync("", embed: StaticBase.Database.GetCollection<Data.Entities.Enemy>("Enemies").FindSync(x => x.Name.Equals(enemy)).First().StatEmbed());
+            }
+
+            [Command("Items")]
+            [Summary("Lists all items, or specific information on one item.")]
+            public async Task Items([Remainder]string item = null){
+                if(item == null)
+                    await ReplyAsync(string.Join(", ", StaticBase.Database.GetCollection<Data.Entities.Item>("Items").FindSync(x => true).ToList().Select(y => string.Format("`{0}`", y.Name))));
+                else
+                    await ReplyAsync("", embed: StaticBase.Database.GetCollection<Data.Entities.Item>("Items").FindSync(x => x.Name.Equals(item)).First().ItemEmbed());
+            }
+
+            [Command("Inventory")]
+            [Summary("Lists all items in your inventory.")]
+            public async Task Inventory(){
+                await ReplyAsync(string.Join("\n", (StaticBase.Users.GetUser(Context.User.Id).Inventory ?? new List<int>())
+                                .Select(x => { var Item = StaticBase.Database.GetCollection<Data.Entities.Item>("Items").FindSync(y => y.Id.Equals(x)).First();
+                                                return $"Id: [**{Item.Id}**], {Item.Name}";})));
+            }
+
+            [Command("Equip")]
+            [Summary("Equip an Item from your inventory.")]
+            public async Task Equip(int itemId){
+                var User = StaticBase.Users.GetUser(Context.User.Id);
+                var Inventory = User.Inventory ?? new List<int>();
+
+                if(Inventory.Contains(itemId)){
+                    await User.ModifyAsync(x => {x.Inventory.Remove(itemId);
+                                                 x.Inventory.Add(x.WeaponId);
+                                                 x.WeaponId = itemId;});
+                    await ReplyAsync($"Your equipped the [{itemId}] item and put your old item into your inventory.");
+                }
+
+                else
+                    await ReplyAsync($"No Item with the Id {itemId} could be found.");
             }
         }
 

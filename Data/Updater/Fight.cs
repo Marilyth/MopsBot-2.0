@@ -13,7 +13,7 @@ namespace MopsBot.Data.Updater
         private Entities.User User;
         private Entities.Enemy Enemy;
         private IUserMessage Message;
-        private int Health, BaseDamage, Rage;
+        private int Health, Rage;
         private Entities.Item Weapon;
         private Entities.ItemMove NextEnemyMove;
         private List<string> Log = new List<string>();
@@ -36,7 +36,6 @@ namespace MopsBot.Data.Updater
             User = StaticBase.Users.GetUser(userId);
             Weapon = StaticBase.Database.GetCollection<Entities.Item>("Items").FindSync(x => x.Id == User.WeaponId).First();
             Health = User.CalcCurLevel() + Weapon.BaseDefence + 10;
-            BaseDamage = Weapon.BaseDamage;
 
             for(int i = 0; i < Weapon.Moveset.Count; i++){
                 int curIndex = i;
@@ -55,18 +54,22 @@ namespace MopsBot.Data.Updater
                     Rage -= Weapon.Moveset[option].RageConsumption;
                     Enemy.Rage -= (int)(NextEnemyMove.RageConsumption);
 
-                    var userDamage = (int)(Weapon.Moveset[option].DamageModifier * BaseDamage);
-                    var userHealing = (int)Weapon.Moveset[option].HealthModifier;
-                    var enemyDamage = (int)(NextEnemyMove.DamageModifier * Enemy.Damage);
+                    var userDamage = (int)(Weapon.Moveset[option].DamageModifier * Weapon.BaseDamage - NextEnemyMove.HealthModifier - NextEnemyMove.DefenceModifier * Enemy.Damage + NextEnemyMove.DamageModifier * Enemy.Damage * Weapon.Moveset[option].DeflectModifier);
+                    var enemyDamage = (int)(NextEnemyMove.DamageModifier * Enemy.Damage - Weapon.Moveset[option].HealthModifier - Weapon.Moveset[option].DefenceModifier * Weapon.BaseDefence + Weapon.Moveset[option].DamageModifier * Weapon.BaseDamage * NextEnemyMove.DeflectModifier);
+                    if(enemyDamage < 0) enemyDamage = 0;
+                    if(userDamage < 0) userDamage = 0;
 
-                    Enemy.Health -= userDamage;
-                    if(userDamage > 0)
+                    if(userDamage >= 0)
                         Log.Add($"You [{Weapon.Moveset[option].Name}] the {Enemy.Name} for {userDamage} damage.");
-                    if(userHealing > 0)
-                        Log.Add($"You [{Weapon.Moveset[option].Name}] yourself for {userHealing} health.");
+                    else
+                        Log.Add($"The {Enemy.Name} [{Weapon.Moveset[option].Name}] itself for {userDamage * (-1)} health.");
+                    if(enemyDamage < 0)
+                        Log.Add($"You [{Weapon.Moveset[option].Name}] yourself for {enemyDamage * (-1)} health.");
+                    else
+                        Log.Add($"The {Enemy.Name} [{NextEnemyMove.Name}] you for {enemyDamage} damage.");
 
-                    Health -= enemyDamage - userHealing;
-                    Log.Add($"The {Enemy.Name} [{NextEnemyMove.Name}] you for {enemyDamage} damage.");
+                    Health -= (int)(enemyDamage);
+                    Enemy.Health -= userDamage;
 
                     if(Enemy.Health <= 0){
                         await Program.ReactionHandler.ClearHandler(Message);
@@ -79,7 +82,7 @@ namespace MopsBot.Data.Updater
                         Log.Add($"You gained {tmpEnemy.Health}$");
                         if(loot.Count > 0) Log.Add($"You gained Loot: {string.Join(", ", loot.Select(x => string.Format("[{0}]", x.Name)))}");
                         await User.ModifyAsync(x => {x.Experience += tmpEnemy.Health * tmpEnemy.Damage * 10; 
-                                                     x.Inventory = x.Inventory ?? new List<int>(){0};
+                                                     x.Inventory = x.Inventory ?? new List<int>();
                                                      x.Inventory.AddRange(loot.Select(y => y.Id));
                                                      x.Money += tmpEnemy.Health;});
 
@@ -121,12 +124,12 @@ namespace MopsBot.Data.Updater
             StringBuilder options = new StringBuilder();
             int i = 0;
             foreach (var move in Weapon.Moveset)
-            {
-                options.AppendLine($"{ReactionPoll.EmojiDict[i++]}: [**{move.Name}**]: {(move.DamageModifier > 0 ? $"{move.DamageModifier * BaseDamage}dmg" : $"{move.HealthModifier}hp")}, Rage Cost: {move.RageConsumption}");
+            {   
+                options.AppendLine($"{ReactionPoll.EmojiDict[i++]}: {move.ToString(Weapon.BaseDamage, Weapon.BaseDefence, (int)(NextEnemyMove.DamageModifier * Enemy.Damage))}");
             }
 
             e.AddField("Skills", options, true);
-            e.AddField("Enemy Skills", string.Join("\n", Enemy.MoveList.Select(x => $"[**{x.Name}**]: {x.DamageModifier * Enemy.Damage}dmg, Rage Cost: {x.RageConsumption}")), true);
+            e.AddField("Enemy Skills", string.Join("\n", Enemy.MoveList.Select(x => x.ToString(Enemy.Damage, Enemy.Defence, 0))), true);
 
             e.AddField("Log", $"```css\n{string.Join("\n\n", Log)}```");
 

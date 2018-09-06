@@ -15,8 +15,7 @@ namespace MopsBot.Data.Entities
     {
         [BsonId]
         public int Id;
-        public string Name;
-        public string ImageUrl;
+        public string Name, ImageUrl;
         public int BaseDamage, BaseDefence;
         public List<ItemMove> Moveset;
 
@@ -25,7 +24,7 @@ namespace MopsBot.Data.Entities
             e.WithAuthor(Name);
             e.WithCurrentTimestamp().WithColor(Discord.Color.Blue).WithThumbnailUrl(ImageUrl);
 
-            e.AddField("Skills", string.Join("\n", Moveset.Select(x => $"[**{x.Name}**], {x.DamageModifier * BaseDamage}dmg, Rage Cost: {x.RageConsumption}")), true);
+            e.AddField("Skills", string.Join("\n", Moveset.Select(x => x.ToString(BaseDamage, BaseDefence, 0))), true);
             
             return e.Build();
         }
@@ -35,7 +34,17 @@ namespace MopsBot.Data.Entities
     {
         [BsonId]
         public string Name;
-        public double DamageModifier, DefenceModifier, HealthModifier;
+        public double DamageModifier, DefenceModifier, HealthModifier, DeflectModifier;
         public int RageConsumption;
+
+        public string ToString(int BaseDamage, int BaseDefence, int IncomingDamage){
+            List<string> stats = new List<string>();
+                if(DamageModifier != 0) stats.Add(DamageModifier * BaseDamage + "dmg");
+                if(DeflectModifier != 0) stats.Add(DeflectModifier * IncomingDamage + "dmg");
+                if(DefenceModifier != 0) stats.Add(DefenceModifier * BaseDefence + "def");
+                if(HealthModifier != 0) stats.Add(HealthModifier + "hp");
+                
+                return $"[**{Name}**]: {string.Join(", ", stats)}, Rage Cost: {RageConsumption}";
+        }
     }
 }
