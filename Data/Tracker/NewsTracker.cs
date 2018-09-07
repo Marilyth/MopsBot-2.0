@@ -63,7 +63,7 @@ namespace MopsBot.Data.Tracker
 
                 foreach (Article newArticle in newArticles)
                 {
-                    foreach (ulong channel in ChannelIds)
+                    foreach (ulong channel in ChannelIds.ToList())
                     {
                         await OnMajorChangeTracked(channel, createEmbed(newArticle), ChannelMessages[channel]);
                     }

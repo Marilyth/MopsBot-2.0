@@ -76,7 +76,6 @@ namespace MopsBot.Data.Updater
 
                     if(Enemy.Health <= 0){
                         await Program.ReactionHandler.ClearHandler(Message);
-                        await Message.ModifyAsync(x => x.Embed = WinEmbed());
 
                         List<Entities.Item> loot = Enemy.GetLoot();
                         Log = new List<string>();

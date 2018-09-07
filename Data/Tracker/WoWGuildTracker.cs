@@ -65,7 +65,7 @@ namespace MopsBot.Data.Tracker
                 var changes = getNewsFeed(newStats);
                 if (changes.Count > 0)
                 {
-                    foreach (ulong channel in ChannelIds)
+                    foreach (ulong channel in ChannelIds.ToList())
                     {
                         foreach (var embed in changes)
                             await OnMajorChangeTracked(channel, embed, ChannelMessages[channel]);
