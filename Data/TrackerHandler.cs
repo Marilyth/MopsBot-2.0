@@ -17,7 +17,7 @@ namespace MopsBot.Data
     public abstract class TrackerWrapper
     {
         public abstract Task UpdateDBAsync(ITracker tracker);
-        public abstract void SaveJson();
+        //public abstract void SaveJson();
         protected abstract Task RemoveFromDBAsync(ITracker tracker);
         protected abstract Task InsertToDBAsync(ITracker tracker);
         public abstract Task<bool> TryRemoveTrackerAsync(string name, ulong channelID);
@@ -91,18 +91,18 @@ namespace MopsBot.Data
             // }
         }
 
-        public override void SaveJson()
+        /*public override void SaveJson()
         {
             string dictAsJson = JsonConvert.SerializeObject(trackers, Formatting.Indented);
             using (StreamWriter write = new StreamWriter(new FileStream($"mopsdata//{typeof(T).Name}.json", FileMode.Create)))
                 write.Write(dictAsJson);
-        }
+        }*/
 
         public override async Task UpdateDBAsync(ITracker tracker)
         {
-            string dictAsJson = JsonConvert.SerializeObject(trackers, Formatting.Indented);
+            /*string dictAsJson = JsonConvert.SerializeObject(trackers, Formatting.Indented);
             using (StreamWriter write = new StreamWriter(new FileStream($"mopsdata//{typeof(T).Name}.json", FileMode.Create)))
-                write.Write(dictAsJson);
+                write.Write(dictAsJson);*/
 
             await StaticBase.Database.GetCollection<ITracker>(typeof(T).Name).ReplaceOneAsync(x => x.Name.Equals(tracker.Name), tracker);
         }
@@ -150,7 +150,7 @@ namespace MopsBot.Data
                     await RemoveFromDBAsync(trackers[name]);
                     trackers[name].Dispose();
                     trackers.Remove(name);
-                    SaveJson();
+                    //SaveJson();
                     Console.WriteLine("\n" + $"{DateTime.Now} Removed a {trackers.First().Value.GetType().Name} for {name}\nChannel: {channelId}; Last channel left.");
                 }
 
