@@ -44,7 +44,7 @@ namespace MopsBot.Data.Tracker
 
         public virtual void PostInitialisation()
         {
-            Console.WriteLine("\n" + $"{DateTime.Now} Started a {this.GetType().Name} for {Name}\nChannels: {string.Join(",", ChannelIds)}");
+            //Console.WriteLine("\n" + $"{DateTime.Now} Started a {this.GetType().Name} for {Name}\nChannels: {string.Join(",", ChannelIds)}");
         }
 
         protected abstract void CheckForChange_Elapsed(object stateinfo);
