@@ -62,7 +62,7 @@ namespace MopsBot.Data.Tracker
                 if (newPosts.Length > 0)
                 {
                     lastCheck = newPosts.Max(x => x.data.created_utc);
-                    StaticBase.Trackers["reddit"].UpdateDBAsync(this);
+                    await StaticBase.Trackers["reddit"].UpdateDBAsync(this);
 
                     newPosts = newPosts.Reverse().ToArray();
                     foreach (var post in newPosts)

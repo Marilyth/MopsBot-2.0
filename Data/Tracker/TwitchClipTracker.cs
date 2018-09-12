@@ -9,12 +9,16 @@ using Newtonsoft.Json;
 using MopsBot.Data.Tracker.APIResults.TwitchClip;
 using System.Threading.Tasks;
 using System.Xml;
+using MongoDB.Bson.Serialization.Options;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace MopsBot.Data.Tracker
 {
     public class TwitchClipTracker : ITracker
     {
         public uint ViewThreshold;
+        
+        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
         public Dictionary<DateTime, KeyValuePair<int, double>> TrackedClips;
         public TwitchClipTracker() : base(600000, (ExistingTrackers * 2000 + 500) % 600000)
         {
@@ -50,7 +54,7 @@ namespace MopsBot.Data.Tracker
                 {
                     if (datetime.AddMinutes(30) <= DateTime.UtcNow){
                         TrackedClips.Remove(datetime);
-                        StaticBase.Trackers["twitchclips"].UpdateDBAsync(this);
+                        await StaticBase.Trackers["twitchclips"].UpdateDBAsync(this);
                     }
                 }
 
@@ -115,7 +119,7 @@ namespace MopsBot.Data.Tracker
                             clips.clips.Add(clip);
                         }
                         
-                        StaticBase.Trackers["twitchclips"].UpdateDBAsync(this);
+                        await StaticBase.Trackers["twitchclips"].UpdateDBAsync(this);
                     }
                     if (!tmpResult._cursor.Equals(""))
                     {

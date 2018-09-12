@@ -17,11 +17,15 @@ namespace MopsBot.Module
         [RequireBotPermission(ChannelPermission.ManageMessages)]
         public class RPG : ModuleBase
         {
-            [Command("Fight")]
+            [Command("Fight", RunMode = RunMode.Async)]
             [Summary("Starts a fight with the specified Enemy.")]
             public async Task Start([Remainder]string enemy){
                 var message = await ReplyAsync("Generating fight.");
-                new Data.Updater.Fight(Context.User.Id, enemy, message);
+                try{
+                    new Data.Updater.Fight(Context.User.Id, enemy, message);
+                } catch(ArgumentException e) {
+                    await ReplyAsync(e.Message);
+                }
             }
 
             [Command("Enemies")]
@@ -66,6 +70,23 @@ namespace MopsBot.Module
                 else
                     await ReplyAsync($"No Item with the Id {itemId} could be found.");
             }
+
+            /*[Command("Sell")]
+            [Summary("Sell an Item from your inventory.")]
+            public async Task Sell(int itemId){
+                var User = StaticBase.Users.GetUser(Context.User.Id);
+                var Inventory = User.Inventory ?? new List<int>();
+
+                if(Inventory.Contains(itemId)){
+                    await User.ModifyAsync(x => {x.Inventory.Remove(itemId);
+                                                 x.Inventory.Add(x.WeaponId);
+                                                 x.WeaponId = itemId;});
+                    await ReplyAsync($"Your equipped the [{itemId}] item and put your old item into your inventory.");
+                }
+
+                else
+                    await ReplyAsync($"No Item with the Id {itemId} could be found.");*/
+            }
         }
 
         /*[Group("salad")]
@@ -88,6 +109,6 @@ namespace MopsBot.Module
                 StaticBase.Crosswords.guessWord(Context.User.Id, guess);
                 await Context.Message.DeleteAsync();
             }
-        }*/
-    }
+        }
+    }*/
 }

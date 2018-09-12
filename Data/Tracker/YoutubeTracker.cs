@@ -18,12 +18,13 @@ namespace MopsBot.Data.Tracker
     public class YoutubeTracker : ITracker
     {
         public string LastTime;
+        private string channelThumbnailUrl, uploadPlaylistId;
 
-        public YoutubeTracker() : base(1200000, (ExistingTrackers * 2000 + 500) % 1200000)
+        public YoutubeTracker() : base(180000, (ExistingTrackers * 2000 + 500) % 180000)
         {
         }
 
-        public YoutubeTracker(string channelId) : base(1200000)
+        public YoutubeTracker(string channelId) : base(180000)
         {
             Name = channelId;
             LastTime = XmlConvert.ToString(DateTime.Now, XmlDateTimeSerializationMode.Utc);
@@ -32,7 +33,9 @@ namespace MopsBot.Data.Tracker
             try
             {
                 var checkExists = fetchChannel().Result;
-                Name = checkExists.items[0].id;
+                Name = checkExists.id;
+                uploadPlaylistId = checkExists.contentDetails.relatedPlaylists.uploads;
+                channelThumbnailUrl = checkExists.snippet.thumbnails.medium.url;
             }
             catch (Exception)
             {
@@ -41,29 +44,24 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        private async Task<YoutubeResult> fetchVideos()
+        public async override void PostInitialisation()
         {
-            var lastDateTime = DateTime.Parse(LastTime);
-            var lastStringDateTime = XmlConvert.ToString(lastDateTime.AddSeconds(1), XmlDateTimeSerializationMode.Utc);
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://www.googleapis.com/youtube/v3/search?key={Program.Config["Youtube"]}&channelId={Name}&part=snippet,id&order=date&maxResults=20&publishedAfter={lastStringDateTime}");
+            try{
+                ChannelItem channel = await fetchChannel();
+            
+                uploadPlaylistId = channel.contentDetails.relatedPlaylists.uploads;
+                channelThumbnailUrl = channel.snippet.thumbnails.medium.url;
+            } catch {
 
-            var tmp = Program.Config["Youtube"];
-            Program.Config["Youtube"] = Program.Config["Youtube2"];
-            Program.Config["Youtube2"] = tmp;
-
-            JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
-            {
-                NullValueHandling = NullValueHandling.Ignore
-            };
-
-            YoutubeResult tmpResult = JsonConvert.DeserializeObject<YoutubeResult>(query, _jsonWriter);
-
-            return tmpResult;
+            }
         }
 
-        private async Task<YoutubeChannelResult> fetchChannel()
+        private async Task<Video[]> fetchPlaylist()
         {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://www.googleapis.com/youtube/v3/channels?part=snippet&id={Name}&key={Program.Config["Youtube"]}");
+            var lastDateTime = DateTime.Parse(LastTime).ToUniversalTime();
+            var lastStringDateTime = XmlConvert.ToString(lastDateTime.AddSeconds(1), XmlDateTimeSerializationMode.Utc);
+            string query = await MopsBot.Module.Information.ReadURLAsync($"https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId={uploadPlaylistId}&key={Program.Config["Youtube"]}");
+
             var tmp = Program.Config["Youtube"];
             Program.Config["Youtube"] = Program.Config["Youtube2"];
             Program.Config["Youtube2"] = tmp;
@@ -73,19 +71,35 @@ namespace MopsBot.Data.Tracker
                 NullValueHandling = NullValueHandling.Ignore
             };
 
-            YoutubeChannelResult tmpResult = JsonConvert.DeserializeObject<YoutubeChannelResult>(query, _jsonWriter);
+            Playlist tmpResult = JsonConvert.DeserializeObject<Playlist>(query, _jsonWriter);
 
-            return tmpResult;
+            return tmpResult.items.Where(x => x.snippet.publishedAt > lastDateTime).OrderByDescending(x => x.snippet.publishedAt).ToArray();
+        }
+
+        private async Task<ChannelItem> fetchChannel()
+        {
+            string query = await MopsBot.Module.Information.ReadURLAsync($"https://www.googleapis.com/youtube/v3/channels?part=contentDetails,snippet&id={Name}&key={Program.Config["Youtube"]}");
+            var tmp = Program.Config["Youtube"];
+            Program.Config["Youtube"] = Program.Config["Youtube2"];
+            Program.Config["Youtube2"] = tmp;
+
+            JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
+            {
+                NullValueHandling = NullValueHandling.Ignore
+            };
+
+            Channel tmpResult = JsonConvert.DeserializeObject<Channel>(query, _jsonWriter);
+
+            return tmpResult.items.First();
         }
 
         protected async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
             {
-                YoutubeResult curStats = await fetchVideos();
-                Item[] newVideos = curStats.items.ToArray();
+                var newVideos = await fetchPlaylist();
 
-                foreach (Item video in newVideos)
+                foreach (Video video in newVideos)
                 {
                     foreach (ulong channel in ChannelIds.ToList())
                     {
@@ -105,13 +119,13 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        private async Task<Embed> createEmbed(Item result)
+        private async Task<Embed> createEmbed(Video video)
         {
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0xFF0000);
-            e.Title = result.snippet.title;
-            e.Url = $"https://www.youtube.com/watch?v={result.id.videoId}";
-            e.Timestamp = result.snippet.publishedAt;
+            e.Title = video.snippet.title;
+            e.Url = $"https://www.youtube.com/watch?v={video.id}";
+            e.Timestamp = video.snippet.publishedAt;
 
             EmbedFooterBuilder footer = new EmbedFooterBuilder();
             footer.IconUrl = "http://www.stickpng.com/assets/images/580b57fcd9996e24bc43c545.png";
@@ -119,15 +133,14 @@ namespace MopsBot.Data.Tracker
             e.Footer = footer;
 
             EmbedAuthorBuilder author = new EmbedAuthorBuilder();
-            author.Name = result.snippet.channelTitle;
-            author.Url = $"https://www.youtube.com/channel/{result.snippet.channelId}";
-            var channelInformation = await fetchChannel();
-            author.IconUrl = channelInformation.items[0].snippet.thumbnails.medium.url;
+            author.Name = video.snippet.channelTitle;
+            author.Url = $"https://www.youtube.com/channel/{video.snippet.channelId}";
+            author.IconUrl = channelThumbnailUrl;
             e.Author = author;
 
-            e.ThumbnailUrl = channelInformation.items[0].snippet.thumbnails.medium.url;
-            e.ImageUrl = result.snippet.thumbnails.high.url;
-            e.Description = result.snippet.description;
+            e.ThumbnailUrl = channelThumbnailUrl;
+            e.ImageUrl = video.snippet.thumbnails.high.url;
+            e.Description = video.snippet.description.Length > 300 ? video.snippet.description.Substring(0, 300) + " [...]" : video.snippet.description;
 
             return e.Build();
         }

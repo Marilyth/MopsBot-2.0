@@ -76,7 +76,6 @@ namespace MopsBot.Data.Updater
 
                     if(Enemy.Health <= 0){
                         await Program.ReactionHandler.ClearHandler(Message);
-                        await Message.ModifyAsync(x => x.Embed = WinEmbed());
 
                         List<Entities.Item> loot = Enemy.GetLoot();
                         Log = new List<string>();
@@ -89,7 +88,7 @@ namespace MopsBot.Data.Updater
                                                      x.Inventory.AddRange(loot.Select(y => y.Id));
                                                      x.Money += tmpEnemy.Health;});
 
-                        await Message.ModifyAsync(x => x.Embed = WinEmbed());
+                        await Message.ModifyAsync(x => x.Embed = EndEmbed());
                         return;
                     }
                     else if(Health <= 0){
@@ -98,7 +97,7 @@ namespace MopsBot.Data.Updater
                         Log = new List<string>();
                         Log.Add($"You died and lost {User.Experience/10} Experience");
 
-                        await Message.ModifyAsync(x => x.Embed = LossEmbed());
+                        await Message.ModifyAsync(x => x.Embed = EndEmbed());
                         await User.ModifyAsync(x => x.Experience -= x.Experience/10);
                         return;
                     }
@@ -139,24 +138,7 @@ namespace MopsBot.Data.Updater
             return e.Build();
         }
 
-        private Embed WinEmbed(){
-            EmbedBuilder e = new EmbedBuilder();
-
-            e.WithAuthor(Program.Client.GetUser(User.Id).Username, Program.Client.GetUser(User.Id).GetAvatarUrl());
-            e.WithThumbnailUrl(Enemy.ImageUrl);
-
-            e.AddField("Stats", $"HP: {Health}/{User.CalcCurLevel() + Weapon.BaseDefence + 10}\n" + 
-                                $"Rage: {Rage}!!!", true);
-
-            e.AddField("Enemy Stats", $"HP: {Enemy.Health}\n" + 
-                                      $"Rage: {Enemy.Rage}!!!", true);
-
-            e.AddField("Log", $"```css\n{string.Join("\n\n", Log)}```");
-
-            return e.Build();
-        }
-
-        private Embed LossEmbed(){
+        private Embed EndEmbed(){
             EmbedBuilder e = new EmbedBuilder();
 
             e.WithAuthor(Program.Client.GetUser(User.Id).Username, Program.Client.GetUser(User.Id).GetAvatarUrl());

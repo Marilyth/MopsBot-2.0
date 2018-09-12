@@ -21,13 +21,14 @@ namespace MopsBot
     {
         public static void Main(string[] args)
         {
-            Task.Run(() => BuildWebHost(args).Run());
+            //Task.Run(() => BuildWebHost(args).Run());
             new Program().Start().GetAwaiter().GetResult();
         }
         public static DiscordSocketClient Client;
         public static Dictionary<string, string> Config;
         public static CommandHandler Handler { get; private set; }
         public static ReactionHandler ReactionHandler { get; private set; }
+        private System.Threading.Timer garbageCollector;
         
         private async Task Start()
         {
@@ -58,6 +59,8 @@ namespace MopsBot
             ReactionHandler = new ReactionHandler();
             ReactionHandler.Install(provider);
 
+            garbageCollector = new System.Threading.Timer(collectGarbage, null, 1800000, 1800000);
+
             await Task.Delay(-1);
         }
 
@@ -73,6 +76,13 @@ namespace MopsBot
             Task.Run(() => StaticBase.initTracking());
             Task.Run(() => StaticBase.UpdateGameAsync());
             return Task.CompletedTask;
+        }
+
+        private void collectGarbage(object stateinfo)
+        {
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
         }
 
         public static IWebHost BuildWebHost(string[] args) =>
