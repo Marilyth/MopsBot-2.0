@@ -6,16 +6,19 @@ using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using System.Linq;
 
-namespace MopsBot{
-    public class ReactionHandlerContext{
+namespace MopsBot
+{
+    public class ReactionHandlerContext
+    {
         public ISocketMessageChannel Channel;
         public Cacheable<IUserMessage, ulong> MessageCache;
-        public IUserMessage Message {get {return MessageCache.GetOrDownloadAsync().Result;}}
-        public IUserMessage DownloadMessage {get {return MessageCache.DownloadAsync().Result;}}
+        public IUserMessage Message { get { return MessageCache.GetOrDownloadAsync().Result; } }
+        public IUserMessage DownloadMessage { get { return MessageCache.DownloadAsync().Result; } }
         public IEmote Emote;
         public SocketReaction Reaction;
     }
-    public class ReactionHandler{
+    public class ReactionHandler
+    {
         private DiscordSocketClient client;
         private IServiceProvider _provider;
         private Dictionary<IUserMessage, Dictionary<IEmote, Func<ReactionHandlerContext, Task>>> messageFunctions;
@@ -25,10 +28,11 @@ namespace MopsBot{
         /// Subscribes to the ReactionAdded event of the client 
         /// </summary>
         /// <param name="provider">The service provider to get the client from</param>
-        public void Install(IServiceProvider provider){
+        public void Install(IServiceProvider provider)
+        {
             _provider = provider;
             client = _provider.GetService<DiscordSocketClient>();
-            
+
             client.ReactionAdded += Client_ReactionAdded;
 
             messageFunctions = new Dictionary<IUserMessage, Dictionary<IEmote, Func<ReactionHandlerContext, Task>>>();
@@ -41,24 +45,29 @@ namespace MopsBot{
         /// <param name="channel"></param>
         /// <param name="reaction"></param>
         /// <returns></returns>
-        private async Task Client_ReactionAdded(Cacheable<IUserMessage, ulong> messageCache, ISocketMessageChannel channel, SocketReaction reaction){
-            if(reaction.UserId.Equals(client.CurrentUser.Id))
-                return;
-            
-            IUserMessage message = await messageCache.GetOrDownloadAsync();
-            ReactionHandlerContext context = new ReactionHandlerContext();
-            context.Channel = channel;
-            context.MessageCache = messageCache;
-            context.Emote = reaction.Emote;
-            context.Reaction = reaction;
-            Task.Run(async () => {
-            if(messageFunctions.Any(x => x.Key.Id.Equals(message.Id))){
-                if(messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.ContainsKey(reaction.Emote))
-                    await messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value[reaction.Emote](context);
-                else if(messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.ContainsKey(DefaultEmote))
-                    await messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value[DefaultEmote](context);
-                await message.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
-            }});
+        private async Task Client_ReactionAdded(Cacheable<IUserMessage, ulong> messageCache, ISocketMessageChannel channel, SocketReaction reaction)
+        {
+            Task.Run(() =>
+            {
+                if (reaction.UserId.Equals(client.CurrentUser.Id))
+                    return;
+
+                IUserMessage message = messageCache.GetOrDownloadAsync().Result;
+                ReactionHandlerContext context = new ReactionHandlerContext();
+                context.Channel = channel;
+                context.MessageCache = messageCache;
+                context.Emote = reaction.Emote;
+                context.Reaction = reaction;
+
+                if (messageFunctions.Any(x => x.Key.Id.Equals(message.Id)))
+                {
+                    if (messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.ContainsKey(reaction.Emote))
+                        messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value[reaction.Emote](context);
+                    else if (messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.ContainsKey(DefaultEmote))
+                        messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value[DefaultEmote](context);
+                    message.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
+                }
+            });
         }
 
         /// <summary>
@@ -68,7 +77,8 @@ namespace MopsBot{
         /// <param name="function">The function to call</param>
         /// <param name="clear"></param>
         /// <returns></returns>
-        public async Task AddHandler(IUserMessage message, Func<ReactionHandlerContext, Task> function, bool clear=false){
+        public async Task AddHandler(IUserMessage message, Func<ReactionHandlerContext, Task> function, bool clear = false)
+        {
             await AddHandler(message, DefaultEmote, function, clear);
         }
 
@@ -80,15 +90,16 @@ namespace MopsBot{
         /// <param name="function">The function to execute</param>
         /// <param name="clear"></param>
         /// <returns></returns>
-        public async Task AddHandler(IUserMessage message, IEmote emote, Func<ReactionHandlerContext, Task> function, bool clear=false){
-            if(clear)
+        public async Task AddHandler(IUserMessage message, IEmote emote, Func<ReactionHandlerContext, Task> function, bool clear = false)
+        {
+            if (clear)
                 await ClearHandler(message);
-            if(messageFunctions.Any(x => x.Key.Id.Equals(message.Id)))
-                messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value[emote]=function;
-            else   
-                messageFunctions.Add(message, new Dictionary<IEmote, Func<ReactionHandlerContext, Task>>{{emote, function}});
+            if (messageFunctions.Any(x => x.Key.Id.Equals(message.Id)))
+                messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value[emote] = function;
+            else
+                messageFunctions.Add(message, new Dictionary<IEmote, Func<ReactionHandlerContext, Task>> { { emote, function } });
             // await populate(message);
-            if(!emote.Equals(DefaultEmote))
+            if (!emote.Equals(DefaultEmote))
                 await message.AddReactionAsync(emote);
         }
 
@@ -99,8 +110,9 @@ namespace MopsBot{
         /// </summary>
         /// <param name="message">The message to remove from the handler.</param>
         /// <returns></returns>
-        public async Task ClearHandler(IUserMessage message){
-            if(messageFunctions.Any(x => x.Key.Id.Equals(message.Id)))
+        public async Task ClearHandler(IUserMessage message)
+        {
+            if (messageFunctions.Any(x => x.Key.Id.Equals(message.Id)))
                 messageFunctions.Remove(messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Key);
             await message.RemoveAllReactionsAsync();
         }
@@ -111,10 +123,12 @@ namespace MopsBot{
         /// <param name="message">The message to remove from</param>
         /// <param name="emote">The emote to remove</param>
         /// <returns></returns>
-        public async Task RemoveHandler(IUserMessage message, IEmote emote){
-            if(messageFunctions.Any(x => x.Key.Id.Equals(message.Id))){
+        public async Task RemoveHandler(IUserMessage message, IEmote emote)
+        {
+            if (messageFunctions.Any(x => x.Key.Id.Equals(message.Id)))
+            {
                 messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.Remove(emote);
-                if(!messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.Any())
+                if (!messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.Any())
                     messageFunctions.Remove(message);
                 await message.RemoveReactionAsync(emote, client.CurrentUser);
             }
@@ -125,7 +139,8 @@ namespace MopsBot{
         /// </summary>
         /// <param name="message">The message to get information from</param>
         /// <returns>A dictionary consisting of all emotes and their corresponding functions</returns>
-        public Dictionary<IEmote, Func<ReactionHandlerContext, Task>> GetHandler(IUserMessage message){
+        public Dictionary<IEmote, Func<ReactionHandlerContext, Task>> GetHandler(IUserMessage message)
+        {
             return messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value;
         }
     }
