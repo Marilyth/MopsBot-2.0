@@ -111,13 +111,19 @@ namespace MopsBot.Module
 
             request.KeepAlive = false;
             request.UserAgent = "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)";
-            
-            using (var response = await request.GetResponseAsync())
-            using (var content = response.GetResponseStream())
-            using (var reader = new System.IO.StreamReader(content))
-            {
-                return await reader.ReadToEndAsync();
-            }
+            using (var response = await request.GetResponseAsync()){
+                try{
+                    using (var content = response.GetResponseStream())
+                    using (var reader = new System.IO.StreamReader(content))
+                    {
+                        return await reader.ReadToEndAsync();
+                    }
+                }
+                catch(System.Net.WebException e){
+                    response.Close();
+                    return e.Message;
+                }
+                }
         }
 
         public static async Task<Gfycat.Gfy> ConvertToGifAsync(string url)
