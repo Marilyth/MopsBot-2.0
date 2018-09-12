@@ -20,7 +20,7 @@ namespace MopsBot.Data.Tracker
         public string LastTime;
         private string channelThumbnailUrl, uploadPlaylistId;
 
-        public YoutubeTracker() : base(1200000, (ExistingTrackers * 2000 + 500) % 1200000)
+        public YoutubeTracker() : base(300000, (ExistingTrackers * 2000 + 500) % 300000)
         {
         }
 
@@ -52,7 +52,7 @@ namespace MopsBot.Data.Tracker
                 uploadPlaylistId = channel.contentDetails.relatedPlaylists.uploads;
                 channelThumbnailUrl = channel.snippet.thumbnails.medium.url;
             } catch {
-                
+
             }
         }
 
