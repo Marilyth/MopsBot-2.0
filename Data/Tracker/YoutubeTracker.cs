@@ -46,10 +46,14 @@ namespace MopsBot.Data.Tracker
 
         public async override void PostInitialisation()
         {
-            ChannelItem channel = await fetchChannel();
+            try{
+                ChannelItem channel = await fetchChannel();
             
-            uploadPlaylistId = channel.contentDetails.relatedPlaylists.uploads;
-            channelThumbnailUrl = channel.snippet.thumbnails.medium.url;
+                uploadPlaylistId = channel.contentDetails.relatedPlaylists.uploads;
+                channelThumbnailUrl = channel.snippet.thumbnails.medium.url;
+            } catch {
+                
+            }
         }
 
         private async Task<Video[]> fetchPlaylist()
