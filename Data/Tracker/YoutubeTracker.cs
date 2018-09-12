@@ -18,7 +18,7 @@ namespace MopsBot.Data.Tracker
     public class YoutubeTracker : ITracker
     {
         public string LastTime;
-        public string UploadPlaylistId;
+        private string channelThumbnailUrl, uploadPlaylistId;
 
         public YoutubeTracker() : base(1200000, (ExistingTrackers * 2000 + 500) % 1200000)
         {
@@ -34,7 +34,8 @@ namespace MopsBot.Data.Tracker
             {
                 var checkExists = fetchChannel().Result;
                 Name = checkExists.id;
-                UploadPlaylistId = checkExists.contentDetails.relatedPlaylists.uploads;
+                uploadPlaylistId = checkExists.contentDetails.relatedPlaylists.uploads;
+                channelThumbnailUrl = checkExists.snippet.thumbnails.medium.url;
             }
             catch (Exception)
             {
@@ -45,17 +46,17 @@ namespace MopsBot.Data.Tracker
 
         public async override void PostInitialisation()
         {
-            if(UploadPlaylistId == null){
-                UploadPlaylistId = (await fetchChannel()).contentDetails.relatedPlaylists.uploads;
-                await StaticBase.Trackers["youtube"].UpdateDBAsync(this);
-            }
+            ChannelItem channel = await fetchChannel();
+            
+            uploadPlaylistId = channel.contentDetails.relatedPlaylists.uploads;
+            channelThumbnailUrl = channel.snippet.thumbnails.medium.url;
         }
 
         private async Task<Video[]> fetchPlaylist()
         {
             var lastDateTime = DateTime.Parse(LastTime).ToUniversalTime();
             var lastStringDateTime = XmlConvert.ToString(lastDateTime.AddSeconds(1), XmlDateTimeSerializationMode.Utc);
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId={UploadPlaylistId}&key={Program.Config["Youtube"]}");
+            string query = await MopsBot.Module.Information.ReadURLAsync($"https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId={uploadPlaylistId}&key={Program.Config["Youtube"]}");
 
             var tmp = Program.Config["Youtube"];
             Program.Config["Youtube"] = Program.Config["Youtube2"];
@@ -73,7 +74,7 @@ namespace MopsBot.Data.Tracker
 
         private async Task<ChannelItem> fetchChannel()
         {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id={Name}&key={Program.Config["Youtube"]}");
+            string query = await MopsBot.Module.Information.ReadURLAsync($"https://www.googleapis.com/youtube/v3/channels?part=contentDetails,snippet&id={Name}&key={Program.Config["Youtube"]}");
             var tmp = Program.Config["Youtube"];
             Program.Config["Youtube"] = Program.Config["Youtube2"];
             Program.Config["Youtube2"] = tmp;
@@ -130,13 +131,12 @@ namespace MopsBot.Data.Tracker
             EmbedAuthorBuilder author = new EmbedAuthorBuilder();
             author.Name = video.snippet.channelTitle;
             author.Url = $"https://www.youtube.com/channel/{video.snippet.channelId}";
-            var channelInformation = await fetchChannel();
-            //author.IconUrl = channelInformation.snippet.thumbnails.medium.url;
+            author.IconUrl = channelThumbnailUrl;
             e.Author = author;
 
-            //e.ThumbnailUrl = channelInformation.items[0].snippet.thumbnails.medium.url;
+            e.ThumbnailUrl = channelThumbnailUrl;
             e.ImageUrl = video.snippet.thumbnails.high.url;
-            e.Description = video.snippet.description.Length > 300 ? video.snippet.description.Substring(0, 300) : video.snippet.description;
+            e.Description = video.snippet.description.Length > 300 ? video.snippet.description.Substring(0, 300) + " [...]" : video.snippet.description;
 
             return e.Build();
         }

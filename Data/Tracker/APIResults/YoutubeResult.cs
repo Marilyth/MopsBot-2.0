@@ -32,6 +32,7 @@ namespace MopsBot.Data.Tracker.APIResults.Youtube
         public string etag { get; set; }
         public string id { get; set; }
         public ContentDetails contentDetails { get; set; }
+        public ChannelSnippet snippet { get; set; }
     }
 
     public class Channel
@@ -42,35 +43,7 @@ namespace MopsBot.Data.Tracker.APIResults.Youtube
         public List<ChannelItem> items { get; set; }
     }
 
-    public class Default
-    {
-        public string url { get; set; }
-        public int width { get; set; }
-        public int height { get; set; }
-    }
-
-    public class Medium
-    {
-        public string url { get; set; }
-        public int width { get; set; }
-        public int height { get; set; }
-    }
-
-    public class High
-    {
-        public string url { get; set; }
-        public int width { get; set; }
-        public int height { get; set; }
-    }
-
-    public class Standard
-    {
-        public string url { get; set; }
-        public int width { get; set; }
-        public int height { get; set; }
-    }
-
-    public class Maxres
+    public class Thumbnail
     {
         public string url { get; set; }
         public int width { get; set; }
@@ -79,11 +52,11 @@ namespace MopsBot.Data.Tracker.APIResults.Youtube
 
     public class Thumbnails
     {
-        public Default @default { get; set; }
-        public Medium medium { get; set; }
-        public High high { get; set; }
-        public Standard standard { get; set; }
-        public Maxres maxres { get; set; }
+        public Thumbnail @default { get; set; }
+        public Thumbnail medium { get; set; }
+        public Thumbnail high { get; set; }
+        public Thumbnail standard { get; set; }
+        public Thumbnail maxres { get; set; }
     }
 
     public class ResourceId
@@ -92,7 +65,23 @@ namespace MopsBot.Data.Tracker.APIResults.Youtube
         public string videoId { get; set; }
     }
 
-    public class Snippet
+    public class ChannelSnippet
+    {
+        public string title { get; set; }
+        public string description { get; set; }
+        public string customUrl { get; set; }
+        public DateTime publishedAt { get; set; }
+        public Thumbnails thumbnails { get; set; }
+        public Localized localized { get; set; }
+    }
+
+    public class Localized
+    {
+        public string title { get; set; }
+        public string description { get; set; }
+    }
+
+    public class VideoSnippet
     {
         public DateTime publishedAt { get; set; }
         public string channelId { get; set; }
@@ -110,7 +99,7 @@ namespace MopsBot.Data.Tracker.APIResults.Youtube
         public string kind { get; set; }
         public string etag { get; set; }
         public string id { get; set; }
-        public Snippet snippet { get; set; }
+        public VideoSnippet snippet { get; set; }
     }
 
     public class Playlist

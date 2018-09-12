@@ -121,7 +121,7 @@ namespace MopsBot.Data
         {
             if (trackers.ContainsKey(name) && trackers[name].ChannelIds.Contains(channelId))
             {
-                if (trackers.First().Value.GetType() == typeof(Tracker.TwitchTracker))
+                if (typeof(T) == typeof(Tracker.TwitchTracker))
                     foreach (var channel in (trackers[name] as Tracker.TwitchTracker).ToUpdate.Where(x => x.Key.Equals(channelId)))
                         try
                         {
@@ -142,7 +142,7 @@ namespace MopsBot.Data
                     }
 
                     await UpdateDBAsync(trackers[name]);
-                    Console.WriteLine("\n" + $"{DateTime.Now} Removed a {trackers.First().Value.GetType().Name} for {name}\nChannel: {channelId}");
+                    Console.WriteLine("\n" + $"{DateTime.Now} Removed a {typeof(T).FullName} for {name}\nChannel: {channelId}");
                 }
 
                 else
@@ -151,7 +151,7 @@ namespace MopsBot.Data
                     trackers[name].Dispose();
                     trackers.Remove(name);
                     //SaveJson();
-                    Console.WriteLine("\n" + $"{DateTime.Now} Removed a {trackers.First().Value.GetType().Name} for {name}\nChannel: {channelId}; Last channel left.");
+                    Console.WriteLine("\n" + $"{DateTime.Now} Removed a {typeof(T).FullName} for {name}\nChannel: {channelId}; Last channel left.");
                 }
 
                 return true;
