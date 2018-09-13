@@ -235,5 +235,9 @@ namespace MopsBot.Data.Tracker
             GC.SuppressFinalize(this);
             viewerGraph.RemovePlot();
         }
+
+        public override string TrackerUrl(){
+            return "https://www.twitch.tv/" + Name;
+        }
     }
 }

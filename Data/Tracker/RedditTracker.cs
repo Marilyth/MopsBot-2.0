@@ -133,5 +133,9 @@ namespace MopsBot.Data.Tracker
             
             return e.Build();
         }
+
+        public override string TrackerUrl(){
+            return "https://www.reddit.com/r/" + Name.Split(" ").First();
+        }
     }
 }

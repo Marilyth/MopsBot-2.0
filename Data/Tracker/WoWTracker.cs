@@ -297,6 +297,11 @@ namespace MopsBot.Data.Tracker
 
             return changes;
         }
+
+        public override string TrackerUrl()
+        {
+            return $"https://www.wowhead.com/list/{WoWRegion.ToString()}-{Realm}-{WoWName}";
+        }
     }
 }
 

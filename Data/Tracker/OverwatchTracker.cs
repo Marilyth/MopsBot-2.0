@@ -318,5 +318,9 @@ namespace MopsBot.Data.Tracker
 
             return Tuple.Create("CannotFetchArcade", "CannotFetchArcade");
         }
+
+        public override string TrackerUrl(){
+            return "https://playoverwatch.com/en-us/career/pc/eu/" + Name;
+        }
     }
 }

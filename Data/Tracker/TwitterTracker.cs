@@ -129,7 +129,7 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        protected override string TrackerUrl(){
+        public override string TrackerUrl(){
             return "https://twitter.com/" + Name;
         }
     }

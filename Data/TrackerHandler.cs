@@ -26,6 +26,7 @@ namespace MopsBot.Data
         public abstract HashSet<Tracker.ITracker> GetTrackerSet();
         public abstract Dictionary<string, Tracker.ITracker> GetTrackers();
         public abstract IEnumerable<ITracker> GetTrackers(ulong channelID);
+        public abstract Embed GetTrackersEmbed(ulong channelID);
         public abstract ITracker GetTracker(ulong channelID, string name);
         public abstract Type GetTrackerType();
         public abstract void postInitialisation();
@@ -198,6 +199,16 @@ namespace MopsBot.Data
         public override IEnumerable<ITracker> GetTrackers(ulong channelID)
         {
             return trackers.Select(x => x.Value).Where(x => x.ChannelIds.Contains(channelID));
+        }
+
+        public override Embed GetTrackersEmbed(ulong channelID)
+        {
+            EmbedBuilder e = new EmbedBuilder();
+            e.WithTitle(typeof(T).Name).WithCurrentTimestamp().WithColor(Discord.Color.Blue);
+
+            e.WithDescription(string.Join("\n", trackers.Select(x => x.Value.TrackerUrl() != null ? $"[{x.Key}]({x.Value.TrackerUrl()})" : x.Key)));
+
+            return e.Build();
         }
 
         public override Dictionary<string, ITracker> GetTrackers()

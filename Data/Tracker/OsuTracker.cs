@@ -200,5 +200,9 @@ namespace MopsBot.Data.Tracker
             }
             return 0;
         }
+
+        public override string TrackerUrl(){
+            return "https://osu.ppy.sh/u/" + Name;
+        }
     }
 }

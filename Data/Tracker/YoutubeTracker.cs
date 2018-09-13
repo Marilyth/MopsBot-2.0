@@ -140,5 +140,9 @@ namespace MopsBot.Data.Tracker
 
             return e.Build();
         }
+
+        public override string TrackerUrl(){
+            return "https://www.youtube.com/channel/" + Name;
+        }
     }
 }

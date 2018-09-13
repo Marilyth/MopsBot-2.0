@@ -48,7 +48,7 @@ namespace MopsBot.Data.Tracker
 
         protected abstract void CheckForChange_Elapsed(object stateinfo);
 
-        protected virtual string TrackerUrl(){
+        public virtual string TrackerUrl(){
             return null;
         }
 
