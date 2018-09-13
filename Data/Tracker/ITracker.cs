@@ -39,7 +39,7 @@ namespace MopsBot.Data.Tracker
             ChannelIds = new HashSet<ulong>();
             ChannelMessages = new Dictionary<ulong, string>();
             checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false),
-                                                                                (gap + 5000) % interval, interval);
+                                                                                (gap % interval) + 5000, interval);
         }
 
         public virtual void PostInitialisation()
