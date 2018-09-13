@@ -19,7 +19,7 @@ namespace MopsBot.Data.Tracker
     {
         public string LastNews, Query, Source;
 
-        public NewsTracker() : base(600000, (ExistingTrackers * 2000 + 500) % 600000)
+        public NewsTracker() : base(600000, ExistingTrackers * 2000)
         {
         }
 

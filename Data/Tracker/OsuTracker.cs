@@ -17,7 +17,7 @@ namespace MopsBot.Data.Tracker
         private Dictionary<string, double> allPP;
         public double PPThreshold;
 
-        public OsuTracker() : base(60000, (ExistingTrackers * 2000 + 500) % 60000)
+        public OsuTracker() : base(60000, ExistingTrackers * 2000)
         {
             allPP = new Dictionary<string, double>();
             allPP.Add("m=0", 0);

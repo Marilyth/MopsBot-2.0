@@ -25,7 +25,7 @@ namespace MopsBot.Data.Tracker
         public bool trackFeed;
         private Character oldStats;
 
-        public WoWTracker() : base(300000, (ExistingTrackers * 2000 + 500) % 300000)
+        public WoWTracker() : base(300000, ExistingTrackers * 2000)
         {
         }
 

@@ -18,7 +18,7 @@ namespace MopsBot.Data.Tracker
     {
         public long lastMessage;
 
-        public TwitterTracker() : base(600000, (ExistingTrackers * 2000 + 500) % 600000)
+        public TwitterTracker() : base(600000, ExistingTrackers * 2000)
         {
         }
 

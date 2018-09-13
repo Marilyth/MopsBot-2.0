@@ -26,7 +26,7 @@ namespace MopsBot.Data.Tracker
         public bool isThumbnailLarge;
         public int TimeoutCount;
 
-        public TwitchTracker() : base(60000, (ExistingTrackers * 2000 + 500) % 60000)
+        public TwitchTracker() : base(60000, ExistingTrackers * 2000)
         {
         }
 

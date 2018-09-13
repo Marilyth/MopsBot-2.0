@@ -20,7 +20,7 @@ namespace MopsBot.Data.Tracker
         
         [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
         public Dictionary<DateTime, KeyValuePair<int, double>> TrackedClips;
-        public TwitchClipTracker() : base(600000, (ExistingTrackers * 2000 + 500) % 600000)
+        public TwitchClipTracker() : base(600000, ExistingTrackers * 2000)
         {
         }
 

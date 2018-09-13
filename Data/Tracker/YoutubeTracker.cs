@@ -20,7 +20,7 @@ namespace MopsBot.Data.Tracker
         public string LastTime;
         private string channelThumbnailUrl, uploadPlaylistId;
 
-        public YoutubeTracker() : base(180000, (ExistingTrackers * 2000 + 500) % 180000)
+        public YoutubeTracker() : base(180000, ExistingTrackers * 2000)
         {
         }
 
@@ -41,18 +41,6 @@ namespace MopsBot.Data.Tracker
             {
                 Dispose();
                 throw new Exception($"Channel-ID `{Name}` could not be found on Youtube!\nPerhaps you used the channel-name instead?");
-            }
-        }
-
-        public async override void PostInitialisation()
-        {
-            try{
-                ChannelItem channel = await fetchChannel();
-            
-                uploadPlaylistId = channel.contentDetails.relatedPlaylists.uploads;
-                channelThumbnailUrl = channel.snippet.thumbnails.medium.url;
-            } catch {
-
             }
         }
 
@@ -97,6 +85,14 @@ namespace MopsBot.Data.Tracker
         {
             try
             {
+                if(uploadPlaylistId == null){
+                    ChannelItem channel = await fetchChannel();
+
+                    uploadPlaylistId = channel.contentDetails.relatedPlaylists.uploads;
+                    channelThumbnailUrl = channel.snippet.thumbnails.medium.url;
+                }
+
+
                 var newVideos = await fetchPlaylist();
 
                 foreach (Video video in newVideos)
@@ -115,7 +111,7 @@ namespace MopsBot.Data.Tracker
             }
             catch (Exception e)
             {
-                Console.WriteLine("\n" +  $"[ERROR] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+                Console.WriteLine("\n" + $"[ERROR] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
             }
         }
 

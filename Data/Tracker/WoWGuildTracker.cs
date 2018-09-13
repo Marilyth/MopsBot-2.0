@@ -23,7 +23,7 @@ namespace MopsBot.Data.Tracker
         public bool trackAchievements;
         private Guild oldStats;
 
-        public WoWGuildTracker() : base(300000, (ExistingTrackers * 2000 + 500) % 300000)
+        public WoWGuildTracker() : base(300000, ExistingTrackers * 2000)
         {
         }
 
