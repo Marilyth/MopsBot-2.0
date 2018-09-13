@@ -123,7 +123,7 @@ namespace MopsBot.Data.Tracker
                                         Score scoreInformation, double ppChange, string mode = "m=0")
         {
             EmbedBuilder e = new EmbedBuilder();
-            e.Color = new Color(0x6441A4);
+            e.Color = new Color(255, 87, 156);
             e.Title = $"{beatmapInformation.artist} - {beatmapInformation.title} [{beatmapInformation.version}]";
             e.Url = $"https://osu.ppy.sh/b/{beatmapInformation.beatmap_id}&m={beatmapInformation.mode}";
             e.Description = Math.Round(double.Parse(beatmapInformation.difficultyrating, CultureInfo.InvariantCulture), 2) + "*";

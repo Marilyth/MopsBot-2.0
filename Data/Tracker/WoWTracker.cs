@@ -128,7 +128,7 @@ namespace MopsBot.Data.Tracker
             Character WoWChar = WoWClient.GetCharacter(Enum.Parse<Region>(Region, true), Realm, Name, CharacterOptions.GetEverything);
 
             EmbedBuilder e = new EmbedBuilder();
-            e.Color = new Color(0x6441A4);
+            e.Color = new Color(255, 226, 84);
             e.Title = "WoW Stats";
             e.Timestamp = DateTime.UtcNow;
 

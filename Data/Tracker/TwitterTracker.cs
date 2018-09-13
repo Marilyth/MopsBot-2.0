@@ -85,7 +85,7 @@ namespace MopsBot.Data.Tracker
         private Embed createEmbed(ITweet tweet)
         {
             EmbedBuilder e = new EmbedBuilder();
-            e.Color = new Color(0x6441A4);
+            e.Color = new Color(0, 163, 243);
             e.Title = "Tweet-Link";
             e.Url = tweet.Url;
             e.Timestamp = tweet.CreatedAt;

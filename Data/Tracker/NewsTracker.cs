@@ -93,7 +93,7 @@ namespace MopsBot.Data.Tracker
         private Embed createEmbed(Article article)
         {
             EmbedBuilder e = new EmbedBuilder();
-            e.Color = new Color(0x0099ff);
+            e.Color = new Color(255, 255, 255);
             e.Title = article.Title;
             e.Url = article.Url;
             e.Timestamp = article.PublishedAt;

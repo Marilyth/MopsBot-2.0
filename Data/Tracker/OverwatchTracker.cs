@@ -116,7 +116,7 @@ namespace MopsBot.Data.Tracker
             var mostPlayed = getMostPlayed(info.getNotNull().heroes.playtime);
 
             EmbedBuilder e = new EmbedBuilder();
-            e.Color = new Color(0x6441A4);
+            e.Color = new Color(255, 152, 0);
             e.Title = "Stats";
             e.Url = $"https://playoverwatch.com/en-us/career/pc/eu/{owName}";
 
@@ -184,7 +184,7 @@ namespace MopsBot.Data.Tracker
             OverallStats stats = overwatchInformation.getNotNull().stats.quickplay.overall_stats;
 
             EmbedBuilder e = new EmbedBuilder();
-            e.Color = new Color(0x6441A4);
+            e.Color = new Color(255, 152, 0);
             e.Title = "New Stats!";
             e.Url = $"https://playoverwatch.com/en-us/career/pc/eu/{Name}";
 

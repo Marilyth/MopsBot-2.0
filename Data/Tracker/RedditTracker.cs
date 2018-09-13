@@ -98,7 +98,7 @@ namespace MopsBot.Data.Tracker
         private async Task<Embed> createEmbed(Data2 redditPost)
         {
             EmbedBuilder e = new EmbedBuilder();
-            e.Color = new Color(0x6441A4);
+            e.Color = new Color(255, 49, 0);
             e.Title = redditPost.title.Length > 256 ? redditPost.title.Substring(0, 251) + "[...]" : redditPost.title;
             e.Url = "https://www.reddit.com" + redditPost.permalink;
             e.Description = redditPost.selftext.Length > 2048 ? redditPost.selftext.Substring(0, 2043) + "[...]" : redditPost.selftext;
