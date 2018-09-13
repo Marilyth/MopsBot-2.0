@@ -29,6 +29,7 @@ namespace MopsBot.Data.Tracker
             //Check if person exists by forcing Exceptions if not.
             try
             {
+                if(twitterName.Contains(" ")) throw new Exception();
                 lastMessage = getNewTweets().Last().Id;
             }
             catch (Exception)
@@ -126,6 +127,10 @@ namespace MopsBot.Data.Tracker
                 Console.WriteLine("Waiting for RateLimits until : {0}", queryRateLimits.ResetDateTime.ToLongTimeString());
                 args.Cancel = true;
             }
+        }
+
+        protected override string TrackerUrl(){
+            return "https://twitter.com/" + Name;
         }
     }
 }

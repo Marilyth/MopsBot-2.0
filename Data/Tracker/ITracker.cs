@@ -48,6 +48,10 @@ namespace MopsBot.Data.Tracker
 
         protected abstract void CheckForChange_Elapsed(object stateinfo);
 
+        protected virtual string TrackerUrl(){
+            return null;
+        }
+
         protected async Task OnMajorChangeTracked(ulong channelID, Embed embed, string notificationText = "")
         {
             if (OnMajorEventFired != null)
