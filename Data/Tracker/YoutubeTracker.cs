@@ -120,7 +120,7 @@ namespace MopsBot.Data.Tracker
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0xFF0000);
             e.Title = video.snippet.title;
-            e.Url = $"https://www.youtube.com/watch?v={video.id}";
+            e.Url = $"https://www.youtube.com/watch?v={video.snippet.resourceId.videoId}";
             e.Timestamp = video.snippet.publishedAt;
 
             EmbedFooterBuilder footer = new EmbedFooterBuilder();
