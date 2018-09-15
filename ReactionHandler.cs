@@ -112,9 +112,13 @@ namespace MopsBot
         /// <returns></returns>
         public async Task ClearHandler(IUserMessage message)
         {
-            if (messageFunctions.Any(x => x.Key.Id.Equals(message.Id)))
-                messageFunctions.Remove(messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Key);
-            await message.RemoveAllReactionsAsync();
+            try{
+                if (messageFunctions.Any(x => x.Key.Id.Equals(message.Id)))
+                    messageFunctions.Remove(messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Key);
+                await message.RemoveAllReactionsAsync();
+            } catch (Exception e){
+                Console.WriteLine($"Tried to delete message {message.Id} but it did not exist.");
+            }
         }
 
         /// <summary>

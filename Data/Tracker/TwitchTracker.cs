@@ -100,12 +100,12 @@ namespace MopsBot.Data.Tracker
                             Console.WriteLine("\n" + $"{DateTime.Now} {Name} went Offline");
                             viewerGraph.Dispose();
                             viewerGraph = new Plot(Name, "Time In Minutes", "Viewers", false);
-                            foreach (var channelMessage in ToUpdate)
-                                await Program.ReactionHandler.ClearHandler((IUserMessage)await ((ITextChannel)Program.Client.GetChannel(channelMessage.Key)).GetMessageAsync(channelMessage.Value));
                             ToUpdate = new Dictionary<ulong, ulong>();
-
                             foreach (ulong channel in ChannelMessages.Keys)
                                 await OnMinorChangeTracked(channel, $"{Name} went Offline!");
+
+                            foreach (var channelMessage in ToUpdate)
+                                await Program.ReactionHandler.ClearHandler((IUserMessage)await ((ITextChannel)Program.Client.GetChannel(channelMessage.Key)).GetMessageAsync(channelMessage.Value));
                         }
                     }
                     else
@@ -140,7 +140,7 @@ namespace MopsBot.Data.Tracker
             }
             catch (Exception e)
             {
-                Console.WriteLine("\n" +  $"[Error] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+                Console.WriteLine("\n" + $"[Error] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
             }
         }
 
@@ -230,13 +230,15 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public new void Dispose(){
+        public new void Dispose()
+        {
             Dispose(true);
             GC.SuppressFinalize(this);
             viewerGraph.RemovePlot();
         }
 
-        public override string TrackerUrl(){
+        public override string TrackerUrl()
+        {
             return "https://www.twitch.tv/" + Name;
         }
     }
