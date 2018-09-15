@@ -74,6 +74,23 @@ namespace MopsBot.Data.Tracker
 
         private ITweet[] getNewTweets()
         {
+            var twitterKey = Program.Config["TwitterKey"];
+            var twitterSecret = Program.Config["TwitterSecret"];
+            var twitterToken = Program.Config["TwitterToken"];
+            var twitterAccessSecret = Program.Config["TwitterAccessSecret"];
+
+            Program.Config["TwitterKey"] = Program.Config["TwitterKey2"];
+            Program.Config["TwitterSecret"] = Program.Config["TwitterSecret2"];
+            Program.Config["TwitterToken"] = Program.Config["TwitterToken2"];
+            Program.Config["TwitterAccessSecret"] = Program.Config["TwitterAccessSecret2"];
+
+            Program.Config["TwitterKey2"] = twitterKey;
+            Program.Config["TwitterSecret2"] = twitterSecret;
+            Program.Config["TwitterToken2"] = twitterToken;
+            Program.Config["TwitterAccessSecret2"] = twitterAccessSecret;
+
+            Auth.SetUserCredentials(Program.Config["TwitterKey"], Program.Config["TwitterSecret"],
+                                        Program.Config["TwitterToken"], Program.Config["TwitterAccessSecret"]);
             Tweetinvi.Parameters.IUserTimelineParameters parameters = Timeline.CreateUserTimelineParameter();
             if (lastMessage != 0) parameters.SinceId = lastMessage;
             parameters.MaximumNumberOfTweetsToRetrieve = 10;
