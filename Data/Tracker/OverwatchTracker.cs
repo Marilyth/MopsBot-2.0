@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using MopsBot.Data.Tracker.APIResults;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
+using MopsBot.Data.Tracker.APIResults.Overwatch;
 
 namespace MopsBot.Data.Tracker
 {
@@ -24,7 +25,7 @@ namespace MopsBot.Data.Tracker
         /// Initialises the tracker by setting attributes and setting up a Timer with a 10 minutes interval
         /// </summary>
         /// <param Name="OWName"> The Name-Battletag combination of the player to track </param>
-        public OverwatchTracker() : base(600000, (ExistingTrackers * 20000 + 500) % 600000)
+        public OverwatchTracker() : base(600000, ExistingTrackers * 20000)
         {
         }
 
@@ -66,7 +67,7 @@ namespace MopsBot.Data.Tracker
 
                 if (changedStats.Count != 0)
                 {
-                    foreach (ulong channel in ChannelIds)
+                    foreach (ulong channel in ChannelIds.ToList())
                     {
                         await OnMajorChangeTracked(channel, createEmbed(newInformation, changedStats, getSessionMostPlayed(information.getNotNull().heroes.playtime, newInformation.getNotNull().heroes.playtime)), ChannelMessages[channel]);
                     }
@@ -75,7 +76,7 @@ namespace MopsBot.Data.Tracker
             }
             catch (Exception e)
             {
-                Console.WriteLine($"[ERROR] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+                Console.WriteLine("\n" +  $"[ERROR] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
             }
         }
 
@@ -115,7 +116,7 @@ namespace MopsBot.Data.Tracker
             var mostPlayed = getMostPlayed(info.getNotNull().heroes.playtime);
 
             EmbedBuilder e = new EmbedBuilder();
-            e.Color = new Color(0x6441A4);
+            e.Color = new Color(255, 152, 0);
             e.Title = "Stats";
             e.Url = $"https://playoverwatch.com/en-us/career/pc/eu/{owName}";
 
@@ -151,7 +152,8 @@ namespace MopsBot.Data.Tracker
 
             e.AddField("General", $"Time played: {stats.game_stats.time_played}hrs" +
                             $"\nLevel: {stats.overall_stats.level + (100 * stats.overall_stats.prestige)}" +
-                            $"\nWon Games: {stats.overall_stats.wins}", true);
+                            $"\nWon Games: {stats.overall_stats.wins}" +
+                            $"\n Endorsement Level: {stats.overall_stats.endorsement_level}", true);
 
             if(info.getNotNull().stats.competitive != null){
                 author.IconUrl = info.getNotNull().stats.competitive.overall_stats.tier_image;
@@ -160,9 +162,12 @@ namespace MopsBot.Data.Tracker
                             $"\nRank: {info.getNotNull().stats.competitive.overall_stats.comprank}", true);
             }
 
+
             e.AddField("Most Played", mostPlayed.Item2);
 
-            if (mostPlayed.Item1.Equals("Ana") || mostPlayed.Item1.Equals("Moira") || mostPlayed.Item1.Equals("Orisa") || mostPlayed.Item1.Equals("Doomfist") || mostPlayed.Item1.Equals("Sombra"))
+            if (mostPlayed.Item1.Equals("Ana") || mostPlayed.Item1.Equals("Moira") || mostPlayed.Item1.Equals("Orisa") || 
+                mostPlayed.Item1.Equals("Doomfist") || mostPlayed.Item1.Equals("Sombra") || mostPlayed.Item1.Equals("Wrecking-Ball") ||
+                mostPlayed.Item1.Equals("Brigitte"))
                 e.ImageUrl = $"https://blzgdapipro-a.akamaihd.net/hero/{mostPlayed.Item1.ToLower()}/full-portrait.png";
             else
                 e.ImageUrl = $"https://blzgdapipro-a.akamaihd.net/media/thumbnail/{mostPlayed.Item1.ToLower()}-gameplay.jpg";
@@ -179,7 +184,7 @@ namespace MopsBot.Data.Tracker
             OverallStats stats = overwatchInformation.getNotNull().stats.quickplay.overall_stats;
 
             EmbedBuilder e = new EmbedBuilder();
-            e.Color = new Color(0x6441A4);
+            e.Color = new Color(255, 152, 0);
             e.Title = "New Stats!";
             e.Url = $"https://playoverwatch.com/en-us/career/pc/eu/{Name}";
 
@@ -203,7 +208,8 @@ namespace MopsBot.Data.Tracker
             }
 
             e.AddField("Sessions most played Hero", $"{mostPlayed.Item2}");
-            if (mostPlayed.Item1.Equals("Ana") || mostPlayed.Item1.Equals("Moira") || mostPlayed.Item1.Equals("Orisa") || mostPlayed.Item1.Equals("Doomfist") || mostPlayed.Item1.Equals("Sombra"))
+            if (mostPlayed.Item1.Equals("Ana") || mostPlayed.Item1.Equals("Moira") || mostPlayed.Item1.Equals("Orisa") || mostPlayed.Item1.Equals("Doomfist") || 
+                mostPlayed.Item1.Equals("Sombra") || mostPlayed.Item1.Equals("Brigitte") || mostPlayed.Item1.Equals("Wrecking-Ball"))
                 e.ImageUrl = $"https://blzgdapipro-a.akamaihd.net/hero/{mostPlayed.Item1.ToLower()}/full-portrait.png";
             else
                 e.ImageUrl = $"https://blzgdapipro-a.akamaihd.net/media/thumbnail/{mostPlayed.Item1.ToLower()}-gameplay.jpg";
@@ -256,6 +262,10 @@ namespace MopsBot.Data.Tracker
                 }
             }
 
+            if(quickNew.endorsement_level != quickOld.endorsement_level){
+                changedStats.Add("Endorsement Level", quickNew.endorsement_level.ToString());
+            }
+
             return changedStats;
         }
 
@@ -284,7 +294,7 @@ namespace MopsBot.Data.Tracker
                     break;
             }
 
-            if (difference[sortedList[0].Key] > 0)
+            if (difference[sortedList[0].Key] > 0.005)
                 return Tuple.Create(sortedList[0].Key, leaderboard);
 
             return Tuple.Create("CannotFetchArcade", "CannotFetchArcade");
@@ -303,10 +313,14 @@ namespace MopsBot.Data.Tracker
                     break;
             }
 
-            if (playtime[sortedList[0].Key] > 0)
+            if (playtime[sortedList[0].Key] > 0.005)
                 return Tuple.Create(sortedList[0].Key, leaderboard);
 
             return Tuple.Create("CannotFetchArcade", "CannotFetchArcade");
+        }
+
+        public override string TrackerUrl(){
+            return "https://playoverwatch.com/en-us/career/pc/eu/" + Name;
         }
     }
 }

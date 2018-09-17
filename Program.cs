@@ -21,23 +21,24 @@ namespace MopsBot
     {
         public static void Main(string[] args)
         {
-            // Task.Run(() => BuildWebHost(args).Run());
+            //Task.Run(() => BuildWebHost(args).Run());
             new Program().Start().GetAwaiter().GetResult();
-
         }
         public static DiscordSocketClient Client;
         public static Dictionary<string, string> Config;
-        public static CommandHandler Handler {get; private set;}
-        public static ReactionHandler ReactionHandler {get; private set;}
-
-        public async Task Start()
+        public static CommandHandler Handler { get; private set; }
+        public static ReactionHandler ReactionHandler { get; private set; }
+        private System.Threading.Timer garbageCollector;
+        
+        private async Task Start()
         {
             Client = new DiscordSocketClient(new DiscordSocketConfig()
             {
                 LogLevel = LogSeverity.Info,
+                AlwaysDownloadUsers = true
             });
 
-            using(StreamReader sr = new StreamReader(new FileStream("mopsdata//Config.json", FileMode.Open)))
+            using (StreamReader sr = new StreamReader(new FileStream("mopsdata//Config.json", FileMode.Open)))
                 Config = JsonConvert.DeserializeObject<Dictionary<string, string>>(sr.ReadToEnd());
 
             await Client.LoginAsync(TokenType.Bot, Config["Discord"]);
@@ -45,7 +46,6 @@ namespace MopsBot
 
             Client.Log += Client_Log;
             Client.Ready += onClientReady;
-            Client.Disconnected += onClientDC;
 
             var map = new ServiceCollection().AddSingleton(Client)
                 // .AddSingleton(new AudioService())
@@ -59,12 +59,14 @@ namespace MopsBot
             ReactionHandler = new ReactionHandler();
             ReactionHandler.Install(provider);
 
+            garbageCollector = new System.Threading.Timer(collectGarbage, null, 1800000, 1800000);
+
             await Task.Delay(-1);
         }
 
         private Task Client_Log(LogMessage msg)
         {
-            Console.WriteLine(msg.ToString());
+            Console.WriteLine("\n" +  msg.ToString());
             return Task.CompletedTask;
         }
 
@@ -76,14 +78,22 @@ namespace MopsBot
             return Task.CompletedTask;
         }
 
-        private async Task onClientDC(Exception e)
+        private void collectGarbage(object stateinfo)
         {
-            await Task.Run(() => StaticBase.disconnected());
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
         }
 
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
                 .UseUrls("http://0.0.0.0:5000/")
+                .ConfigureServices(x => x.AddCors(options => options.AddPolicy("AllowAllHeaders",
+                    builder =>
+                    {
+                        builder.WithOrigins("*")
+                               .AllowAnyHeader();
+                    })))
                 .UseKestrel()
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseIISIntegration()

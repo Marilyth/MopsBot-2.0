@@ -18,17 +18,18 @@ namespace MopsBot.Data.Tracker
     {
         public long lastMessage;
 
-        public TwitterTracker() : base(300000, (ExistingTrackers * 2000 + 500) % 300000)
+        public TwitterTracker() : base(600000, ExistingTrackers * 2000)
         {
         }
 
-        public TwitterTracker(string twitterName) : base(300000)
+        public TwitterTracker(string twitterName) : base(600000)
         {
             Name = twitterName;
 
             //Check if person exists by forcing Exceptions if not.
             try
             {
+                if(twitterName.Contains(" ")) throw new Exception();
                 lastMessage = getNewTweets().Last().Id;
             }
             catch (Exception)
@@ -46,13 +47,14 @@ namespace MopsBot.Data.Tracker
 
                 foreach (ITweet newTweet in newTweets)
                 {
-                    foreach (ulong channel in ChannelIds)
+                    foreach (ulong channel in ChannelIds.ToList())
                     {
-                        if (newTweet.InReplyToScreenName == null && !newTweet.IsRetweet){
+                        if (newTweet.InReplyToScreenName == null && !newTweet.IsRetweet)
+                        {
                             if (!ChannelMessages[channel].Split("|")[0].Equals("NONE"))
                                 await OnMajorChangeTracked(channel, createEmbed(newTweet), ChannelMessages[channel].Split("|")[0]);
                         }
-                        else if(!ChannelMessages[channel].Split("|")[1].Equals("NONE"))
+                        else if (!ChannelMessages[channel].Split("|")[1].Equals("NONE"))
                             await OnMajorChangeTracked(channel, createEmbed(newTweet), ChannelMessages[channel].Split("|")[1]);
                     }
                 }
@@ -60,18 +62,35 @@ namespace MopsBot.Data.Tracker
                 if (newTweets.Length != 0)
                 {
                     lastMessage = newTweets[newTweets.Length - 1].Id;
-                    StaticBase.Trackers["twitter"].SaveJson();
+                    await StaticBase.Trackers["twitter"].UpdateDBAsync(this);
                 }
 
             }
             catch (Exception e)
             {
-                Console.WriteLine($"[ERROR] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+                Console.WriteLine("\n" + $"[ERROR] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
             }
         }
 
         private ITweet[] getNewTweets()
         {
+            var twitterKey = Program.Config["TwitterKey"];
+            var twitterSecret = Program.Config["TwitterSecret"];
+            var twitterToken = Program.Config["TwitterToken"];
+            var twitterAccessSecret = Program.Config["TwitterAccessSecret"];
+
+            Program.Config["TwitterKey"] = Program.Config["TwitterKey2"];
+            Program.Config["TwitterSecret"] = Program.Config["TwitterSecret2"];
+            Program.Config["TwitterToken"] = Program.Config["TwitterToken2"];
+            Program.Config["TwitterAccessSecret"] = Program.Config["TwitterAccessSecret2"];
+
+            Program.Config["TwitterKey2"] = twitterKey;
+            Program.Config["TwitterSecret2"] = twitterSecret;
+            Program.Config["TwitterToken2"] = twitterToken;
+            Program.Config["TwitterAccessSecret2"] = twitterAccessSecret;
+
+            Auth.SetUserCredentials(Program.Config["TwitterKey"], Program.Config["TwitterSecret"],
+                                        Program.Config["TwitterToken"], Program.Config["TwitterAccessSecret"]);
             Tweetinvi.Parameters.IUserTimelineParameters parameters = Timeline.CreateUserTimelineParameter();
             if (lastMessage != 0) parameters.SinceId = lastMessage;
             parameters.MaximumNumberOfTweetsToRetrieve = 10;
@@ -83,7 +102,7 @@ namespace MopsBot.Data.Tracker
         private Embed createEmbed(ITweet tweet)
         {
             EmbedBuilder e = new EmbedBuilder();
-            e.Color = new Color(0x6441A4);
+            e.Color = new Color(0, 163, 243);
             e.Title = "Tweet-Link";
             e.Url = tweet.Url;
             e.Timestamp = tweet.CreatedAt;
@@ -107,6 +126,28 @@ namespace MopsBot.Data.Tracker
             e.Description = tweet.FullText;
 
             return e.Build();
+        }
+
+        public static void QueryBeforeExecute(object sender, Tweetinvi.Events.QueryBeforeExecuteEventArgs args)
+        {
+            var queryRateLimits = RateLimit.GetQueryRateLimit(args.QueryURL);
+            // Some methods are not RateLimited. Invoking such a method will result in the queryRateLimits to be null
+            if (queryRateLimits != null)
+            {
+                if (queryRateLimits.Remaining > 0)
+                {
+                    // We have enough resource to execute the query
+                    return;
+                }
+
+                // Strategy #1 : Wait for RateLimits to be available
+                Console.WriteLine("Waiting for RateLimits until : {0}", queryRateLimits.ResetDateTime.ToLongTimeString());
+                args.Cancel = true;
+            }
+        }
+
+        public override string TrackerUrl(){
+            return "https://twitter.com/" + Name;
         }
     }
 }

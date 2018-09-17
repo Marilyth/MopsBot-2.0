@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Reflection;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Discord.Commands;
 using Discord.WebSocket;
@@ -38,6 +39,7 @@ namespace MopsBot
 
             GuildPrefix = new Dictionary<ulong, string>();
             fillPrefix();
+            loadCustomCommands();
             client.MessageReceived += Client_MessageReceived;
             client.MessageReceived += HandleCommand;
             client.UserJoined += Client_UserJoined;
@@ -46,37 +48,22 @@ namespace MopsBot
         }
 
         /// <summary>
-        /// Manages polls and experience gain whenever a message is recieved
-        /// Also keeps track of how many characters have been sent each day
+        /// Manages experience gain whenever a message is recieved
         /// </summary>
         /// <param name="arg">The recieved message</param>
-        /// <returns>A Task that can be awaited</returns>
         private async Task Client_MessageReceived(SocketMessage arg)
         {
-            //Poll
-            if (arg.Channel is Discord.IDMChannel && StaticBase.Poll != null)
+            //User Experience
+            if (!arg.Author.IsBot)
             {
-                if (StaticBase.Poll.participants.ToList().Select(x => x.Id).Contains(arg.Author.Id))
-                {
-                    StaticBase.Poll.AddValue(StaticBase.Poll.answers[int.Parse(arg.Content) - 1], arg.Author.Id);
-                    await arg.Channel.SendMessageAsync("Vote accepted!");
-                    StaticBase.Poll.participants.RemoveAll(x => x.Id == arg.Author.Id);
-                }
-            }
-
-            //Daily Statistics & User Experience
-            if (!arg.Author.IsBot && !arg.Content.StartsWith("!"))
-            {
-                StaticBase.people.AddStat(arg.Author.Id, arg.Content.Length, "experience");
-                StaticBase.stats.AddValue(arg.Content.Length);
+                await StaticBase.Users.ModifyUserAsync(arg.Author.Id, x => x.Experience += arg.Content.Length);
             }
         }
 
         /// <summary>
-        /// Greets User when he joins a Guild
+        /// Greets a user when he joins a Guild
         /// </summary>
         /// <param name="User">The User who joined</param>
-        /// <returns>A Task that can be awaited</returns>
         private async Task Client_UserJoined(SocketGuildUser User)
         {
             //PhunkRoyalServer Begruessung
@@ -87,11 +74,12 @@ namespace MopsBot
                 $"\n\nHave a very mopsig day\nDein heimlicher Verehrer Mops");
         }
 
-        private async Task UserCountChanged(SocketGuildUser User)
-        {
-            await StaticBase.UpdateGameAsync();
-        }
-
+        /// <summary>
+        /// Called whenever a guild has been joined or left
+        /// 
+        /// Updates the activity showing the number of guilds Mops is in
+        /// </summary>
+        /// <param name="guild">The guild joined or left</param>
         private async Task GuildCountChanged(SocketGuild guild)
         {
             await StaticBase.UpdateGameAsync();
@@ -101,7 +89,6 @@ namespace MopsBot
         /// Checks if message is a command, and executes it
         /// </summary>
         /// <param name="parameterMessage">The message to check</param>
-        /// <returns>A Task that can be awaited</returns>
         public async Task HandleCommand(SocketMessage parameterMessage)
         {
             // Don't handle the command if it is a system message
@@ -120,7 +107,7 @@ namespace MopsBot
             // Determine if the message has a valid prefix, adjust argPos 
             if (!(message.HasMentionPrefix(client.CurrentUser, ref argPos) || message.HasStringPrefix(prefix, ref argPos) || message.HasCharPrefix('?', ref argPos))) return;
 
-            StaticBase.people.AddStat(parameterMessage.Author.Id, 0, "experience");
+            //StaticBase.people.AddStat(parameterMessage.Author.Id, 0, "experience");
 
             if (char.IsWhiteSpace(message.Content[argPos]))
                 argPos += 1;
@@ -137,9 +124,17 @@ namespace MopsBot
             var result = await commands.ExecuteAsync(context, argPos, _provider);
 
             // If the command failed, notify the user
-            if (!result.IsSuccess && !result.ErrorReason.Contains("Unknown command") && !result.ErrorReason.Equals(""))
+            if (!result.IsSuccess && !result.ErrorReason.Equals(""))
             {
-                await message.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}");
+                if(result.ErrorReason.Contains("Object reference not set to an instance of an object"))
+                    await message.Channel.SendMessageAsync($"**Error:** Mops just restarted and needs to initialise things first.\nTry again in a minute!");
+                else if(result.ErrorReason.Contains("The input text has too many parameters"))
+                    await message.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}\nIf your parameter contains spaces, please wrap it around quotation marks like this: `\"A Parameter\"`.");
+                else if(!result.ErrorReason.Contains("Unknown command"))
+                    await message.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}");
+                else{
+                    await commands.Commands.First(x => x.Name.Equals("UseCustomCommand")).ExecuteAsync(context, new List<object>{$"{context.Message.Content.Substring(argPos)}"}, new List<object>{}, _provider);
+                }
             }
         }
 
@@ -147,7 +142,6 @@ namespace MopsBot
         /// Creates help message as well as command information, and sends it
         /// </summary>
         /// <param name="msg">The message recieved</param>
-        /// <returns>A Task that can be awaited</returns>
         public async Task getCommands(SocketMessage msg, string prefix)
         {
             var output = "";
@@ -207,6 +201,12 @@ namespace MopsBot
                 await msg.Channel.SendMessageAsync("", embed: embed);
         }
 
+        /// <summary>
+        /// Creates the embed that is sent whenever ?command is called
+        /// </summary>
+        /// <param name="command">The command to create the embed for</param>
+        /// <param name="usage">The usage example to include in the embed</param>
+        /// <param name="description">The desciption to include in the embed</param>
         private Embed createHelpEmbed(string command, string usage, string description){
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0x0099ff);
@@ -219,6 +219,28 @@ namespace MopsBot
             return e.Build();
         }
 
+        /// <summary>
+        /// Reads all custom commands and saves them as a Dictionary
+        /// </summary>
+        private void loadCustomCommands()
+        {
+            
+            using (StreamReader read = new StreamReader(new FileStream($"mopsdata//CustomCommands.json", FileMode.OpenOrCreate)))
+            {
+                try
+                {
+                    CustomCommands = JsonConvert.DeserializeObject<Dictionary<ulong, Dictionary<string, string>>>(read.ReadToEnd()) ?? new Dictionary<ulong, Dictionary<string, string>>();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("\n" +  e.Message + e.StackTrace);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Reads all guild prefixes and saves them as a dictionary
+        /// </summary>
         private void fillPrefix()
         {
             string s = "";
@@ -239,7 +261,7 @@ namespace MopsBot
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine(e.Message);
+                        Console.WriteLine("\n" +  $"[ERROR] by GuildPrefixes at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
                     }
                 }
             }

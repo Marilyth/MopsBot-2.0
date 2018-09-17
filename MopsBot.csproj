@@ -12,12 +12,16 @@
   <ItemGroup>
     <PackageReference Include="Discord.Net" Version="2.0.0-beta2-00965" />
     <PackageReference Include="TweetinviAPI" Version="2.1.0" />
-    <PackageReference Include="OxyPlot.Core" Version="2.0.0-unstable1013" />
+    <PackageReference Include="OxyPlot.Core" Version="2.0.0-unstable1035" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.7" />
     <PackageReference Include="Gfycat.Net" Version="1.0.10.73" />
     <PackageReference Include="NewsAPI" Version="0.5.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="2.8.2"/>
+    <PackageReference Include="WowDotNetAPI" Version="4.0.8" />
+    <PackageReference Include="MongoDB.Driver.Core" Version="2.7.0" />
+    <PackageReference Include="MongoDB.Bson" Version="2.7.0" />
+    <PackageReference Include="MongoDB.Driver" Version="2.7.0" />
   </ItemGroup>
 
   <ItemGroup>

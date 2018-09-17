@@ -9,6 +9,8 @@ using Discord.WebSocket;
 using Microsoft.Win32.SafeHandles;
 using System.Runtime.InteropServices;
 using Newtonsoft.Json;
+using MongoDB.Bson.Serialization.Options;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace MopsBot.Data
 {
@@ -26,7 +28,7 @@ namespace MopsBot.Data
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e.Message + e.StackTrace);
+                    Console.WriteLine("\n" +  e.Message + e.StackTrace);
                 }
             }
             Giveaways = Giveaways ?? new Dictionary<string, HashSet<ulong>>();
@@ -93,7 +95,8 @@ namespace MopsBot.Data
     {
 
         //Key: Channel ID, Value: (Key: Message ID, Value: User IDs)
-        public Dictionary<ulong, Dictionary<ulong, HashSet<ulong>>> Giveaways = new Dictionary<ulong, Dictionary<ulong, HashSet<ulong>>>();
+        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
+        public Dictionary<ulong, Dictionary<ulong, List<ulong>>> Giveaways = new Dictionary<ulong, Dictionary<ulong, List<ulong>>>();
 
         public ReactionGiveaway()
         {
@@ -101,22 +104,64 @@ namespace MopsBot.Data
             {
                 try
                 {
-                    Giveaways = JsonConvert.DeserializeObject<Dictionary<ulong, Dictionary<ulong, HashSet<ulong>>>>(read.ReadToEnd());
-                    foreach(var channel in Giveaways){
-                        foreach(var message in channel.Value){
-                            var textmessage = (IUserMessage)((ITextChannel)Program.Client.GetChannel(channel.Key)).GetMessageAsync(message.Key).Result;
-                            Program.ReactionHandler.AddHandler(textmessage, new Emoji("✅"), JoinGiveaway).Wait();
-                            Program.ReactionHandler.AddHandler(textmessage, new Emoji("❎"), LeaveGiveaway).Wait();
-                            Program.ReactionHandler.AddHandler(textmessage, new Emoji("🎁"), DrawGiveaway).Wait();
-                        }
-                    }
+                    Giveaways = JsonConvert.DeserializeObject<Dictionary<ulong, Dictionary<ulong, List<ulong>>>>(read.ReadToEnd());
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e.Message + e.StackTrace);
+                    Console.WriteLine("\n" +  e.Message + e.StackTrace);
                 }
             }
-            Giveaways = Giveaways ?? new Dictionary<ulong, Dictionary<ulong, HashSet<ulong>>>();
+            Giveaways = Giveaways ?? new Dictionary<ulong, Dictionary<ulong, List<ulong>>>();
+
+            foreach (var channel in Giveaways.ToList())
+            {
+                foreach (var message in channel.Value.ToList())
+                {
+                    try
+                    {
+                        var textmessage = (IUserMessage)((ITextChannel)Program.Client.GetChannel(channel.Key)).GetMessageAsync(message.Key).Result;
+                        Program.ReactionHandler.AddHandler(textmessage, new Emoji("✅"), JoinGiveaway).Wait();
+                        Program.ReactionHandler.AddHandler(textmessage, new Emoji("❎"), LeaveGiveaway).Wait();
+                        Program.ReactionHandler.AddHandler(textmessage, new Emoji("🎁"), DrawGiveaway).Wait();
+
+                        //Task.Run(async () =>
+                        //{
+                        foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("✅"), 100).First().Result.Where(x => !x.IsBot))
+                        {
+                            JoinGiveaway(user.Id, textmessage);
+                            textmessage.RemoveReactionAsync(new Emoji("✅"), user);
+                        }
+                        foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("❎"), 100).First().Result.Where(x => !x.IsBot))
+                        {
+                            LeaveGiveaway(user.Id, textmessage);
+                            textmessage.RemoveReactionAsync(new Emoji("❎"), user);
+                        }
+                        foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("🎁"), 100).First().Result.Where(x => !x.IsBot))
+                        {
+                            DrawGiveaway(user.Id, textmessage);
+                            textmessage.RemoveReactionAsync(new Emoji("🎁"), user);
+                        }
+                        //});
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("\n" +  $"[ERROR] by ReactionGiveaway for [{channel.Key}][{message.Key}] at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+
+                        if ((e.Message.Contains("Object reference not set to an instance of an object.") || e.Message.Contains("Value cannot be null.")) 
+                            && Program.Client.ConnectionState.Equals(ConnectionState.Connected))
+                        {
+                            Console.WriteLine("\n" +  $"Removing Giveaway due to missing message: [{channel.Key}][{message.Key}]");
+
+                            if (channel.Value.Count > 1)
+                                channel.Value.Remove(message.Key);
+                            else
+                                Giveaways.Remove(channel.Key);
+
+                            SaveJson();
+                        }
+                    }
+                }
+            }
         }
 
         public void SaveJson()
@@ -146,8 +191,8 @@ namespace MopsBot.Data
             await Program.ReactionHandler.AddHandler(message, new Emoji("❎"), LeaveGiveaway);
             await Program.ReactionHandler.AddHandler(message, new Emoji("🎁"), DrawGiveaway);
 
-            Dictionary<ulong, HashSet<ulong>> messages = new Dictionary<ulong, HashSet<ulong>>();
-            HashSet<ulong> participants = new HashSet<ulong>();
+            Dictionary<ulong, List<ulong>> messages = new Dictionary<ulong, List<ulong>>();
+            List<ulong> participants = new List<ulong>();
             participants.Add(creator.Id);
 
             messages.Add(message.Id, participants);
@@ -159,60 +204,109 @@ namespace MopsBot.Data
 
         private async Task JoinGiveaway(ReactionHandlerContext context)
         {
-            if (!Giveaways[context.channel.Id][context.message.Id].First().Equals(context.reaction.UserId))
+            if (!Giveaways[context.Channel.Id][context.Message.Id].First().Equals(context.Reaction.UserId)
+                && !Giveaways[context.Channel.Id][context.Message.Id].Contains(context.Reaction.UserId))
             {
-                Giveaways[context.channel.Id][context.message.Id].Add(context.reaction.UserId);
+                Giveaways[context.Channel.Id][context.Message.Id].Add(context.Reaction.UserId);
                 SaveJson();
-                await updateMessage(context);
+                await updateMessage(context.Message);
+            }
+        }
+
+        private async Task JoinGiveaway(ulong userId, IUserMessage message)
+        {
+            if (!Giveaways[message.Channel.Id][message.Id].First().Equals(userId)
+               && !Giveaways[message.Channel.Id][message.Id].Contains(userId))
+            {
+                Giveaways[message.Channel.Id][message.Id].Add(userId);
+                SaveJson();
+                await updateMessage(message);
             }
         }
 
         private async Task LeaveGiveaway(ReactionHandlerContext context)
         {
-            if (!Giveaways[context.channel.Id][context.message.Id].First().Equals(context.reaction.UserId))
+            if (!Giveaways[context.Channel.Id][context.Message.Id].First().Equals(context.Reaction.UserId))
             {
-                Giveaways[context.channel.Id][context.message.Id].Remove(context.reaction.UserId);
+                Giveaways[context.Channel.Id][context.Message.Id].Remove(context.Reaction.UserId);
                 SaveJson();
-                await updateMessage(context);
+                await updateMessage(context.Message);
+            }
+        }
+
+        private async Task LeaveGiveaway(ulong userId, IUserMessage message)
+        {
+            if (!Giveaways[message.Channel.Id][message.Id].First().Equals(userId))
+            {
+                Giveaways[message.Channel.Id][message.Id].Remove(userId);
+                SaveJson();
+                await updateMessage(message);
             }
         }
 
         private async Task DrawGiveaway(ReactionHandlerContext context)
         {
-            if (context.reaction.UserId.Equals(Giveaways[context.channel.Id][context.message.Id].First()))
+            if (context.Reaction.UserId.Equals(Giveaways[context.Channel.Id][context.Message.Id].First()))
             {
-                await Program.ReactionHandler.ClearHandler(context.message);
+                await Program.ReactionHandler.ClearHandler(context.Message);
 
-                ulong winner =  Giveaways[context.channel.Id][context.message.Id].Count > 1 ? Giveaways[context.channel.Id][context.message.Id]
-                               .ToList()[StaticBase.ran.Next(1, Giveaways[context.channel.Id][context.message.Id].Count)]
-                               : context.reaction.UserId;
+                ulong winnerId = Giveaways[context.Channel.Id][context.Message.Id].Count > 1 ? Giveaways[context.Channel.Id][context.Message.Id]
+                               [StaticBase.ran.Next(1, Giveaways[context.Channel.Id][context.Message.Id].Count)]
+                               : context.Reaction.UserId;
 
-                await context.channel.SendMessageAsync($"{context.channel.GetUserAsync(winner).Result.Mention} won the "
-                                                      + $"`{context.message.Embeds.First().Title}`");
+                IUser winner = await context.Channel.GetUserAsync(winnerId);
+                await context.Channel.SendMessageAsync($"{winner.Mention} won the "
+                                                      + $"`{context.Message.Embeds.First().Title}`");
 
-                if(Giveaways[context.channel.Id].Count == 1) Giveaways.Remove(context.channel.Id);
-                else Giveaways[context.channel.Id].Remove(context.message.Id);
+                var embed = context.Message.Embeds.First().ToEmbedBuilder().WithDescription(winner.Mention + " won the giveaway!");
+                await context.Message.ModifyAsync(x => x.Embed = embed.Build());
+
+                if (Giveaways[context.Channel.Id].Count == 1) Giveaways.Remove(context.Channel.Id);
+                else Giveaways[context.Channel.Id].Remove(context.Message.Id);
                 SaveJson();
             }
         }
 
-        private async Task updateMessage(ReactionHandlerContext context)
+        private async Task DrawGiveaway(ulong userId, IUserMessage message)
         {
-            var e = context.message.Embeds.First().ToEmbedBuilder();
+            if (userId.Equals(Giveaways[message.Channel.Id][message.Id].First()))
+            {
+                await Program.ReactionHandler.ClearHandler(message);
+
+                ulong winnerId = Giveaways[message.Channel.Id][message.Id].Count > 1 ? Giveaways[message.Channel.Id][message.Id]
+                               [StaticBase.ran.Next(1, Giveaways[message.Channel.Id][message.Id].Count)]
+                               : userId;
+
+                IUser winner = await message.Channel.GetUserAsync(winnerId);
+                await message.Channel.SendMessageAsync($"{winner.Mention} won the "
+                                                      + $"`{message.Embeds.First().Title}`");
+                
+                var embed = message.Embeds.First().ToEmbedBuilder().WithDescription(winner.Mention + " won the giveaway!");
+                await message.ModifyAsync(x => x.Embed = embed.Build());
+
+                if (Giveaways[message.Channel.Id].Count == 1) Giveaways.Remove(message.Channel.Id);
+                else Giveaways[message.Channel.Id].Remove(message.Id);
+                SaveJson();
+            }
+        }
+
+        private async Task updateMessage(IUserMessage message)
+        {
+            var e = message.Embeds.First().ToEmbedBuilder();
 
             e.Color = new Color(100, 100, 0);
 
             foreach (EmbedFieldBuilder field in e.Fields)
             {
                 if (field.Name.Equals("Participants"))
-                    field.Value = Giveaways[context.channel.Id][context.message.Id].Count -1;
+                    field.Value = Giveaways[message.Channel.Id][message.Id].Count - 1;
                 else
-                    field.Value = Giveaways[context.channel.Id][context.message.Id].Count > 1 ? 
-                                  Math.Round((1.0 / (Giveaways[context.channel.Id][context.message.Id].Count - 1)) * 100, 2) + "%"
+                    field.Value = Giveaways[message.Channel.Id][message.Id].Count > 1 ?
+                                  Math.Round((1.0 / (Giveaways[message.Channel.Id][message.Id].Count - 1)) * 100, 2) + "%"
                                   : Double.NaN.ToString();
             }
 
-            await context.message.ModifyAsync(x =>
+            await message.ModifyAsync(x =>
             {
                 x.Embed = e.Build();
             });
