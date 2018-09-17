@@ -101,11 +101,12 @@ namespace MopsBot.Data.Tracker
                             viewerGraph.Dispose();
                             viewerGraph = new Plot(Name, "Time In Minutes", "Viewers", false);
                             ToUpdate = new Dictionary<ulong, ulong>();
-                            foreach (ulong channel in ChannelMessages.Keys)
-                                await OnMinorChangeTracked(channel, $"{Name} went Offline!");
 
                             foreach (var channelMessage in ToUpdate)
                                 await Program.ReactionHandler.ClearHandler((IUserMessage)await ((ITextChannel)Program.Client.GetChannel(channelMessage.Key)).GetMessageAsync(channelMessage.Value));
+                            
+                            foreach (ulong channel in ChannelMessages.Keys)
+                                await OnMinorChangeTracked(channel, $"{Name} went Offline!");
                         }
                     }
                     else
