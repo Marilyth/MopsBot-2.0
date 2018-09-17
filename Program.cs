@@ -112,7 +112,7 @@ namespace MopsBot
                 if(OpenFilesLastRead == openFiles)
                     OpenFilesSameCount++;
 
-                if(OpenFilesSameCount == OpenFilesSameCounThreshold)
+                if(OpenFilesSameCount == OpenFilesSameCountThreshold)
                     Environment.Exit(-1);
 
                 OpenFilesLastRead = openFiles;
