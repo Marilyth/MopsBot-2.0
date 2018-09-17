@@ -115,7 +115,7 @@ namespace MopsBot
                         OpenFilesRepetition = 0;
                     
                     
-                    if (OpenFilesCount > 600){
+                    if (openFiles > 600){
                         Console.WriteLine("\nShutting down due to too many open files!");
                         Environment.Exit(-1);
                     }
