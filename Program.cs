@@ -92,7 +92,7 @@ namespace MopsBot
                 using (var process = new System.Diagnostics.Process())
                 {
                     process.StartInfo.FileName = "/bin/bash";
-                    process.StartInfo.Arguments = $"ls -lisa /proc/{ProcessId}/fd | wc -l";
+                    process.StartInfo.Arguments = $"-c \"ls -lisa /proc/{ProcessId}/fd | wc -l\"";
                     process.StartInfo.RedirectStandardOutput = true;
                     process.StartInfo.UseShellExecute = false;
                     process.StartInfo.CreateNoWindow = true;

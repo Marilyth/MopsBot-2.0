@@ -205,7 +205,7 @@ namespace MopsBot.Module
             using (var process = new System.Diagnostics.Process())
             {
                 process.StartInfo.FileName = "/bin/bash";
-                process.StartInfo.Arguments = $"ls -lisa /proc/{System.Diagnostics.Process.GetCurrentProcess().Id}/fd | wc -l";
+                process.StartInfo.Arguments = $"-c \"ls -lisa /proc/{System.Diagnostics.Process.GetCurrentProcess().Id}/fd | wc -l\"";
                 process.StartInfo.RedirectStandardOutput = true;
                 process.StartInfo.UseShellExecute = false;
                 process.StartInfo.CreateNoWindow = true;
@@ -215,7 +215,7 @@ namespace MopsBot.Module
 
                 string result = process.StandardOutput.ReadToEnd();
                 int openFiles = Convert.ToInt32(result);
-                Console.WriteLine(System.DateTime.Now.ToLongDateString() + $" open files were {openFiles}");
+                await ReplyAsync(System.DateTime.Now.ToLongDateString() + $" open files were {openFiles}");
             }
         }
 
