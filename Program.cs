@@ -102,12 +102,12 @@ namespace MopsBot
 
                     string result = process.StandardOutput.ReadToEnd();
                     int openFiles = Convert.ToInt32(result);
-                    Console.WriteLine(System.DateTime.Now.ToLongTimeString() + $" open files were {openFiles}");
+                    Console.WriteLine("\n" + System.DateTime.Now.ToLongTimeString() + $" open files were {openFiles}");
                     if (OpenFilesCount == openFiles)
                         OpenFilesRepetition++;
                     
                     if (OpenFilesRepetition == OpenFilesRepetitionThreshold || OpenFilesCount > 600){
-                        Console.WriteLine("Shutting down due to deadlock or too many open files!\n");
+                        Console.WriteLine("\nShutting down due to deadlock or too many open files!");
                         Environment.Exit(-1);
                     }
 
@@ -118,7 +118,7 @@ namespace MopsBot
             }
             catch (Exception e)
             {
-                Console.WriteLine("[FILE READING ERROR]: " + System.DateTime.Now.ToLongDateString() + $"{e.Message}\n{e.StackTrace}");
+                Console.WriteLine("\n[FILE READING ERROR]: " + System.DateTime.Now.ToLongDateString() + $" {e.Message}\n{e.StackTrace}");
                 //Environment.Exit(-1);
             }
         }
