@@ -215,7 +215,7 @@ namespace MopsBot.Module
 
                 string result = process.StandardOutput.ReadToEnd();
                 int openFiles = Convert.ToInt32(result);
-                await ReplyAsync(System.DateTime.Now.ToLongTimeString() + $" open files were {openFiles}");
+                await ReplyAsync(DateTime.Now + $" open files were {openFiles}");
             }
         }
 

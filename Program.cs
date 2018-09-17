@@ -102,7 +102,7 @@ namespace MopsBot
 
                     string result = process.StandardOutput.ReadToEnd();
                     int openFiles = Convert.ToInt32(result);
-                    Console.WriteLine("\n" + System.DateTime.Now.ToLongTimeString() + $" open files were {openFiles}");
+                    Console.WriteLine("\n" + System.DateTime.Now + $" open files were {openFiles}");
                     if (OpenFilesCount == openFiles)
                         OpenFilesRepetition++;
                     
@@ -118,7 +118,7 @@ namespace MopsBot
             }
             catch (Exception e)
             {
-                Console.WriteLine("\n[FILE READING ERROR]: " + System.DateTime.Now.ToLongDateString() + $" {e.Message}\n{e.StackTrace}");
+                Console.WriteLine("\n[FILE READING ERROR]: " + System.DateTime.Now + $" {e.Message}\n{e.StackTrace}");
                 //Environment.Exit(-1);
             }
         }
