@@ -200,7 +200,7 @@ namespace MopsBot.Module
         [Command("openfiles", RunMode = RunMode.Async)]
         [RequireBotManage()]
         [Hide]
-        public async Task openfiles([Remainder]string expression)
+        public async Task openfiles()
         {
             using (var process = new System.Diagnostics.Process())
             {
@@ -215,7 +215,7 @@ namespace MopsBot.Module
 
                 string result = process.StandardOutput.ReadToEnd();
                 int openFiles = Convert.ToInt32(result);
-                await ReplyAsync(System.DateTime.Now.ToLongDateString() + $" open files were {openFiles}");
+                await ReplyAsync(System.DateTime.Now.ToLongTimeString() + $" open files were {openFiles}");
             }
         }
 

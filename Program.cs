@@ -87,7 +87,7 @@ namespace MopsBot
 
         private void checkOpenFiles(object stateinfo)
         {
-            /*try
+            try
             {
                 using (var process = new System.Diagnostics.Process())
                 {
@@ -102,11 +102,14 @@ namespace MopsBot
 
                     string result = process.StandardOutput.ReadToEnd();
                     int openFiles = Convert.ToInt32(result);
-                    Console.WriteLine(System.DateTime.Now.ToLongDateString() + $" open files were {openFiles}");
+                    Console.WriteLine(System.DateTime.Now.ToLongTimeString() + $" open files were {openFiles}");
                     if (OpenFilesCount == openFiles)
                         OpenFilesRepetition++;
-                    if (OpenFilesRepetition == OpenFilesRepetitionThreshold || OpenFilesCount > 600)
+                    
+                    if (OpenFilesRepetition == OpenFilesRepetitionThreshold || OpenFilesCount > 600){
+                        Console.WriteLine("Shutting down due to deadlock or too many open files!\n");
                         Environment.Exit(-1);
+                    }
 
                     OpenFilesCount = openFiles;
                 }
@@ -115,9 +118,9 @@ namespace MopsBot
             }
             catch (Exception e)
             {
-                Console.WriteLine(System.DateTime.Now.ToLongDateString() + $"{e.Message}\n{e.StackTrace}");
+                Console.WriteLine("[FILE READING ERROR]: " + System.DateTime.Now.ToLongDateString() + $"{e.Message}\n{e.StackTrace}");
                 //Environment.Exit(-1);
-            }*/
+            }
         }
 
         public static IWebHost BuildWebHost(string[] args) =>
