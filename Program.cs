@@ -34,7 +34,7 @@ namespace MopsBot
         private int ProcessId;
         private int OpenFilesLastRead;
         private int OpenFilesSameCount;
-        private static int OpenFilesSameCounThreshold = 5;
+        private static int OpenFilesSameCountThreshold = 5;
         
         private async Task Start()
         {
