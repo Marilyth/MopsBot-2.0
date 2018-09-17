@@ -211,12 +211,16 @@ namespace MopsBot
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0x0099ff);
             e.Title = command;
-            e.ImageUrl = $"http://5.45.104.29/mops_example_usage/{command.ToLower()}.PNG?rand={StaticBase.ran.Next(0,999999999)}".Replace(" ", "%20");
+            e.ImageUrl = GetCommandHelpImage(command);
 
             e.AddField("Example usage", usage);
             e.Description = description;
 
             return e.Build();
+        }
+
+        public static string GetCommandHelpImage(string command){
+            return $"http://5.45.104.29/mops_example_usage/{command.ToLower()}.PNG?rand={StaticBase.ran.Next(0, 999999999)}".Replace(" ", "%20");
         }
 
         /// <summary>
