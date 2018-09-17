@@ -14,7 +14,6 @@ using Discord.Commands;
 using System.Threading;
 using System.Net;
 using Newtonsoft.Json;
-using System.Diagnostics;
 
 namespace MopsBot
 {
@@ -23,21 +22,23 @@ namespace MopsBot
         public static void Main(string[] args)
         {
             //Task.Run(() => BuildWebHost(args).Run());
-            //Task.Run(() => BuildTwitterWebHost(args).Run());
             new Program().Start().GetAwaiter().GetResult();
         }
         public static DiscordSocketClient Client;
         public static Dictionary<string, string> Config;
         public static CommandHandler Handler { get; private set; }
         public static ReactionHandler ReactionHandler { get; private set; }
-        private System.Threading.Timer garbageCollector;
-        private int ProcessId;
-        private int OpenFilesLastRead;
-        private int OpenFilesSameCount;
-        private static int OpenFilesSameCountThreshold = 5;
-        
+        private System.Threading.Timer openFileChecker;
+
+        //Open file handling
+        private int ProcessId, OpenFilesCount, OpenFilesRepetition;
+        private static int OpenFilesRepetitionThreshold = 5;
+
         private async Task Start()
         {
+            ProcessId = System.Diagnostics.Process.GetCurrentProcess().Id;
+            Console.Out.WriteLine(ProcessId);
+
             Client = new DiscordSocketClient(new DiscordSocketConfig()
             {
                 LogLevel = LogSeverity.Info,
@@ -65,60 +66,58 @@ namespace MopsBot
             ReactionHandler = new ReactionHandler();
             ReactionHandler.Install(provider);
 
-            garbageCollector = new System.Threading.Timer(collectGarbage, null, 1800000, 1800000);
-            ProcessId = Process.GetCurrentProcess().Id;
-            Console.Out.WriteLine(ProcessId);
+            openFileChecker = new System.Threading.Timer(checkOpenFiles, null, 60000, 60000);
 
             await Task.Delay(-1);
         }
 
         private Task Client_Log(LogMessage msg)
         {
-            Console.WriteLine("\n" +  msg.ToString());
+            Console.WriteLine("\n" + msg.ToString());
             return Task.CompletedTask;
         }
 
-
         private Task onClientReady()
         {
+            var test = Client;
             Task.Run(() => StaticBase.initTracking());
             Task.Run(() => StaticBase.UpdateGameAsync());
             return Task.CompletedTask;
         }
 
-        private void collectGarbage(object stateinfo)
+        private void checkOpenFiles(object stateinfo)
         {
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            GC.Collect();
-        }
-
-        private void checkOpenFiles(){
-            try{
-                var process = new Process()
+            /*try
+            {
+                using (var process = new System.Diagnostics.Process())
                 {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = "/bin/bash",
-                        Arguments = $"-c \"ls -lisa /proc/{ProcessId}/fd | wc -l\"",
-                        RedirectStandardOutput = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true,
-                    }
-                };
-                process.Start();
-                string result = process.StandardOutput.ReadToEnd();
-                int openFiles = Convert.ToInt32(result);
-                if(OpenFilesLastRead == openFiles)
-                    OpenFilesSameCount++;
+                    process.StartInfo.FileName = "/bin/bash";
+                    process.StartInfo.Arguments = $"ls -lisa /proc/{ProcessId}/fd | wc -l";
+                    process.StartInfo.RedirectStandardOutput = true;
+                    process.StartInfo.UseShellExecute = false;
+                    process.StartInfo.CreateNoWindow = true;
 
-                if(OpenFilesSameCount == OpenFilesSameCountThreshold)
-                    Environment.Exit(-1);
+                    process.Start();
+                    process.WaitForExit();
 
-                OpenFilesLastRead = openFiles;
-                }catch(Exception e){
-                    Environment.Exit(-1);
+                    string result = process.StandardOutput.ReadToEnd();
+                    int openFiles = Convert.ToInt32(result);
+                    Console.WriteLine(System.DateTime.Now.ToLongDateString() + $" open files were {openFiles}");
+                    if (OpenFilesCount == openFiles)
+                        OpenFilesRepetition++;
+                    if (OpenFilesRepetition == OpenFilesRepetitionThreshold || OpenFilesCount > 600)
+                        Environment.Exit(-1);
+
+                    OpenFilesCount = openFiles;
                 }
+
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(System.DateTime.Now.ToLongDateString() + $"{e.Message}\n{e.StackTrace}");
+                //Environment.Exit(-1);
+            }*/
         }
 
         public static IWebHost BuildWebHost(string[] args) =>
@@ -134,12 +133,6 @@ namespace MopsBot
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseIISIntegration()
                 .UseStartup<Startup>()
-                .Build();
-
-        public static IWebHost BuildTwitterWebHost(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
-                .UseStartup<TwitterStartup>()
-                .UseUrls("http://0.0.0.0:8076/")
                 .Build();
     }
 }

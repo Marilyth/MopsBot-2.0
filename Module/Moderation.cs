@@ -59,7 +59,7 @@ namespace MopsBot.Module
             }
         }
 
-        [Command("poll", RunMode=RunMode.Async), Summary("Creates a poll\nExample: !poll \"What should I play\" \"Dark Souls\" \"Osu!\" \"WoW\"")]
+        [Command("poll", RunMode = RunMode.Async), Summary("Creates a poll\nExample: !poll \"What should I play\" \"Dark Souls\" \"Osu!\" \"WoW\"")]
         [RequireUserPermission(GuildPermission.ManageChannels)]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         [RequireBotPermission(ChannelPermission.AddReactions)]
@@ -197,41 +197,26 @@ namespace MopsBot.Module
             return Task.CompletedTask;
         }
 
-        [Command("createdb", RunMode = RunMode.Async)]
+        [Command("openfiles", RunMode = RunMode.Async)]
         [RequireBotManage()]
         [Hide]
-        public async Task createdb()
+        public async Task openfiles([Remainder]string expression)
         {
-            await DatabaseClient.DropDatabaseAsync("Mops");
-            Database = DatabaseClient.GetDatabase("Mops");
-            
-            foreach(var tracker in Trackers.Values){
-                var type = tracker.GetTrackerType();
-                if(tracker.GetTrackerSet().Count > 0){
-                    var collection = Database.GetCollection<ITracker>(type.Name);
-                    collection.InsertMany(tracker.GetTrackerSet());
-                }
-                else{
-                    await Database.CreateCollectionAsync(type.Name);
-                }
+            using (var process = new System.Diagnostics.Process())
+            {
+                process.StartInfo.FileName = "/bin/bash";
+                process.StartInfo.Arguments = $"ls -lisa /proc/{System.Diagnostics.Process.GetCurrentProcess().Id}/fd | wc -l";
+                process.StartInfo.RedirectStandardOutput = true;
+                process.StartInfo.UseShellExecute = false;
+                process.StartInfo.CreateNoWindow = true;
+
+                process.Start();
+                process.WaitForExit();
+
+                string result = process.StandardOutput.ReadToEnd();
+                int openFiles = Convert.ToInt32(result);
+                Console.WriteLine(System.DateTime.Now.ToLongDateString() + $" open files were {openFiles}");
             }
-
-            var giveawayCollection = Database.GetCollection<KeyValuePair<ulong, List<KeyValuePair<ulong, List<ulong>>>>>("ReactionGiveaways");
-            foreach(var giveaway in ReactGiveaways.Giveaways){
-                await giveawayCollection.InsertOneAsync(KeyValuePair.Create(giveaway.Key, giveaway.Value.ToList()));
-            }
-
-            var rolejoinCollection = Database.GetCollection<KeyValuePair<ulong, HashSet<ulong>>>("ReactionRoleInvites");
-            rolejoinCollection.InsertMany(ReactRoleJoin.RoleInvites.ToList());
-
-            var pollCollection = Database.GetCollection<KeyValuePair<ulong, List<Data.Poll>>>("ReactionPolls");
-            pollCollection.InsertMany(StaticBase.Poll.Polls.ToList());
-
-            var prefixCollection = Database.GetCollection<KeyValuePair<ulong, string>>("GuildPrefixes");
-            prefixCollection.InsertMany(GuildPrefix.ToList());
-
-            var customCollection = Database.GetCollection<KeyValuePair<ulong, Dictionary<string, string>>>("Custom_Commands");
-            customCollection.InsertMany(CustomCommands.ToList());
         }
 
         [Command("eval", RunMode = RunMode.Async)]
