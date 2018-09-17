@@ -103,11 +103,20 @@ namespace MopsBot
                     string result = process.StandardOutput.ReadToEnd();
                     int openFiles = Convert.ToInt32(result);
                     Console.WriteLine("\n" + System.DateTime.Now + $" open files were {openFiles}");
-                    if (OpenFilesCount == openFiles)
-                        OpenFilesRepetition++;
+                   
+                    if (OpenFilesCount == openFiles){
+                        if(++OpenFilesRepetition == OpenFilesRepetitionThreshold){
+                            Console.WriteLine("\nShutting down due to 5 repetitions!");
+                            Environment.Exit(-1);
+                        }
+                    }
+
+                    else
+                        OpenFilesRepetition = 0;
                     
-                    if (OpenFilesRepetition == OpenFilesRepetitionThreshold || OpenFilesCount > 600){
-                        Console.WriteLine("\nShutting down due to deadlock or too many open files!");
+                    
+                    if (OpenFilesCount > 600){
+                        Console.WriteLine("\nShutting down due to too many open files!");
                         Environment.Exit(-1);
                     }
 
