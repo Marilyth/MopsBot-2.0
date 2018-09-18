@@ -202,21 +202,7 @@ namespace MopsBot.Module
         [Hide]
         public async Task openfiles()
         {
-            using (var process = new System.Diagnostics.Process())
-            {
-                process.StartInfo.FileName = "/bin/bash";
-                process.StartInfo.Arguments = $"-c \"ls -lisa /proc/{System.Diagnostics.Process.GetCurrentProcess().Id}/fd | wc -l\"";
-                process.StartInfo.RedirectStandardOutput = true;
-                process.StartInfo.UseShellExecute = false;
-                process.StartInfo.CreateNoWindow = true;
-
-                process.Start();
-                process.WaitForExit();
-
-                string result = process.StandardOutput.ReadToEnd();
-                int openFiles = Convert.ToInt32(result);
-                await ReplyAsync(DateTime.Now + $" open files were {openFiles}");
-            }
+            await ReplyAsync(DateTime.Now + $" open files were {System.Diagnostics.Process.GetCurrentProcess().HandleCount}");
         }
 
         [Command("eval", RunMode = RunMode.Async)]
