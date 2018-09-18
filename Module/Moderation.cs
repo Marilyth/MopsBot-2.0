@@ -59,7 +59,7 @@ namespace MopsBot.Module
             }
         }
 
-        [Command("poll", RunMode = RunMode.Async), Summary("Creates a poll\nExample: !poll \"What should I play\" \"Dark Souls\" \"Osu!\" \"WoW\"")]
+        [Command("Poll", RunMode = RunMode.Async), Summary("Creates a poll\nExample: !poll \"What should I play\" \"Dark Souls\" \"Osu!\" \"WoW\"")]
         [RequireUserPermission(GuildPermission.ManageChannels)]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         [RequireBotPermission(ChannelPermission.AddReactions)]
@@ -91,7 +91,7 @@ namespace MopsBot.Module
             }
         }
 
-        [Command("setPrefix")]
+        [Command("SetPrefix")]
         [Summary("Changes the prefix of Mops in the current Guild")]
         [RequireUserPermission(ChannelPermission.ManageChannels)]
         public async Task setPrefix([Remainder]string prefix)
@@ -236,6 +236,7 @@ namespace MopsBot.Module
         }
 
         [Command("help")]
+        [Alias("commands")]
         [Hide]
         public async Task help(string helpModule = null)
         {

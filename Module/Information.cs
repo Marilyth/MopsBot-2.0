@@ -17,7 +17,7 @@ namespace MopsBot.Module
     public class Information : ModuleBase
     {
 
-        [Command("howLong")]
+        [Command("HowLong")]
         [Summary("Returns the date you joined the Guild")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public async Task howLong()
@@ -25,7 +25,7 @@ namespace MopsBot.Module
             await ReplyAsync(((SocketGuildUser)Context.User).JoinedAt.Value.Date.ToString("d"));
         }
 
-        [Command("invite")]
+        [Command("Invite")]
         [Summary("Provides link to make me join your Server")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public async Task joinServer()
@@ -33,7 +33,7 @@ namespace MopsBot.Module
             await ReplyAsync($"https://discordapp.com/oauth2/authorize?client_id={Context.Client.CurrentUser.Id}&permissions=271969344&scope=bot");
         }
 
-        [Command("define")]
+        [Command("Define")]
         [Summary("Searches dictionaries for a definition of the specified word or expression")]
         public async Task define([Remainder] string text)
         {
@@ -54,7 +54,7 @@ namespace MopsBot.Module
             }
         }
 
-        [Command("translate")]
+        [Command("Translate")]
         [Summary("Translates your text from srcLanguage to tgtLanguage.")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public async Task translate(string srcLanguage, string tgtLanguage, [Remainder] string text)
