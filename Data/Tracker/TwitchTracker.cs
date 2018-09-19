@@ -32,7 +32,9 @@ namespace MopsBot.Data.Tracker
 
         public async override void PostInitialisation()
         {
-            ViewerGraph = new Plot(Name, "Time In Minutes", "Viewers", IsOnline);
+            if(ViewerGraph != null)
+              ViewerGraph.InitPlot();
+
             foreach (var channelMessage in ToUpdate)
             {
                 try
@@ -97,7 +99,6 @@ namespace MopsBot.Data.Tracker
                             IsOnline = false;
                             Console.WriteLine("\n" + $"{DateTime.Now} {Name} went Offline");
                             ViewerGraph.Dispose();
-                            ViewerGraph = new Plot(Name, "Time In Minutes", "Viewers", false);
                             ToUpdate = new Dictionary<ulong, ulong>();
 
                             foreach (var channelMessage in ToUpdate)
@@ -236,6 +237,7 @@ namespace MopsBot.Data.Tracker
             Dispose(true);
             GC.SuppressFinalize(this);
             ViewerGraph.RemovePlot();
+            ViewerGraph = null;
         }
 
         public override string TrackerUrl()

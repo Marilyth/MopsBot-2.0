@@ -151,13 +151,14 @@ namespace MopsBot.Data
     /// <summary>
     /// A Class that handles drawing plots.
     /// </summary>
+    [BsonIgnoreExtraElements]
     public class Plot
     {
         private PlotModel viewerChart;
         private List<OxyPlot.Series.LineSeries> lineSeries;
         private static string COLLECTIONNAME = "TwitchTracker";
         public List<KeyValuePair<string, double>> PlotPoints;
-        public int CurX;
+        private int CurX;
         
         [BsonId]
         public string ID;
@@ -166,18 +167,14 @@ namespace MopsBot.Data
         {
             ID = name;
             PlotPoints = new List<KeyValuePair<string, double>>();
-            initPlot(xName, yName);
+            InitPlot(xName, yName);
             if (keepTrack)
             {
                 readPlotPoints();
             }
         }
 
-        public Plot(){
-            initPlot();
-        }
-
-        private void initPlot(string xAxis = "Time in minutes", string yAxis = "Viewers")
+        public void InitPlot(string xAxis = "Time In Minutes", string yAxis = "Viewers")
         {
             viewerChart = new PlotModel();
             viewerChart.TextColor = OxyColor.FromRgb(175, 175, 175);
@@ -209,15 +206,19 @@ namespace MopsBot.Data
             viewerChart.LegendPosition = LegendPosition.BottomCenter;
 
             lineSeries = new List<OxyPlot.Series.LineSeries>();
+            foreach (var plotPoint in PlotPoints)
+            {
+                AddValue(plotPoint.Key, plotPoint.Value, false);
+            }
         }
 
         private void writePlotPoints()
         {
-            using (StreamWriter write = new StreamWriter(new FileStream($"mopsdata//plots//{ID}plot.json", FileMode.Create)))
+            /*using (StreamWriter write = new StreamWriter(new FileStream($"mopsdata//plots//{ID}plot.json", FileMode.Create)))
             {
                 string plot = Newtonsoft.Json.JsonConvert.SerializeObject(PlotPoints, Newtonsoft.Json.Formatting.Indented);
                 write.WriteLine(plot);
-            }
+            }*/
         }
 
         /// <summary>
@@ -252,7 +253,7 @@ namespace MopsBot.Data
 
         private void readPlotPoints()
         {
-            using (StreamReader read = new StreamReader(new FileStream($"mopsdata//plots//{ID}plot.json", FileMode.OpenOrCreate)))
+            /*using (StreamReader read = new StreamReader(new FileStream($"mopsdata//plots//{ID}plot.json", FileMode.OpenOrCreate)))
             {
                 PlotPoints = Newtonsoft.Json.JsonConvert.DeserializeObject<List<KeyValuePair<string, double>>>(read.ReadToEnd());
             }
@@ -262,7 +263,7 @@ namespace MopsBot.Data
             foreach (var plotPoint in PlotPoints)
             {
                 AddValue(plotPoint.Key, plotPoint.Value, false);
-            }
+            }*/
         }
 
         /// <summary>
