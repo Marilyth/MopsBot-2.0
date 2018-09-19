@@ -536,7 +536,7 @@ namespace MopsBot.Module
             }
         }
         
-        [Group("WoWGuild")]
+        /*[Group("WoWGuild")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public class WoWGuild : ModuleBase
         {
@@ -568,7 +568,7 @@ namespace MopsBot.Module
                 await ReplyAsync("Following guilds are currently being tracked:", embed:StaticBase.Trackers[ITracker.TrackerType.WoWGuild].GetTrackersEmbed(Context.Channel.Id));
             }
 
-            /*[Command("SetNotification")]
+            [Command("SetNotification")]
             [Summary("Sets the notification text that is used each time a change in news was found.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task SetNotification(string Region, string Realm, string Name, [Remainder]string notification)
@@ -579,7 +579,7 @@ namespace MopsBot.Module
                 else
                     await ReplyAsync($"Could not find tracker for `{Region} {Realm} {Name}`\n"+
                                      $"Currently tracked guilds are: ``{String.Join(", ", StaticBase.Trackers[ITracker.TrackerType.WoWGuild].GetTrackers(Context.Channel.Id).Select(x => x.Name))}``");
-            }*/
+            }
 
             [Command("ChangeLootTrack")]
             [Summary("Notifies when member gains loot.")]
@@ -604,7 +604,7 @@ namespace MopsBot.Module
                 await StaticBase.Trackers[ITracker.TrackerType.WoWGuild].UpdateDBAsync(tracker);
                 await ReplyAsync($"Changed StatTrack for `{Region} {Realm} {Name}` to `{tracker.trackAchievements}`");
             }
-        }
+        }*/
         /*[Command("trackClips")]
         [Summary("Keeps track of clips from streams of the specified Streamer, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
         [RequireUserPermission(ChannelPermission.ManageChannels)]
