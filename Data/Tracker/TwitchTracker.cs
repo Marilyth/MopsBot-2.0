@@ -76,7 +76,6 @@ namespace MopsBot.Data.Tracker
             }
             catch (Exception)
             {
-                Dispose();
                 throw new Exception($"Streamer {TrackerUrl()} could not be found on Twitch!");
             }
         }
