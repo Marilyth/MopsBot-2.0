@@ -315,7 +315,7 @@ namespace MopsBot.Data
             // var file = new FileInfo($"mopsdata//plots//{ID}plot.json");
             // file.Delete();
             var dir = new DirectoryInfo("mopsdata//");
-            var files = dir.GetFiles().Where(x => x.Extension.ToLower().Equals($"{ID.toLower()}plot.pdf"));
+            var files = dir.GetFiles().Where(x => x.Extension.ToLower().Equals($"{ID.ToLower()}plot.pdf"));
             foreach (var f in files)
                 f.Delete();
         }
