@@ -312,10 +312,10 @@ namespace MopsBot.Data
         {
             viewerChart = null;
             lineSeries = null;
-            var file = new FileInfo($"mopsdata//plots//{ID}plot.json");
-            file.Delete();
+            // var file = new FileInfo($"mopsdata//plots//{ID}plot.json");
+            // file.Delete();
             var dir = new DirectoryInfo("mopsdata//");
-            var files = dir.GetFiles().Where(x => x.Extension.ToLower().Equals($"{ID}plot.pdf"));
+            var files = dir.GetFiles().Where(x => x.Extension.ToLower().Equals($"{ID.toLower()}plot.pdf"));
             foreach (var f in files)
                 f.Delete();
         }
