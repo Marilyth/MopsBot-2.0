@@ -43,7 +43,7 @@ namespace MopsBot.Data.Tracker
             {
                 Dispose();
                 Console.WriteLine("\n" +  "");
-                throw new Exception($"No results were found for Subreddit `{Name.Split(" ")[0]}`" +
+                throw new Exception($"No results were found for Subreddit {TrackerUrl()}" +
                                     $"{(Name.Split(" ").Length > 1 ? $" with restriction(s) `{Name.Split(" ")[1]}`." : ".")}");
             }
         }
@@ -62,7 +62,7 @@ namespace MopsBot.Data.Tracker
                 if (newPosts.Length > 0)
                 {
                     lastCheck = newPosts.Max(x => x.data.created_utc);
-                    await StaticBase.Trackers["reddit"].UpdateDBAsync(this);
+                    await StaticBase.Trackers[TrackerType.Reddit].UpdateDBAsync(this);
 
                     newPosts = newPosts.Reverse().ToArray();
                     foreach (var post in newPosts)

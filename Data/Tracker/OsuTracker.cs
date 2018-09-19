@@ -45,7 +45,7 @@ namespace MopsBot.Data.Tracker
             catch (Exception)
             {
                 Dispose();
-                throw new Exception($"Person `{Name}` could not be found on Osu!");
+                throw new Exception($"Player {TrackerUrl()} could not be found on Osu!");
             }
         }
 

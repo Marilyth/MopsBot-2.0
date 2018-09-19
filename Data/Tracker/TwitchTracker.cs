@@ -16,7 +16,7 @@ namespace MopsBot.Data.Tracker
 {
     public class TwitchTracker : ITracker
     {
-        private Plot viewerGraph;
+        public Plot ViewerGraph;
         private TwitchResult StreamerStatus;
 
         [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
@@ -32,7 +32,7 @@ namespace MopsBot.Data.Tracker
 
         public async override void PostInitialisation()
         {
-            viewerGraph = new Plot(Name, "Time In Minutes", "Viewers", IsOnline);
+            ViewerGraph = new Plot(Name, "Time In Minutes", "Viewers", IsOnline);
             foreach (var channelMessage in ToUpdate)
             {
                 try
@@ -60,8 +60,6 @@ namespace MopsBot.Data.Tracker
 
         public TwitchTracker(string streamerName) : base(60000)
         {
-            viewerGraph = new Plot(streamerName, "Time In Minutes", "Viewers", false);
-
             ToUpdate = new Dictionary<ulong, ulong>();
             ChannelMessages = new Dictionary<ulong, string>();
             Name = streamerName;
@@ -77,7 +75,7 @@ namespace MopsBot.Data.Tracker
             catch (Exception)
             {
                 Dispose();
-                throw new Exception($"Person `{Name}` could not be found on Twitch!");
+                throw new Exception($"Streamer {TrackerUrl()} could not be found on Twitch!");
             }
         }
 
@@ -98,8 +96,8 @@ namespace MopsBot.Data.Tracker
                             TimeoutCount = 0;
                             IsOnline = false;
                             Console.WriteLine("\n" + $"{DateTime.Now} {Name} went Offline");
-                            viewerGraph.Dispose();
-                            viewerGraph = new Plot(Name, "Time In Minutes", "Viewers", false);
+                            ViewerGraph.Dispose();
+                            ViewerGraph = new Plot(Name, "Time In Minutes", "Viewers", false);
                             ToUpdate = new Dictionary<ulong, ulong>();
 
                             foreach (var channelMessage in ToUpdate)
@@ -111,29 +109,31 @@ namespace MopsBot.Data.Tracker
                     }
                     else
                     {
+                        ViewerGraph = new Plot(Name, "Time In Minutes", "Viewers", IsOnline);
                         IsOnline = true;
                         CurGame = StreamerStatus.stream.game;
 
                         foreach (ulong channel in ChannelMessages.Keys)
                             await OnMinorChangeTracked(channel, ChannelMessages[channel]);
                     }
-                    await StaticBase.Trackers["twitch"].UpdateDBAsync(this);
+                    await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
                 }
                 else
                     TimeoutCount = 0;
 
                 if (isStreaming)
                 {
-                    viewerGraph.AddValue(CurGame, StreamerStatus.stream.viewers);
+                    ViewerGraph.AddValue(CurGame, StreamerStatus.stream.viewers);
                     if (CurGame.CompareTo(StreamerStatus.stream.game) != 0)
                     {
                         CurGame = StreamerStatus.stream.game;
-                        viewerGraph.AddValue(CurGame, StreamerStatus.stream.viewers);
+                        ViewerGraph.AddValue(CurGame, StreamerStatus.stream.viewers);
 
                         foreach (ulong channel in ChannelMessages.Keys)
                             await OnMinorChangeTracked(channel, $"{Name} switched games to **{CurGame}**");
-                        await StaticBase.Trackers["twitch"].UpdateDBAsync(this);
                     }
+
+                    await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
 
                     foreach (ulong channel in ChannelIds.ToList())
                         await OnMajorChangeTracked(channel, createEmbed());
@@ -199,8 +199,8 @@ namespace MopsBot.Data.Tracker
             footer.Text = "Twitch";
             e.Footer = footer;
 
-            e.ThumbnailUrl = isThumbnailLarge ? viewerGraph.DrawPlot() : $"{StreamerStatus.stream.preview.medium}?rand={StaticBase.ran.Next(0, 99999999)}";
-            e.ImageUrl = isThumbnailLarge ? $"{StreamerStatus.stream.preview.large}?rand={StaticBase.ran.Next(0, 99999999)}" : viewerGraph.DrawPlot();
+            e.ThumbnailUrl = isThumbnailLarge ? ViewerGraph.DrawPlot() : $"{StreamerStatus.stream.preview.medium}?rand={StaticBase.ran.Next(0, 99999999)}";
+            e.ImageUrl = isThumbnailLarge ? $"{StreamerStatus.stream.preview.large}?rand={StaticBase.ran.Next(0, 99999999)}" : ViewerGraph.DrawPlot();
 
             e.AddField("Game", CurGame, true);
             e.AddField("Viewers", StreamerStatus.stream.viewers, true);
@@ -212,7 +212,7 @@ namespace MopsBot.Data.Tracker
         {
             if (((IGuildUser)await context.Reaction.Channel.GetUserAsync(context.Reaction.UserId)).GetPermissions((IGuildChannel)context.Channel).ManageChannel)
             {
-                viewerGraph.Recolour();
+                ViewerGraph.Recolour();
 
                 foreach (ulong channel in ChannelIds)
                     await OnMajorChangeTracked(channel, createEmbed());
@@ -224,7 +224,7 @@ namespace MopsBot.Data.Tracker
             if (((IGuildUser)await context.Reaction.Channel.GetUserAsync(context.Reaction.UserId)).GetPermissions((IGuildChannel)context.Channel).ManageChannel)
             {
                 isThumbnailLarge = !isThumbnailLarge;
-                await StaticBase.Trackers["twitch"].UpdateDBAsync(this);
+                await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
 
                 foreach (ulong channel in ChannelIds)
                     await OnMajorChangeTracked(channel, createEmbed());
@@ -235,7 +235,7 @@ namespace MopsBot.Data.Tracker
         {
             Dispose(true);
             GC.SuppressFinalize(this);
-            viewerGraph.RemovePlot();
+            ViewerGraph.RemovePlot();
         }
 
         public override string TrackerUrl()

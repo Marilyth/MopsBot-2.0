@@ -58,7 +58,7 @@ namespace MopsBot.Data.Tracker
                 if (newArticles.Length > 0)
                 {
                     LastNews = newArticles.First().PublishedAt.ToString();
-                    await StaticBase.Trackers["news"].UpdateDBAsync(this);
+                    await StaticBase.Trackers[TrackerType.News].UpdateDBAsync(this);
                 }
 
                 foreach (Article newArticle in newArticles)

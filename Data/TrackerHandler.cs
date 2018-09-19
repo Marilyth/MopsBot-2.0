@@ -29,8 +29,7 @@ namespace MopsBot.Data
         public abstract Embed GetTrackersEmbed(ulong channelID);
         public abstract ITracker GetTracker(ulong channelID, string name);
         public abstract Type GetTrackerType();
-        public abstract void postInitialisation();
-
+        public abstract void PostInitialisation();
     }
 
     /// <summary>
@@ -60,7 +59,7 @@ namespace MopsBot.Data
             // }
         }
 
-        public override void postInitialisation()
+        public override void PostInitialisation()
         {
             //using (StreamReader read = new StreamReader(new FileStream($"mopsdata//{typeof(T).Name}.json", FileMode.OpenOrCreate)))
             //{

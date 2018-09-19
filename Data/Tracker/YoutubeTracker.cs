@@ -40,7 +40,7 @@ namespace MopsBot.Data.Tracker
             catch (Exception)
             {
                 Dispose();
-                throw new Exception($"Channel-ID `{Name}` could not be found on Youtube!\nPerhaps you used the channel-name instead?");
+                throw new Exception($"Channel {TrackerUrl()} could not be found on Youtube!\nPerhaps you used the channel-name instead?");
             }
         }
 
@@ -106,7 +106,7 @@ namespace MopsBot.Data.Tracker
                 if (newVideos.Length > 0)
                 {
                     LastTime = XmlConvert.ToString(newVideos[0].snippet.publishedAt, XmlDateTimeSerializationMode.Utc);
-                    await StaticBase.Trackers["youtube"].UpdateDBAsync(this);
+                    await StaticBase.Trackers[TrackerType.Youtube].UpdateDBAsync(this);
                 }
             }
             catch (Exception e)

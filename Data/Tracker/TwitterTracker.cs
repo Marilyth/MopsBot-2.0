@@ -35,7 +35,7 @@ namespace MopsBot.Data.Tracker
             catch (Exception)
             {
                 Dispose();
-                throw new Exception($"No tweets from `{Name}` could be found on Twitter!\nI only track people who tweeted at least once.");
+                throw new Exception($"No tweets from {TrackerUrl()} could be found on Twitter!\nI only track people who tweeted at least once.");
             }
         }
 
@@ -62,7 +62,7 @@ namespace MopsBot.Data.Tracker
                 if (newTweets.Length != 0)
                 {
                     lastMessage = newTweets[newTweets.Length - 1].Id;
-                    await StaticBase.Trackers["twitter"].UpdateDBAsync(this);
+                    await StaticBase.Trackers[TrackerType.Twitter].UpdateDBAsync(this);
                 }
 
             }

@@ -38,7 +38,7 @@ namespace MopsBot
         public static ReactionRoleJoin ReactRoleJoin;
         public static ReactionPoll Poll;
         //public static Crosswords Crosswords;
-        public static Dictionary<string, TrackerWrapper> Trackers;
+        public static Dictionary<ITracker.TrackerType, TrackerWrapper> Trackers;
         public static MuteTimeHandler MuteHandler;
         public static NewsApiClient NewsClient;
 
@@ -90,21 +90,21 @@ namespace MopsBot
                     }
                 }
                 
-                Trackers = new Dictionary<string, Data.TrackerWrapper>();
-                Trackers["osu"] = new TrackerHandler<OsuTracker>();
-                Trackers["overwatch"] = new TrackerHandler<OverwatchTracker>();
-                Trackers["twitch"] = new TrackerHandler<TwitchTracker>();
-                Trackers["twitchclips"] = new TrackerHandler<TwitchClipTracker>();
-                Trackers["twitter"] = new TrackerHandler<TwitterTracker>();
-                Trackers["youtube"] = new TrackerHandler<YoutubeTracker>();
-                Trackers["reddit"] = new TrackerHandler<RedditTracker>();
-                Trackers["news"] = new TrackerHandler<NewsTracker>();
-                Trackers["wow"] = new TrackerHandler<WoWTracker>();
-                Trackers["wowguild"] = new TrackerHandler<WoWGuildTracker>();
+                Trackers = new Dictionary<ITracker.TrackerType, Data.TrackerWrapper>();
+                Trackers[ITracker.TrackerType.Osu] = new TrackerHandler<OsuTracker>();
+                Trackers[ITracker.TrackerType.Overwatch] = new TrackerHandler<OverwatchTracker>();
+                Trackers[ITracker.TrackerType.Twitch] = new TrackerHandler<TwitchTracker>();
+                Trackers[ITracker.TrackerType.TwitchClips] = new TrackerHandler<TwitchClipTracker>();
+                Trackers[ITracker.TrackerType.Twitter] = new TrackerHandler<TwitterTracker>();
+                Trackers[ITracker.TrackerType.Youtube] = new TrackerHandler<YoutubeTracker>();
+                Trackers[ITracker.TrackerType.Reddit] = new TrackerHandler<RedditTracker>();
+                Trackers[ITracker.TrackerType.News] = new TrackerHandler<NewsTracker>();
+                Trackers[ITracker.TrackerType.WoW] = new TrackerHandler<WoWTracker>();
+                Trackers[ITracker.TrackerType.WoWGuild] = new TrackerHandler<WoWGuildTracker>();
 
                 foreach (var tracker in Trackers)
                 {
-                    Task.Run(() => tracker.Value.postInitialisation());
+                    Task.Run(() => tracker.Value.PostInitialisation());
                 }
 
                 init = true;

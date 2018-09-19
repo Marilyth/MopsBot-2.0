@@ -6,6 +6,10 @@ using System.Text;
 using OxyPlot;
 using OxyPlot.Axes;
 using System.Threading.Tasks;
+using MongoDB;
+using MongoDB.Driver;
+using MongoDB.Bson.Serialization.Options;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace MopsBot.Data
 {
@@ -151,8 +155,11 @@ namespace MopsBot.Data
     {
         private PlotModel viewerChart;
         private List<OxyPlot.Series.LineSeries> lineSeries;
+        private static string COLLECTIONNAME = "TwitchTracker";
         public List<KeyValuePair<string, double>> PlotPoints;
         public int CurX;
+        
+        [BsonId]
         public string ID;
 
         public Plot(string name, string xName = "x", string yName = "y", bool keepTrack = false)
@@ -166,7 +173,11 @@ namespace MopsBot.Data
             }
         }
 
-        private void initPlot(string xAxis, string yAxis)
+        public Plot(){
+            initPlot();
+        }
+
+        private void initPlot(string xAxis = "Time in minutes", string yAxis = "Viewers")
         {
             viewerChart = new PlotModel();
             viewerChart.TextColor = OxyColor.FromRgb(175, 175, 175);

@@ -41,7 +41,7 @@ namespace MopsBot.Data.Tracker
             catch (Exception)
             {
                 Dispose();
-                throw new Exception($"Person `{Name}` could not be found on Twitch!");
+                throw new Exception($"Streamer {TrackerUrl()} could not be found on Twitch!");
             }
         }
 
@@ -54,7 +54,7 @@ namespace MopsBot.Data.Tracker
                 {
                     if (datetime.AddMinutes(30) <= DateTime.UtcNow){
                         TrackedClips.Remove(datetime);
-                        await StaticBase.Trackers["twitchclips"].UpdateDBAsync(this);
+                        await StaticBase.Trackers[TrackerType.TwitchClips].UpdateDBAsync(this);
                     }
                 }
 
@@ -119,7 +119,7 @@ namespace MopsBot.Data.Tracker
                             clips.clips.Add(clip);
                         }
                         
-                        await StaticBase.Trackers["twitchclips"].UpdateDBAsync(this);
+                        await StaticBase.Trackers[TrackerType.TwitchClips].UpdateDBAsync(this);
                     }
                     if (!tmpResult._cursor.Equals(""))
                     {

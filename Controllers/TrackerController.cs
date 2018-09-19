@@ -49,14 +49,14 @@ namespace MopsBot.Api.Controllers
 
         }
 
-        [HttpGet()]
+        /*[HttpGet()]
         public IActionResult GetTracks()
         {
             Dictionary<string, string[]> parameters = HttpContext.Request.Query.ToDictionary(x => x.Key, x => x.Value.ToArray());
             bool allTypes = !parameters.ContainsKey("type");
             bool allChannels = !parameters.ContainsKey("channel");
 
-            Dictionary<string, TrackerWrapper> allTrackers = StaticBase.Trackers;
+            Dictionary<ITracker.TrackerType, TrackerWrapper> allTrackers = StaticBase.Trackers;
             HashSet<ITracker> allResults = new HashSet<ITracker>();
 
             allTrackers = allTrackers.
@@ -73,7 +73,7 @@ namespace MopsBot.Api.Controllers
                 Where(z => allChannels || parameters["channel"].Contains(z.ToString()))));
 
             return new ObjectResult(JsonConvert.SerializeObject(result, Formatting.Indented));
-        }
+        }*/
 
         [HttpGet("{channel}/{type}")]
         public IActionResult GetTracks(ulong channel, string type)
@@ -107,7 +107,7 @@ namespace MopsBot.Api.Controllers
             return new ObjectResult(result);
         }
 
-        [HttpGet("add/{token}/{channel}/{type}/{name}/{notification}")]
+        /*[HttpGet("add/{token}/{channel}/{type}/{name}/{notification}")]
         public IActionResult AddNewTracker(string token, ulong channel, string type, string name, string notification)
         {
             if (token.Equals(Program.Config["MopsAPI"]))
@@ -124,9 +124,9 @@ namespace MopsBot.Api.Controllers
                 return new ObjectResult("Success");
             }
             return new ObjectResult("Wrong token");
-        }
+        }*/
 
-        [HttpGet("remove/{token}/{channel}/{type}/{name}")]
+        /*[HttpGet("remove/{token}/{channel}/{type}/{name}")]
         public IActionResult RemoveTracker(string token, ulong channel, string type, string name)
         {
             if (token.Equals(Program.Config["MopsAPI"]))
@@ -143,6 +143,6 @@ namespace MopsBot.Api.Controllers
                 }
             }
             return new ObjectResult("Wrong token");
-        }
+        }*/
     }
 }
