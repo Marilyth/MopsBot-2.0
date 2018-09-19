@@ -98,6 +98,7 @@ namespace MopsBot.Data.Tracker
                             IsOnline = false;
                             Console.WriteLine("\n" + $"{DateTime.Now} {Name} went Offline");
                             ViewerGraph.Dispose();
+                            ViewerGraph = null;
                             ToUpdate = new Dictionary<ulong, ulong>();
 
                             foreach (var channelMessage in ToUpdate)
@@ -235,7 +236,7 @@ namespace MopsBot.Data.Tracker
         {
             Dispose(true);
             GC.SuppressFinalize(this);
-            ViewerGraph.RemovePlot();
+            ViewerGraph.Dispose();
             ViewerGraph = null;
         }
 
