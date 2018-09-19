@@ -43,8 +43,6 @@ namespace MopsBot
             client.MessageReceived += Client_MessageReceived;
             client.MessageReceived += HandleCommand;
             client.UserJoined += Client_UserJoined;
-            client.JoinedGuild += GuildCountChanged;
-            client.LeftGuild += GuildCountChanged;
         }
 
         /// <summary>
@@ -72,17 +70,6 @@ namespace MopsBot
                 $"\n\nBevor Du vollen Zugriff auf den Server hast, möchten wir Dich auf die Regeln des Servers hinweisen, die Du hier findest:" +
                 $" {User.Guild.GetTextChannel(457616881520738334).Mention}\nDort kannst Du dich auch freischalten, sobald Du die Regeln gelesen hast, und mit ihnen einverstanden bist." +
                 $"\n\nHave a very mopsig day\nDein heimlicher Verehrer Mops");
-        }
-
-        /// <summary>
-        /// Called whenever a guild has been joined or left
-        /// 
-        /// Updates the activity showing the number of guilds Mops is in
-        /// </summary>
-        /// <param name="guild">The guild joined or left</param>
-        private async Task GuildCountChanged(SocketGuild guild)
-        {
-            await StaticBase.UpdateGameAsync();
         }
 
         /// <summary>

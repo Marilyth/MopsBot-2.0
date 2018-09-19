@@ -241,7 +241,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task trackClips(string streamerName, [Remainder]string notificationMessage = "New trending clip found!")
             {
-                await Trackers[ITracker.TrackerType.TwitchClips].AddTrackerAsync(streamerName, Context.Channel.Id, notificationMessage);
+                await Trackers[ITracker.TrackerType.TwitchClip].AddTrackerAsync(streamerName, Context.Channel.Id, notificationMessage);
 
                 await ReplyAsync("Keeping track of " + streamerName + "'s top clips above **2** views every 30 minutes, from now on!\nUse the `SetViewThreshold` subcommand to change the threshold.");
             }
@@ -251,18 +251,18 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task unTrackStreamer(string streamerName)
             {
-                if(await Trackers[ITracker.TrackerType.TwitchClips].TryRemoveTrackerAsync(streamerName, Context.Channel.Id))
+                if(await Trackers[ITracker.TrackerType.TwitchClip].TryRemoveTrackerAsync(streamerName, Context.Channel.Id))
                     await ReplyAsync("Stopped keeping track of " + streamerName + "'s streams!");
                 else
                     await ReplyAsync($"Could not find tracker for `{streamerName}`\n"+
-                                     $"Currently tracked Streamers are:", embed:StaticBase.Trackers[ITracker.TrackerType.TwitchClips].GetTrackersEmbed(Context.Channel.Id));
+                                     $"Currently tracked Streamers are:", embed:StaticBase.Trackers[ITracker.TrackerType.TwitchClip].GetTrackersEmbed(Context.Channel.Id));
             }
 
             [Command("GetTrackers")]
             [Summary("Returns the streamers that are tracked in the current channel.")]
             public async Task getTrackers()
             {
-                await ReplyAsync("Following streamers are currently being tracked:", embed:StaticBase.Trackers[ITracker.TrackerType.TwitchClips].GetTrackersEmbed(Context.Channel.Id));
+                await ReplyAsync("Following streamers are currently being tracked:", embed:StaticBase.Trackers[ITracker.TrackerType.TwitchClip].GetTrackersEmbed(Context.Channel.Id));
             }
 
             [Command("SetNotification")]
@@ -270,12 +270,12 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task SetNotification(string streamer, [Remainder]string notification)
             {
-                if(await StaticBase.Trackers[ITracker.TrackerType.TwitchClips].TrySetNotificationAsync(streamer, Context.Channel.Id, notification)){
+                if(await StaticBase.Trackers[ITracker.TrackerType.TwitchClip].TrySetNotificationAsync(streamer, Context.Channel.Id, notification)){
                     await ReplyAsync($"Changed notification for `{streamer}` to `{notification}`");
                 }
                 else
                     await ReplyAsync($"Could not find tracker for `{streamer}`\n"+
-                                     $"Currently tracked streamers are:", embed:StaticBase.Trackers[ITracker.TrackerType.TwitchClips].GetTrackersEmbed(Context.Channel.Id));
+                                     $"Currently tracked streamers are:", embed:StaticBase.Trackers[ITracker.TrackerType.TwitchClip].GetTrackersEmbed(Context.Channel.Id));
             }
 
             [Command("SetViewThreshold")]
@@ -283,15 +283,15 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task SetViewThreshold(string streamer, uint threshold)
             {
-                var tracker = (TwitchClipTracker)StaticBase.Trackers[ITracker.TrackerType.TwitchClips].GetTracker(Context.Channel.Id, streamer);
+                var tracker = (TwitchClipTracker)StaticBase.Trackers[ITracker.TrackerType.TwitchClip].GetTracker(Context.Channel.Id, streamer);
                 if(tracker != null){
                     tracker.ViewThreshold = threshold;
-                    await StaticBase.Trackers[ITracker.TrackerType.TwitchClips].UpdateDBAsync(tracker);
+                    await StaticBase.Trackers[ITracker.TrackerType.TwitchClip].UpdateDBAsync(tracker);
                     await ReplyAsync($"Will only notify about clips equal or above **{threshold}** views for `{streamer}` now.");
                 }
                 else
                     await ReplyAsync($"Could not find tracker for `{streamer}`\n"+
-                                     $"Currently tracked streamers are:", embed:StaticBase.Trackers[ITracker.TrackerType.TwitchClips].GetTrackersEmbed(Context.Channel.Id));
+                                     $"Currently tracked streamers are:", embed:StaticBase.Trackers[ITracker.TrackerType.TwitchClip].GetTrackersEmbed(Context.Channel.Id));
             }
         }
 

@@ -31,7 +31,7 @@ namespace MopsBot
 
         [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
         public static Dictionary<ulong, string> GuildPrefix;
-        
+
         [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
         public static Dictionary<ulong, Dictionary<string, string>> CustomCommands;
         public static ReactionGiveaway ReactGiveaways;
@@ -68,7 +68,7 @@ namespace MopsBot
                 TweetinviEvents.QueryBeforeExecute += Data.Tracker.TwitterTracker.QueryBeforeExecute;
 
                 gfy = new Gfycat.GfycatClient(Program.Config["GfyID"], Program.Config["GfySecret"]);
-                
+
                 NewsClient = new NewsApiClient(Program.Config["NewsAPI"]);
 
                 WoWTracker.WoWClient = new WowExplorer(Region.EU, Locale.en_GB, Program.Config["WoWKey"]);
@@ -86,15 +86,15 @@ namespace MopsBot
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine("\n" +  e.Message + e.StackTrace);
+                        Console.WriteLine("\n" + e.Message + e.StackTrace);
                     }
                 }
-                
+
                 Trackers = new Dictionary<ITracker.TrackerType, Data.TrackerWrapper>();
                 Trackers[ITracker.TrackerType.Osu] = new TrackerHandler<OsuTracker>();
                 Trackers[ITracker.TrackerType.Overwatch] = new TrackerHandler<OverwatchTracker>();
                 Trackers[ITracker.TrackerType.Twitch] = new TrackerHandler<TwitchTracker>();
-                Trackers[ITracker.TrackerType.TwitchClips] = new TrackerHandler<TwitchClipTracker>();
+                Trackers[ITracker.TrackerType.TwitchClip] = new TrackerHandler<TwitchClipTracker>();
                 Trackers[ITracker.TrackerType.Twitter] = new TrackerHandler<TwitterTracker>();
                 Trackers[ITracker.TrackerType.Youtube] = new TrackerHandler<YoutubeTracker>();
                 Trackers[ITracker.TrackerType.Reddit] = new TrackerHandler<RedditTracker>();
@@ -142,9 +142,36 @@ namespace MopsBot
         /// Updates the guild count, by displaying it as an activity.
         /// </summary>
         /// <returns>A Task that sets the activity</returns>
-        public static async Task UpdateGameAsync()
+        public static async Task UpdateServerCount()
         {
             await Program.Client.SetActivityAsync(new Game($"{Program.Client.Guilds.Count} servers", ActivityType.Watching));
+        }
+
+        /// <summary>
+        /// Displays the tracker counts one after another.
+        /// </summary>
+        /// <returns>A Task that sets the activity</returns>
+        public static async Task UpdateStatusAsync()
+        {
+            int status = 11;
+            while (true)
+            {
+                try
+                {
+                    ITracker.TrackerType type = (ITracker.TrackerType)status++;
+                    var trackerCount = Trackers[type].GetTrackers().Count;
+                    await Program.Client.SetActivityAsync(new Game($"{trackerCount} {type.ToString()} Trackers", ActivityType.Watching));
+                }
+                catch
+                {
+                    //Trackers were not initialised yet, or status exceeded trackertypes
+                    //Show servers instead
+                    status = 0;
+                    await UpdateServerCount();
+                }
+
+                await Task.Delay(30000);
+            }
         }
     }
 }
