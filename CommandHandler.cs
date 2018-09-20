@@ -131,12 +131,49 @@ namespace MopsBot
         /// <param name="msg">The message recieved</param>
         public async Task getCommands(SocketMessage msg, string prefix)
         {
-            var output = "";
+            EmbedBuilder e = new EmbedBuilder();
+            e.WithDescription("For more information regarding a **specific command**, please use **?<command>**\n" +
+                              "To see the commands of a **submodule\\***, please use **help <submodule>**.")
+             .WithColor(Discord.Color.Blue)
+             .WithAuthor(async x => {
+                 x.IconUrl = (await ((IDiscordClient)Program.Client).GetGuildAsync(435919579005321237)).IconUrl;
+                 x.Name = "Click to join the Support Server!";
+                 x.Url = "https://discord.gg/wZFE2Zs";
+             });
+             
             string message = msg.Content.Replace("?", "").ToLower();
+            Embed embed = getHelpEmbed(message, prefix, e).Build();
+            
+            if(embed != null)
+                await msg.Channel.SendMessageAsync("", embed: embed);
+        }
 
+
+        /// <summary>
+        /// Creates the embed that is sent whenever ?command is called
+        /// </summary>
+        /// <param name="command">The command to create the embed for</param>
+        /// <param name="usage">The usage example to include in the embed</param>
+        /// <param name="description">The desciption to include in the embed</param>
+        private EmbedBuilder createHelpEmbed(string command, string usage, string description, EmbedBuilder e){
+            //EmbedBuilder e = new EmbedBuilder();
+            e.Title = command;
+            e.ImageUrl = GetCommandHelpImage(command);
+
+            e.AddField("Example usage", usage);
+            e.Description = description;
+
+            return e;
+        }
+
+        public EmbedBuilder getHelpEmbed(string message, string prefix, EmbedBuilder e = null){
+            if(e is null){
+                e = new EmbedBuilder();
+                e.Color = new Color(0x0099ff);
+            }
+
+            var output = "";
             string commandName = message, moduleName = message;
-            Embed embed = null;
-
             string[] tempMessages;
             if ((tempMessages = message.Split(' ')).Length > 1)
             {
@@ -153,7 +190,7 @@ namespace MopsBot
                 }
 
                 if(curCommand.Summary.Equals("")){
-                    return;
+                    throw new Exception("Command not found");
                 }
                 output += $"`{prefix}{(curCommand.Module.IsSubmodule ? curCommand.Module.Name + " " + curCommand.Name : curCommand.Name)}";
                 foreach (Discord.Commands.ParameterInfo p in curCommand.Parameters)
@@ -162,7 +199,7 @@ namespace MopsBot
                 }
                 output += "`";
 
-                embed = createHelpEmbed($"{(curCommand.Module.IsSubmodule ? curCommand.Module.Name + " " + curCommand.Name : curCommand.Name)}", output, curCommand.Summary);
+                e = createHelpEmbed($"{(curCommand.Module.IsSubmodule ? curCommand.Module.Name + " " + curCommand.Name : curCommand.Name)}", output, curCommand.Summary, e);
                 // if(curCommand.Parameters.Any(x=> x.IsOptional)){
                 //     output +="\n\n**Default Values**:";
                 //     foreach(var p in curCommand.Parameters.Where(x=>x.IsOptional))
@@ -172,38 +209,17 @@ namespace MopsBot
             }
             else
             {
-                ModuleInfo curModule = commands.Modules.First(x => x.Name.ToLower().Equals(moduleName));
+                var module = Program.Handler.commands.Modules.First(x => x.Name.ToLower().Equals(moduleName.ToLower()));
+                
+                string moduleInformation = "";
+                moduleInformation += string.Join(", ", module.Commands.Where(x => !x.Preconditions.OfType<HideAttribute>().Any()).Select(x => $"[{x.Name}]({CommandHandler.GetCommandHelpImage($"{module.Name} {x.Name}")})"));
+                moduleInformation += "\n";
 
-                output += $"**{curModule.Name}**:";
+                moduleInformation += string.Join(", ", module.Submodules.Select(x => $"{x.Name}\\*"));
 
-                foreach (CommandInfo curCommand in curModule.Commands)
-                    output += $" `{curCommand.Name}`";
-                foreach (ModuleInfo curMod in curModule.Submodules)
-                    output += $" `{curMod.Name}*`";
+                e.AddField($"**{module.Name}**", moduleInformation);
             }
-
-            if(embed == null)
-                await msg.Channel.SendMessageAsync(output);
-            else
-                await msg.Channel.SendMessageAsync("", embed: embed);
-        }
-
-        /// <summary>
-        /// Creates the embed that is sent whenever ?command is called
-        /// </summary>
-        /// <param name="command">The command to create the embed for</param>
-        /// <param name="usage">The usage example to include in the embed</param>
-        /// <param name="description">The desciption to include in the embed</param>
-        private Embed createHelpEmbed(string command, string usage, string description){
-            EmbedBuilder e = new EmbedBuilder();
-            e.Color = new Color(0x0099ff);
-            e.Title = command;
-            e.ImageUrl = GetCommandHelpImage(command);
-
-            e.AddField("Example usage", usage);
-            e.Description = description;
-
-            return e.Build();
+            return e;
         }
 
         public static string GetCommandHelpImage(string command){

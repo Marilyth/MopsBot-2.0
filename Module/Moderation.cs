@@ -238,7 +238,7 @@ namespace MopsBot.Module
         [Command("help")]
         [Alias("commands")]
         [Hide]
-        public async Task help(string helpModule = null)
+        public async Task help([Remainder]string helpModule = null)
         {
             EmbedBuilder e = new EmbedBuilder();
             e.WithDescription("For more information regarding a **specific command**, please use **?<command>**\n" +
@@ -273,15 +273,17 @@ namespace MopsBot.Module
             }
             else
             {
-                var module = Program.Handler.commands.Modules.First(x => x.Name.ToLower().Equals(helpModule.ToLower()));
+                // var module = Program.Handler.commands.Modules.First(x => x.Name.ToLower().Equals(helpModule.ToLower()));
                 
-                string moduleInformation = "";
-                moduleInformation += string.Join(", ", module.Commands.Where(x => !x.Preconditions.OfType<HideAttribute>().Any()).Select(x => $"[{x.Name}]({CommandHandler.GetCommandHelpImage($"{module.Name} {x.Name}")})"));
-                moduleInformation += "\n";
+                // string moduleInformation = "";
+                // moduleInformation += string.Join(", ", module.Commands.Where(x => !x.Preconditions.OfType<HideAttribute>().Any()).Select(x => $"[{x.Name}]({CommandHandler.GetCommandHelpImage($"{module.Name} {x.Name}")})"));
+                // moduleInformation += "\n";
 
-                moduleInformation += string.Join(", ", module.Submodules.Select(x => $"{x.Name}\\*"));
+                // moduleInformation += string.Join(", ", module.Submodules.Select(x => $"{x.Name}\\*"));
 
-                e.AddField($"**{module.Name}**", moduleInformation);
+                // e.AddField($"**{module.Name}**", moduleInformation);
+                var prefix = GuildPrefix.ContainsKey(Context.Guild.Id) ? GuildPrefix[Context.Guild.Id] : "!";
+                e = Program.Handler.getHelpEmbed(helpModule.ToLower(), prefix, e);
             }
 
             await ReplyAsync("", embed: e.Build());
