@@ -59,7 +59,7 @@ namespace MopsBot.Module
                     var nonMainNotification = twitter.ChannelMessages[Context.Channel.Id].Split("|")[1];
                     nonMainNotification = $"{notification}|{nonMainNotification}";
                     await StaticBase.Trackers[ITracker.TrackerType.Twitter].TrySetNotificationAsync(TwitterName, Context.Channel.Id, nonMainNotification);
-                    await ReplyAsync($"Set notification for retweets and replies, for `{TwitterName}`, to {notification}!");
+                    await ReplyAsync($"Set notification for main tweets, for `{TwitterName}`, to {notification}!");
                 } catch {
                     await ReplyAsync($"Could not find tracker for `{TwitterName}`\n"+
                                      $"Currently tracked Twitter Users are:", embed:StaticBase.Trackers[ITracker.TrackerType.Twitter].GetTrackersEmbed(Context.Channel.Id));
