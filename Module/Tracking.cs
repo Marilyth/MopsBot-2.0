@@ -21,14 +21,13 @@ namespace MopsBot.Module
         public class Twitter : ModuleBase
         {
             [Command("Track")]
-            [Summary("Keeps track of the specified TwitterUser, in the Channel you are calling this command right now.\nRequires Manage channel permissions.\n"+
-                      "You can specify the tweet notification like so: Normal tweet notification|Retweet or answer notification")]
+            [Summary("Keeps track of the specified TwitterUser, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task trackTwitter(string twitterUser, [Remainder]string tweetNotification = "~Tweet Tweet~|~Tweet Tweet~")
+            public async Task trackTwitter(string twitterUser, [Remainder]string tweetNotification = "~Tweet Tweet~")
             {
-                await Trackers[ITracker.TrackerType.Twitter].AddTrackerAsync(twitterUser, Context.Channel.Id, tweetNotification.Contains('|') ? tweetNotification : tweetNotification + "|" + tweetNotification);
+                await Trackers[ITracker.TrackerType.Twitter].AddTrackerAsync(twitterUser, Context.Channel.Id, tweetNotification + "|" + tweetNotification);
 
-                await ReplyAsync("Keeping track of " + twitterUser + "'s tweets, from now on!");
+                await ReplyAsync("Keeping track of " + twitterUser + "'s tweets, replies and retweets, from now on!\nTo disable replies and retweets, please use the `Twitter DisableNonMain` subcommand!");
             }
 
             [Command("UnTrack")]
@@ -51,20 +50,54 @@ namespace MopsBot.Module
             }
 
             [Command("SetNotification")]
-            [Summary("Sets the notification text that is used each time a new Tweet is found.\n"+
-                     "To differentiate between main tweets and other tweets, use `<Main Tweet Notification>|<Other Tweet Notification>`\n"+
-                     "To disable a kind of tweet, set notification to **NONE**")]
+            [Summary("Sets the notification text that is used each time a new Main-Tweet is found.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(string twitterUser, [Remainder]string notification)
+            public async Task SetNotification(string TwitterName, [Remainder]string notification)
             {
-                notification = notification.Contains("|") ? notification : notification + "|" + notification;
-
-                if(await StaticBase.Trackers[ITracker.TrackerType.Twitter].TrySetNotificationAsync(twitterUser, Context.Channel.Id, notification)){
-                    await ReplyAsync($"Changed notification for `{twitterUser}` to `{notification}`");
-                }
-                else
-                    await ReplyAsync($"Could not find tracker for `{twitterUser}`\n"+
+                var twitter = StaticBase.Trackers[ITracker.TrackerType.Twitter].GetTracker(Context.Channel.Id, TwitterName);
+                try{
+                    var nonMainNotification = twitter.ChannelMessages[Context.Channel.Id].Split("|")[1];
+                    nonMainNotification = $"{notification}|{nonMainNotification}";
+                    await StaticBase.Trackers[ITracker.TrackerType.Twitter].TrySetNotificationAsync(TwitterName, Context.Channel.Id, nonMainNotification);
+                    await ReplyAsync($"Set notification for retweets and replies, for `{TwitterName}`, to {notification}!");
+                } catch {
+                    await ReplyAsync($"Could not find tracker for `{TwitterName}`\n"+
                                      $"Currently tracked Twitter Users are:", embed:StaticBase.Trackers[ITracker.TrackerType.Twitter].GetTrackersEmbed(Context.Channel.Id));
+                }
+            }
+
+            [Command("SetNonMainNotification")]
+            [Summary("Sets the notification text that is used each time a new retweet or reply is found.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task SetNonMainNotification(string TwitterName, [Remainder]string notification = "~Tweet Tweet~")
+            {
+                var twitter = StaticBase.Trackers[ITracker.TrackerType.Twitter].GetTracker(Context.Channel.Id, TwitterName);
+                try{
+                    var mainNotification = twitter.ChannelMessages[Context.Channel.Id].Split("|")[0];
+                    mainNotification += $"|{notification}";
+                    await StaticBase.Trackers[ITracker.TrackerType.Twitter].TrySetNotificationAsync(TwitterName, Context.Channel.Id, mainNotification);
+                    await ReplyAsync($"Set notification for retweets and replies, for `{TwitterName}`, to {notification}!");
+                } catch {
+                    await ReplyAsync($"Could not find tracker for `{TwitterName}`\n"+
+                                     $"Currently tracked Twitter Users are:", embed:StaticBase.Trackers[ITracker.TrackerType.Twitter].GetTrackersEmbed(Context.Channel.Id));
+                }
+            }
+
+            [Command("DisableNonMain")]
+            [Alias("DisableReplies", "DisableRetweets")]
+            [Summary("Disables tracking for the retweets and replies of the specified Twitter account.")]
+            public async Task DisableRetweets(string TwitterName)
+            {
+                var twitter = StaticBase.Trackers[ITracker.TrackerType.Twitter].GetTracker(Context.Channel.Id, TwitterName);
+                try{
+                    var notification = twitter.ChannelMessages[Context.Channel.Id].Split("|")[0];
+                    notification += "|NONE";
+                    await StaticBase.Trackers[ITracker.TrackerType.Twitter].TrySetNotificationAsync(TwitterName, Context.Channel.Id, notification);
+                    await ReplyAsync($"Disabled retweets and replies for `{TwitterName}`!\nTo reenable retweets and replies, please provide a notification via the `Twitter SetNonMainNotification` subcommand!");
+                } catch {
+                    await ReplyAsync($"Could not find tracker for `{TwitterName}`\n"+
+                                     $"Currently tracked Twitter Users are:", embed:StaticBase.Trackers[ITracker.TrackerType.Twitter].GetTrackersEmbed(Context.Channel.Id));
+                }
             }
         }
 
