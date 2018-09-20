@@ -243,7 +243,11 @@ namespace MopsBot.Module
             EmbedBuilder e = new EmbedBuilder();
             e.WithDescription("For more information regarding a **specific command**, please use **?<command>**\n" +
                               "To see the commands of a **submodule\\***, please use **help <submodule>**.")
-             .WithColor(Discord.Color.Blue);
+             .WithColor(Discord.Color.Blue)
+             .WithFooter(async x => {
+                 x.IconUrl = (await Context.Client.GetGuildAsync(435919579005321237)).IconUrl;
+                 x.Text = $"Support Server: https://discord.gg/wZFE2Zs";
+             });
 
             if (helpModule == null)
             {
