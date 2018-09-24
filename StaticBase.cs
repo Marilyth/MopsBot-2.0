@@ -153,6 +153,9 @@ namespace MopsBot
         /// <returns>A Task that sets the activity</returns>
         public static async Task UpdateStatusAsync()
         {
+            await Program.Client.SetActivityAsync(new Game("Currently Restarting!", ActivityType.Playing));
+            await Task.Delay(30000);
+
             int status = 11;
             while (true)
             {
