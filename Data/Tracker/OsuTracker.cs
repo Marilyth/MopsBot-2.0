@@ -143,16 +143,16 @@ namespace MopsBot.Data.Tracker
             switch (mode)
             {
                 case "m=0":
-                    e.ThumbnailUrl = "https://w.ppy.sh/1/19/Mode-osu.png";
+                    e.ThumbnailUrl = "https://lemmmy.pw/osusig/img/osu.png";
                     break;
                 case "m=1":
-                    e.ThumbnailUrl = "http://w.ppy.sh/4/40/Mode-taiko.png";
+                    e.ThumbnailUrl = "https://lemmmy.pw/osusig/img/taiko.png";
                     break;
                 case "m=2":
-                    e.ThumbnailUrl = "https://w.ppy.sh/2/26/Mode-ctb.png";
+                    e.ThumbnailUrl = "https://lemmmy.pw/osusig/img/ctb.png";
                     break;
                 case "m=3":
-                    e.ThumbnailUrl = "http://w.ppy.sh/5/51/Mode-mania.png";
+                    e.ThumbnailUrl = "https://lemmmy.pw/osusig/img/mania.png";
                     break;
             }
             e.ImageUrl = $"https://b.ppy.sh/thumb/{beatmapInformation.beatmapset_id}l.jpg";
