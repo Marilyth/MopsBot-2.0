@@ -154,7 +154,7 @@ namespace MopsBot
         public static async Task UpdateStatusAsync()
         {
             await Program.Client.SetActivityAsync(new Game("Currently Restarting!", ActivityType.Playing));
-            await Task.Delay(30000);
+            await Task.Delay(60000);
 
             int status = 11;
             while (true)
