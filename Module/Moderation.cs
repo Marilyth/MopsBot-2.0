@@ -153,7 +153,7 @@ namespace MopsBot.Module
                         handler.Name = null;
                     }
 
-                    handler.ChannelId = handler.ChannelId == Context.Channel.Id ? handler.ChannelId : Context.Channel.Id;
+                    handler.ChannelId = Context.Channel.Id;
                     handler.Notification = WelcomeMessage;
                     await Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").ReplaceOneAsync(x => x.GuildId == Context.Guild.Id, StaticBase.WelcomeMessages[Context.Guild.Id]);
                     await ReplyAsync($"Replaced welcome message with:\n**{WelcomeMessage}**.");
@@ -184,10 +184,11 @@ namespace MopsBot.Module
                     if(!handler.IsWebhook || handler.ChannelId != Context.Channel.Id){
                         await handler.RemoveWebhookAsync();
 
-                        var webhook = await ((SocketTextChannel)Context.Channel).CreateWebhookAsync($"{Name} - Welcome Messages");
+                        var webhook = await ((SocketTextChannel)Context.Channel).CreateWebhookAsync($"{Name ?? "Mops"} - Welcome Messages");
                         handler.WebhookId = webhook.Id;
                         handler.WebhookToken = webhook.Token;
                         handler.IsWebhook = true;
+                        handler.ChannelId = Context.Channel.Id;
                     }
                     
                     handler.Name = Name;
