@@ -66,6 +66,7 @@ namespace MopsBot.Data.Entities
                 Client = Client ?? new Discord.Webhook.DiscordWebhookClient(WebhookId, WebhookToken);
                 await Client.DeleteWebhookAsync();
                 Client.Dispose();
+                Client = null;
             }
         }
     }
