@@ -11,6 +11,7 @@ using System.Diagnostics;
 using MopsBot.Module.Preconditions;
 using System.Text.RegularExpressions;
 using MopsBot.Data.Tracker;
+using MongoDB.Driver;
 using static MopsBot.StaticBase;
 
 namespace MopsBot.Module
@@ -116,9 +117,101 @@ namespace MopsBot.Module
                 GuildPrefix.Add(Context.Guild.Id, prefix);
             }
 
-            savePrefix();
+            SavePrefix();
 
             await ReplyAsync($"Changed prefix from `{oldPrefix}` to `{prefix}`");
+        }
+
+        [Group("WelcomeMessage")]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
+        public class WelcomeMessage : ModuleBase
+        {
+            [Command("Create")]
+            [Summary("Makes Mops greet people, in the channel you are calling this command in.\n" +
+                     "Name of user: {User.Username}\n" +
+                     "Mention of user: {User.Mention}")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task WelcomeCreate([Remainder] string WelcomeMessage)
+            {
+                if (!StaticBase.WelcomeMessages.ContainsKey(Context.Guild.Id))
+                {
+                    StaticBase.WelcomeMessages.Add(Context.Guild.Id, new Data.Entities.WelcomeMessage(Context.Guild.Id, Context.Channel.Id, WelcomeMessage));
+                    await Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").InsertOneAsync(StaticBase.WelcomeMessages[Context.Guild.Id]);
+                    await ReplyAsync($"Created welcome message:\n**{WelcomeMessage}**.");
+                }
+
+                else
+                {
+                    var handler = StaticBase.WelcomeMessages[Context.Guild.Id];
+
+                    if(handler.IsWebhook){
+                        handler.IsWebhook = false;
+                        await handler.RemoveWebhookAsync();
+                        handler.WebhookId = 0;
+                        handler.WebhookToken = null;
+                        handler.AvatarUrl = null;
+                        handler.Name = null;
+                    }
+
+                    handler.ChannelId = handler.ChannelId == Context.Channel.Id ? handler.ChannelId : Context.Channel.Id;
+                    handler.Notification = WelcomeMessage;
+                    await Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").ReplaceOneAsync(x => x.GuildId == Context.Guild.Id, StaticBase.WelcomeMessages[Context.Guild.Id]);
+                    await ReplyAsync($"Replaced welcome message with:\n**{WelcomeMessage}**.");
+                }
+            }
+
+            [Command("CreateWebhook")]
+            [Summary("Makes Mops greet people, in the channel you are calling this command in.\n" +
+                     "Additionally, avatar and name of the notification account can be set."+
+                     "Name of user: {User.Username}\n" +
+                     "Mention of user: {User.Mention}")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [RequireBotPermission(ChannelPermission.ManageWebhooks)]
+            public async Task WelcomeCreateWebhook(string WelcomeMessage, string Name = null, string AvatarUrl = null)
+            {
+                if (!StaticBase.WelcomeMessages.ContainsKey(Context.Guild.Id))
+                {
+                    var webhook = await ((SocketTextChannel)Context.Channel).CreateWebhookAsync($"{Name ?? "Mops"} - Welcome Messages");
+                    StaticBase.WelcomeMessages.Add(Context.Guild.Id, new Data.Entities.WelcomeMessage(Context.Guild.Id, Context.Channel.Id, WelcomeMessage, webhook.Id, webhook.Token, Name, AvatarUrl));
+                    await Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").InsertOneAsync(StaticBase.WelcomeMessages[Context.Guild.Id]);
+                    await ReplyAsync($"Created welcome message:\n**{WelcomeMessage}**.");
+                }
+
+                else
+                {
+                    var handler = StaticBase.WelcomeMessages[Context.Guild.Id];
+                    
+                    if(!handler.IsWebhook || handler.ChannelId != Context.Channel.Id){
+                        await handler.RemoveWebhookAsync();
+
+                        var webhook = await ((SocketTextChannel)Context.Channel).CreateWebhookAsync($"{Name} - Welcome Messages");
+                        handler.WebhookId = webhook.Id;
+                        handler.WebhookToken = webhook.Token;
+                        handler.IsWebhook = true;
+                    }
+                    
+                    handler.Name = Name;
+                    handler.AvatarUrl = AvatarUrl;
+                    handler.Notification = WelcomeMessage;
+                    await Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").ReplaceOneAsync(x => x.GuildId == Context.Guild.Id, StaticBase.WelcomeMessages[Context.Guild.Id]);
+                    await ReplyAsync($"Replaced welcome message with:\n**{WelcomeMessage}**.");
+                }
+            }
+
+            [Command("Delete")]
+            [Summary("Stops Mops from sending welcome messages.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task WelcomeDelete()
+            {
+                if (StaticBase.WelcomeMessages.ContainsKey(Context.Guild.Id))
+                {
+                    await StaticBase.WelcomeMessages[Context.Guild.Id].RemoveWebhookAsync();
+
+                    StaticBase.WelcomeMessages.Remove(Context.Guild.Id);
+                    await Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").DeleteOneAsync(x => x.GuildId == Context.Guild.Id);
+                    await ReplyAsync($"Removed welcome message!");
+                }
+            }
         }
 
         [Command("CreateCommand")]
@@ -145,7 +238,7 @@ namespace MopsBot.Module
                 await ReplyAsync($"Replaced command **{command}**.");
             }
 
-            StaticBase.saveCommand();
+            StaticBase.SaveCommand();
         }
 
         [Command("RemoveCommand")]
@@ -160,7 +253,7 @@ namespace MopsBot.Module
                 else
                     StaticBase.CustomCommands[Context.Guild.Id].Remove(command);
 
-                StaticBase.saveCommand();
+                StaticBase.SaveCommand();
                 await ReplyAsync($"Removed command **{command}**.");
             }
             else
@@ -244,7 +337,8 @@ namespace MopsBot.Module
             e.WithDescription("For more information regarding a **specific command**, please use **?<command>**\n" +
                               "To see the commands of a **submodule\\***, please use **help <submodule>**.")
              .WithColor(Discord.Color.Blue)
-             .WithAuthor(async x => {
+             .WithAuthor(async x =>
+             {
                  x.IconUrl = (await Context.Client.GetGuildAsync(435919579005321237)).IconUrl;
                  x.Name = "Click to join the Support Server!";
                  x.Url = "https://discord.gg/wZFE2Zs";
@@ -274,7 +368,7 @@ namespace MopsBot.Module
             else
             {
                 // var module = Program.Handler.commands.Modules.First(x => x.Name.ToLower().Equals(helpModule.ToLower()));
-                
+
                 // string moduleInformation = "";
                 // moduleInformation += string.Join(", ", module.Commands.Where(x => !x.Preconditions.OfType<HideAttribute>().Any()).Select(x => $"[{x.Name}]({CommandHandler.GetCommandHelpImage($"{module.Name} {x.Name}")})"));
                 // moduleInformation += "\n";

@@ -31,6 +31,8 @@ namespace MopsBot
 
         [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
         public static Dictionary<ulong, string> GuildPrefix;
+        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
+        public static Dictionary<ulong, Data.Entities.WelcomeMessage> WelcomeMessages;
 
         [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
         public static Dictionary<ulong, Dictionary<string, string>> CustomCommands;
@@ -57,6 +59,7 @@ namespace MopsBot
                     ReactGiveaways = new ReactionGiveaway();
                     ReactRoleJoin = new ReactionRoleJoin();
                     Poll = new ReactionPoll();
+                    WelcomeMessages = Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").FindSync(x => true).ToEnumerable().ToDictionary(x => x.GuildId);
                 });
 
                 Auth.SetUserCredentials(Program.Config["TwitterKey"], Program.Config["TwitterSecret"],
@@ -115,7 +118,7 @@ namespace MopsBot
         /// <summary>
         /// Writes all guildprefixes into a file.
         /// </summary>
-        public static void savePrefix()
+        public static void SavePrefix()
         {
             using (StreamWriter write = new StreamWriter(new FileStream("mopsdata//guildprefixes.txt", FileMode.Create)))
             {
@@ -130,7 +133,7 @@ namespace MopsBot
         /// <summary>
         /// Writes all custom commands into a file.
         /// </summary>
-        public static void saveCommand()
+        public static void SaveCommand()
         {
             using (StreamWriter write = new StreamWriter(new FileStream("mopsdata//CustomCommands.json", FileMode.Create)))
             {
