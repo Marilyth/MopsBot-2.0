@@ -137,7 +137,7 @@ namespace MopsBot.Module
                 {
                     StaticBase.WelcomeMessages.Add(Context.Guild.Id, new Data.Entities.WelcomeMessage(Context.Guild.Id, Context.Channel.Id, WelcomeMessage));
                     await Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").InsertOneAsync(StaticBase.WelcomeMessages[Context.Guild.Id]);
-                    await ReplyAsync($"Created welcome message:\n**{WelcomeMessage}**.");
+                    await ReplyAsync($"Created welcome message:\n{WelcomeMessage}");
                 }
 
                 else
@@ -156,7 +156,7 @@ namespace MopsBot.Module
                     handler.ChannelId = Context.Channel.Id;
                     handler.Notification = WelcomeMessage;
                     await Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").ReplaceOneAsync(x => x.GuildId == Context.Guild.Id, StaticBase.WelcomeMessages[Context.Guild.Id]);
-                    await ReplyAsync($"Replaced welcome message with:\n**{WelcomeMessage}**.");
+                    await ReplyAsync($"Replaced welcome message with:\n{WelcomeMessage}");
                 }
             }
 
@@ -174,7 +174,7 @@ namespace MopsBot.Module
                     var webhook = await ((SocketTextChannel)Context.Channel).CreateWebhookAsync($"{Name ?? "Mops"} - Welcome Messages");
                     StaticBase.WelcomeMessages.Add(Context.Guild.Id, new Data.Entities.WelcomeMessage(Context.Guild.Id, Context.Channel.Id, WelcomeMessage, webhook.Id, webhook.Token, Name, AvatarUrl));
                     await Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").InsertOneAsync(StaticBase.WelcomeMessages[Context.Guild.Id]);
-                    await ReplyAsync($"Created welcome message:\n**{WelcomeMessage}**.");
+                    await ReplyAsync($"Created welcome message:\n{WelcomeMessage}");
                 }
 
                 else
@@ -195,7 +195,7 @@ namespace MopsBot.Module
                     handler.AvatarUrl = AvatarUrl;
                     handler.Notification = WelcomeMessage;
                     await Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").ReplaceOneAsync(x => x.GuildId == Context.Guild.Id, StaticBase.WelcomeMessages[Context.Guild.Id]);
-                    await ReplyAsync($"Replaced welcome message with:\n**{WelcomeMessage}**.");
+                    await ReplyAsync($"Replaced welcome message with:\n{WelcomeMessage}");
                 }
             }
 
