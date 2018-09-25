@@ -128,8 +128,8 @@ namespace MopsBot.Module
         {
             [Command("Create")]
             [Summary("Makes Mops greet people, in the channel you are calling this command in.\n" +
-                     "Name of user: {User.Username}\n" +
-                     "Mention of user: {User.Mention}")]
+                     "Name of user: **{User.Username}**\n" +
+                     "Mention of user: **{User.Mention}**")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task WelcomeCreate([Remainder] string WelcomeMessage)
             {
@@ -162,9 +162,9 @@ namespace MopsBot.Module
 
             [Command("CreateWebhook")]
             [Summary("Makes Mops greet people, in the channel you are calling this command in.\n" +
-                     "Additionally, avatar and name of the notification account can be set."+
-                     "Name of user: {User.Username}\n" +
-                     "Mention of user: {User.Mention}")]
+                     "Additionally, avatar and name of the notification account can be set.\n"+
+                     "Name of user: **{User.Username}**\n" +
+                     "Mention of user: **{User.Mention}**")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.ManageWebhooks)]
             public async Task WelcomeCreateWebhook(string WelcomeMessage, string Name = null, string AvatarUrl = null)
