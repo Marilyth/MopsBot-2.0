@@ -508,7 +508,7 @@ namespace MopsBot.Module
             [Command("GetStats")]
             [Summary("Gets all top 2kk stats of the specified player.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task GetStats(string name)
+            public async Task GetStats([Remainder]string name)
             {
                 await ReplyAsync("", embed: await OSRSTracker.GetStatEmbed(name));
             }

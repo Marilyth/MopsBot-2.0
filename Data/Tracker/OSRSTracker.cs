@@ -18,7 +18,7 @@ namespace MopsBot.Data.Tracker
     public class OSRSTracker : ITracker
     {
         private string channelThumbnailUrl, uploadPlaylistId;
-        private List<int[]> stats;
+        private List<long[]> stats;
 
         public OSRSTracker() : base(60000, ExistingTrackers * 2000)
         {
@@ -72,17 +72,17 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        private static async Task<List<int[]>> fetchStats(string name)
+        private static async Task<List<long[]>> fetchStats(string name)
         {
             string query = await MopsBot.Module.Information.ReadURLAsync($"https://secure.runescape.com/m=hiscore_oldschool/index_lite.ws?player={name}");
 
             var allStats = query.Split("\n").ToList();
-            List<int[]> statList = new List<int[]>();
+            List<long[]> statList = new List<long[]>();
             allStats.RemoveAt(allStats.Count - 1);
 
             foreach (var stat in allStats)
             {
-                statList.Add(stat.Split(",").Select(x => int.Parse(x)).ToArray());
+                statList.Add(stat.Split(",").Select(x => long.Parse(x)).ToArray());
             }
 
             return statList;
