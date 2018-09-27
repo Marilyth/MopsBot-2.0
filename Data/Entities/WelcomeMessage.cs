@@ -21,7 +21,7 @@ namespace MopsBot.Data.Entities
         public ulong WebhookId, ChannelId;
         private Discord.Webhook.DiscordWebhookClient Client;
 
-        public void SendWelcomeMessage(SocketGuildUser User)
+        public async Task SendWelcomeMessageAsync(SocketGuildUser User)
         {
             if (IsWebhook)
             {
@@ -30,12 +30,12 @@ namespace MopsBot.Data.Entities
                     Client = new Discord.Webhook.DiscordWebhookClient(WebhookId, WebhookToken);
                 }
 
-                Client.SendMessageAsync(Notification.Replace("{User.Mention}", User.Mention).Replace("{User.Username}", User.Username), username: Name, avatarUrl: AvatarUrl ?? Program.Client.CurrentUser.GetAvatarUrl());
+                await Client.SendMessageAsync(Notification.Replace("{User.Mention}", User.Mention).Replace("{User.Username}", User.Username), username: Name, avatarUrl: AvatarUrl ?? Program.Client.CurrentUser.GetAvatarUrl());
             }
 
             else
             {
-                ((ITextChannel)Program.Client.GetChannel(ChannelId)).SendMessageAsync(Notification.Replace("{User.Mention}", User.Mention).Replace("{User.Username}", User.Username));
+                await ((ITextChannel)Program.Client.GetChannel(ChannelId)).SendMessageAsync(Notification.Replace("{User.Mention}", User.Mention).Replace("{User.Username}", User.Username));
             }
         }
 
