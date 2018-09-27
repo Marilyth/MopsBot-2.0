@@ -480,6 +480,60 @@ namespace MopsBot.Module
             }
         }
 
+        [Group("OSRS")]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
+        public class OSRS : ModuleBase
+        {
+            [Command("Track")]
+            [Summary("Keeps track of the stats of the OSRS player.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task Track(string name, [Remainder]string notification = "")
+            {
+                await Trackers[ITracker.TrackerType.OSRS].AddTrackerAsync(name, Context.Channel.Id);
+                await ReplyAsync($"Keeping track of `{name}` stats after each playsession, from now on!");
+            }
+
+            [Command("UnTrack")]
+            [Summary("Stops tracking the player with the specified name.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task UnTrack([Remainder]string name)
+            {
+                if(await Trackers[ITracker.TrackerType.OSRS].TryRemoveTrackerAsync(name, Context.Channel.Id))
+                    await ReplyAsync($"Stopped keeping track of {name}!");
+                else
+                    await ReplyAsync($"Could not find tracker for `{name}`\n"+
+                                     $"Currently tracked players are:", embed:StaticBase.Trackers[ITracker.TrackerType.OSRS].GetTrackersEmbed(Context.Channel.Id));
+            }
+
+            [Command("GetStats")]
+            [Summary("Gets all top 2kk stats of the specified player.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task GetStats(string name)
+            {
+                await ReplyAsync("", embed: await OSRSTracker.GetStatEmbed(name));
+            }
+
+            [Command("GetTrackers")]
+            [Summary("Returns the players that are tracked in the current channel.")]
+            public async Task getTrackers()
+            {
+                await ReplyAsync("Following players are currently being tracked:", embed:StaticBase.Trackers[ITracker.TrackerType.OSRS].GetTrackersEmbed(Context.Channel.Id));
+            }
+
+            [Command("SetNotification")]
+            [Summary("Sets the notification text that is used each time a level up takes place.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task SetNotification(string name, [Remainder]string notification)
+            {
+                if(await StaticBase.Trackers[ITracker.TrackerType.OSRS].TrySetNotificationAsync(name, Context.Channel.Id, notification)){
+                    await ReplyAsync($"Changed notification for `{name}` to `{notification}`");
+                }
+                else
+                    await ReplyAsync($"Could not find tracker for `{name}`\n"+
+                                     $"Currently tracked players are:", embed:StaticBase.Trackers[ITracker.TrackerType.OSRS].GetTrackersEmbed(Context.Channel.Id));
+            }
+        }
+
         [Group("WoW")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public class WoW : ModuleBase

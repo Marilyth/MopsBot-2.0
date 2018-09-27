@@ -104,6 +104,7 @@ namespace MopsBot
                 Trackers[ITracker.TrackerType.News] = new TrackerHandler<NewsTracker>();
                 Trackers[ITracker.TrackerType.WoW] = new TrackerHandler<WoWTracker>();
                 Trackers[ITracker.TrackerType.WoWGuild] = new TrackerHandler<WoWGuildTracker>();
+                Trackers[ITracker.TrackerType.OSRS] = new TrackerHandler<OSRSTracker>();
 
                 foreach (var tracker in Trackers)
                 {
@@ -159,7 +160,7 @@ namespace MopsBot
             await Program.Client.SetActivityAsync(new Game("Currently Restarting!", ActivityType.Playing));
             await Task.Delay(60000);
 
-            int status = 11;
+            int status = 12;
             while (true)
             {
                 try
