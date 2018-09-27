@@ -51,16 +51,14 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public override void PostInitialisation()
-        {
-            oldStats = WoWTracker.WoWClient.GetGuild(WoWRegion, Realm, GuildName, GuildOptions.GetEverything);
-        }
-
         protected async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
             {
                 Guild newStats = WoWTracker.WoWClient.GetGuild(WoWRegion, Realm, GuildName, GuildOptions.GetEverything);
+
+                if(oldStats == null)
+                    oldStats = newStats;
 
                 var changes = getNewsFeed(newStats);
                 if (changes.Count > 0)
