@@ -513,6 +513,14 @@ namespace MopsBot.Module
                 await ReplyAsync("", embed: await OSRSTracker.GetStatEmbed(name));
             }
 
+            [Command("Compare")]
+            [Summary("Compares the stats of 2 players.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task Compare(string name1, string name2)
+            {
+                await ReplyAsync("", embed: await OSRSTracker.GetCompareEmbed(name1, name2));
+            }
+
             [Command("GetTrackers")]
             [Summary("Returns the players that are tracked in the current channel.")]
             public async Task getTrackers()

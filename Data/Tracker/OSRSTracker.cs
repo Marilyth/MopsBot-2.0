@@ -113,6 +113,8 @@ namespace MopsBot.Data.Tracker
             var stats = await fetchStats(name);
 
             EmbedBuilder e = new EmbedBuilder();
+            e.Color = new Color(136, 107, 62);
+            e.WithTitle(name + " Skills");
             StringBuilder statString = new StringBuilder();
 
             for (int i = 0; i < 24; i++)
@@ -127,6 +129,44 @@ namespace MopsBot.Data.Tracker
             }
 
             e.Description = statString.ToString();
+
+            EmbedFooterBuilder footer = new EmbedFooterBuilder();
+            footer.IconUrl = "https://imgb.apk.tools/150/b/c/2/com.jagex.oldscape.android.png";
+            footer.Text = "Old School RuneScape";
+            e.Footer = footer;
+
+
+            return e.Build();
+        }
+
+        public static async Task<Embed> GetCompareEmbed(string name1, string name2)
+        {
+            var stats1 = await fetchStats(name1);
+            var stats2 = await fetchStats(name2);
+
+            EmbedBuilder e = new EmbedBuilder();
+            e.Color = new Color(136, 107, 62);
+            e.Title = $"{name1} vs {name2}";
+            StringBuilder statString = new StringBuilder();
+
+            for (int i = 0; i < 24; i++)
+            {
+                var stat1 = stats1[i];
+                var stat2 = stats2[i];
+                if (stat1[1] > 1 || stat2[1] > 1){
+                    string statName = ((StatNames)i).ToString();
+                    var id = (long)Enum.Parse(typeof(StatEmojiId), $"{statName.ToLower()}");
+                    string statEmoji = $"<:{statName.ToLower()}:{id}>";
+                    statString.Append($"{statEmoji} {stat1[1]} {(stat1[1] > stat2[1] ? " > " : stat1[1] == stat2[1] ? " = " : " < ")} {stat2[1]}\n");
+                }
+            }
+
+            e.Description = statString.ToString();
+
+            EmbedFooterBuilder footer = new EmbedFooterBuilder();
+            footer.IconUrl = "https://imgb.apk.tools/150/b/c/2/com.jagex.oldscape.android.png";
+            footer.Text = "Old School RuneScape";
+            e.Footer = footer;
 
             return e.Build();
         }
