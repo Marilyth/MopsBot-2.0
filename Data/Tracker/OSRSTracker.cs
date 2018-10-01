@@ -46,13 +46,15 @@ namespace MopsBot.Data.Tracker
             try
             {
                 var newStats = await fetchStats(Name);
-                if(stats == null)
+                if (stats == null)
                     stats = newStats;
 
                 List<string> changedStats = new List<string>();
 
-                for(int i = 0; i < 24; i++){
-                    if(newStats[i][1] != stats[i][1]){
+                for (int i = 0; i < 24; i++)
+                {
+                    if (newStats[i][1] != stats[i][1])
+                    {
                         string statName = ((StatNames)i).ToString();
                         var id = (long)Enum.Parse(typeof(StatEmojiId), $"{statName.ToLower()}");
                         string statEmoji = $"<:{statName.ToLower()}:{id}>";
@@ -60,8 +62,8 @@ namespace MopsBot.Data.Tracker
                     }
                 }
 
-                if(changedStats.Count > 0)
-                    foreach(var channel in ChannelMessages.Keys)
+                if (changedStats.Count > 0)
+                    foreach (var channel in ChannelMessages.Keys)
                         await OnMajorChangeTracked(channel, CreateChangeEmbed(changedStats), ChannelMessages[channel]);
 
                 stats = newStats;
@@ -87,8 +89,9 @@ namespace MopsBot.Data.Tracker
 
             return statList;
         }
-        
-        private Embed CreateChangeEmbed(List<string> changedStats){
+
+        private Embed CreateChangeEmbed(List<string> changedStats)
+        {
             EmbedBuilder e = new EmbedBuilder();
 
             e.Color = new Color(136, 107, 62);
@@ -120,7 +123,8 @@ namespace MopsBot.Data.Tracker
             for (int i = 0; i < 24; i++)
             {
                 var stat = stats[i];
-                if (stat[1] > 1){
+                if (stat[1] > 1)
+                {
                     string statName = ((StatNames)i).ToString();
                     var id = (long)Enum.Parse(typeof(StatEmojiId), $"{statName.ToLower()}");
                     string statEmoji = $"<:{statName.ToLower()}:{id}>";
@@ -153,7 +157,8 @@ namespace MopsBot.Data.Tracker
             {
                 var stat1 = stats1[i];
                 var stat2 = stats2[i];
-                if (stat1[1] > 1 || stat2[1] > 1){
+                if (stat1[1] > 1 || stat2[1] > 1)
+                {
                     string statName = ((StatNames)i).ToString();
                     var id = (long)Enum.Parse(typeof(StatEmojiId), $"{statName.ToLower()}");
                     string statEmoji = $"<:{statName.ToLower()}:{id}>";
@@ -170,6 +175,45 @@ namespace MopsBot.Data.Tracker
 
             return e.Build();
         }
+
+        public static async Task<Embed> GetItemEmbed(string name)
+        {
+            var stats = await MopsBot.Module.Information.ReadURLAsync($"http://oldschoolrunescape.wikia.com/wiki/{name.ToLower().Replace(" ", "_")}?action=raw");
+            var information = stats.Split(new string[] { "{{", "}}", "==" }, 1000, StringSplitOptions.RemoveEmptyEntries);
+
+            
+            string description = information.First(x => x.Contains("px]]"));
+            description = string.Join("\n", description.Split("\n").Where(x => !x.StartsWith("[[File:")).Select(x => x.Replace("[[", "").Replace("]]", "")));
+            
+            List<string> replaced = new List<string>();
+            foreach (string word in description.Split(new string[] { " ", ",", "." }, 1000, StringSplitOptions.RemoveEmptyEntries))
+            {
+                if (!int.TryParse(word, out int n) && !replaced.Contains(word))
+                {
+                    StatEmojiId id;
+                    if (Enum.TryParse<StatEmojiId>(word, true, out id))
+                    {
+                        description = description.Replace(word, $"<:{word.ToLower()}:{(long)id}>");
+                        replaced.Add(word);
+                    }
+                }
+            }
+
+            EmbedBuilder e = new EmbedBuilder();
+            e.Color = new Color(136, 107, 62);
+            e.Title = $"{name}";
+            e.WithUrl($"http://oldschoolrunescape.wikia.com/wiki/{name.Replace(" ", "_")}");
+            e.WithThumbnailUrl($"http://oldschoolrunescape.wikia.com/wiki/File:{name.Replace(" ", "_")}.png");
+            e.WithDescription(string.Join("\n", description.Split("\n").Where(x => !x.StartsWith("[[File:")).Select(x => x.Replace("[[", "").Replace("]]", ""))));
+
+            EmbedFooterBuilder footer = new EmbedFooterBuilder();
+            footer.IconUrl = "https://imgb.apk.tools/150/b/c/2/com.jagex.oldscape.android.png";
+            footer.Text = "Old School RuneScape";
+            e.Footer = footer;
+
+            return e.Build();
+        }
+
 
         private enum StatNames
         {

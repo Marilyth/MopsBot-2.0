@@ -507,7 +507,6 @@ namespace MopsBot.Module
 
             [Command("GetStats")]
             [Summary("Gets all top 2kk stats of the specified player.")]
-            [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task GetStats([Remainder]string name)
             {
                 await ReplyAsync("", embed: await OSRSTracker.GetStatEmbed(name));
@@ -515,10 +514,15 @@ namespace MopsBot.Module
 
             [Command("Compare")]
             [Summary("Compares the stats of 2 players.")]
-            [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task Compare(string name1, string name2)
             {
                 await ReplyAsync("", embed: await OSRSTracker.GetCompareEmbed(name1, name2));
+            }
+
+            [Command("GetItem")]
+            [Summary("Gets information on an Item")]
+            public async Task GetItem([Remainder]string name){
+                await ReplyAsync("", embed: await OSRSTracker.GetItemEmbed(name));
             }
 
             [Command("GetTrackers")]
