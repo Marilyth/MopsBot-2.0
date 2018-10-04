@@ -713,5 +713,28 @@ namespace MopsBot.Module
 
             await ReplyAsync("Keeping track of clips of " + streamerName + "'s streams, from now on!");
         }*/
+
+        [Command("PruneTrackers")]
+        [RequireBotManage()]
+        [Hide]
+        public async Task PruneTrackers(bool testing = true){
+            Dictionary<string, int> pruneCount = new Dictionary<string, int>();
+
+            foreach(var trackerHandler in StaticBase.Trackers){
+                pruneCount[trackerHandler.Key.ToString()] = 0;
+                foreach(var tracker in trackerHandler.Value.GetTrackerSet()){
+                    foreach(var channel in tracker.ChannelIds.ToList()){
+                        if(Program.Client.GetChannel(channel) == null){
+                            if(!testing)
+                                await trackerHandler.Value.TryRemoveTrackerAsync(tracker.Name, channel);
+
+                            pruneCount[trackerHandler.Key.ToString()]++;
+                        }
+                    }
+                }
+            }
+
+            await ReplyAsync($"```{"TrackerType", -20}{"PruneCount"}\n{string.Join("\n", pruneCount.Select(x => $"{x.Key, -20}{x.Value, -3}"))}```");
+        }
     }
 }
