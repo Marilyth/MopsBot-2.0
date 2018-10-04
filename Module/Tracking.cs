@@ -714,7 +714,7 @@ namespace MopsBot.Module
             await ReplyAsync("Keeping track of clips of " + streamerName + "'s streams, from now on!");
         }*/
 
-        [Command("PruneTrackers")]
+        [Command("PruneTrackers", RunMode = RunMode.Async)]
         [RequireBotManage()]
         [Hide]
         public async Task PruneTrackers(bool testing = true){
