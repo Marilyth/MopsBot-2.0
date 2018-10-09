@@ -546,6 +546,46 @@ namespace MopsBot.Module
             }
         }
 
+        [Group("HTML")]
+        [RequireBotManage]
+        [Hide]
+        public class HTML : ModuleBase{
+
+            [Hide]
+            [Command("Track")]
+            public async Task Track(string website, string scrapeRegex){
+                await Trackers[ITracker.TrackerType.HTML].AddTrackerAsync(website + "|||" + scrapeRegex, Context.Channel.Id);
+                await ReplyAsync($"Keeping track of `{website}` data using `{scrapeRegex}`, from now on!\nInitial value was {await HTMLTracker.FetchData(website + "|||" + scrapeRegex)}");
+            }
+
+            [Hide]
+            [Command("TestRegex")]
+            public async Task Test(string website, string scrapeRegex){
+                await ReplyAsync($"Regex returned value: {await HTMLTracker.FetchData(website + "|||" + scrapeRegex)}");
+            }
+
+            [Hide]
+            [Command("UnTrack")]
+            public async Task UnTrack(string website, string scrapeRegex){
+                if(await Trackers[ITracker.TrackerType.HTML].TryRemoveTrackerAsync(website + "|||" + scrapeRegex, Context.Channel.Id))
+                    await ReplyAsync($"Stopped keeping track of {website}!");
+                else
+                    await ReplyAsync($"Could not find tracker for `{website + "|||" + scrapeRegex}`\n"+
+                                     $"Currently tracked websites are:", embed:StaticBase.Trackers[ITracker.TrackerType.HTML].GetTrackersEmbed(Context.Channel.Id));
+            }
+
+            [Hide]
+            [Command("SetNotification")]
+            public async Task SetNotification(string website, string scrapeRegex, [Remainder]string notification){
+                if(await StaticBase.Trackers[ITracker.TrackerType.HTML].TrySetNotificationAsync(website + "|||" + scrapeRegex, Context.Channel.Id, notification)){
+                    await ReplyAsync($"Changed notification for `{website}` to `{notification}`");
+                }
+                else
+                    await ReplyAsync($"Could not find tracker for `{website + "|||" + scrapeRegex}`\n"+
+                                     $"Currently tracked players are:", embed:StaticBase.Trackers[ITracker.TrackerType.HTML].GetTrackersEmbed(Context.Channel.Id));
+            }
+        }
+
         [Group("WoW")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public class WoW : ModuleBase

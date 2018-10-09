@@ -105,6 +105,7 @@ namespace MopsBot
                 Trackers[ITracker.TrackerType.WoW] = new TrackerHandler<WoWTracker>();
                 Trackers[ITracker.TrackerType.WoWGuild] = new TrackerHandler<WoWGuildTracker>();
                 Trackers[ITracker.TrackerType.OSRS] = new TrackerHandler<OSRSTracker>();
+                Trackers[ITracker.TrackerType.HTML] = new TrackerHandler<HTMLTracker>();
 
                 foreach (var tracker in Trackers)
                 {
