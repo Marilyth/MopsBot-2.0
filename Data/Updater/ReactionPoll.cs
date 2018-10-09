@@ -193,7 +193,7 @@ namespace MopsBot.Data
         }
 
         public void CreateChart(bool alreadyExists = true){
-            chart = new BarPlot(Uri.EscapeUriString(Question) + MessageID, alreadyExists, Options);
+            chart = new BarPlot(Uri.EscapeDataString(Question) + MessageID, alreadyExists, Options);
         }
 
         public void AddValue(string option, double value){
