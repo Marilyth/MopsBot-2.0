@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <PackageReference Include="Discord.Net" Version="2.0.0-beta2-00965" />
+    <PackageReference Include="Discord.Addons.Interactive" Version="1.0.1" />
     <PackageReference Include="TweetinviAPI" Version="2.1.0" />
     <PackageReference Include="OxyPlot.Core" Version="2.0.0-unstable1035" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.0.0" />

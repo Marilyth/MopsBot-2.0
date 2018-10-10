@@ -14,6 +14,7 @@ using Discord.Commands;
 using System.Threading;
 using System.Net;
 using Newtonsoft.Json;
+using Discord.Addons.Interactive;
 
 namespace MopsBot
 {
@@ -48,7 +49,8 @@ namespace MopsBot
 
             var map = new ServiceCollection().AddSingleton(Client)
                 // .AddSingleton(new AudioService())
-                .AddSingleton(new ReliabilityService(Client, Client_Log));
+                .AddSingleton(new ReliabilityService(Client, Client_Log))
+                .AddSingleton(new InteractiveService(Client));
 
             var provider = map.BuildServiceProvider();
 

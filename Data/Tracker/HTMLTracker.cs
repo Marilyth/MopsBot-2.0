@@ -66,15 +66,22 @@ namespace MopsBot.Data.Tracker
         private async Task<string> fetchData()
         {
             var html = await Module.Information.ReadURLAsync(Name.Split("|||")[0]);
-            var match = System.Text.RegularExpressions.Regex.Match(html, Regex);
+            var match = System.Text.RegularExpressions.Regex.Match(html, Regex, System.Text.RegularExpressions.RegexOptions.Singleline);
             return match.Groups.Last().Value;
         }
 
         public static async Task<string> FetchData(string expression)
         {
             var html = await Module.Information.ReadURLAsync(expression.Split("|||")[0]);
-            var match = System.Text.RegularExpressions.Regex.Match(html, expression.Split("|||")[1]);
+            var match = System.Text.RegularExpressions.Regex.Match(html, expression.Split("|||")[1], System.Text.RegularExpressions.RegexOptions.Singleline);
             return match.Groups.Last().Value;
+        }
+
+        public static async Task<System.Text.RegularExpressions.MatchCollection> FetchAllData(string expression)
+        {
+            var html = await Module.Information.ReadURLAsync(expression.Split("|||")[0]);
+            var match = System.Text.RegularExpressions.Regex.Matches(html, expression.Split("|||")[1], System.Text.RegularExpressions.RegexOptions.Singleline);
+            return match;
         }
 
         private Embed CreateChangeEmbed(string changedData)
