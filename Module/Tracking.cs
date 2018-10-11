@@ -639,7 +639,8 @@ namespace MopsBot.Module
                 }
             }
 
-            [Command("SetNotification")]
+            [Command("SetNotification", RunMode = RunMode.Async)]
+            [Summary("Sets the notification for when the text of a regex match changes.\nRequires only the notification, paginator will guide you.")]
             public async Task SetNotification([Remainder]string notification)
             {
                 var trackers = Trackers[ITracker.TrackerType.HTML].GetTrackers(Context.Channel.Id).ToList();
