@@ -591,10 +591,10 @@ namespace MopsBot.Module
                     await PagedReplyAsync(matches.Select(x => $"**{textToTrack}** in context\n\n```html\n{x.Value}```"));
 
                     await ReplyAsync("Which page is the one you want to track?\nIf none are specific enough, consider extending the context, or writing your own regex using the `TrackRegex` subcommand.");
-                    int regexIndex = int.Parse((await NextMessageAsync()).Content) - 1;
+                    int page = int.Parse((await NextMessageAsync(timeout: new TimeSpan(0, 5, 0))).Content) - 1;
 
                     //Escape regex symbols
-                    string matchString = matches[regexIndex].Value.Replace("?", "\\?").Replace("*", "\\*").Replace(".", "\\.").Replace("+", "\\+");
+                    string matchString = matches[page].Value.Replace("?", "\\?").Replace("*", "\\*").Replace(".", "\\.").Replace("+", "\\+");
                     
                     //Find out position of text, and replace it with wild characters
                     var match = Regex.Match(matchString, $">[^<>]*?({textToTrack})[^<>]*?<");
