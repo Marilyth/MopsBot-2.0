@@ -649,7 +649,7 @@ namespace MopsBot.Module
 
                 int page = int.Parse((await NextMessageAsync(timeout: new TimeSpan(0, 5, 0))).Content) - 1;
                 if (await Trackers[ITracker.TrackerType.HTML].TrySetNotificationAsync(trackers[page].Name, Context.Channel.Id, notification))
-                    await ReplyAsync($"Set notification for result {page + 1} of paginator to {notification}!");
+                    await ReplyAsync($"Set notification for result {page + 1} of paginator to `{notification}`!");
             }
         }
 
