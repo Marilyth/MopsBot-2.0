@@ -569,60 +569,67 @@ namespace MopsBot.Module
         }
 
         [Group("HTML")]
-        [RequireBotManage]
-        [Hide]
+        [RequireUserPermission(ChannelPermission.ManageChannels)]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
         public class HTML : InteractiveBase
         {
-
-            [Hide]
-            [Command("Track")]
+            [Command("TrackRegex")]
+            [Summary("Tracks regex on a webpage. Use () around the text you want to track to signify a match.")]
             public async Task TrackRegex(string website, string scrapeRegex)
             {
                 await Trackers[ITracker.TrackerType.HTML].AddTrackerAsync(website + "|||" + scrapeRegex, Context.Channel.Id);
-                await ReplyAsync($"Keeping track of `{website}` data using `{scrapeRegex}`, from now on!\nInitial value was: **{await HTMLTracker.FetchData(website + "|||" + scrapeRegex)}**");
+                await ReplyAsync($"Keeping track of `{website}` data using `{scrapeRegex}`, from now on!\n\nInitial value was: **{await HTMLTracker.FetchData(website + "|||" + scrapeRegex)}**");
             }
 
-            [Hide]
-            [Command("TrackText", RunMode = RunMode.Async)]
-            public async Task TrackText(string website, string textToTrack, int leftContextLength = 2, int rightContextLength = 1)
+            [Command("Track", RunMode = RunMode.Async)]
+            [Summary("Tracks plain text on a webpage, and notifies whenever that text changes.\nThis command will guide you through the process.")]
+            public async Task TrackText(string website, string textToTrack, int leftContextLength = 4, int rightContextLength = 1)
             {
                 if (leftContextLength > 0 && rightContextLength > 0)
                 {
                     MatchCollection matches = await HTMLTracker.FetchAllData(website + "|||" + $"(<[^<>]*?>[^<>]*?){{{leftContextLength}}}({textToTrack})[^<>]*?(<[^<>]*?>[^<>]*?){{{rightContextLength}}}");
-                    await ReplyAsync($"Found values:\n{string.Join("\n\n", matches.Select((x, i) => $"{i}. **{textToTrack}** in context `{x.Value}`"))}");
+                    await PagedReplyAsync(matches.Select(x => $"**{textToTrack}** in context\n\n```html\n{x.Value}```"));
 
-                    await ReplyAsync("Which number is the one you want to track?\nIf none are specific enough, consider extending the context, or writing your own regex using the `TrackRegex` subcommand.");
-                    int regexIndex = int.Parse((await NextMessageAsync()).Content);
+                    await ReplyAsync("Which page is the one you want to track?\nIf none are specific enough, consider extending the context, or writing your own regex using the `TrackRegex` subcommand.");
+                    int regexIndex = int.Parse((await NextMessageAsync()).Content) - 1;
 
+                    //Escape regex symbols
                     string matchString = matches[regexIndex].Value.Replace("?", "\\?").Replace("*", "\\*").Replace(".", "\\.").Replace("+", "\\+");
+                    
+                    //Find out position of text, and replace it with wild characters
                     var match = Regex.Match(matchString, $">[^<>]*?({textToTrack})[^<>]*?<");
                     int position = match.Groups.First(x => x.Value.Equals(textToTrack)).Index;
                     string scrapeRegex = matchString.Remove(position, textToTrack.Length).Insert(position, $"([^<>]*?)");
+                    
+                    //Make any additional occurences of text in context wild characters
+                    scrapeRegex = scrapeRegex.Replace(textToTrack, "[^<>]*?");
 
                     await TrackRegex(website, scrapeRegex);
                 }
             }
 
-            [Hide]
             [Command("TestRegex")]
+            [Summary("Tests the regex and returns it's value. Handy if you want to check your regex before tracking with it!")]
             public async Task Test(string website, string scrapeRegex)
             {
                 await ReplyAsync($"Regex returned value: {await HTMLTracker.FetchData(website + "|||" + scrapeRegex)}");
             }
 
-            [Hide]
-            [Command("UnTrack")]
-            public async Task UnTrack(string website, string scrapeRegex)
+            [Command("UnTrack", RunMode = RunMode.Async)]
+            [Summary("Creates a paginator of all trackers, out of which you have to choose one.")]
+            public async Task UnTrack()
             {
-                if (await Trackers[ITracker.TrackerType.HTML].TryRemoveTrackerAsync(website + "|||" + scrapeRegex, Context.Channel.Id))
-                    await ReplyAsync($"Stopped keeping track of {website}!");
-                else
-                    await ReplyAsync($"Could not find tracker for `{website + "|||" + scrapeRegex}`\n" +
-                                     $"Currently tracked websites are:", embed: StaticBase.Trackers[ITracker.TrackerType.HTML].GetTrackersEmbed(Context.Channel.Id));
+                var trackers = Trackers[ITracker.TrackerType.HTML].GetTrackers(Context.Channel.Id).ToList();
+                await PagedReplyAsync(trackers.Select(x => $"```html\n{x.Name}```"));
+                await ReplyAsync("Which tracker do you want to delete?\nPlease enter the page number");
+
+                int page = int.Parse((await NextMessageAsync(timeout: new TimeSpan(0, 5, 0))).Content) - 1;
+                if (await Trackers[ITracker.TrackerType.HTML].TryRemoveTrackerAsync(trackers[page].Name, Context.Channel.Id))
+                    await ReplyAsync($"Stopped keeping track of result {page + 1} of paginator!");
             }
 
-            [Hide]
             [Command("UnTrackAll")]
+            [Summary("Untracks all trackers in the current channel.")]
             public async Task UnTrackAll()
             {
                 foreach (var tracker in Trackers[ITracker.TrackerType.HTML].GetTrackers(Context.Channel.Id).ToList())
@@ -632,17 +639,16 @@ namespace MopsBot.Module
                 }
             }
 
-            [Hide]
             [Command("SetNotification")]
-            public async Task SetNotification(string website, string scrapeRegex, [Remainder]string notification)
+            public async Task SetNotification([Remainder]string notification)
             {
-                if (await StaticBase.Trackers[ITracker.TrackerType.HTML].TrySetNotificationAsync(website + "|||" + scrapeRegex, Context.Channel.Id, notification))
-                {
-                    await ReplyAsync($"Changed notification for `{website}` to `{notification}`");
-                }
-                else
-                    await ReplyAsync($"Could not find tracker for `{website + "|||" + scrapeRegex}`\n" +
-                                     $"Currently tracked players are:", embed: StaticBase.Trackers[ITracker.TrackerType.HTML].GetTrackersEmbed(Context.Channel.Id));
+                var trackers = Trackers[ITracker.TrackerType.HTML].GetTrackers(Context.Channel.Id).ToList();
+                await PagedReplyAsync(trackers.Select(x => $"```html\n{x.Name}```"));
+                await ReplyAsync("Which tracker do you want to set the notification for?\nPlease enter the page number");
+
+                int page = int.Parse((await NextMessageAsync(timeout: new TimeSpan(0, 5, 0))).Content) - 1;
+                if (await Trackers[ITracker.TrackerType.HTML].TrySetNotificationAsync(trackers[page].Name, Context.Channel.Id, notification))
+                    await ReplyAsync($"Set notification for result {page + 1} of paginator to {notification}!");
             }
         }
 
