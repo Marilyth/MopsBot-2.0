@@ -604,6 +604,15 @@ namespace MopsBot.Module
                     //Make any additional occurences of text in context wild characters
                     scrapeRegex = scrapeRegex.Replace(textToTrack, "[^<>]*?");
 
+                    await ReplyAsync($"Is there anything, for the sake of context, that you want to have removed (e.g. tracking highest level, but don't want it to be bound to a certain name)?\n\n`{scrapeRegex}`\n\nIf so, please enter the exact texts you want to be generic instead of fixed in a **comma seperated list**.");
+                    string result = (await NextMessageAsync(timeout: new TimeSpan(0, 1, 0))).Content;
+                    foreach(string value in result?.Split(",")){
+                        if(value.ToLower().Equals("no") || value.ToLower().Equals("n") || value.ToLower().Equals("nope"))
+                            break;
+                        string toRemove = value.Trim();
+                        scrapeRegex = scrapeRegex.Replace(toRemove, "[^<>]*?");
+                    }
+
                     await TrackRegex(website, scrapeRegex);
                 }
             }
