@@ -33,7 +33,7 @@ namespace MopsBot.Data.Tracker
             try
             {
                 var value = fetchData().Result;
-                if(value == null)
+                if (string.IsNullOrEmpty(value))
                     throw new ArgumentException();
             }
             catch (Exception)
@@ -48,14 +48,18 @@ namespace MopsBot.Data.Tracker
             try
             {
                 var match = await fetchData();
-                if(oldMatch == null)
-                    oldMatch = match;
 
-                if(!match.Equals(oldMatch))
-                    foreach(var channel in ChannelIds.ToList())
-                        await OnMajorChangeTracked(channel, CreateChangeEmbed($"{oldMatch} -> {match}"), ChannelMessages[channel]);
-                
-                oldMatch = match;
+                if (!string.IsNullOrEmpty(match))
+                {
+                    if (oldMatch == null)
+                        oldMatch = match;
+
+                    if (!match.Equals(oldMatch))
+                        foreach (var channel in ChannelIds.ToList())
+                            await OnMajorChangeTracked(channel, CreateChangeEmbed($"{oldMatch} -> {match}"), ChannelMessages[channel]);
+
+                    oldMatch = match;
+                }
             }
             catch (Exception e)
             {
