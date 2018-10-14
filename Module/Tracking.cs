@@ -587,22 +587,26 @@ namespace MopsBot.Module
             {
                 if (leftContextLength > 0 && rightContextLength > 0)
                 {
-                    MatchCollection matches = await HTMLTracker.FetchAllData(website + "|||" + $"(<[^<>]*?>[^<>]*?){{{leftContextLength}}}({textToTrack})[^<>]*?(<[^<>]*?>[^<>]*?){{{rightContextLength}}}");
+                    string escapedTextToTrack = textToTrack.Replace("?", @"\?").Replace("*", @"\*").Replace(".", @"\.").Replace("+", @"\+").Replace(")", @"\)").Replace("(", @"\(").Replace("[", @"\[").Replace("]", @"\]");
+
+                    MatchCollection matches = await HTMLTracker.FetchAllData(website + "|||" + $"(<[^<>]*?>[^<>]*?){{{leftContextLength}}}({escapedTextToTrack})[^<>]*?(<[^<>]*?>[^<>]*?){{{rightContextLength}}}");
                     await PagedReplyAsync(matches.Select(x => $"**{textToTrack}** in context\n\n```html\n{x.Value}```"));
 
                     await ReplyAsync("Which page is the one you want to track?\nIf none are specific enough, consider extending the context, or writing your own regex using the `TrackRegex` subcommand.");
                     int page = int.Parse((await NextMessageAsync(timeout: new TimeSpan(0, 5, 0))).Content) - 1;
 
                     //Escape regex symbols
-                    string matchString = matches[page].Value.Replace("?", "\\?").Replace("*", "\\*").Replace(".", "\\.").Replace("+", "\\+");
+                    string unescapedMatchString = matches[page].Value.Replace(escapedTextToTrack, textToTrack);
 
                     //Find out position of text, and replace it with wild characters
-                    var match = Regex.Match(matchString, $">[^<>]*?({textToTrack})[^<>]*?<");
+                    var match = Regex.Match(unescapedMatchString, $@">[^<>]*?({escapedTextToTrack})[^<>]*?<", RegexOptions.Singleline);
                     int position = match.Groups.First(x => x.Value.Equals(textToTrack)).Index;
-                    string scrapeRegex = matchString.Remove(position, textToTrack.Length).Insert(position, $"([^<>]*?)");
+                    string scrapeRegex = unescapedMatchString.Remove(position, textToTrack.Length).Insert(position, $@"\(\[^<>\]\*\?\)");
 
                     //Make any additional occurences of text in context wild characters
-                    scrapeRegex = scrapeRegex.Replace(textToTrack, "[^<>]*?");
+                    scrapeRegex = scrapeRegex.Replace(escapedTextToTrack, @"\[^<>\]\*\?");
+                    scrapeRegex = scrapeRegex.Replace("?", @"\?").Replace("*", @"\*").Replace(".", @"\.").Replace("+", @"\+").Replace(")", @"\)").Replace("(", @"\(").Replace("[", @"\[").Replace("]", @"\]");
+                    scrapeRegex = scrapeRegex.Replace("\\\\?", @"?").Replace("\\\\*", @"*").Replace("\\\\.", @".").Replace("\\\\+", @"+").Replace("\\\\)", @")").Replace("\\\\(", @"(").Replace("\\\\[", @"[").Replace("\\\\]", @"]");
 
                     await ReplyAsync($"Is there anything, for the sake of context, that you want to have removed (e.g. tracking highest level, but don't want it to be bound to a certain name)?\n\n```html\n{scrapeRegex}```\n\nIf so, please enter the exact texts you want to be generic instead of fixed in a **comma seperated list**.");
                     string result = (await NextMessageAsync(timeout: new TimeSpan(0, 1, 0)))?.Content;
