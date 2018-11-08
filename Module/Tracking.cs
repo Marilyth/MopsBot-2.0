@@ -53,7 +53,7 @@ namespace MopsBot.Module
             [Command("SetNotification")]
             [Summary("Sets the notification text that is used each time a new Main-Tweet is found.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(string TwitterName, [Remainder]string notification)
+            public async Task SetNotification(string TwitterName, [Remainder]string notification = "")
             {
                 var twitter = StaticBase.Trackers[ITracker.TrackerType.Twitter].GetTracker(Context.Channel.Id, TwitterName);
                 try
@@ -217,7 +217,7 @@ namespace MopsBot.Module
             [Command("SetNotification")]
             [Summary("Sets the notification text that is used each time a new video appears.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(string channelID, [Remainder]string notification)
+            public async Task SetNotification(string channelID, [Remainder]string notification = "")
             {
                 if (await StaticBase.Trackers[ITracker.TrackerType.Youtube].TrySetNotificationAsync(channelID, Context.Channel.Id, notification))
                 {
@@ -316,7 +316,7 @@ namespace MopsBot.Module
             [Command("SetNotification")]
             [Summary("Sets the notification text that is used each time a new clip is found.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(string streamer, [Remainder]string notification)
+            public async Task SetNotification(string streamer, [Remainder]string notification = "")
             {
                 if (await StaticBase.Trackers[ITracker.TrackerType.TwitchClip].TrySetNotificationAsync(streamer, Context.Channel.Id, notification))
                 {
@@ -382,7 +382,7 @@ namespace MopsBot.Module
             [Command("SetNotification")]
             [Summary("Sets the notification text that is used each time a new post was found.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(string subreddit, string notification, string query = null)
+            public async Task SetNotification(string subreddit, string notification = "", string query = null)
             {
                 if (await StaticBase.Trackers[ITracker.TrackerType.Reddit].TrySetNotificationAsync(String.Join(" ", new string[] { subreddit, query }.Where(x => x != null)), Context.Channel.Id, notification))
                 {
@@ -439,7 +439,7 @@ namespace MopsBot.Module
             [Command("SetNotification")]
             [Summary("Sets the notification text that is used each time a players' stats changed.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(string owUser, [Remainder]string notification)
+            public async Task SetNotification(string owUser, [Remainder]string notification = "")
             {
                 owUser = owUser.Replace("#", "-");
                 if (await StaticBase.Trackers[ITracker.TrackerType.Overwatch].TrySetNotificationAsync(owUser, Context.Channel.Id, notification))
@@ -488,7 +488,7 @@ namespace MopsBot.Module
             [Command("SetNotification")]
             [Summary("Sets the notification text that is used each time a article was found.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(string articleQuery, [Remainder]string notification)
+            public async Task SetNotification(string articleQuery, [Remainder]string notification = "")
             {
                 if (await StaticBase.Trackers[ITracker.TrackerType.News].TrySetNotificationAsync(articleQuery, Context.Channel.Id, notification))
                 {
@@ -556,7 +556,7 @@ namespace MopsBot.Module
             [Command("SetNotification")]
             [Summary("Sets the notification text that is used each time a level up takes place.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(string name, [Remainder]string notification)
+            public async Task SetNotification(string name, [Remainder]string notification = "")
             {
                 if (await StaticBase.Trackers[ITracker.TrackerType.OSRS].TrySetNotificationAsync(name, Context.Channel.Id, notification))
                 {
@@ -659,7 +659,7 @@ namespace MopsBot.Module
 
             [Command("SetNotification", RunMode = RunMode.Async)]
             [Summary("Sets the notification for when the text of a regex match changes.\nRequires only the notification, paginator will guide you.")]
-            public async Task SetNotification([Remainder]string notification)
+            public async Task SetNotification([Remainder]string notification = "")
             {
                 var trackers = Trackers[ITracker.TrackerType.HTML].GetTrackers(Context.Channel.Id).ToList();
                 await PagedReplyAsync(trackers.Select(x => $"```html\n{x.Name}```"));
