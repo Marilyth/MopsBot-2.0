@@ -11,6 +11,7 @@ using Discord.WebSocket;
 using Discord;
 using MopsBot.Module.Preconditions;
 using System.IO;
+using MongoDB.Driver;
 using static MopsBot.StaticBase;
 
 namespace MopsBot
@@ -224,20 +225,21 @@ namespace MopsBot
         /// <summary>
         /// Reads all custom commands and saves them as a Dictionary
         /// </summary>
-        private void loadCustomCommands()
+        private async Task loadCustomCommands()
         {
-            
             using (StreamReader read = new StreamReader(new FileStream($"mopsdata//CustomCommands.json", FileMode.OpenOrCreate)))
             {
                 try
                 {
                     CustomCommands = JsonConvert.DeserializeObject<Dictionary<ulong, Dictionary<string, string>>>(read.ReadToEnd()) ?? new Dictionary<ulong, Dictionary<string, string>>();
+                    //CustomCommands = (await StaticBase.Database.GetCollection<Data.Entities.CustomCommands>("CustomCommands").FindAsync(x => true)).ToList().ToDictionary(x => x.GuildId, x => x);
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine("\n" +  e.Message + e.StackTrace);
                 }
             }
+            SaveCommand();
         }
     }
 }

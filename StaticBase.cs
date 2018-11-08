@@ -118,6 +118,7 @@ namespace MopsBot
             using (StreamWriter write = new StreamWriter(new FileStream("mopsdata//CustomCommands.json", FileMode.Create)))
             {
                 write.WriteLine(JsonConvert.SerializeObject(CustomCommands, Formatting.Indented));
+                Database.GetCollection<Data.Entities.CustomCommands>("CustomCommands").InsertMany(CustomCommands.Select(x => new Data.Entities.CustomCommands(x.Key){Commands = x.Value}));
             }
         }
 
