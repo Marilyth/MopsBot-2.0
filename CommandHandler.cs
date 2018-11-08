@@ -37,8 +37,6 @@ namespace MopsBot
 
             await commands.AddModulesAsync(Assembly.GetEntryAssembly(), provider);
 
-            GuildPrefix = new Dictionary<ulong, string>();
-            readPrefix();
             loadCustomCommands();
             client.MessageReceived += Client_MessageReceived;
             client.MessageReceived += HandleCommand;
@@ -240,36 +238,6 @@ namespace MopsBot
                     Console.WriteLine("\n" +  e.Message + e.StackTrace);
                 }
             }
-        }
-
-        /// <summary>
-        /// Reads all guild prefixes and saves them as a dictionary
-        /// </summary>
-        private void readPrefix()
-        {
-            string s = "";
-            using (StreamReader read = new StreamReader(new FileStream("mopsdata//guildprefixes.txt", FileMode.OpenOrCreate)))
-            {
-                while ((s = read.ReadLine()) != null)
-                {
-                    try
-                    {
-                        var trackerInformation = s.Split('|');
-                        var prefix = trackerInformation[1];
-                        var guildID = ulong.Parse(trackerInformation[0]);
-                        if (!GuildPrefix.ContainsKey(guildID))
-                        {
-                            GuildPrefix.Add(guildID, prefix);
-                        }
-
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine("\n" +  $"[ERROR] by GuildPrefixes at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
-                    }
-                }
-            }
-            SavePrefix();
         }
     }
 }

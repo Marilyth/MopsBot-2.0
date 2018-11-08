@@ -348,7 +348,7 @@ namespace MopsBot.Module
                 // moduleInformation += string.Join(", ", module.Submodules.Select(x => $"{x.Name}\\*"));
 
                 // e.AddField($"**{module.Name}**", moduleInformation);
-                var prefix = GuildPrefix.ContainsKey(Context.Guild.Id) ? GuildPrefix[Context.Guild.Id] : "!";
+                var prefix = await GetGuildPrefixAsync(Context.Guild.Id);
                 e = Program.Handler.getHelpEmbed(helpModule.ToLower(), prefix, e);
             }
 

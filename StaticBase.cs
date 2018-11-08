@@ -28,9 +28,6 @@ namespace MopsBot
         public static Random ran = new Random();
         public static Gfycat.GfycatClient gfy;
         public static List<string> Playlist = new List<string>();
-
-        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
-        public static Dictionary<ulong, string> GuildPrefix;
         [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
         public static Dictionary<ulong, Data.Entities.WelcomeMessage> WelcomeMessages;
 
@@ -96,22 +93,6 @@ namespace MopsBot
 
                 init = true;
 
-            }
-        }
-
-        /// <summary>
-        /// Writes all guildprefixes into a file.
-        /// </summary>
-        public static async Task SavePrefix()
-        {
-            using (StreamWriter write = new StreamWriter(new FileStream("mopsdata//guildprefixes.txt", FileMode.Create)))
-            {
-                write.AutoFlush = true;
-                foreach (var kv in GuildPrefix)
-                {
-                    write.WriteLine($"{kv.Key}|{kv.Value}");
-                    await Database.GetCollection<Data.Entities.MongoKVP<ulong, string>>("GuildPrefixes").InsertOneAsync(new Data.Entities.MongoKVP<ulong, string>(kv.Key, kv.Value));
-                }
             }
         }
 
