@@ -86,21 +86,9 @@ namespace MopsBot.Module
                 return;
             }
 
-            string oldPrefix;
+            string oldPrefix = await GetGuildPrefixAsync(Context.Guild.Id);
 
-            if (GuildPrefix.ContainsKey(Context.Guild.Id))
-            {
-                oldPrefix = GuildPrefix[Context.Guild.Id];
-                GuildPrefix[Context.Guild.Id] = prefix;
-            }
-
-            else
-            {
-                oldPrefix = "!";
-                GuildPrefix.Add(Context.Guild.Id, prefix);
-            }
-
-            SavePrefix();
+            await InsertOrUpdatePrefixAsync(Context.Guild.Id, prefix);
 
             await ReplyAsync($"Changed prefix from `{oldPrefix}` to `{prefix}`");
         }

@@ -38,7 +38,7 @@ namespace MopsBot
             await commands.AddModulesAsync(Assembly.GetEntryAssembly(), provider);
 
             GuildPrefix = new Dictionary<ulong, string>();
-            fillPrefix();
+            readPrefix();
             loadCustomCommands();
             client.MessageReceived += Client_MessageReceived;
             client.MessageReceived += HandleCommand;
@@ -86,7 +86,7 @@ namespace MopsBot
             ulong id = 0;
             if (message.Channel is Discord.IDMChannel) id = message.Channel.Id;
             else id = ((SocketGuildChannel)message.Channel).Guild.Id;
-            var prefix = GuildPrefix.ContainsKey(id) ? GuildPrefix[id] : "!";
+            var prefix = await GetGuildPrefixAsync(id);
 
             // Determine if the message has a valid prefix, adjust argPos 
             if (!(message.HasMentionPrefix(client.CurrentUser, ref argPos) || message.HasStringPrefix(prefix, ref argPos) || message.HasCharPrefix('?', ref argPos))) return;
@@ -245,7 +245,7 @@ namespace MopsBot
         /// <summary>
         /// Reads all guild prefixes and saves them as a dictionary
         /// </summary>
-        private void fillPrefix()
+        private void readPrefix()
         {
             string s = "";
             using (StreamReader read = new StreamReader(new FileStream("mopsdata//guildprefixes.txt", FileMode.OpenOrCreate)))
@@ -269,6 +269,7 @@ namespace MopsBot
                     }
                 }
             }
+            SavePrefix();
         }
     }
 }

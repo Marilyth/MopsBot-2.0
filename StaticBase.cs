@@ -102,7 +102,7 @@ namespace MopsBot
         /// <summary>
         /// Writes all guildprefixes into a file.
         /// </summary>
-        public static void SavePrefix()
+        public static async Task SavePrefix()
         {
             using (StreamWriter write = new StreamWriter(new FileStream("mopsdata//guildprefixes.txt", FileMode.Create)))
             {
@@ -110,8 +110,23 @@ namespace MopsBot
                 foreach (var kv in GuildPrefix)
                 {
                     write.WriteLine($"{kv.Key}|{kv.Value}");
+                    await Database.GetCollection<Data.Entities.MongoKVP<ulong, string>>("GuildPrefixes").InsertOneAsync(new Data.Entities.MongoKVP<ulong, string>(kv.Key, kv.Value));
                 }
             }
+        }
+
+        public static async Task InsertOrUpdatePrefixAsync(ulong guildId, string prefix){
+            bool hasEntry = (await Database.GetCollection<Data.Entities.MongoKVP<ulong, string>>("GuildPrefixes").FindAsync(x => x.Key == guildId)).ToList().Count == 1;
+
+            if(!hasEntry)
+                await Database.GetCollection<Data.Entities.MongoKVP<ulong, string>>("GuildPrefixes").InsertOneAsync(new Data.Entities.MongoKVP<ulong, string>(guildId, prefix));
+            else
+                await Database.GetCollection<Data.Entities.MongoKVP<ulong, string>>("GuildPrefixes").ReplaceOneAsync(x => x.Key == guildId, new Data.Entities.MongoKVP<ulong, string>(guildId, prefix));
+        }
+
+        public static async Task<string> GetGuildPrefixAsync(ulong guildId){
+            string prefix = (await Database.GetCollection<Data.Entities.MongoKVP<ulong, string>>("GuildPrefixes").FindAsync(x => x.Key == guildId)).FirstOrDefault()?.Value;
+            return prefix ?? "!";
         }
 
         /// <summary>
