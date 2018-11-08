@@ -16,6 +16,13 @@ namespace MopsBot.Data.Entities
             return new KeyValuePair<T1, T2>(mKVP.Key, mKVP.Value);
         }
 
+        public MongoKVP(){}
+
+        public MongoKVP(T1 key, T2 value){
+            Key = key;
+            Value = value;
+        }
+
         public static MongoKVP<T1, T2> KVPToMongoKVP(KeyValuePair<T1, T2> kvp){
             return new MongoKVP<T1, T2>(){Key = kvp.Key, Value = kvp.Value};
         }

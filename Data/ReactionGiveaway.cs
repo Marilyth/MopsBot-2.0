@@ -11,91 +11,15 @@ using System.Runtime.InteropServices;
 using Newtonsoft.Json;
 using MongoDB.Bson.Serialization.Options;
 using MongoDB.Bson.Serialization.Attributes;
+using MopsBot.Data.Entities;
+using MongoDB.Driver;
 
 namespace MopsBot.Data
 {
-    public class Giveaway
-    {
-        public Dictionary<string, HashSet<ulong>> Giveaways = new Dictionary<string, HashSet<ulong>>();
-
-        public Giveaway()
-        {
-            using (StreamReader read = new StreamReader(new FileStream($"mopsdata//Giveaways.json", FileMode.OpenOrCreate)))
-            {
-                try
-                {
-                    Giveaways = JsonConvert.DeserializeObject<Dictionary<string, HashSet<ulong>>>(read.ReadToEnd());
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine("\n" +  e.Message + e.StackTrace);
-                }
-            }
-            Giveaways = Giveaways ?? new Dictionary<string, HashSet<ulong>>();
-        }
-
-        public void SaveJson()
-        {
-            using (StreamWriter write = new StreamWriter(new FileStream($"mopsdata//Giveaways.json", FileMode.Create)))
-                write.Write(JsonConvert.SerializeObject(Giveaways, Formatting.Indented));
-        }
-
-        public void AddGiveaway(string name)
-        {
-            name = name.ToLower();
-
-            if (!Giveaways.ContainsKey(name))
-            {
-                Giveaways.Add(name, new HashSet<ulong>());
-                SaveJson();
-            }
-
-            else
-                throw new Exception("A Giveaway with the same name already exists.\nPlease try another name.");
-        }
-
-        public void JoinGiveaway(string name, ulong id)
-        {
-            if (Giveaways.ContainsKey(name))
-            {
-                Giveaways[name].Add(id);
-                SaveJson();
-            }
-
-            else
-                throw new Exception("The Giveaway does not seem to exist.");
-        }
-
-        public ulong DrawGiveaway(string name)
-        {
-            name = name.ToLower();
-
-            if (Giveaways.ContainsKey(name))
-            {
-                if (Giveaways[name].Count > 1)
-                {
-                    ulong toReturn = Giveaways[name].ToList()[StaticBase.ran.Next(1, Giveaways[name].Count)];
-                    Giveaways.Remove(name);
-                    SaveJson();
-                    return toReturn;
-                }
-                else
-                {
-                    Giveaways.Remove(name);
-                    SaveJson();
-                    throw new Exception("There was nobody to draw. Deleting Giveaway still.");
-                }
-            }
-
-            throw new Exception("The Giveaway does not exist.");
-        }
-    }
-
     public class ReactionGiveaway
     {
 
         //Key: Channel ID, Value: (Key: Message ID, Value: User IDs)
-        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
         public Dictionary<ulong, Dictionary<ulong, List<ulong>>> Giveaways = new Dictionary<ulong, Dictionary<ulong, List<ulong>>>();
 
         public ReactionGiveaway()
@@ -105,6 +29,8 @@ namespace MopsBot.Data
                 try
                 {
                     Giveaways = JsonConvert.DeserializeObject<Dictionary<ulong, Dictionary<ulong, List<ulong>>>>(read.ReadToEnd());
+                    StaticBase.Database.GetCollection<MongoKVP<ulong, List<KeyValuePair<ulong, List<ulong>>>>>(this.GetType().Name).InsertMany(MongoKVP<ulong, List<KeyValuePair<ulong, List<ulong>>>>.DictToMongoKVP(Giveaways.ToDictionary(x => x.Key, x=> x.Value.ToList())));
+                    //Giveaways = new Dictionary<ulong, Dictionary<ulong, List<ulong>>>(StaticBase.Database.GetCollection<MongoKVP<ulong, List<KeyValuePair<ulong, List<ulong>>>>>(this.GetType().Name).FindSync(x => true).ToList().Select(x => new KeyValuePair<ulong, Dictionary<ulong, List<ulong>>>(x.Key, x.Value.ToDictionary(y => y.Key, y => y.Value))));
                 }
                 catch (Exception e)
                 {
@@ -156,18 +82,22 @@ namespace MopsBot.Data
                                 channel.Value.Remove(message.Key);
                             else
                                 Giveaways.Remove(channel.Key);
-
-                            SaveJson();
                         }
                     }
                 }
             }
         }
 
-        public void SaveJson()
-        {
-            using (StreamWriter write = new StreamWriter(new FileStream($"mopsdata//ReactionGiveaways.json", FileMode.Create)))
-                write.Write(JsonConvert.SerializeObject(Giveaways, Formatting.Indented));
+        public async Task InsertIntoDBAsync(ulong key){
+            await StaticBase.Database.GetCollection<MongoKVP<ulong, List<KeyValuePair<ulong, List<ulong>>>>>(this.GetType().Name).InsertOneAsync(new MongoKVP<ulong, List<KeyValuePair<ulong, List<ulong>>>>(key, Giveaways[key].ToList()));
+        }
+
+        public async Task UpdateDBAsync(ulong key){
+            await StaticBase.Database.GetCollection<MongoKVP<ulong, List<KeyValuePair<ulong, List<ulong>>>>>(this.GetType().Name).ReplaceOneAsync(x => x.Key == key, new MongoKVP<ulong, List<KeyValuePair<ulong, List<ulong>>>>(key, Giveaways[key].ToList()));
+        }
+
+        public async Task RemoveFromDBAsync(ulong key){
+            await StaticBase.Database.GetCollection<MongoKVP<ulong, List<KeyValuePair<ulong, List<ulong>>>>>(this.GetType().Name).DeleteOneAsync(x => x.Key == key);
         }
 
         public async Task AddGiveaway(IMessageChannel channel, string name, IUser creator)
@@ -196,10 +126,14 @@ namespace MopsBot.Data
             participants.Add(creator.Id);
 
             messages.Add(message.Id, participants);
-            if (Giveaways.ContainsKey(channel.Id)) Giveaways[channel.Id].Add(message.Id, participants);
-            else Giveaways.Add(channel.Id, messages);
-
-            SaveJson();
+            if (Giveaways.ContainsKey(channel.Id)){
+                Giveaways[channel.Id].Add(message.Id, participants);
+                await UpdateDBAsync(channel.Id);
+            }
+            else{
+                Giveaways.Add(channel.Id, messages);
+                await InsertIntoDBAsync(channel.Id);
+            }
         }
 
         private async Task JoinGiveaway(ReactionHandlerContext context)
@@ -208,7 +142,7 @@ namespace MopsBot.Data
                 && !Giveaways[context.Channel.Id][context.Message.Id].Contains(context.Reaction.UserId))
             {
                 Giveaways[context.Channel.Id][context.Message.Id].Add(context.Reaction.UserId);
-                SaveJson();
+                await UpdateDBAsync(context.Channel.Id);
                 await updateMessage(context.Message);
             }
         }
@@ -219,7 +153,7 @@ namespace MopsBot.Data
                && !Giveaways[message.Channel.Id][message.Id].Contains(userId))
             {
                 Giveaways[message.Channel.Id][message.Id].Add(userId);
-                SaveJson();
+                await UpdateDBAsync(message.Channel.Id);
                 await updateMessage(message);
             }
         }
@@ -229,7 +163,7 @@ namespace MopsBot.Data
             if (!Giveaways[context.Channel.Id][context.Message.Id].First().Equals(context.Reaction.UserId))
             {
                 Giveaways[context.Channel.Id][context.Message.Id].Remove(context.Reaction.UserId);
-                SaveJson();
+                await UpdateDBAsync(context.Channel.Id);
                 await updateMessage(context.Message);
             }
         }
@@ -239,7 +173,7 @@ namespace MopsBot.Data
             if (!Giveaways[message.Channel.Id][message.Id].First().Equals(userId))
             {
                 Giveaways[message.Channel.Id][message.Id].Remove(userId);
-                SaveJson();
+                await UpdateDBAsync(message.Channel.Id);
                 await updateMessage(message);
             }
         }
@@ -261,9 +195,14 @@ namespace MopsBot.Data
                 var embed = context.Message.Embeds.First().ToEmbedBuilder().WithDescription(winner.Mention + " won the giveaway!");
                 await context.Message.ModifyAsync(x => x.Embed = embed.Build());
 
-                if (Giveaways[context.Channel.Id].Count == 1) Giveaways.Remove(context.Channel.Id);
-                else Giveaways[context.Channel.Id].Remove(context.Message.Id);
-                SaveJson();
+                if (Giveaways[context.Channel.Id].Count == 1){
+                    Giveaways.Remove(context.Channel.Id);
+                    await RemoveFromDBAsync(context.Channel.Id);
+                }
+                else{
+                    Giveaways[context.Channel.Id].Remove(context.Message.Id);
+                    await UpdateDBAsync(context.Channel.Id);
+                }
             }
         }
 
@@ -284,9 +223,14 @@ namespace MopsBot.Data
                 var embed = message.Embeds.First().ToEmbedBuilder().WithDescription(winner.Mention + " won the giveaway!");
                 await message.ModifyAsync(x => x.Embed = embed.Build());
 
-                if (Giveaways[message.Channel.Id].Count == 1) Giveaways.Remove(message.Channel.Id);
-                else Giveaways[message.Channel.Id].Remove(message.Id);
-                SaveJson();
+                if (Giveaways[message.Channel.Id].Count == 1){
+                    Giveaways.Remove(message.Channel.Id);
+                    await RemoveFromDBAsync(message.Channel.Id);
+                }
+                else{
+                    Giveaways[message.Channel.Id].Remove(message.Id);
+                    await UpdateDBAsync(message.Channel.Id);
+                }
             }
         }
 

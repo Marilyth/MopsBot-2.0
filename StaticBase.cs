@@ -41,7 +41,6 @@ namespace MopsBot
         public static ReactionPoll Poll;
         //public static Crosswords Crosswords;
         public static Dictionary<ITracker.TrackerType, TrackerWrapper> Trackers;
-        public static MuteTimeHandler MuteHandler;
         public static NewsApiClient NewsClient;
 
         public static bool init = false;
@@ -75,23 +74,6 @@ namespace MopsBot
                 NewsClient = new NewsApiClient(Program.Config["NewsAPI"]);
 
                 WoWTracker.WoWClient = new WowExplorer(Region.EU, Locale.en_GB, Program.Config["WoWKey"]);
-
-                using (StreamReader read = new StreamReader(new FileStream($"mopsdata//MuteTimerHandler.json", FileMode.OpenOrCreate)))
-                {
-                    try
-                    {
-                        MuteHandler = Newtonsoft.Json.JsonConvert.DeserializeObject<MuteTimeHandler>(read.ReadToEnd());
-
-                        if (MuteHandler == null)
-                            MuteHandler = new MuteTimeHandler();
-
-                        MuteHandler.SetTimers();
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine("\n" + e.Message + e.StackTrace);
-                    }
-                }
 
                 Trackers = new Dictionary<ITracker.TrackerType, Data.TrackerWrapper>();
                 Trackers[ITracker.TrackerType.Osu] = new TrackerHandler<OsuTracker>();
