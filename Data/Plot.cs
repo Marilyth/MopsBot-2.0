@@ -82,6 +82,15 @@ namespace MopsBot.Data
             }
         }
 
+        public static string DrawPlot(string name, Dictionary<string, double> dict){
+            var tmpBarPlot = new BarPlot(name, false, dict.Keys.ToArray());
+            foreach(var key in dict.Keys){
+                tmpBarPlot.AddValue(key, dict[key]);
+            }
+
+            return tmpBarPlot.DrawPlot();
+        }
+
         /// <summary>
         /// Saves the plot as a .png and returns the URL.
         /// </summary>

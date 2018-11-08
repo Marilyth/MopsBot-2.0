@@ -11,13 +11,14 @@ using System.Runtime.InteropServices;
 using Newtonsoft.Json;
 using MongoDB.Bson.Serialization.Options;
 using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Driver;
+using MopsBot.Data.Entities;
 
 namespace MopsBot.Data
 {
     public class ReactionPoll
     {
         //Key: Channel ID, Value: Message IDs
-        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
         public Dictionary<ulong, List<Poll>> Polls = new Dictionary<ulong, List<Poll>>();
 
         public ReactionPoll()
@@ -27,13 +28,21 @@ namespace MopsBot.Data
                 try
                 {
                     Polls = JsonConvert.DeserializeObject<Dictionary<ulong, List<Poll>>>(read.ReadToEnd());
-                    if (Polls == null)
+                    StaticBase.Database.GetCollection<MongoKVP<ulong, List<Poll>>>(this.GetType().Name).InsertMany(MongoKVP<ulong, List<Poll>>.DictToMongoKVP(Polls));
+                    //Polls = new Dictionary<ulong, List<Poll>>(StaticBase.Database.GetCollection<MongoKVP<ulong, List<Poll>>>(this.GetType().Name).FindSync(x => true).ToList().Select(x => (KeyValuePair<ulong, List<Poll>>)x));
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("\n" + e.Message + e.StackTrace);
+                }
+
+                Polls = Polls ?? new Dictionary<ulong, List<Poll>>();
+                
+                foreach (var channel in Polls)
+                {
+                    foreach (var poll in channel.Value)
                     {
-                        Polls = new Dictionary<ulong, List<Poll>>();
-                    }
-                    foreach (var channel in Polls)
-                    {
-                        foreach (var poll in channel.Value)
+                        try
                         {
                             poll.CreateChart();
                             var textmessage = (IUserMessage)((ITextChannel)Program.Client.GetChannel(channel.Key)).GetMessageAsync(poll.MessageID).Result;
@@ -46,21 +55,30 @@ namespace MopsBot.Data
 
                             Program.ReactionHandler.AddHandler(textmessage, new Emoji("🗑"), DeletePoll).Wait();
                         }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("\n" + e.Message + e.StackTrace);
+                        }
                     }
                 }
-                catch (Exception e)
-                {
-                    Console.WriteLine("\n" +  e.Message + e.StackTrace);
-                }
+
             }
         }
 
-        public void SaveJson()
+        public async Task InsertIntoDBAsync(ulong key)
         {
-            using (StreamWriter write = new StreamWriter(new FileStream($"mopsdata//ReactionPoll.json", FileMode.Create)))
-                write.Write(JsonConvert.SerializeObject(Polls, Formatting.Indented));
+            await StaticBase.Database.GetCollection<MongoKVP<ulong, List<Poll>>>(this.GetType().Name).InsertOneAsync(MongoKVP<ulong, List<Poll>>.KVPToMongoKVP(new KeyValuePair<ulong, List<Poll>>(key, Polls[key])));
         }
 
+        public async Task UpdateDBAsync(ulong key)
+        {
+            await StaticBase.Database.GetCollection<MongoKVP<ulong, List<Poll>>>(this.GetType().Name).ReplaceOneAsync(x => x.Key == key, MongoKVP<ulong, List<Poll>>.KVPToMongoKVP(new KeyValuePair<ulong, List<Poll>>(key, Polls[key])));
+        }
+
+        public async Task RemoveFromDBAsync(ulong key)
+        {
+            await StaticBase.Database.GetCollection<MongoKVP<ulong, List<Poll>>>(this.GetType().Name).DeleteOneAsync(x => x.Key == key);
+        }
         public async Task AddPoll(ITextChannel channel, Poll poll)
         {
             EmbedBuilder e = new EmbedBuilder();
@@ -85,36 +103,40 @@ namespace MopsBot.Data
                 var option = poll.Options[i];
                 Program.ReactionHandler.AddHandler(message, EmojiDict[i], x => AddVote(x, option)).Wait();
             }
-            await Program.ReactionHandler.AddHandler(message, new Emoji("🗑"), DeletePoll);
 
-            if (Polls.ContainsKey(channel.Id))
+            await Program.ReactionHandler.AddHandler(message, new Emoji("🗑"), DeletePoll);
+            poll.MessageID = message.Id;
+
+            if (Polls.ContainsKey(channel.Id)){
                 Polls[channel.Id].Add(poll);
+                await UpdateDBAsync(channel.Id);
+            }
             else
             {
                 Polls.Add(channel.Id, new List<Poll> { poll });
+                await InsertIntoDBAsync(channel.Id);
             }
 
-            poll.MessageID = message.Id;
             poll.CreateChart(false);
             await updateMessage(message, poll);
-
-            SaveJson();
         }
 
         public async Task AddVote(ReactionHandlerContext context, string option)
         {
             var poll = Polls[context.Channel.Id].First(x => x.MessageID.Equals(context.Message.Id));
-            if(!poll.Voters.ContainsKey(context.Reaction.UserId)){
+            if (!poll.Voters.ContainsKey(context.Reaction.UserId))
+            {
                 poll.AddValue(option, 1);
                 poll.Voters.Add(context.Reaction.UserId, option);
             }
-            else{
+            else
+            {
                 poll.AddValue(option, 1);
                 poll.AddValue(poll.Voters[context.Reaction.UserId], -1);
                 poll.Voters[context.Reaction.UserId] = option;
             }
-
-            SaveJson();
+            
+            await UpdateDBAsync(context.Channel.Id);
             await updateMessage(context, poll);
         }
 
@@ -125,14 +147,14 @@ namespace MopsBot.Data
             {
                 await Program.ReactionHandler.ClearHandler(context.Message);
 
-                Polls[context.Channel.Id].First(x => x.MessageID == context.Message.Id).Dispose();
-
-                if (Polls[context.Channel.Id].Count > 1)
+                if (Polls[context.Channel.Id].Count > 1){
                     Polls[context.Channel.Id].RemoveAll(x => x.MessageID == context.Message.Id);
-                else
+                    await UpdateDBAsync(context.Channel.Id);
+                }
+                else{
                     Polls.Remove(context.Channel.Id);
-
-                SaveJson();
+                    await RemoveFromDBAsync(context.Channel.Id);
+                }
             }
         }
 
@@ -141,7 +163,7 @@ namespace MopsBot.Data
             var e = context.Message.Embeds.First().ToEmbedBuilder();
 
             e.WithImageUrl(poll.GetChartURI());
-            
+
 
             await context.Message.ModifyAsync(x =>
             {
@@ -154,7 +176,7 @@ namespace MopsBot.Data
             var e = message.Embeds.First().ToEmbedBuilder();
 
             e.WithImageUrl(poll.GetChartURI());
-            
+
 
             await message.ModifyAsync(x =>
             {
@@ -192,20 +214,28 @@ namespace MopsBot.Data
             Voters = new Dictionary<ulong, string>();
         }
 
-        public void CreateChart(bool alreadyExists = true){
+        public void CreateChart(bool alreadyExists = true)
+        {
             chart = new BarPlot(Uri.EscapeDataString(Question) + MessageID, alreadyExists, Options);
         }
 
-        public void AddValue(string option, double value){
+        public void AddValue(string option, double value)
+        {
             chart.AddValue(option, value);
         }
 
-        public string GetChartURI(){
-            return chart.DrawPlot();
-        }
+        public string GetChartURI()
+        {
+            Dictionary<string, double> results = new Dictionary<string, double>();
 
-        public void Dispose(){
-            chart?.RemovePlot();
+            foreach(var option in Options){
+                results[option] = 0;
+            }
+            foreach(var vote in Voters){
+                results[vote.Value]++;
+            }
+
+            return BarPlot.DrawPlot(Uri.EscapeDataString(Question) + MessageID, results);
         }
     }
 }
