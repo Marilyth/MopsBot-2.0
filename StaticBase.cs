@@ -30,9 +30,7 @@ namespace MopsBot
         public static List<string> Playlist = new List<string>();
         [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
         public static Dictionary<ulong, Data.Entities.WelcomeMessage> WelcomeMessages;
-
-        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
-        public static Dictionary<ulong, Dictionary<string, string>> CustomCommands;
+        public static Dictionary<ulong, Data.Entities.CustomCommands> CustomCommands;
         public static ReactionGiveaway ReactGiveaways;
         public static ReactionRoleJoin ReactRoleJoin;
         public static ReactionPoll Poll;
@@ -108,18 +106,6 @@ namespace MopsBot
         public static async Task<string> GetGuildPrefixAsync(ulong guildId){
             string prefix = (await Database.GetCollection<Data.Entities.MongoKVP<ulong, string>>("GuildPrefixes").FindAsync(x => x.Key == guildId)).FirstOrDefault()?.Value;
             return prefix ?? "!";
-        }
-
-        /// <summary>
-        /// Writes all custom commands into a file.
-        /// </summary>
-        public static void SaveCommand()
-        {
-            using (StreamWriter write = new StreamWriter(new FileStream("mopsdata//CustomCommands.json", FileMode.Create)))
-            {
-                write.WriteLine(JsonConvert.SerializeObject(CustomCommands, Formatting.Indented));
-                Database.GetCollection<Data.Entities.CustomCommands>("CustomCommands").InsertMany(CustomCommands.Select(x => new Data.Entities.CustomCommands(x.Key){Commands = x.Value}));
-            }
         }
 
         /// <summary>

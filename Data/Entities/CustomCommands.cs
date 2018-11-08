@@ -25,8 +25,23 @@ namespace MopsBot.Data.Entities
             Commands = new Dictionary<string, string>();
         }
 
+        public async Task AddCommandAsync(string command, string message){
+            Commands[command] = message;
+            await InsertOrUpdateAsync();
+        }
+
+        public async Task RemoveCommandAsync(string command){
+            if(Commands.Count == 1){
+                await RemoveFromDBAsync();
+                StaticBase.CustomCommands.Remove(GuildId);
+            } else {
+                Commands.Remove(command);
+                await InsertOrUpdateAsync();
+            }
+        }
+
         public async Task InsertOrUpdateAsync(){
-            bool hasEntry = (await StaticBase.Database.GetCollection<Data.Entities.MongoKVP<ulong, string>>(this.GetType().Name).FindAsync(x => x.Key == GuildId)).ToList().Count == 1;
+            bool hasEntry = (await StaticBase.Database.GetCollection<CustomCommands>(this.GetType().Name).FindAsync(x => x.GuildId == GuildId)).ToList().Count == 1;
             
             if(!hasEntry)
                 await StaticBase.Database.GetCollection<CustomCommands>(this.GetType().Name).InsertOneAsync(this);

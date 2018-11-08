@@ -63,7 +63,8 @@ namespace MopsBot
         /// <param name="User">The User who joined</param>
         private async Task Client_UserJoined(SocketGuildUser User)
         {
-            if(StaticBase.WelcomeMessages.ContainsKey(User.Guild.Id)){
+            if (StaticBase.WelcomeMessages.ContainsKey(User.Guild.Id))
+            {
                 await WelcomeMessages[User.Guild.Id].SendWelcomeMessageAsync(User);
             }
         }
@@ -109,14 +110,15 @@ namespace MopsBot
             // If the command failed, notify the user
             if (!result.IsSuccess && !result.ErrorReason.Equals(""))
             {
-                if(result.ErrorReason.Contains("Object reference not set to an instance of an object"))
+                if (result.ErrorReason.Contains("Object reference not set to an instance of an object"))
                     await message.Channel.SendMessageAsync($"**Error:** Mops just restarted and needs to initialise things first.\nTry again in a minute!");
-                else if(result.ErrorReason.Contains("The input text has too many parameters"))
+                else if (result.ErrorReason.Contains("The input text has too many parameters"))
                     await message.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}\nIf your parameter contains spaces, please wrap it around quotation marks like this: `\"A Parameter\"`.");
-                else if(!result.ErrorReason.Contains("Unknown command"))
+                else if (!result.ErrorReason.Contains("Unknown command"))
                     await message.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}");
-                else{
-                    await commands.Commands.First(x => x.Name.Equals("UseCustomCommand")).ExecuteAsync(context, new List<object>{$"{context.Message.Content.Substring(argPos)}"}, new List<object>{}, _provider);
+                else
+                {
+                    await commands.Commands.First(x => x.Name.Equals("UseCustomCommand")).ExecuteAsync(context, new List<object> { $"{context.Message.Content.Substring(argPos)}" }, new List<object> { }, _provider);
                 }
             }
         }
@@ -131,16 +133,17 @@ namespace MopsBot
             e.WithDescription("For more information regarding a **specific command**, please use **?<command>**\n" +
                               "To see the commands of a **submodule\\***, please use **help <submodule>**.")
              .WithColor(Discord.Color.Blue)
-             .WithAuthor(async x => {
+             .WithAuthor(async x =>
+             {
                  x.IconUrl = (await ((IDiscordClient)Program.Client).GetGuildAsync(435919579005321237)).IconUrl;
                  x.Name = "Click to join the Support Server!";
                  x.Url = "https://discord.gg/wZFE2Zs";
              });
-             
+
             string message = msg.Content.Replace("?", "").ToLower();
             Embed embed = getHelpEmbed(message, prefix, e).Build();
-            
-            if(embed != null)
+
+            if (embed != null)
                 await msg.Channel.SendMessageAsync("", embed: embed);
         }
 
@@ -151,7 +154,8 @@ namespace MopsBot
         /// <param name="command">The command to create the embed for</param>
         /// <param name="usage">The usage example to include in the embed</param>
         /// <param name="description">The desciption to include in the embed</param>
-        private EmbedBuilder createHelpEmbed(string command, string usage, string description, EmbedBuilder e){
+        private EmbedBuilder createHelpEmbed(string command, string usage, string description, EmbedBuilder e)
+        {
             //EmbedBuilder e = new EmbedBuilder();
             e.Title = command;
             e.ImageUrl = GetCommandHelpImage(command);
@@ -162,8 +166,10 @@ namespace MopsBot
             return e;
         }
 
-        public EmbedBuilder getHelpEmbed(string message, string prefix, EmbedBuilder e = null){
-            if(e is null){
+        public EmbedBuilder getHelpEmbed(string message, string prefix, EmbedBuilder e = null)
+        {
+            if (e is null)
+            {
                 e = new EmbedBuilder();
                 e.Color = new Color(0x0099ff);
             }
@@ -185,7 +191,8 @@ namespace MopsBot
                     curCommand = commands.Modules.First(x => x.Name.ToLower().Equals(moduleName)).Commands.First(x => x.Name.ToLower().Equals(commandName));
                 }
 
-                if(curCommand.Summary.Equals("")){
+                if (curCommand.Summary.Equals(""))
+                {
                     throw new Exception("Command not found");
                 }
                 output += $"`{prefix}{(curCommand.Module.IsSubmodule ? curCommand.Module.Name + " " + curCommand.Name : curCommand.Name)}";
@@ -206,7 +213,7 @@ namespace MopsBot
             else
             {
                 var module = Program.Handler.commands.Modules.First(x => x.Name.ToLower().Equals(moduleName.ToLower()));
-                
+
                 string moduleInformation = "";
                 moduleInformation += string.Join(", ", module.Commands.Where(x => !x.Preconditions.OfType<HideAttribute>().Any()).Select(x => $"[{x.Name}]({CommandHandler.GetCommandHelpImage($"{module.Name} {x.Name}")})"));
                 moduleInformation += "\n";
@@ -218,7 +225,8 @@ namespace MopsBot
             return e;
         }
 
-        public static string GetCommandHelpImage(string command){
+        public static string GetCommandHelpImage(string command)
+        {
             return $"http://5.45.104.29/mops_example_usage/{command.ToLower()}.PNG?rand={StaticBase.ran.Next(0, 999999999)}".Replace(" ", "%20");
         }
 
@@ -227,19 +235,14 @@ namespace MopsBot
         /// </summary>
         private async Task loadCustomCommands()
         {
-            using (StreamReader read = new StreamReader(new FileStream($"mopsdata//CustomCommands.json", FileMode.OpenOrCreate)))
+            try
             {
-                try
-                {
-                    CustomCommands = JsonConvert.DeserializeObject<Dictionary<ulong, Dictionary<string, string>>>(read.ReadToEnd()) ?? new Dictionary<ulong, Dictionary<string, string>>();
-                    //CustomCommands = (await StaticBase.Database.GetCollection<Data.Entities.CustomCommands>("CustomCommands").FindAsync(x => true)).ToList().ToDictionary(x => x.GuildId, x => x);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine("\n" +  e.Message + e.StackTrace);
-                }
+                CustomCommands = (await StaticBase.Database.GetCollection<Data.Entities.CustomCommands>("CustomCommands").FindAsync(x => true)).ToList().ToDictionary(x => x.GuildId, x => x);
             }
-            SaveCommand();
+            catch (Exception e)
+            {
+                Console.WriteLine("\n" + e.Message + e.StackTrace);
+            }
         }
     }
 }

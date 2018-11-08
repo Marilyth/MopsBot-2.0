@@ -195,22 +195,12 @@ namespace MopsBot.Module
         {
             if (!StaticBase.CustomCommands.ContainsKey(Context.Guild.Id))
             {
-                StaticBase.CustomCommands.Add(Context.Guild.Id, new Dictionary<string, string>());
+                StaticBase.CustomCommands.Add(Context.Guild.Id, new Data.Entities.CustomCommands(Context.Guild.Id));
             }
 
-            if (!StaticBase.CustomCommands[Context.Guild.Id].ContainsKey(command))
-            {
-                StaticBase.CustomCommands[Context.Guild.Id].Add(command, responseText);
-                await ReplyAsync($"Added new command **{command}**.");
-            }
+            await StaticBase.CustomCommands[Context.Guild.Id].AddCommandAsync(command, responseText);
 
-            else
-            {
-                StaticBase.CustomCommands[Context.Guild.Id][command] = responseText;
-                await ReplyAsync($"Replaced command **{command}**.");
-            }
-
-            StaticBase.SaveCommand();
+            await ReplyAsync($"Command **{command}** has been created.");
         }
 
         [Command("RemoveCommand")]
@@ -218,14 +208,9 @@ namespace MopsBot.Module
         [RequireUserPermission(ChannelPermission.ManageChannels)]
         public async Task RemoveCommand(string command)
         {
-            if (StaticBase.CustomCommands[Context.Guild.Id].ContainsKey(command))
+            if (StaticBase.CustomCommands.ContainsKey(Context.Guild.Id))
             {
-                if (StaticBase.CustomCommands[Context.Guild.Id].Count == 1)
-                    StaticBase.CustomCommands.Remove(Context.Guild.Id);
-                else
-                    StaticBase.CustomCommands[Context.Guild.Id].Remove(command);
-
-                StaticBase.SaveCommand();
+                await StaticBase.CustomCommands[Context.Guild.Id].RemoveCommandAsync(command);
                 await ReplyAsync($"Removed command **{command}**.");
             }
             else
@@ -246,7 +231,7 @@ namespace MopsBot.Module
         [Hide()]
         public async Task UseCustomCommand(string command)
         {
-            var reply = StaticBase.CustomCommands[Context.Guild.Id][command];
+            var reply = StaticBase.CustomCommands[Context.Guild.Id].Commands[command];
             reply = reply.Replace("{User.Username}", $"{Context.User.Username}")
                          .Replace("{User.Mention}", $"{Context.User.Mention}");
             await ReplyAsync(reply);
@@ -334,7 +319,7 @@ namespace MopsBot.Module
 
                 if (StaticBase.CustomCommands.ContainsKey(Context.Guild.Id))
                 {
-                    e.AddField("**Custom Commands**", string.Join(", ", StaticBase.CustomCommands.Where(x => x.Key == Context.Guild.Id).First().Value.Select(x => $"`{x.Key}`")));
+                    e.AddField("**Custom Commands**", string.Join(", ", StaticBase.CustomCommands.Where(x => x.Key == Context.Guild.Id).First().Value.Commands.Select(x => $"`{x.Key}`")));
                 }
             }
             else
