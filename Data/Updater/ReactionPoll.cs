@@ -23,46 +23,47 @@ namespace MopsBot.Data
 
         public ReactionPoll()
         {
-            using (StreamReader read = new StreamReader(new FileStream($"mopsdata//ReactionPoll.json", FileMode.OpenOrCreate)))
+            //using (StreamReader read = new StreamReader(new FileStream($"mopsdata//ReactionPoll.json", FileMode.OpenOrCreate)))
+            //{
+            try
             {
-                try
-                {
-                    Polls = JsonConvert.DeserializeObject<Dictionary<ulong, List<Poll>>>(read.ReadToEnd());
-                    StaticBase.Database.GetCollection<MongoKVP<ulong, List<Poll>>>(this.GetType().Name).InsertMany(MongoKVP<ulong, List<Poll>>.DictToMongoKVP(Polls));
-                    //Polls = new Dictionary<ulong, List<Poll>>(StaticBase.Database.GetCollection<MongoKVP<ulong, List<Poll>>>(this.GetType().Name).FindSync(x => true).ToList().Select(x => (KeyValuePair<ulong, List<Poll>>)x));
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine("\n" + e.Message + e.StackTrace);
-                }
+                //Polls = JsonConvert.DeserializeObject<Dictionary<ulong, List<Poll>>>(read.ReadToEnd());
+                //StaticBase.Database.GetCollection<MongoKVP<ulong, List<Poll>>>(this.GetType().Name).InsertMany(MongoKVP<ulong, List<Poll>>.DictToMongoKVP(Polls));
+                Polls = new Dictionary<ulong, List<Poll>>(StaticBase.Database.GetCollection<MongoKVP<ulong, List<Poll>>>(this.GetType().Name).FindSync(x => true).ToList().Select(x => (KeyValuePair<ulong, List<Poll>>)x));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("\n" + e.Message + e.StackTrace);
+            }
+            //}
 
-                Polls = Polls ?? new Dictionary<ulong, List<Poll>>();
-                
-                foreach (var channel in Polls)
+            Polls = Polls ?? new Dictionary<ulong, List<Poll>>();
+
+            foreach (var channel in Polls)
+            {
+                foreach (var poll in channel.Value)
                 {
-                    foreach (var poll in channel.Value)
+                    try
                     {
-                        try
-                        {
-                            poll.CreateChart();
-                            var textmessage = (IUserMessage)((ITextChannel)Program.Client.GetChannel(channel.Key)).GetMessageAsync(poll.MessageID).Result;
+                        poll.CreateChart();
+                        var textmessage = (IUserMessage)((ITextChannel)Program.Client.GetChannel(channel.Key)).GetMessageAsync(poll.MessageID).Result;
 
-                            for (int i = 0; i < poll.Options.Length; i++)
-                            {
-                                var option = poll.Options[i];
-                                Program.ReactionHandler.AddHandler(textmessage, EmojiDict[i], x => AddVote(x, option)).Wait();
-                            }
-
-                            Program.ReactionHandler.AddHandler(textmessage, new Emoji("🗑"), DeletePoll).Wait();
-                        }
-                        catch (Exception e)
+                        for (int i = 0; i < poll.Options.Length; i++)
                         {
-                            Console.WriteLine("\n" + e.Message + e.StackTrace);
+                            var option = poll.Options[i];
+                            Program.ReactionHandler.AddHandler(textmessage, EmojiDict[i], x => AddVote(x, option)).Wait();
                         }
+
+                        Program.ReactionHandler.AddHandler(textmessage, new Emoji("🗑"), DeletePoll).Wait();
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("\n" + e.Message + e.StackTrace);
                     }
                 }
-
             }
+
+
         }
 
         public async Task InsertIntoDBAsync(ulong key)
@@ -107,7 +108,8 @@ namespace MopsBot.Data
             await Program.ReactionHandler.AddHandler(message, new Emoji("🗑"), DeletePoll);
             poll.MessageID = message.Id;
 
-            if (Polls.ContainsKey(channel.Id)){
+            if (Polls.ContainsKey(channel.Id))
+            {
                 Polls[channel.Id].Add(poll);
                 await UpdateDBAsync(channel.Id);
             }
@@ -135,7 +137,7 @@ namespace MopsBot.Data
                 poll.AddValue(poll.Voters[context.Reaction.UserId], -1);
                 poll.Voters[context.Reaction.UserId] = option;
             }
-            
+
             await UpdateDBAsync(context.Channel.Id);
             await updateMessage(context, poll);
         }
@@ -147,11 +149,13 @@ namespace MopsBot.Data
             {
                 await Program.ReactionHandler.ClearHandler(context.Message);
 
-                if (Polls[context.Channel.Id].Count > 1){
+                if (Polls[context.Channel.Id].Count > 1)
+                {
                     Polls[context.Channel.Id].RemoveAll(x => x.MessageID == context.Message.Id);
                     await UpdateDBAsync(context.Channel.Id);
                 }
-                else{
+                else
+                {
                     Polls.Remove(context.Channel.Id);
                     await RemoveFromDBAsync(context.Channel.Id);
                 }
@@ -228,10 +232,12 @@ namespace MopsBot.Data
         {
             Dictionary<string, double> results = new Dictionary<string, double>();
 
-            foreach(var option in Options){
+            foreach (var option in Options)
+            {
                 results[option] = 0;
             }
-            foreach(var vote in Voters){
+            foreach (var vote in Voters)
+            {
                 results[vote.Value]++;
             }
 
