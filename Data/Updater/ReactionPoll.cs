@@ -45,7 +45,6 @@ namespace MopsBot.Data
                 {
                     try
                     {
-                        poll.CreateChart();
                         var textmessage = (IUserMessage)((ITextChannel)Program.Client.GetChannel(channel.Key)).GetMessageAsync(poll.MessageID).Result;
 
                         for (int i = 0; i < poll.Options.Length; i++)
@@ -119,7 +118,6 @@ namespace MopsBot.Data
                 await InsertIntoDBAsync(channel.Id);
             }
 
-            poll.CreateChart(false);
             await updateMessage(message, poll);
         }
 
@@ -128,13 +126,10 @@ namespace MopsBot.Data
             var poll = Polls[context.Channel.Id].First(x => x.MessageID.Equals(context.Message.Id));
             if (!poll.Voters.ContainsKey(context.Reaction.UserId))
             {
-                poll.AddValue(option, 1);
                 poll.Voters.Add(context.Reaction.UserId, option);
             }
             else
             {
-                poll.AddValue(option, 1);
-                poll.AddValue(poll.Voters[context.Reaction.UserId], -1);
                 poll.Voters[context.Reaction.UserId] = option;
             }
 
@@ -209,23 +204,12 @@ namespace MopsBot.Data
         public string[] Options;
         public string Question;
         public ulong MessageID;
-        private BarPlot chart;
 
         public Poll(string question, params string[] options)
         {
             Options = options;
             Question = question;
             Voters = new Dictionary<ulong, string>();
-        }
-
-        public void CreateChart(bool alreadyExists = true)
-        {
-            chart = new BarPlot(Uri.EscapeDataString(Question) + MessageID, alreadyExists, Options);
-        }
-
-        public void AddValue(string option, double value)
-        {
-            chart.AddValue(option, value);
         }
 
         public string GetChartURI()
