@@ -79,6 +79,7 @@ namespace MopsBot.Data
         {
             await StaticBase.Database.GetCollection<MongoKVP<ulong, List<Poll>>>(this.GetType().Name).DeleteOneAsync(x => x.Key == key);
         }
+        
         public async Task AddPoll(ITextChannel channel, Poll poll)
         {
             EmbedBuilder e = new EmbedBuilder();
@@ -88,7 +89,6 @@ namespace MopsBot.Data
             e.Color = Color.Blue;
             e.WithCurrentTimestamp();
             e.WithFooter(x => x.WithIconUrl("http://thebullelephant.com/wp-content/uploads/2016/10/poll-box-1.png").WithText("Poll"));
-            //e.WithImageUrl(poll.GetChartURI());
 
             StringBuilder optionText = new StringBuilder();
             for (int i = 0; i < poll.Options.Length; i++)

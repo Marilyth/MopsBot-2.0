@@ -74,14 +74,6 @@ namespace MopsBot.Data
             viewerChart.Series.Add(columnSeries);
         }
 
-        private void writePlotPoints()
-        {
-            using (StreamWriter write = new StreamWriter(new FileStream($"mopsdata//plots//{ID}barplot.json", FileMode.Create)))
-            {
-                write.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(Categories));
-            }
-        }
-
         public static string DrawPlot(string name, Dictionary<string, double> dict){
             var tmpBarPlot = new BarPlot(name, false, dict.Keys.ToArray());
             foreach(var key in dict.Keys){
@@ -138,7 +130,6 @@ namespace MopsBot.Data
         public void AddValue(string title, double value)
         {
             Categories[title] += value;
-            writePlotPoints();
         }
 
         /// <summary>
