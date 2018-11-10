@@ -225,7 +225,7 @@ namespace MopsBot.Data
                 results[vote.Value]++;
             }
 
-            return BarPlot.DrawPlot(MessageID, results);
+            return BarPlot.DrawPlot(MessageID.ToString(), results);
         }
     }
 }
