@@ -43,21 +43,30 @@ namespace MopsBot.Module
             }
         }
 
-        [Command("Poll", RunMode = RunMode.Async), Summary("Creates a poll\nExample: !poll \"What should I play\" \"Dark Souls\" \"Osu!\" \"WoW\"")]
-        [RequireUserPermission(GuildPermission.ManageChannels)]
+        [Group("Poll")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         [RequireBotPermission(ChannelPermission.AddReactions)]
         [RequireBotPermission(ChannelPermission.ManageMessages)]
         [RequireBotPermission(ChannelPermission.ReadMessageHistory)]
-        public async Task Poll(string title, params string[] options)
+        public class Poll : ModuleBase
         {
-            if (options.Length <= 10)
+            [Command("Create", RunMode = RunMode.Async), Summary("Creates a poll\nExample: !poll \"What should I play\" \"Dark Souls\" \"Osu!\" \"WoW\"")]
+            [RequireUserPermission(GuildPermission.ManageChannels)]
+            public async Task Create(string title, params string[] options)
             {
-                Data.Poll poll = new Data.Poll(title, options);
-                await StaticBase.Poll.AddPoll((ITextChannel)Context.Channel, poll);
+                if (options.Length <= 10)
+                {
+                    Data.Poll poll = new Data.Poll(title, options);
+                    await StaticBase.Poll.AddPoll((ITextChannel)Context.Channel, poll);
+                }
+                else
+                    await ReplyAsync("Can't have more than 10 options per poll.");
             }
-            else
-                await ReplyAsync("Can't have more than 10 options per poll.");
+
+            [Command("Get")]
+            public async Task Get(){
+                await ReplyAsync(String.Join("\n", StaticBase.Poll.Polls[Context.Channel.Id].Select(x => $"https://discordapp.com/channels/{Context.Guild.Id}/{Context.Channel.Id}/{x.MessageID} - {x.Question}")));
+            }
         }
 
         [Group("Giveaway")]
@@ -67,11 +76,18 @@ namespace MopsBot.Module
         [RequireBotPermission(ChannelPermission.ReadMessageHistory)]
         public class Giveaway : ModuleBase
         {
-            [Command("create", RunMode = RunMode.Async)]
+            [Command("Create", RunMode = RunMode.Async)]
             [Summary("Creates giveaway.")]
-            public async Task create([Remainder]string game)
+            public async Task Create([Remainder]string game)
             {
                 await ReactGiveaways.AddGiveaway(Context.Channel, game, Context.User);
+            }
+
+            [Command("Get", RunMode = RunMode.Async)]
+            [Summary("Returns message links to all active giveaways.")]
+            public async Task Get()
+            {
+                await ReplyAsync(String.Join("\n", ReactGiveaways.Giveaways[Context.Channel.Id].Select(x => $"https://discordapp.com/channels/{Context.Guild.Id}/{Context.Channel.Id}/{x.Key}")));
             }
         }
 
@@ -115,7 +131,8 @@ namespace MopsBot.Module
                 {
                     var handler = StaticBase.WelcomeMessages[Context.Guild.Id];
 
-                    if(handler.IsWebhook){
+                    if (handler.IsWebhook)
+                    {
                         handler.IsWebhook = false;
                         await handler.RemoveWebhookAsync();
                         handler.WebhookId = 0;
@@ -133,7 +150,7 @@ namespace MopsBot.Module
 
             [Command("CreateWebhook")]
             [Summary("Makes Mops greet people, in the channel you are calling this command in.\n" +
-                     "Additionally, avatar and name of the notification account can be set.\n"+
+                     "Additionally, avatar and name of the notification account can be set.\n" +
                      "Name of user: **{User.Username}**\n" +
                      "Mention of user: **{User.Mention}**")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
@@ -151,8 +168,9 @@ namespace MopsBot.Module
                 else
                 {
                     var handler = StaticBase.WelcomeMessages[Context.Guild.Id];
-                    
-                    if(!handler.IsWebhook || handler.ChannelId != Context.Channel.Id){
+
+                    if (!handler.IsWebhook || handler.ChannelId != Context.Channel.Id)
+                    {
                         await handler.RemoveWebhookAsync();
 
                         var webhook = await ((SocketTextChannel)Context.Channel).CreateWebhookAsync($"{Name ?? "Mops"} - Welcome Messages");
@@ -161,7 +179,7 @@ namespace MopsBot.Module
                         handler.IsWebhook = true;
                         handler.ChannelId = Context.Channel.Id;
                     }
-                    
+
                     handler.Name = Name;
                     handler.AvatarUrl = AvatarUrl;
                     handler.Notification = WelcomeMessage;

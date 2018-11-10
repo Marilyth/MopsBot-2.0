@@ -61,8 +61,6 @@ namespace MopsBot.Data
                     }
                 }
             }
-
-
         }
 
         public async Task InsertIntoDBAsync(ulong key)
