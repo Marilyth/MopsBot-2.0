@@ -21,14 +21,21 @@ namespace MopsBot.Module
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public class Twitter : ModuleBase
         {
-            [Command("Track")]
+            [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified TwitterUser, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task trackTwitter(string twitterUser, [Remainder]string tweetNotification = "~Tweet Tweet~")
             {
-                await Trackers[ITracker.TrackerType.Twitter].AddTrackerAsync(twitterUser, Context.Channel.Id, tweetNotification + "|" + tweetNotification);
+                try
+                {
+                    await Trackers[ITracker.TrackerType.Twitter].AddTrackerAsync(twitterUser, Context.Channel.Id, tweetNotification + "|" + tweetNotification);
 
-                await ReplyAsync("Keeping track of " + twitterUser + "'s tweets, replies and retweets, from now on!\nTo disable replies and retweets, please use the `Twitter DisableNonMain` subcommand!");
+                    await ReplyAsync("Keeping track of " + twitterUser + "'s tweets, replies and retweets, from now on!\nTo disable replies and retweets, please use the `Twitter DisableNonMain` subcommand!");
+                }
+                catch (Exception e)
+                {
+                    await ReplyAsync("**Error**: " + e.InnerException.Message);
+                }
             }
 
             [Command("UnTrack")]
@@ -115,14 +122,21 @@ namespace MopsBot.Module
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public class Osu : ModuleBase
         {
-            [Command("Track")]
+            [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified Osu player, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task trackOsu([Remainder]string OsuUser)
             {
-                await Trackers[ITracker.TrackerType.Osu].AddTrackerAsync(OsuUser, Context.Channel.Id);
+                try
+                {
+                    await Trackers[ITracker.TrackerType.Osu].AddTrackerAsync(OsuUser, Context.Channel.Id);
 
-                await ReplyAsync("Keeping track of " + OsuUser + "'s plays above `0.1pp` gain, from now on!\nYou can change the lower pp boundary by using the `Osu SetPPBounds` subcommand!");
+                    await ReplyAsync("Keeping track of " + OsuUser + "'s plays above `0.1pp` gain, from now on!\nYou can change the lower pp boundary by using the `Osu SetPPBounds` subcommand!");
+                }
+                catch (Exception e)
+                {
+                    await ReplyAsync("**Error**: " + e.InnerException.Message);
+                }
             }
 
             [Command("UnTrack")]
@@ -185,14 +199,22 @@ namespace MopsBot.Module
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public class Youtube : ModuleBase
         {
-            [Command("Track")]
+            [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified Youtuber, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task trackYoutube(string channelID, [Remainder]string notificationMessage = "New Video")
             {
-                await Trackers[ITracker.TrackerType.Youtube].AddTrackerAsync(channelID, Context.Channel.Id, notificationMessage);
+                try
+                {
+                    await Trackers[ITracker.TrackerType.Youtube].AddTrackerAsync(channelID, Context.Channel.Id, notificationMessage);
 
-                await ReplyAsync("Keeping track of " + channelID + "'s videos, from now on!");
+                    await ReplyAsync("Keeping track of " + channelID + "'s videos, from now on!");
+
+                }
+                catch (Exception e)
+                {
+                    await ReplyAsync("**Error**: " + e.InnerException.Message);
+                }
             }
 
             [Command("UnTrack")]
@@ -233,7 +255,7 @@ namespace MopsBot.Module
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public class Twitch : ModuleBase
         {
-            [Command("Track")]
+            [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified Streamer, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.ReadMessageHistory)]
@@ -241,9 +263,17 @@ namespace MopsBot.Module
             [RequireBotPermission(ChannelPermission.ManageMessages)]
             public async Task trackStreamer(string streamerName, [Remainder]string notificationMessage = "Stream went live!")
             {
-                await Trackers[ITracker.TrackerType.Twitch].AddTrackerAsync(streamerName, Context.Channel.Id, notificationMessage);
+                try
+                {
+                    await Trackers[ITracker.TrackerType.Twitch].AddTrackerAsync(streamerName, Context.Channel.Id, notificationMessage);
 
-                await ReplyAsync("Keeping track of " + streamerName + "'s streams, from now on!");
+                    await ReplyAsync("Keeping track of " + streamerName + "'s streams, from now on!");
+
+                }
+                catch (Exception e)
+                {
+                    await ReplyAsync("**Error**: " + e.InnerException.Message);
+                }
             }
 
             [Command("UnTrack")]
@@ -284,14 +314,22 @@ namespace MopsBot.Module
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public class TwitchClips : ModuleBase
         {
-            [Command("Track")]
+            [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified streamer's top clips every 30 minutes, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task trackClips(string streamerName, [Remainder]string notificationMessage = "New trending clip found!")
             {
-                await Trackers[ITracker.TrackerType.TwitchClip].AddTrackerAsync(streamerName, Context.Channel.Id, notificationMessage);
+                try
+                {
+                    await Trackers[ITracker.TrackerType.TwitchClip].AddTrackerAsync(streamerName, Context.Channel.Id, notificationMessage);
 
-                await ReplyAsync("Keeping track of " + streamerName + "'s top clips above **2** views every 30 minutes, from now on!\nUse the `SetViewThreshold` subcommand to change the threshold.");
+                    await ReplyAsync("Keeping track of " + streamerName + "'s top clips above **2** views every 30 minutes, from now on!\nUse the `SetViewThreshold` subcommand to change the threshold.");
+
+                }
+                catch (Exception e)
+                {
+                    await ReplyAsync("**Error**: " + e.InnerException.Message);
+                }
             }
 
             [Command("UnTrack")]
@@ -349,15 +387,23 @@ namespace MopsBot.Module
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public class Reddit : ModuleBase
         {
-            [Command("Track")]
+            [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified Subreddit, in the Channel you are calling this command right now.\nRequires Manage channel permissions."
             + "\n queries MUST look something like this: `title:mei+title:hanzo`")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task trackSubreddit(string subreddit, string query = null)
             {
-                await Trackers[ITracker.TrackerType.Reddit].AddTrackerAsync(String.Join(" ", new string[] { subreddit, query }.Where(x => x != null)), Context.Channel.Id);
+                try
+                {
+                    await Trackers[ITracker.TrackerType.Reddit].AddTrackerAsync(String.Join(" ", new string[] { subreddit, query }.Where(x => x != null)), Context.Channel.Id);
 
-                await ReplyAsync("Keeping track of " + subreddit + $"'s posts, from now on, using {query}!");
+                    await ReplyAsync("Keeping track of " + subreddit + $"'s posts, from now on, using {query}!");
+
+                }
+                catch (Exception e)
+                {
+                    await ReplyAsync("**Error**: " + e.InnerException.Message);
+                }
             }
 
             [Command("UnTrack")]
@@ -398,15 +444,23 @@ namespace MopsBot.Module
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public class Overwatch : ModuleBase
         {
-            [Command("Track")]
+            [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified Overwatch player, in the Channel you are calling this command right now.\nParameter: Username-Battletag")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task trackOW(string owUser)
             {
-                owUser = owUser.Replace("#", "-");
-                await Trackers[ITracker.TrackerType.Overwatch].AddTrackerAsync(owUser, Context.Channel.Id);
+                try
+                {
+                    owUser = owUser.Replace("#", "-");
+                    await Trackers[ITracker.TrackerType.Overwatch].AddTrackerAsync(owUser, Context.Channel.Id);
 
-                await ReplyAsync("Keeping track of " + owUser + "'s stats, from now on!");
+                    await ReplyAsync("Keeping track of " + owUser + "'s stats, from now on!");
+
+                }
+                catch (Exception e)
+                {
+                    await ReplyAsync("**Error**: " + e.InnerException.Message);
+                }
             }
 
             [Command("UnTrack")]
@@ -456,14 +510,22 @@ namespace MopsBot.Module
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public class News : ModuleBase
         {
-            [Command("Track")]
+            [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of articles from the specified source.\n" +
                      "Here is a list of possible sources: https://newsapi.org/sources")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task trackNews(string source, [Remainder]string query = "")
             {
-                await Trackers[ITracker.TrackerType.News].AddTrackerAsync(String.Join("|", new string[] { source, query }), Context.Channel.Id);
-                await ReplyAsync($"Keeping track of `{source}`'s articles {(query.Equals("") ? "" : $"including `{query}` from now on!")}");
+                try
+                {
+                    await Trackers[ITracker.TrackerType.News].AddTrackerAsync(String.Join("|", new string[] { source, query }), Context.Channel.Id);
+                    await ReplyAsync($"Keeping track of `{source}`'s articles {(query.Equals("") ? "" : $"including `{query}` from now on!")}");
+
+                }
+                catch (Exception e)
+                {
+                    await ReplyAsync("**Error**: " + e.InnerException.Message);
+                }
             }
 
             [Command("UnTrack")]
@@ -504,13 +566,21 @@ namespace MopsBot.Module
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public class OSRS : ModuleBase
         {
-            [Command("Track")]
+            [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the stats of the OSRS player.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task Track(string name, [Remainder]string notification = "")
             {
-                await Trackers[ITracker.TrackerType.OSRS].AddTrackerAsync(name, Context.Channel.Id);
-                await ReplyAsync($"Keeping track of `{name}` stats after each playsession, from now on!");
+                try
+                {
+                    await Trackers[ITracker.TrackerType.OSRS].AddTrackerAsync(name, Context.Channel.Id);
+                    await ReplyAsync($"Keeping track of `{name}` stats after each playsession, from now on!");
+
+                }
+                catch (Exception e)
+                {
+                    await ReplyAsync("**Error**: " + e.InnerException.Message);
+                }
             }
 
             [Command("UnTrack")]
@@ -573,12 +643,20 @@ namespace MopsBot.Module
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public class HTML : InteractiveBase
         {
-            [Command("TrackRegex")]
+            [Command("TrackRegex", RunMode = RunMode.Async)]
             [Summary("Tracks regex on a webpage. Use () around the text you want to track to signify a match.")]
             public async Task TrackRegex(string website, string scrapeRegex)
             {
-                await Trackers[ITracker.TrackerType.HTML].AddTrackerAsync(website + "|||" + scrapeRegex, Context.Channel.Id);
-                await ReplyAsync($"Keeping track of `{website}` data using ```html\n{scrapeRegex}```, from now on!\n\nInitial value was: **{await HTMLTracker.FetchData(website + "|||" + scrapeRegex)}**");
+                try
+                {
+                    await Trackers[ITracker.TrackerType.HTML].AddTrackerAsync(website + "|||" + scrapeRegex, Context.Channel.Id);
+                    await ReplyAsync($"Keeping track of `{website}` data using ```html\n{scrapeRegex}```, from now on!\n\nInitial value was: **{await HTMLTracker.FetchData(website + "|||" + scrapeRegex)}**");
+
+                }
+                catch (Exception e)
+                {
+                    await ReplyAsync("**Error**: " + e.InnerException.Message);
+                }
             }
 
             [Command("Track", RunMode = RunMode.Async)]
@@ -626,11 +704,19 @@ namespace MopsBot.Module
                 }
             }
 
-            [Command("TestRegex")]
+            [Command("TestRegex", RunMode = RunMode.Async)]
             [Summary("Tests the regex and returns it's value. Handy if you want to check your regex before tracking with it!")]
             public async Task Test(string website, string scrapeRegex)
             {
-                await ReplyAsync($"Regex returned value: {await HTMLTracker.FetchData(website + "|||" + scrapeRegex)}");
+                try
+                {
+                    await ReplyAsync($"Regex returned value: {await HTMLTracker.FetchData(website + "|||" + scrapeRegex)}");
+
+                }
+                catch (Exception e)
+                {
+                    await ReplyAsync("**Error**: " + e.InnerException.Message);
+                }
             }
 
             [Command("UnTrack", RunMode = RunMode.Async)]
@@ -675,13 +761,21 @@ namespace MopsBot.Module
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public class WoW : ModuleBase
         {
-            [Command("Track")]
+            [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of changes in stats of the specified WoW player.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task Track(string Region, string Realm, string Name)
             {
-                await Trackers[ITracker.TrackerType.WoW].AddTrackerAsync(String.Join("|", new string[] { Region, Realm, Name }), Context.Channel.Id);
-                await ReplyAsync($"Keeping track of `{Name}`'s stats in `{Realm}` from now on.");
+                try
+                {
+                    await Trackers[ITracker.TrackerType.WoW].AddTrackerAsync(String.Join("|", new string[] { Region, Realm, Name }), Context.Channel.Id);
+                    await ReplyAsync($"Keeping track of `{Name}`'s stats in `{Realm}` from now on.");
+
+                }
+                catch (Exception e)
+                {
+                    await ReplyAsync("**Error**: " + e.InnerException.Message);
+                }
             }
 
             [Command("UnTrack")]
