@@ -14,8 +14,10 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace MopsBot.Data.Tracker
 {
+    [BsonIgnoreExtraElements]
     public class TwitchTracker : ITracker
     {
+        private static KeyValuePair<string, string> acceptHeader = new KeyValuePair<string, string>("Accept", "application/vnd.twitchtv.v5+json");
         public Plot ViewerGraph;
         private TwitchResult StreamerStatus;
 
@@ -25,6 +27,7 @@ namespace MopsBot.Data.Tracker
         public string CurGame;
         public bool isThumbnailLarge;
         public int TimeoutCount;
+        public ulong TwitchId;
 
         public TwitchTracker() : base(60000, ExistingTrackers * 2000)
         {
@@ -70,12 +73,11 @@ namespace MopsBot.Data.Tracker
             //Check if person exists by forcing Exceptions if not.
             try
             {
-                string query = MopsBot.Module.Information.ReadURLAsync($"https://api.twitch.tv/kraken/channels/{Name}?client_id={Program.Config["Twitch"]}").Result;
-                Channel checkExists = JsonConvert.DeserializeObject<Channel>(query);
-                var test = checkExists.broadcaster_language;
+                ulong Id = GetIdFromUsername(streamerName).Result;
             }
             catch (Exception)
             {
+                Dispose();
                 throw new Exception($"Streamer {TrackerUrl()} could not be found on Twitch!");
             }
         }
@@ -84,6 +86,11 @@ namespace MopsBot.Data.Tracker
         {
             try
             {
+                if(TwitchId == 0){
+                    TwitchId = await GetIdFromUsername(Name);
+                    await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
+                }
+
                 StreamerStatus = await streamerInformation();
 
                 Boolean isStreaming = StreamerStatus.stream.channel != null;
@@ -149,7 +156,7 @@ namespace MopsBot.Data.Tracker
 
         private async Task<TwitchResult> streamerInformation()
         {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://api.twitch.tv/kraken/streams/{Name}?client_id={Program.Config["Twitch"]}");
+            string query = await MopsBot.Module.Information.ReadURLAsync($"https://api.twitch.tv/kraken/streams/{TwitchId}?client_id={Program.Config["Twitch"]}", acceptHeader);
 
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {
@@ -166,7 +173,7 @@ namespace MopsBot.Data.Tracker
 
         private async static Task<TwitchResult> streamerInformation(string name)
         {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://api.twitch.tv/kraken/streams/{name}?client_id={Program.Config["Twitch"]}");
+            string query = await MopsBot.Module.Information.ReadURLAsync($"https://api.twitch.tv/kraken/streams/{await GetIdFromUsername(name)}?client_id={Program.Config["Twitch"]}", acceptHeader);
 
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {
@@ -178,6 +185,13 @@ namespace MopsBot.Data.Tracker
             if (tmpResult.stream.game == "" || tmpResult.stream.game == null) tmpResult.stream.game = "Nothing";
 
             return tmpResult;
+        }
+
+        public static async Task<ulong> GetIdFromUsername(string name){
+            var result = await MopsBot.Module.Information.ReadURLAsync($"https://api.twitch.tv/kraken/users?login={name}&client_id={Program.Config["Twitch"]}", acceptHeader);
+            var tmpResult = JsonConvert.DeserializeObject<dynamic>(result);
+
+            return tmpResult["users"][0]["_id"];
         }
 
         public Embed createEmbed()
