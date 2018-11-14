@@ -14,7 +14,7 @@ using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
 using MopsBot.Data.Entities;
 
-namespace MopsBot.Data
+namespace MopsBot.Data.Updater
 {
     public class ReactionRoleJoin
     {
