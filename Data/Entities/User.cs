@@ -20,7 +20,7 @@ namespace MopsBot.Data.Entities
         public int WeaponId;
         public List<int> Inventory;
 
-        public User(ulong pId)
+        private User(ulong pId)
         {
             Id = pId;
         }
