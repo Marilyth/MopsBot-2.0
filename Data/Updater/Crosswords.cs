@@ -1,4 +1,4 @@
-using System;
+/*using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -139,7 +139,7 @@ namespace MopsBot.Data.Updater
                 placeWord(word, wordDirection, x, y);
             
 
-                Console.WriteLine(word + " going " + wordDirection.ToString());
+                Console.WriteLine("\n" +  word + " going " + wordDirection.ToString());
             }
         }
 
@@ -248,4 +248,4 @@ namespace MopsBot.Data.Updater
             word = pWord;
         }
     }
-}
+}*/

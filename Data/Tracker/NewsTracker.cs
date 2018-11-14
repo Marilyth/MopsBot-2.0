@@ -19,7 +19,7 @@ namespace MopsBot.Data.Tracker
     {
         public string LastNews, Query, Source;
 
-        public NewsTracker() : base(600000, (ExistingTrackers * 2000 + 500) % 600000)
+        public NewsTracker() : base(600000, ExistingTrackers * 2000)
         {
         }
 
@@ -58,12 +58,12 @@ namespace MopsBot.Data.Tracker
                 if (newArticles.Length > 0)
                 {
                     LastNews = newArticles.First().PublishedAt.ToString();
-                    StaticBase.Trackers["news"].SaveJson();
+                    await StaticBase.Trackers[TrackerType.News].UpdateDBAsync(this);
                 }
 
                 foreach (Article newArticle in newArticles)
                 {
-                    foreach (ulong channel in ChannelIds)
+                    foreach (ulong channel in ChannelIds.ToList())
                     {
                         await OnMajorChangeTracked(channel, createEmbed(newArticle), ChannelMessages[channel]);
                     }
@@ -72,7 +72,7 @@ namespace MopsBot.Data.Tracker
             }
             catch (Exception e)
             {
-                Console.WriteLine($"[ERROR] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+                Console.WriteLine("\n" +  $"[ERROR] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
             }
         }
 
@@ -93,7 +93,7 @@ namespace MopsBot.Data.Tracker
         private Embed createEmbed(Article article)
         {
             EmbedBuilder e = new EmbedBuilder();
-            e.Color = new Color(0x0099ff);
+            e.Color = new Color(255, 255, 255);
             e.Title = article.Title;
             e.Url = article.Url;
             e.Timestamp = article.PublishedAt;

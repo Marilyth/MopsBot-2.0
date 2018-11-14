@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace MopsBot.Data.Tracker.APIResults.RedditResult
+namespace MopsBot.Data.Tracker.APIResults.Reddit
 {
     public class Oembed
     {

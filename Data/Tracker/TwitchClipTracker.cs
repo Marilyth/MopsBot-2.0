@@ -6,23 +6,27 @@ using Discord;
 using Discord.WebSocket;
 using Discord.Commands;
 using Newtonsoft.Json;
-using MopsBot.Data.Tracker.APIResults;
+using MopsBot.Data.Tracker.APIResults.TwitchClip;
 using System.Threading.Tasks;
 using System.Xml;
+using MongoDB.Bson.Serialization.Options;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace MopsBot.Data.Tracker
 {
     public class TwitchClipTracker : ITracker
     {
         public uint ViewThreshold;
+        
+        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
         public Dictionary<DateTime, KeyValuePair<int, double>> TrackedClips;
-        public TwitchClipTracker() : base(600000, (ExistingTrackers * 2000 + 500) % 600000)
+        public TwitchClipTracker() : base(600000, ExistingTrackers * 2000)
         {
         }
 
         public TwitchClipTracker(string streamerName) : base(600000)
         {
-            Console.Out.WriteLine($"{DateTime.Now} Started TwitchClipTracker for {streamerName}");
+            Console.WriteLine("\n" + $"{DateTime.Now} Started TwitchClipTracker for {streamerName}");
             Name = streamerName;
             TrackedClips = new Dictionary<DateTime, KeyValuePair<int, double>>();
             ChannelMessages = new Dictionary<ulong, string>();
@@ -31,13 +35,13 @@ namespace MopsBot.Data.Tracker
             try
             {
                 string query = MopsBot.Module.Information.ReadURLAsync($"https://api.twitch.tv/kraken/channels/{Name}?client_id={Program.Config["Twitch"]}").Result;
-                Channel checkExists = JsonConvert.DeserializeObject<Channel>(query);
+                APIResults.Twitch.Channel checkExists = JsonConvert.DeserializeObject<APIResults.Twitch.Channel>(query);
                 var test = checkExists.broadcaster_language;
             }
             catch (Exception)
             {
                 Dispose();
-                throw new Exception($"Person `{Name}` could not be found on Twitch!");
+                throw new Exception($"Streamer {TrackerUrl()} could not be found on Twitch!");
             }
         }
 
@@ -50,7 +54,7 @@ namespace MopsBot.Data.Tracker
                 {
                     if (datetime.AddMinutes(30) <= DateTime.UtcNow){
                         TrackedClips.Remove(datetime);
-                        StaticBase.Trackers["twitchclips"].SaveJson();
+                        await StaticBase.Trackers[TrackerType.TwitchClip].UpdateDBAsync(this);
                     }
                 }
 
@@ -65,7 +69,7 @@ namespace MopsBot.Data.Tracker
             }
             catch (Exception e)
             {
-                Console.WriteLine($"[Error] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+                Console.WriteLine("\n" +  $"[Error] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
             }
         }
 
@@ -109,11 +113,13 @@ namespace MopsBot.Data.Tracker
                             })){
 
                             TrackedClips.Add(clip.created_at, new KeyValuePair<int, double>(clip.vod.offset, clip.duration));
-                        } else if (clip.vod == null)
+                            clips.clips.Add(clip);
+                        } else if (clip.vod == null){
                             TrackedClips.Add(clip.created_at, new KeyValuePair<int, double>(-60, clip.duration));
-
-                        clips.clips.Add(clip);
-                        StaticBase.Trackers["twitchclips"].SaveJson();
+                            clips.clips.Add(clip);
+                        }
+                        
+                        await StaticBase.Trackers[TrackerType.TwitchClip].UpdateDBAsync(this);
                     }
                     if (!tmpResult._cursor.Equals(""))
                     {
@@ -124,7 +130,7 @@ namespace MopsBot.Data.Tracker
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                Console.WriteLine("\n" +  $"[ERROR] by TwitchClipTracker for {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
                 return new TwitchClipResult();
             }
         }
@@ -152,10 +158,14 @@ namespace MopsBot.Data.Tracker
 
             e.AddField("Length", clip.duration + " seconds", true);
             e.AddField("Views", clip.views, true);
-            e.AddField("Game", clip.game ?? "Nothing", true);
+            e.AddField("Game", (clip.game == null || clip.game.Equals("")) ? "Nothing" : clip.game, true);
             e.AddField("Creator", $"[{clip.curator.name}]({clip.curator.channel_url})", true);
 
             return e.Build();
+        }
+
+        public override string TrackerUrl(){
+            return $"https://www.twitch.tv/{Name}/clips";
         }
     }
 }

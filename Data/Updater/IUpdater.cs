@@ -21,7 +21,7 @@ namespace MopsBot.Data.Updater
         
         public IUpdater(int interval, bool ran = true){
             ChannelMessages = new Dictionary<ulong, ulong>();
-            Console.Out.WriteLine($"{DateTime.Now} Started a {this.GetType().Name}");
+            // Console.WriteLine("\n" + $"{DateTime.Now} Started a {this.GetType().Name}");
         }
 
         protected async Task OnUpdated(ulong channelID, EmbedBuilder embed, string notificationText=""){

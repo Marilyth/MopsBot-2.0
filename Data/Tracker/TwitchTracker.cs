@@ -5,36 +5,50 @@ using Discord;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using MopsBot.Data.Tracker.APIResults;
+using MopsBot.Data.Tracker.APIResults.Twitch;
 using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
+using MongoDB.Bson.Serialization.Options;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace MopsBot.Data.Tracker
 {
+    [BsonIgnoreExtraElements]
     public class TwitchTracker : ITracker
     {
-        private Plot viewerGraph;
-        private APIResults.TwitchResult StreamerStatus;
+        private static KeyValuePair<string, string> acceptHeader = new KeyValuePair<string, string>("Accept", "application/vnd.twitchtv.v5+json");
+        public Plot ViewerGraph;
+        private TwitchResult StreamerStatus;
+
+        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
         public Dictionary<ulong, ulong> ToUpdate;
         public Boolean IsOnline;
         public string CurGame;
         public bool isThumbnailLarge;
+        public int TimeoutCount;
+        public ulong TwitchId;
 
-        public TwitchTracker() : base(60000, (ExistingTrackers * 2000+500) % 60000)
+        public TwitchTracker() : base(60000, ExistingTrackers * 2000)
         {
         }
 
         public async override void PostInitialisation()
         {
-            viewerGraph = new Plot(Name, "Time In Minutes", "Viewers", IsOnline);
-            foreach(var channelMessage in ToUpdate){
-                try{
+            if(ViewerGraph != null)
+              ViewerGraph.InitPlot();
+
+            foreach (var channelMessage in ToUpdate)
+            {
+                try
+                {
                     await setReaction((IUserMessage)((ITextChannel)Program.Client.GetChannel(channelMessage.Key)).GetMessageAsync(channelMessage.Value).Result);
-                }catch{
+                }
+                catch
+                {
                     // if(Program.Client.GetChannel(channelMessage.Key)==null){
                     //     StaticBase.Trackers["twitch"].TryRemoveTracker(Name, channelMessage.Key);
-                    //     Console.Out.WriteLine($"remove tracker for {Name} in channel: {channelMessage.Key}");  
+                    //     Console.WriteLine("\n" + $"remove tracker for {Name} in channel: {channelMessage.Key}");  
                     // }
                     //
                     // the Tracker Should be removed on the first Event Call
@@ -42,7 +56,8 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public async Task setReaction(IUserMessage message){
+        public async Task setReaction(IUserMessage message)
+        {
             //await message.RemoveAllReactionsAsync();
             await Program.ReactionHandler.AddHandler(message, new Emoji("🖌"), recolour);
             await Program.ReactionHandler.AddHandler(message, new Emoji("🔄"), switchThumbnail);
@@ -50,9 +65,6 @@ namespace MopsBot.Data.Tracker
 
         public TwitchTracker(string streamerName) : base(60000)
         {
-            viewerGraph = new Plot(streamerName, "Time In Minutes", "Viewers", false);
-
-            Console.Out.WriteLine($"{DateTime.Now} Started Twitchtracker for {streamerName}");
             ToUpdate = new Dictionary<ulong, ulong>();
             ChannelMessages = new Dictionary<ulong, string>();
             Name = streamerName;
@@ -61,14 +73,12 @@ namespace MopsBot.Data.Tracker
             //Check if person exists by forcing Exceptions if not.
             try
             {
-                string query = MopsBot.Module.Information.ReadURLAsync($"https://api.twitch.tv/kraken/channels/{Name}?client_id={Program.Config["Twitch"]}").Result;
-                Channel checkExists = JsonConvert.DeserializeObject<Channel>(query);
-                var test = checkExists.broadcaster_language;
+                ulong Id = GetIdFromUsername(streamerName).Result;
             }
             catch (Exception)
             {
                 Dispose();
-                throw new Exception($"Person `{Name}` could not be found on Twitch!");
+                throw new Exception($"Streamer {TrackerUrl()} could not be found on Twitch!");
             }
         }
 
@@ -76,6 +86,11 @@ namespace MopsBot.Data.Tracker
         {
             try
             {
+                if(TwitchId == 0){
+                    TwitchId = await GetIdFromUsername(Name);
+                    await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
+                }
+
                 StreamerStatus = await streamerInformation();
 
                 Boolean isStreaming = StreamerStatus.stream.channel != null;
@@ -84,56 +99,64 @@ namespace MopsBot.Data.Tracker
                 {
                     if (IsOnline)
                     {
-                        IsOnline = false;
-                        Console.Out.WriteLine($"{DateTime.Now} {Name} went Offline");
-                        viewerGraph.RemovePlot();
-                        viewerGraph = new Plot(Name, "Time In Minutes", "Viewers", false);
-                        foreach(var channelMessage in ToUpdate)
-                            await Program.ReactionHandler.ClearHandler((IUserMessage) await ((ITextChannel)Program.Client.GetChannel(channelMessage.Key)).GetMessageAsync(channelMessage.Value));
-                        ToUpdate = new Dictionary<ulong, ulong>();
+                        if (++TimeoutCount >= 10)
+                        {
+                            TimeoutCount = 0;
+                            IsOnline = false;
+                            Console.WriteLine("\n" + $"{DateTime.Now} {Name} went Offline");
+                            ViewerGraph.Dispose();
+                            ViewerGraph = null;
 
-                        foreach (ulong channel in ChannelMessages.Keys)
-                            await OnMinorChangeTracked(channel, $"{Name} went Offline!");
+                            foreach (var channelMessage in ToUpdate)
+                                await Program.ReactionHandler.ClearHandler((IUserMessage)await ((ITextChannel)Program.Client.GetChannel(channelMessage.Key)).GetMessageAsync(channelMessage.Value));
+                            
+                            ToUpdate = new Dictionary<ulong, ulong>();
+                            
+                            foreach (ulong channel in ChannelMessages.Keys)
+                                await OnMinorChangeTracked(channel, $"{Name} went Offline!");
+                        }
                     }
                     else
                     {
+                        ViewerGraph = new Plot(Name, "Time In Minutes", "Viewers", IsOnline);
                         IsOnline = true;
                         CurGame = StreamerStatus.stream.game;
-                        viewerGraph.SwitchTitle(CurGame);
 
                         foreach (ulong channel in ChannelMessages.Keys)
                             await OnMinorChangeTracked(channel, ChannelMessages[channel]);
                     }
-                    StaticBase.Trackers["twitch"].SaveJson();
+                    await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
                 }
+                else
+                    TimeoutCount = 0;
 
-                if (IsOnline)
+                if (isStreaming)
                 {
-                    viewerGraph.AddValue(StreamerStatus.stream.viewers);
+                    ViewerGraph.AddValue(CurGame, StreamerStatus.stream.viewers);
                     if (CurGame.CompareTo(StreamerStatus.stream.game) != 0)
                     {
                         CurGame = StreamerStatus.stream.game;
-                        viewerGraph.SwitchTitle(CurGame);
-                        viewerGraph.AddValue(StreamerStatus.stream.viewers);
+                        ViewerGraph.AddValue(CurGame, StreamerStatus.stream.viewers);
 
                         foreach (ulong channel in ChannelMessages.Keys)
                             await OnMinorChangeTracked(channel, $"{Name} switched games to **{CurGame}**");
-                        StaticBase.Trackers["twitch"].SaveJson();
                     }
 
-                    foreach (ulong channel in ChannelIds)
+                    await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
+
+                    foreach (ulong channel in ChannelIds.ToList())
                         await OnMajorChangeTracked(channel, createEmbed());
                 }
             }
             catch (Exception e)
             {
-                Console.WriteLine($"[Error] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+                Console.WriteLine("\n" + $"[Error] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
             }
         }
 
         private async Task<TwitchResult> streamerInformation()
         {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://api.twitch.tv/kraken/streams/{Name}?client_id={Program.Config["Twitch"]}");
+            string query = await MopsBot.Module.Information.ReadURLAsync($"https://api.twitch.tv/kraken/streams/{TwitchId}?client_id={Program.Config["Twitch"]}", acceptHeader);
 
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {
@@ -142,7 +165,7 @@ namespace MopsBot.Data.Tracker
 
             TwitchResult tmpResult = JsonConvert.DeserializeObject<TwitchResult>(query, _jsonWriter);
 
-            if (tmpResult.stream == null) tmpResult.stream = new APIResults.Stream();
+            if (tmpResult.stream == null) tmpResult.stream = new APIResults.Twitch.Stream();
             if (tmpResult.stream.game == "" || tmpResult.stream.game == null) tmpResult.stream.game = "Nothing";
 
             return tmpResult;
@@ -150,7 +173,7 @@ namespace MopsBot.Data.Tracker
 
         private async static Task<TwitchResult> streamerInformation(string name)
         {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://api.twitch.tv/kraken/streams/{name}?client_id={Program.Config["Twitch"]}");
+            string query = await MopsBot.Module.Information.ReadURLAsync($"https://api.twitch.tv/kraken/streams/{await GetIdFromUsername(name)}?client_id={Program.Config["Twitch"]}", acceptHeader);
 
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {
@@ -158,10 +181,17 @@ namespace MopsBot.Data.Tracker
             };
 
             TwitchResult tmpResult = JsonConvert.DeserializeObject<TwitchResult>(query, _jsonWriter);
-            if (tmpResult.stream == null) tmpResult.stream = new APIResults.Stream();
+            if (tmpResult.stream == null) tmpResult.stream = new APIResults.Twitch.Stream();
             if (tmpResult.stream.game == "" || tmpResult.stream.game == null) tmpResult.stream.game = "Nothing";
 
             return tmpResult;
+        }
+
+        public static async Task<ulong> GetIdFromUsername(string name){
+            var result = await MopsBot.Module.Information.ReadURLAsync($"https://api.twitch.tv/kraken/users?login={name}&client_id={Program.Config["Twitch"]}", acceptHeader);
+            var tmpResult = JsonConvert.DeserializeObject<dynamic>(result);
+
+            return tmpResult["users"][0]["_id"];
         }
 
         public Embed createEmbed()
@@ -185,8 +215,8 @@ namespace MopsBot.Data.Tracker
             footer.Text = "Twitch";
             e.Footer = footer;
 
-            e.ThumbnailUrl = isThumbnailLarge ? viewerGraph.DrawPlot() : $"{StreamerStatus.stream.preview.medium}?rand={StaticBase.ran.Next(0, 99999999)}";
-            e.ImageUrl = isThumbnailLarge ? $"{StreamerStatus.stream.preview.large}?rand={StaticBase.ran.Next(0, 99999999)}" : viewerGraph.DrawPlot();
+            e.ThumbnailUrl = isThumbnailLarge ? ViewerGraph.DrawPlot() : $"{StreamerStatus.stream.preview.medium}?rand={StaticBase.ran.Next(0, 99999999)}";
+            e.ImageUrl = isThumbnailLarge ? $"{StreamerStatus.stream.preview.large}?rand={StaticBase.ran.Next(0, 99999999)}" : ViewerGraph.DrawPlot();
 
             e.AddField("Game", CurGame, true);
             e.AddField("Viewers", StreamerStatus.stream.viewers, true);
@@ -194,23 +224,40 @@ namespace MopsBot.Data.Tracker
             return e.Build();
         }
 
-        private async Task recolour(ReactionHandlerContext context){
-            if(((IGuildUser)await context.reaction.Channel.GetUserAsync(context.reaction.UserId)).GetPermissions((IGuildChannel)context.channel).ManageChannel){
-                viewerGraph.Recolour();
+        private async Task recolour(ReactionHandlerContext context)
+        {
+            if (((IGuildUser)await context.Reaction.Channel.GetUserAsync(context.Reaction.UserId)).GetPermissions((IGuildChannel)context.Channel).ManageChannel)
+            {
+                ViewerGraph.Recolour();
 
                 foreach (ulong channel in ChannelIds)
                     await OnMajorChangeTracked(channel, createEmbed());
             }
         }
 
-        private async Task switchThumbnail(ReactionHandlerContext context){
-            if(((IGuildUser)await context.reaction.Channel.GetUserAsync(context.reaction.UserId)).GetPermissions((IGuildChannel)context.channel).ManageChannel){
+        private async Task switchThumbnail(ReactionHandlerContext context)
+        {
+            if (((IGuildUser)await context.Reaction.Channel.GetUserAsync(context.Reaction.UserId)).GetPermissions((IGuildChannel)context.Channel).ManageChannel)
+            {
                 isThumbnailLarge = !isThumbnailLarge;
-                StaticBase.Trackers["twitch"].SaveJson();
+                await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
 
                 foreach (ulong channel in ChannelIds)
                     await OnMajorChangeTracked(channel, createEmbed());
             }
+        }
+
+        public new void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+            ViewerGraph.Dispose();
+            ViewerGraph = null;
+        }
+
+        public override string TrackerUrl()
+        {
+            return "https://www.twitch.tv/" + Name;
         }
     }
 }

@@ -14,6 +14,7 @@ using Discord.Commands;
 using System.Threading;
 using System.Net;
 using Newtonsoft.Json;
+using Discord.Addons.Interactive;
 
 namespace MopsBot
 {
@@ -21,23 +22,23 @@ namespace MopsBot
     {
         public static void Main(string[] args)
         {
-            // Task.Run(() => BuildWebHost(args).Run());
+            //Task.Run(() => BuildWebHost(args).Run());
             new Program().Start().GetAwaiter().GetResult();
-
         }
         public static DiscordSocketClient Client;
         public static Dictionary<string, string> Config;
-        public static CommandHandler Handler {get; private set;}
-        public static ReactionHandler ReactionHandler {get; private set;}
+        public static CommandHandler Handler { get; private set; }
+        public static ReactionHandler ReactionHandler { get; private set; }
 
-        public async Task Start()
+        private async Task Start()
         {
             Client = new DiscordSocketClient(new DiscordSocketConfig()
             {
                 LogLevel = LogSeverity.Info,
+                AlwaysDownloadUsers = true
             });
 
-            using(StreamReader sr = new StreamReader(new FileStream("mopsdata//Config.json", FileMode.Open)))
+            using (StreamReader sr = new StreamReader(new FileStream("mopsdata//Config.json", FileMode.Open)))
                 Config = JsonConvert.DeserializeObject<Dictionary<string, string>>(sr.ReadToEnd());
 
             await Client.LoginAsync(TokenType.Bot, Config["Discord"]);
@@ -45,11 +46,11 @@ namespace MopsBot
 
             Client.Log += Client_Log;
             Client.Ready += onClientReady;
-            Client.Disconnected += onClientDC;
 
             var map = new ServiceCollection().AddSingleton(Client)
                 // .AddSingleton(new AudioService())
-                .AddSingleton(new ReliabilityService(Client, Client_Log));
+                .AddSingleton(new ReliabilityService(Client, Client_Log))
+                .AddSingleton(new InteractiveService(Client));
 
             var provider = map.BuildServiceProvider();
 
@@ -64,26 +65,29 @@ namespace MopsBot
 
         private Task Client_Log(LogMessage msg)
         {
-            Console.WriteLine(msg.ToString());
+            Console.WriteLine("\n" + msg.ToString());
             return Task.CompletedTask;
         }
 
         private Task onClientReady()
         {
             var test = Client;
-            Task.Run(() => StaticBase.initTracking());
-            Task.Run(() => StaticBase.UpdateGameAsync());
+            Task.Run(() => {
+                StaticBase.initTracking();
+                StaticBase.UpdateStatusAsync();
+            });
             return Task.CompletedTask;
         }
-
-        private async Task onClientDC(Exception e)
-        {
-            await Task.Run(() => StaticBase.disconnected());
-        }
-
+        
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
                 .UseUrls("http://0.0.0.0:5000/")
+                .ConfigureServices(x => x.AddCors(options => options.AddPolicy("AllowAllHeaders",
+                    builder =>
+                    {
+                        builder.WithOrigins("*")
+                               .AllowAnyHeader();
+                    })))
                 .UseKestrel()
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseIISIntegration()

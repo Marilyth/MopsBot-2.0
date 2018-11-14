@@ -7,77 +7,84 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using Newtonsoft.Json;
 using MopsBot.Data;
 using MopsBot.Data.Tracker;
 using MopsBot.Data.Updater;
 using Tweetinvi;
 using NewsAPI;
+using WowDotNetAPI;
+using MongoDB.Driver;
+using MongoDB.Bson.Serialization.Options;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace MopsBot
 {
     public class StaticBase
     {
-        public static Data.Statistics stats = new Data.Statistics();
-        public static Data.UserScore people = new Data.UserScore();
+        public static MongoClient DatabaseClient = new MongoClient($"{Program.Config["DatabaseURL"]}");
+        public static IMongoDatabase Database = DatabaseClient.GetDatabase("Mops");
         public static Random ran = new Random();
-        public static List<IdleDungeon> DungeonCrawler = new List<IdleDungeon>();
         public static Gfycat.GfycatClient gfy;
         public static List<string> Playlist = new List<string>();
-        public static HashSet<ulong> MemberSet;
-        public static Dictionary<ulong, string> GuildPrefix;
-        public static Giveaway Giveaways = new Giveaway();
+        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
+        public static Dictionary<ulong, Data.Entities.WelcomeMessage> WelcomeMessages;
+        public static Dictionary<ulong, Data.Entities.CustomCommands> CustomCommands;
         public static ReactionGiveaway ReactGiveaways;
         public static ReactionRoleJoin ReactRoleJoin;
-        public static Poll Poll;
-        public static Crosswords Crosswords;
-        public static Dictionary<string, TrackerWrapper> Trackers;
-        public static MuteTimeHandler MuteHandler;
+        public static ReactionPoll Poll;
+        //public static Crosswords Crosswords;
+        public static Dictionary<ITracker.TrackerType, TrackerWrapper> Trackers;
         public static NewsApiClient NewsClient;
 
         public static bool init = false;
 
         /// <summary>
-        /// Initialises the Twitch, Twitter and Overwatch trackers
+        /// Initialises and loads all trackers
         /// </summary>
         public static void initTracking()
         {
             if (!init)
             {
-                ReactGiveaways = new ReactionGiveaway();
-                ReactRoleJoin = new ReactionRoleJoin();
+                Task.Run(() =>
+                {
+                    WelcomeMessages = Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").FindSync(x => true).ToEnumerable().ToDictionary(x => x.GuildId);
+                    ReactGiveaways = new ReactionGiveaway();
+                    ReactRoleJoin = new ReactionRoleJoin();
+                    Poll = new ReactionPoll();
+                });
 
                 Auth.SetUserCredentials(Program.Config["TwitterKey"], Program.Config["TwitterSecret"],
                                         Program.Config["TwitterToken"], Program.Config["TwitterAccessSecret"]);
                 TweetinviConfig.CurrentThreadSettings.TweetMode = TweetMode.Extended;
                 TweetinviConfig.ApplicationSettings.TweetMode = TweetMode.Extended;
+                Tweetinvi.ExceptionHandler.SwallowWebExceptions = false;
+                Tweetinvi.RateLimit.RateLimitTrackerMode = RateLimitTrackerMode.TrackOnly;
+                TweetinviEvents.QueryBeforeExecute += Data.Tracker.TwitterTracker.QueryBeforeExecute;
+
                 gfy = new Gfycat.GfycatClient(Program.Config["GfyID"], Program.Config["GfySecret"]);
+
                 NewsClient = new NewsApiClient(Program.Config["NewsAPI"]);
 
-                using (StreamReader read = new StreamReader(new FileStream($"mopsdata//MuteTimerHandler.json", FileMode.OpenOrCreate)))
-                {
-                    try{
-                        MuteHandler = Newtonsoft.Json.JsonConvert.DeserializeObject<MuteTimeHandler>(read.ReadToEnd());
-                        
-                        if(MuteHandler == null)
-                            MuteHandler = new MuteTimeHandler();
-                        
-                        MuteHandler.SetTimers();
-                    } catch(Exception e){
-                        Console.WriteLine(e.Message + e.StackTrace);
-                    }
-                }
-                Trackers = new Dictionary<string, Data.TrackerWrapper>();
-                Trackers["osu"] = new TrackerHandler<OsuTracker>();
-                Trackers["overwatch"] = new TrackerHandler<OverwatchTracker>();
-                Trackers["twitch"] = new TrackerHandler<TwitchTracker>();
-                Trackers["twitchclips"] = new TrackerHandler<TwitchClipTracker>();
-                Trackers["twitter"] = new TrackerHandler<TwitterTracker>();
-                Trackers["youtube"] = new TrackerHandler<YoutubeTracker>();
-                Trackers["reddit"] = new TrackerHandler<RedditTracker>();
-                Trackers["news"] = new TrackerHandler<NewsTracker>();
+                WoWTracker.WoWClient = new WowExplorer(Region.EU, Locale.en_GB, Program.Config["WoWKey"]);
 
-                foreach(var tracker in Trackers){
-                    tracker.Value.postInitialisation();
+                Trackers = new Dictionary<ITracker.TrackerType, Data.TrackerWrapper>();
+                Trackers[ITracker.TrackerType.Osu] = new TrackerHandler<OsuTracker>();
+                Trackers[ITracker.TrackerType.Overwatch] = new TrackerHandler<OverwatchTracker>();
+                Trackers[ITracker.TrackerType.Twitch] = new TrackerHandler<TwitchTracker>();
+                Trackers[ITracker.TrackerType.TwitchClip] = new TrackerHandler<TwitchClipTracker>();
+                Trackers[ITracker.TrackerType.Twitter] = new TrackerHandler<TwitterTracker>();
+                Trackers[ITracker.TrackerType.Youtube] = new TrackerHandler<YoutubeTracker>();
+                Trackers[ITracker.TrackerType.Reddit] = new TrackerHandler<RedditTracker>();
+                Trackers[ITracker.TrackerType.News] = new TrackerHandler<NewsTracker>();
+                Trackers[ITracker.TrackerType.WoW] = new TrackerHandler<WoWTracker>();
+                Trackers[ITracker.TrackerType.WoWGuild] = new TrackerHandler<WoWGuildTracker>();
+                Trackers[ITracker.TrackerType.OSRS] = new TrackerHandler<OSRSTracker>();
+                Trackers[ITracker.TrackerType.HTML] = new TrackerHandler<HTMLTracker>();
+
+                foreach (var tracker in Trackers)
+                {
+                    Task.Run(() => tracker.Value.PostInitialisation());
                 }
 
                 init = true;
@@ -85,57 +92,57 @@ namespace MopsBot
             }
         }
 
-        public static void savePrefix()
-        {
-            using (StreamWriter write = new StreamWriter(new FileStream("mopsdata//guildprefixes.txt", FileMode.Create)))
-            {
-                write.AutoFlush = true;
-                foreach (var kv in GuildPrefix)
-                {
-                    write.WriteLine($"{kv.Key}|{kv.Value}");
-                }
-            }
+        public static async Task InsertOrUpdatePrefixAsync(ulong guildId, string prefix){
+            bool hasEntry = (await Database.GetCollection<Data.Entities.MongoKVP<ulong, string>>("GuildPrefixes").FindAsync(x => x.Key == guildId)).ToList().Count == 1;
+
+            if(!hasEntry)
+                await Database.GetCollection<Data.Entities.MongoKVP<ulong, string>>("GuildPrefixes").InsertOneAsync(new Data.Entities.MongoKVP<ulong, string>(guildId, prefix));
+            else
+                await Database.GetCollection<Data.Entities.MongoKVP<ulong, string>>("GuildPrefixes").ReplaceOneAsync(x => x.Key == guildId, new Data.Entities.MongoKVP<ulong, string>(guildId, prefix));
         }
 
-        public static void disconnected()
-        {
-            /*
-            if(init){
-                streamTracks.Dispose();
-                twitterTracks.Dispose();
-                ClipTracker.Dispose();
-                OverwatchTracks.Dispose();
-            }*/
+        public static async Task<string> GetGuildPrefixAsync(ulong guildId){
+            string prefix = (await Database.GetCollection<Data.Entities.MongoKVP<ulong, string>>("GuildPrefixes").FindAsync(x => x.Key == guildId)).FirstOrDefault()?.Value;
+            return prefix ?? "!";
         }
 
         /// <summary>
-        /// Finds out who was mentioned in a command
+        /// Updates the guild count, by displaying it as an activity.
         /// </summary>
-        /// <param name="Context">The CommandContext containing the command message </param>
-        /// <returns>A List of IGuildUsers representing the mentioned Users</returns>
-        public static List<IGuildUser> getMentionedUsers(CommandContext Context)
-        {
-            List<IGuildUser> user = Context.Message.MentionedUserIds.Select(id => Context.Guild.GetUserAsync(id).Result).ToList();
-
-            foreach (var a in Context.Message.MentionedRoleIds.Select(id => Context.Guild.GetRole(id)))
-            {
-                user.AddRange(Context.Guild.GetUsersAsync().Result.Where(u => u.RoleIds.Contains(a.Id)));
-            }
-
-            if (Context.Message.Tags.Select(t => t.Type).Contains(TagType.EveryoneMention))
-            {
-                user.AddRange(Context.Guild.GetUsersAsync().Result);
-            }
-            if (Context.Message.Tags.Select(t => t.Type).Contains(TagType.HereMention))
-            {
-                user.AddRange(Context.Guild.GetUsersAsync().Result.Where(u => u.Status.Equals(UserStatus.Online)));
-            }
-            return new List<IGuildUser>(user.Distinct());
-        }
-
-        public static async Task UpdateGameAsync()
+        /// <returns>A Task that sets the activity</returns>
+        public static async Task UpdateServerCount()
         {
             await Program.Client.SetActivityAsync(new Game($"{Program.Client.Guilds.Count} servers", ActivityType.Watching));
+        }
+
+        /// <summary>
+        /// Displays the tracker counts one after another.
+        /// </summary>
+        /// <returns>A Task that sets the activity</returns>
+        public static async Task UpdateStatusAsync()
+        {
+            await Program.Client.SetActivityAsync(new Game("Currently Restarting!", ActivityType.Playing));
+            await Task.Delay(60000);
+
+            int status = 12;
+            while (true)
+            {
+                try
+                {
+                    ITracker.TrackerType type = (ITracker.TrackerType)status++;
+                    var trackerCount = Trackers[type].GetTrackers().Count;
+                    await Program.Client.SetActivityAsync(new Game($"{trackerCount} {type.ToString()} Trackers", ActivityType.Watching));
+                }
+                catch
+                {
+                    //Trackers were not initialised yet, or status exceeded trackertypes
+                    //Show servers instead
+                    status = 0;
+                    await UpdateServerCount();
+                }
+
+                await Task.Delay(30000);
+            }
         }
     }
 }

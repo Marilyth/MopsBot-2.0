@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.IO;
 using Newtonsoft.Json;
 
-namespace MopsBot.Data.Tracker.APIResults
+namespace MopsBot.Data.Tracker.APIResults.Overwatch
 {
     public class GeneralStats
     {
@@ -87,6 +87,9 @@ namespace MopsBot.Data.Tracker.APIResults
         public Hero mccree { get; set; }
         public Hero orisa { get; set; }
         public Hero moira { get; set; }
+        public Hero brigitte { get; set; }
+        public Hero wrecking_ball { get; set; }
+
 
         public Dictionary<string, Hero> heroesToDict(){
             return new Dictionary<string, Hero>
@@ -116,7 +119,9 @@ namespace MopsBot.Data.Tracker.APIResults
                 {"Mercy", mercy},
                 {"Moira", moira},
                 {"Symmetra", symmetra},
-                {"Zenyatta", zenyatta}
+                {"Zenyatta", zenyatta},
+                {"Brigitte", brigitte},
+                {"Wrecking-Ball", wrecking_ball}
             };
         }
     }
@@ -155,6 +160,8 @@ namespace MopsBot.Data.Tracker.APIResults
         public double moira { get; set; }
         public double genji { get; set; }
         public double mccree { get; set; }
+        public double brigitte {get; set; }
+        public double wrecking_ball {get; set; }
 
         public Dictionary<string, double> heroesToDict(){
             return new Dictionary<string, double>
@@ -184,7 +191,9 @@ namespace MopsBot.Data.Tracker.APIResults
                 {"Mercy", mercy},
                 {"Moira", moira},
                 {"Symmetra", symmetra},
-                {"Zenyatta", zenyatta}
+                {"Zenyatta", zenyatta},
+                {"Brigitte", brigitte},
+                {"Wrecking-Ball", wrecking_ball}
             };
         }
     }
@@ -270,6 +279,11 @@ namespace MopsBot.Data.Tracker.APIResults
         public int ties { get; set; }
         public double win_rate { get; set; }
         public int level { get; set; }
+        public int endorsement_shotcaller { get; set; }
+        public int endorsement_sportsmanship { get; set; }
+        public int endorsement_teammate { get; set; }
+        public int endorsement_level { get; set; }
+
     }
 
     public class AverageStats
@@ -329,7 +343,7 @@ namespace MopsBot.Data.Tracker.APIResults
         public Location kr { get; set; }
 
         public Location getNotNull(){
-            return eu != null ? eu : kr != null ? kr : us;
+            return eu ?? us ?? kr;
         }
     }
 }

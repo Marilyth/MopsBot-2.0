@@ -10,6 +10,8 @@ using OxyPlot;
 using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
+using MongoDB.Bson.Serialization.Options;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace MopsBot.Data.Tracker
 {
@@ -17,6 +19,7 @@ namespace MopsBot.Data.Tracker
     {
         //Avoid ratelimit by placing a gap between all trackers.
         public static int ExistingTrackers = 0;
+        public enum TrackerType {Twitch, TwitchClip, Twitter, Osu, Overwatch, Youtube, Reddit, News, WoW, WoWGuild, OSRS, HTML };
         private bool disposed = false;
         private SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
         protected System.Threading.Timer checkForChange;
@@ -25,7 +28,10 @@ namespace MopsBot.Data.Tracker
         public delegate Task MinorEventHandler(ulong channelID, ITracker self, string notificationText);
         public delegate Task MainEventHandler(ulong channelID, Embed embed, ITracker self, string notificationText = "");
         public HashSet<ulong> ChannelIds;
+        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
         public Dictionary<ulong, string> ChannelMessages;
+
+        [BsonId]
         public string Name;
 
         public ITracker(int interval, int gap = 5000)
@@ -34,8 +40,7 @@ namespace MopsBot.Data.Tracker
             ChannelIds = new HashSet<ulong>();
             ChannelMessages = new Dictionary<ulong, string>();
             checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false),
-                                                                                gap, interval);
-            Console.Out.WriteLine($"{DateTime.Now} Started a {this.GetType().Name}");
+                                                                                (gap % interval) + 5000, interval);
         }
 
         public virtual void PostInitialisation()
@@ -43,6 +48,10 @@ namespace MopsBot.Data.Tracker
         }
 
         protected abstract void CheckForChange_Elapsed(object stateinfo);
+
+        public virtual string TrackerUrl(){
+            return null;
+        }
 
         protected async Task OnMajorChangeTracked(ulong channelID, Embed embed, string notificationText = "")
         {

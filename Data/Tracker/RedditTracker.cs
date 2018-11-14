@@ -7,7 +7,7 @@ using Discord.Commands;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using MopsBot.Data.Tracker.APIResults.RedditResult;
+using MopsBot.Data.Tracker.APIResults.Reddit;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 
@@ -24,7 +24,7 @@ namespace MopsBot.Data.Tracker
         /// Initialises the tracker by setting attributes and setting up a Timer with a 10 minutes interval
         /// </summary>
         /// <param Name="OWName"> The Name-Battletag combination of the player to track </param>
-        public RedditTracker() : base(600000, (ExistingTrackers * 2000 + 500) % 600000)
+        public RedditTracker() : base(600000, ExistingTrackers * 2000)
         {
         }
 
@@ -42,8 +42,8 @@ namespace MopsBot.Data.Tracker
             catch (Exception)
             {
                 Dispose();
-                Console.WriteLine("");
-                throw new Exception($"No results were found for Subreddit `{Name.Split(" ")[0]}`" +
+                Console.WriteLine("\n" +  "");
+                throw new Exception($"No results were found for Subreddit {TrackerUrl()}" +
                                     $"{(Name.Split(" ").Length > 1 ? $" with restriction(s) `{Name.Split(" ")[1]}`." : ".")}");
             }
         }
@@ -62,11 +62,11 @@ namespace MopsBot.Data.Tracker
                 if (newPosts.Length > 0)
                 {
                     lastCheck = newPosts.Max(x => x.data.created_utc);
-                    StaticBase.Trackers["reddit"].SaveJson();
+                    await StaticBase.Trackers[TrackerType.Reddit].UpdateDBAsync(this);
 
                     newPosts = newPosts.Reverse().ToArray();
                     foreach (var post in newPosts)
-                        foreach (ulong channel in ChannelIds)
+                        foreach (ulong channel in ChannelIds.ToList())
                         {
                             await OnMajorChangeTracked(channel, await createEmbed(post.data), "");
                         }
@@ -74,7 +74,7 @@ namespace MopsBot.Data.Tracker
             }
             catch (Exception e)
             {
-                Console.WriteLine($"[ERROR] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+                Console.WriteLine("\n" +  $"[ERROR] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
             }
         }
 
@@ -98,7 +98,7 @@ namespace MopsBot.Data.Tracker
         private async Task<Embed> createEmbed(Data2 redditPost)
         {
             EmbedBuilder e = new EmbedBuilder();
-            e.Color = new Color(0x6441A4);
+            e.Color = new Color(255, 49, 0);
             e.Title = redditPost.title.Length > 256 ? redditPost.title.Substring(0, 251) + "[...]" : redditPost.title;
             e.Url = "https://www.reddit.com" + redditPost.permalink;
             e.Description = redditPost.selftext.Length > 2048 ? redditPost.selftext.Substring(0, 2043) + "[...]" : redditPost.selftext;
@@ -132,6 +132,10 @@ namespace MopsBot.Data.Tracker
             */
             
             return e.Build();
+        }
+
+        public override string TrackerUrl(){
+            return "https://www.reddit.com/r/" + Name.Split(" ").First();
         }
     }
 }

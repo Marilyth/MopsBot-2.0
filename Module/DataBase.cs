@@ -6,54 +6,72 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MopsBot.Data.Entities;
 
 namespace MopsBot.Module
 {
     public class DataBase : ModuleBase
     {
-        [Command("hug")]
+        [Command("Hug")]
         [Summary("Hugs the specified person")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public async Task hug(SocketGuildUser person)
         {
             if (!person.Id.Equals(Context.User.Id))
             {
-                StaticBase.people.AddStat(person.Id, 1, "hug");
-                await ReplyAsync($"Aww. **{person.Username}** got hugged by **{Context.User.Username}**.\n" +
-                                 $"They have already been hugged {StaticBase.people.Users[person.Id].hugged} times!");
+                await User.ModifyUserAsync(person.Id, x => x.Hugged++);
+                await ReplyAsync($"Aww, **{person.Username}** got hugged by **{Context.User.Username}**.\n" +
+                                 $"They have already been hugged {(await User.GetUserAsync(person.Id)).Hugged} times!");
             }
             else
                 await ReplyAsync("Go ahead.");
         }
 
-        [Command("kiss")]
+        [Command("Kiss")]
         [Summary("Smooches the specified person")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public async Task kiss(SocketGuildUser person)
         {
             if (!person.Id.Equals(Context.User.Id))
             {
-                StaticBase.people.AddStat(person.Id, 1, "kiss");
-                await ReplyAsync($"Hmpf. Cute, I guess? **{person.Username}** got kissed by **{Context.User.Username}**.\n" +
-                                 $"They have already been kissed {StaticBase.people.Users[person.Id].kissed} times!");
+                await User.ModifyUserAsync(person.Id, x => x.Kissed++);
+                await ReplyAsync($"Mwaaah, **{person.Username}** got kissed by **{Context.User.Username}**.\n" +
+                                 $"They have already been kissed {(await User.GetUserAsync(person.Id)).Kissed} times!");
             }
             else
                 await ReplyAsync("That's sad.");
         }
 
-        [Command("punch")]
+        [Command("Punch")]
         [Summary("Fucks the specified person up")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public async Task punch(SocketGuildUser person)
         {
             if (!person.Id.Equals(Context.User.Id))
             {
-                StaticBase.people.AddStat(person.Id, 1, "punch");
+                await User.ModifyUserAsync(person.Id, x => x.Punched++);
                 await ReplyAsync($"DAAMN! **{person.Username}** just got fucked up by **{Context.User.Username}**.\n" +
-                                 $"That's {StaticBase.people.Users[person.Id].punched} times, they have been fucked up now.");
+                                 $"That's {(await User.GetUserAsync(person.Id)).Punched} times, they have been fucked up now.");
             }
             else
                 await ReplyAsync("Please don't fuck yourself up. That's unhealthy.");
         }
+
+        
+        [Command("GetStats")]
+        [Summary("Returns your or another persons experience and all that stuff")]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
+        public async Task GetStats(SocketGuildUser user = null)
+        {
+            await ReplyAsync("", embed: (await User.GetUserAsync(user?.Id ?? Context.User.Id)).StatEmbed());
+        }
+
+        /*[Command("ranking")]
+        [Summary("Returns the top 10 list of level")]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
+        public async Task ranking(int limit, string stat = "level")
+        {
+            
+        }*/
     }
 }
