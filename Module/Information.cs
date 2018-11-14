@@ -33,7 +33,7 @@ namespace MopsBot.Module
             await ReplyAsync($"https://discordapp.com/oauth2/authorize?client_id={Context.Client.CurrentUser.Id}&permissions=271969344&scope=bot");
         }
 
-        [Command("Define")]
+        [Command("Define", RunMode = RunMode.Async)]
         [Summary("Searches dictionaries for a definition of the specified word or expression")]
         public async Task define([Remainder] string text)
         {
@@ -54,7 +54,7 @@ namespace MopsBot.Module
             }
         }
 
-        [Command("Translate")]
+        [Command("Translate", RunMode = RunMode.Async)]
         [Summary("Translates your text from srcLanguage to tgtLanguage.")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public async Task translate(string srcLanguage, string tgtLanguage, [Remainder] string text)

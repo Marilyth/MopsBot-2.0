@@ -12,7 +12,7 @@ namespace MopsBot.Module
 {
     public class DataBase : ModuleBase
     {
-        [Command("Hug")]
+        [Command("Hug", RunMode = RunMode.Async)]
         [Summary("Hugs the specified person")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public async Task hug(SocketGuildUser person)
@@ -27,7 +27,7 @@ namespace MopsBot.Module
                 await ReplyAsync("Go ahead.");
         }
 
-        [Command("Kiss")]
+        [Command("Kiss", RunMode = RunMode.Async)]
         [Summary("Smooches the specified person")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public async Task kiss(SocketGuildUser person)
@@ -42,7 +42,7 @@ namespace MopsBot.Module
                 await ReplyAsync("That's sad.");
         }
 
-        [Command("Punch")]
+        [Command("Punch", RunMode = RunMode.Async)]
         [Summary("Fucks the specified person up")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public async Task punch(SocketGuildUser person)
@@ -58,7 +58,7 @@ namespace MopsBot.Module
         }
 
         
-        [Command("GetStats")]
+        [Command("GetStats", RunMode = RunMode.Async)]
         [Summary("Returns your or another persons experience and all that stuff")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public async Task GetStats(SocketGuildUser user = null)
