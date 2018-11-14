@@ -5,12 +5,13 @@ using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using MongoDB.Driver;
+using MopsBot.Data.Entities;
 
 namespace MopsBot.Data.Updater
 {
     public class Fight
     {
-        private Entities.User User;
+        private User tmpUser;
         private Entities.Enemy Enemy;
         private IUserMessage Message;
         private int Health, Rage;
@@ -20,6 +21,7 @@ namespace MopsBot.Data.Updater
 
         public Fight(ulong userId, string enemyName, IUserMessage message)
         {
+            tmpUser = User.GetUserAsync(userId).Result;
             var enemies = StaticBase.Database.GetCollection<Entities.Enemy>("Enemies")
                                .FindSync(x => x.Name.Equals(enemyName)).ToList();
             Message = message;
@@ -33,21 +35,20 @@ namespace MopsBot.Data.Updater
 
 
             Enemy = enemies.First();
-            User = StaticBase.Users.GetUser(userId);
-            Weapon = StaticBase.Database.GetCollection<Entities.Item>("Items").FindSync(x => x.Id == User.WeaponId).First();
-            Health = User.CalcCurLevel() + Weapon.BaseDefence + 10;
+            Weapon = StaticBase.Database.GetCollection<Entities.Item>("Items").FindSync(x => x.Id == tmpUser.WeaponId).First();
+            Health = tmpUser.CalcCurLevel() + Weapon.BaseDefence + 10;
 
             for(int i = 0; i < Weapon.Moveset.Count; i++){
                 int curIndex = i;
                 Program.ReactionHandler.AddHandler(Message, (IEmote)ReactionPoll.EmojiDict[i], x => SkillUsed(x, curIndex), false).Wait();
             }
 
-            Message.ModifyAsync(x => {x.Embed = FightEmbed(); x.Content = "";});
+            Message.ModifyAsync(x => {x.Embed = FightEmbed().Result; x.Content = "";});
         }
 
         private async Task SkillUsed(ReactionHandlerContext context, int option)
         {
-            if(context.Reaction.UserId == User.Id){
+            if(context.Reaction.UserId == tmpUser.Id){
                 if(Rage >= Weapon.Moveset[option].RageConsumption){
                     Log = new List<string>();
 
@@ -83,7 +84,7 @@ namespace MopsBot.Data.Updater
                         Log.Add($"You gained {tmpEnemy.Health * tmpEnemy.Damage * 10} Experience");
                         Log.Add($"You gained {tmpEnemy.Health}$");
                         if(loot.Count > 0) Log.Add($"You gained Loot: {string.Join(", ", loot.Select(x => string.Format("[{0}]", x.Name)))}");
-                        await User.ModifyAsync(x => {x.Experience += tmpEnemy.Health * tmpEnemy.Damage * 10; 
+                        await MopsBot.Data.Entities.User.ModifyUserAsync(tmpUser.Id, x => {x.Experience += tmpEnemy.Health * tmpEnemy.Damage * 10; 
                                                      x.Inventory = x.Inventory ?? new List<int>();
                                                      x.Inventory.AddRange(loot.Select(y => y.Id));
                                                      x.Money += tmpEnemy.Health;});
@@ -95,29 +96,29 @@ namespace MopsBot.Data.Updater
                         await Program.ReactionHandler.ClearHandler(Message);
 
                         Log = new List<string>();
-                        Log.Add($"You died and lost {User.Experience/10} Experience");
+                        Log.Add($"You died and lost {tmpUser.Experience/10} Experience");
 
                         await Message.ModifyAsync(x => x.Embed = EndEmbed());
-                        await User.ModifyAsync(x => x.Experience -= x.Experience/10);
+                        await User.ModifyUserAsync(tmpUser.Id, x => x.Experience -= x.Experience/10);
                         return;
                     }
 
-                    await Message.ModifyAsync(x => x.Embed = FightEmbed());
+                    await Message.ModifyAsync(x => x.Embed = FightEmbed().Result);
                 }
             }
         }
 
-        private Embed FightEmbed()
+        private async Task<Embed> FightEmbed()
         {
             NextEnemyMove = Enemy.GetNextMove();
             Log.Add($"The {Enemy.Name} is preparing to use [{NextEnemyMove.Name}]!");
 
             EmbedBuilder e = new EmbedBuilder();
 
-            e.WithAuthor(Program.Client.GetUser(User.Id).Username, Program.Client.GetUser(User.Id).GetAvatarUrl());
+            e.WithAuthor(Program.Client.GetUser(tmpUser.Id).Username, Program.Client.GetUser(tmpUser.Id).GetAvatarUrl());
             e.WithThumbnailUrl(Enemy.ImageUrl);
             
-            e.AddField("Stats", $"HP: {Health}/{User.CalcCurLevel() + Weapon.BaseDefence + 10}\n" + 
+            e.AddField("Stats", $"HP: {Health}/{(await User.GetUserAsync(tmpUser.Id)).CalcCurLevel() + Weapon.BaseDefence + 10}\n" + 
                                 $"Rage: {Rage}!!!", true);
 
             e.AddField("Enemy Stats", $"HP: {Enemy.Health}\n" + 
@@ -141,10 +142,10 @@ namespace MopsBot.Data.Updater
         private Embed EndEmbed(){
             EmbedBuilder e = new EmbedBuilder();
 
-            e.WithAuthor(Program.Client.GetUser(User.Id).Username, Program.Client.GetUser(User.Id).GetAvatarUrl());
+            e.WithAuthor(Program.Client.GetUser(tmpUser.Id).Username, Program.Client.GetUser(tmpUser.Id).GetAvatarUrl());
             e.WithThumbnailUrl(Enemy.ImageUrl);
 
-            e.AddField("Stats", $"HP: {Health}/{User.CalcCurLevel() + Weapon.BaseDefence + 10}\n" + 
+            e.AddField("Stats", $"HP: {Health}/{tmpUser.CalcCurLevel() + Weapon.BaseDefence + 10}\n" + 
                                 $"Rage: {Rage}!!!", true);
 
             e.AddField("Enemy Stats", $"HP: {Enemy.Health}\n" + 

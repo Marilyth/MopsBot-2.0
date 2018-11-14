@@ -38,7 +38,7 @@ namespace MopsBot
 
             await commands.AddModulesAsync(Assembly.GetEntryAssembly(), provider);
 
-            loadCustomCommands();
+            await loadCustomCommands();
             client.MessageReceived += Client_MessageReceived;
             client.MessageReceived += HandleCommand;
             client.UserJoined += Client_UserJoined;
@@ -51,9 +51,9 @@ namespace MopsBot
         private async Task Client_MessageReceived(SocketMessage arg)
         {
             //User Experience
-            if (!arg.Author.IsBot)
+            if (!arg.Author.IsBot && !arg.Content.StartsWith(await GetGuildPrefixAsync(((ITextChannel)(arg.Channel)).GuildId)))
             {
-                await StaticBase.Users.ModifyUserAsync(arg.Author.Id, x => x.Experience += arg.Content.Length);
+                await MopsBot.Data.Entities.User.ModifyUserAsync(arg.Author.Id, x => x.Experience += arg.Content.Length);
             }
         }
 

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MongoDB.Driver;
+using MopsBot.Data.Entities;
 
 namespace MopsBot.Module
 {
@@ -49,7 +50,7 @@ namespace MopsBot.Module
             [Command("Inventory")]
             [Summary("Lists all items in your inventory.")]
             public async Task Inventory(){
-                await ReplyAsync(string.Join("\n", (StaticBase.Users.GetUser(Context.User.Id).Inventory ?? new List<int>())
+                await ReplyAsync(string.Join("\n", ((await User.GetUserAsync(Context.User.Id)).Inventory ?? new List<int>())
                                 .Select(x => { var Item = StaticBase.Database.GetCollection<Data.Entities.Item>("Items").FindSync(y => y.Id.Equals(x)).First();
                                                 return $"Id: [**{Item.Id}**], {Item.Name}";})));
             }
@@ -57,11 +58,11 @@ namespace MopsBot.Module
             [Command("Equip")]
             [Summary("Equip an Item from your inventory.")]
             public async Task Equip(int itemId){
-                var User = StaticBase.Users.GetUser(Context.User.Id);
-                var Inventory = User.Inventory ?? new List<int>();
+                var user = (await User.GetUserAsync(Context.User.Id));
+                var Inventory = user.Inventory ?? new List<int>();
 
                 if(Inventory.Contains(itemId)){
-                    await User.ModifyAsync(x => {x.Inventory.Remove(itemId);
+                    await User.ModifyUserAsync(user.Id, x => {x.Inventory.Remove(itemId);
                                                  x.Inventory.Add(x.WeaponId);
                                                  x.WeaponId = itemId;});
                     await ReplyAsync($"Your equipped the [{itemId}] item and put your old item into your inventory.");

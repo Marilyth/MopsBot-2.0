@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MopsBot.Data.Entities;
 
 namespace MopsBot.Module
 {
@@ -18,9 +19,9 @@ namespace MopsBot.Module
         {
             if (!person.Id.Equals(Context.User.Id))
             {
-                await StaticBase.Users.ModifyUserAsync(person.Id, x => x.Hugged++);
+                await User.ModifyUserAsync(person.Id, x => x.Hugged++);
                 await ReplyAsync($"Aww, **{person.Username}** got hugged by **{Context.User.Username}**.\n" +
-                                 $"They have already been hugged {StaticBase.Users.GetUser(person.Id).Hugged} times!");
+                                 $"They have already been hugged {(await User.GetUserAsync(person.Id)).Hugged} times!");
             }
             else
                 await ReplyAsync("Go ahead.");
@@ -33,9 +34,9 @@ namespace MopsBot.Module
         {
             if (!person.Id.Equals(Context.User.Id))
             {
-                await StaticBase.Users.ModifyUserAsync(person.Id, x => x.Kissed++);
+                await User.ModifyUserAsync(person.Id, x => x.Kissed++);
                 await ReplyAsync($"Mwaaah, **{person.Username}** got kissed by **{Context.User.Username}**.\n" +
-                                 $"They have already been kissed {StaticBase.Users.GetUser(person.Id).Kissed} times!");
+                                 $"They have already been kissed {(await User.GetUserAsync(person.Id)).Kissed} times!");
             }
             else
                 await ReplyAsync("That's sad.");
@@ -48,9 +49,9 @@ namespace MopsBot.Module
         {
             if (!person.Id.Equals(Context.User.Id))
             {
-                await StaticBase.Users.ModifyUserAsync(person.Id, x => x.Punched++);
+                await User.ModifyUserAsync(person.Id, x => x.Punched++);
                 await ReplyAsync($"DAAMN! **{person.Username}** just got fucked up by **{Context.User.Username}**.\n" +
-                                 $"That's {StaticBase.Users.GetUser(person.Id).Punched} times, they have been fucked up now.");
+                                 $"That's {(await User.GetUserAsync(person.Id)).Punched} times, they have been fucked up now.");
             }
             else
                 await ReplyAsync("Please don't fuck yourself up. That's unhealthy.");
@@ -62,7 +63,7 @@ namespace MopsBot.Module
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public async Task GetStats(SocketGuildUser user = null)
         {
-            await ReplyAsync("", embed: StaticBase.Users.GetUser(user?.Id ?? Context.User.Id).StatEmbed());
+            await ReplyAsync("", embed: (await User.GetUserAsync(user?.Id ?? Context.User.Id)).StatEmbed());
         }
 
         /*[Command("ranking")]

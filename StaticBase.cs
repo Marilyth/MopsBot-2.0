@@ -24,7 +24,6 @@ namespace MopsBot
     {
         public static MongoClient DatabaseClient = new MongoClient($"{Program.Config["DatabaseURL"]}");
         public static IMongoDatabase Database = DatabaseClient.GetDatabase("Mops");
-        public static Data.UserHandler Users;
         public static Random ran = new Random();
         public static Gfycat.GfycatClient gfy;
         public static List<string> Playlist = new List<string>();
@@ -49,7 +48,6 @@ namespace MopsBot
             {
                 Task.Run(() =>
                 {
-                    Users = new UserHandler();
                     WelcomeMessages = Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").FindSync(x => true).ToEnumerable().ToDictionary(x => x.GuildId);
                     ReactGiveaways = new ReactionGiveaway();
                     ReactRoleJoin = new ReactionRoleJoin();

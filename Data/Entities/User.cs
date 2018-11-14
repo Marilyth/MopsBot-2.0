@@ -27,15 +27,36 @@ namespace MopsBot.Data.Entities
 
         public int CalcExperience(int level)
         {
-            return 200*level*level;
+            return 200 * level * level;
         }
 
-        public int CalcCurLevel(){
-            return (int)Math.Sqrt(Experience/200.0);
+        public int CalcCurLevel()
+        {
+            return (int)Math.Sqrt(Experience / 200.0);
         }
 
-        public async Task ModifyAsync(Action<User> modification){
-            await StaticBase.Users.ModifyUserAsync(Id, modification);
+        public static async Task<User> GetUserAsync(ulong id)
+        {
+            User user = (await StaticBase.Database.GetCollection<User>("Users").FindAsync(x => x.Id == id)).First();
+
+            if (user == null)
+            {
+                user = new User(id);
+                await StaticBase.Database.GetCollection<User>("Users").InsertOneAsync(user);
+            }
+
+            return user;
+        }
+
+        public static async Task ModifyUserAsync(ulong id, Action<User> modification)
+        {
+            await (await GetUserAsync(id)).ModifyAsync(modification);
+        }
+
+        private async Task ModifyAsync(Action<User> modification)
+        {
+            modification(this);
+            await StaticBase.Database.GetCollection<User>("Users").ReplaceOneAsync(x => x.Id == Id, this);
         }
 
         private string DrawProgressBar()
