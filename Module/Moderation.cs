@@ -91,7 +91,7 @@ namespace MopsBot.Module
             }
         }
 
-        [Command("SetPrefix")]
+        [Command("SetPrefix", RunMode = RunMode.Async)]
         [Summary("Changes the prefix of Mops in the current Guild")]
         [RequireUserPermission(ChannelPermission.ManageChannels)]
         public async Task setPrefix([Remainder]string prefix)
@@ -113,7 +113,7 @@ namespace MopsBot.Module
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public class WelcomeMessage : ModuleBase
         {
-            [Command("Create")]
+            [Command("Create", RunMode = RunMode.Async)]
             [Summary("Makes Mops greet people, in the channel you are calling this command in.\n" +
                      "Name of user: **{User.Username}**\n" +
                      "Mention of user: **{User.Mention}**")]
@@ -148,7 +148,7 @@ namespace MopsBot.Module
                 }
             }
 
-            [Command("CreateWebhook")]
+            [Command("CreateWebhook", RunMode = RunMode.Async)]
             [Summary("Makes Mops greet people, in the channel you are calling this command in.\n" +
                      "Additionally, avatar and name of the notification account can be set.\n" +
                      "Name of user: **{User.Username}**\n" +
@@ -188,7 +188,7 @@ namespace MopsBot.Module
                 }
             }
 
-            [Command("Delete")]
+            [Command("Delete", RunMode = RunMode.Async)]
             [Summary("Stops Mops from sending welcome messages.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task WelcomeDelete()

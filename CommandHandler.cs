@@ -51,10 +51,11 @@ namespace MopsBot
         private async Task Client_MessageReceived(SocketMessage arg)
         {
             //User Experience
-            if (!arg.Author.IsBot && !arg.Content.StartsWith(await GetGuildPrefixAsync(((ITextChannel)(arg.Channel)).GuildId)))
+            Task.Run(() => {
+            if (!arg.Author.IsBot && !arg.Content.StartsWith(GetGuildPrefixAsync(((ITextChannel)(arg.Channel)).GuildId).Result))
             {
-                await MopsBot.Data.Entities.User.ModifyUserAsync(arg.Author.Id, x => x.Experience += arg.Content.Length);
-            }
+                MopsBot.Data.Entities.User.ModifyUserAsync(arg.Author.Id, x => x.Experience += arg.Content.Length).Wait();
+            }});
         }
 
         /// <summary>
