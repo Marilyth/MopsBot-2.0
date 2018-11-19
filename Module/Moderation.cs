@@ -13,6 +13,7 @@ using System.Text.RegularExpressions;
 using MopsBot.Data.Tracker;
 using MongoDB.Driver;
 using static MopsBot.StaticBase;
+using Discord.Addons.Interactive;
 
 namespace MopsBot.Module
 {
@@ -64,8 +65,10 @@ namespace MopsBot.Module
             }
 
             [Command("Get")]
+            [Summary("Returns a list of all open polls, and a link to their corresponding message.")]
             public async Task Get(){
-                await ReplyAsync(String.Join("\n", StaticBase.Poll.Polls[Context.Channel.Id].Select(x => $"https://discordapp.com/channels/{Context.Guild.Id}/{Context.Channel.Id}/{x.MessageID} - {x.Question}")));
+                var infoEmbed = new EmbedBuilder().WithDescription(String.Join("\n", StaticBase.Poll.Polls[Context.Channel.Id].Select(x => $"[{x.Question}](https://discordapp.com/channels/{Context.Guild.Id}/{Context.Channel.Id}/{x.MessageID})")));
+                await ReplyAsync(embed:infoEmbed.Build());
             }
         }
 
@@ -87,7 +90,10 @@ namespace MopsBot.Module
             [Summary("Returns message links to all active giveaways.")]
             public async Task Get()
             {
-                await ReplyAsync(String.Join("\n", ReactGiveaways.Giveaways[Context.Channel.Id].Select(x => $"https://discordapp.com/channels/{Context.Guild.Id}/{Context.Channel.Id}/{x.Key}")));
+                var allEmbeds = ReactGiveaways.Giveaways[Context.Channel.Id].Select(x => Tuple.Create(Context.Channel.GetMessageAsync(x.Key).Result.Embeds.First(), x.Key));
+                var infoEmbed = new EmbedBuilder().WithDescription(String.Join("\n", allEmbeds.Select(x => $"[{x.Item1.Title} by {x.Item1.Author.Value.Name}](https://discordapp.com/channels/{Context.Guild.Id}/{Context.Channel.Id}/{x.Item2})")));
+
+                await ReplyAsync(embed:infoEmbed.Build());
             }
         }
 
