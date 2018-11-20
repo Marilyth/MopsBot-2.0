@@ -26,15 +26,18 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task trackTwitter(string twitterUser, [Remainder]string tweetNotification = "~Tweet Tweet~")
             {
-                try
+                using (Context.Channel.EnterTypingState())
                 {
-                    await Trackers[ITracker.TrackerType.Twitter].AddTrackerAsync(twitterUser, Context.Channel.Id, tweetNotification + "|" + tweetNotification);
+                    try
+                    {
+                        await Trackers[ITracker.TrackerType.Twitter].AddTrackerAsync(twitterUser, Context.Channel.Id, tweetNotification + "|" + tweetNotification);
 
-                    await ReplyAsync("Keeping track of " + twitterUser + "'s tweets, replies and retweets, from now on!\nTo disable replies and retweets, please use the `Twitter DisableNonMain` subcommand!");
-                }
-                catch (Exception e)
-                {
-                    await ReplyAsync("**Error**: " + e.InnerException.Message);
+                        await ReplyAsync("Keeping track of " + twitterUser + "'s tweets, replies and retweets, from now on!\nTo disable replies and retweets, please use the `Twitter DisableNonMain` subcommand!");
+                    }
+                    catch (Exception e)
+                    {
+                        await ReplyAsync("**Error**: " + e.InnerException.Message);
+                    }
                 }
             }
 
@@ -127,15 +130,18 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task trackOsu([Remainder]string OsuUser)
             {
-                try
+                using (Context.Channel.EnterTypingState())
                 {
-                    await Trackers[ITracker.TrackerType.Osu].AddTrackerAsync(OsuUser, Context.Channel.Id);
+                    try
+                    {
+                        await Trackers[ITracker.TrackerType.Osu].AddTrackerAsync(OsuUser, Context.Channel.Id);
 
-                    await ReplyAsync("Keeping track of " + OsuUser + "'s plays above `0.1pp` gain, from now on!\nYou can change the lower pp boundary by using the `Osu SetPPBounds` subcommand!");
-                }
-                catch (Exception e)
-                {
-                    await ReplyAsync("**Error**: " + e.InnerException.Message);
+                        await ReplyAsync("Keeping track of " + OsuUser + "'s plays above `0.1pp` gain, from now on!\nYou can change the lower pp boundary by using the `Osu SetPPBounds` subcommand!");
+                    }
+                    catch (Exception e)
+                    {
+                        await ReplyAsync("**Error**: " + e.InnerException.Message);
+                    }
                 }
             }
 
@@ -204,16 +210,19 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task trackYoutube(string channelID, [Remainder]string notificationMessage = "New Video")
             {
-                try
+                using (Context.Channel.EnterTypingState())
                 {
-                    await Trackers[ITracker.TrackerType.Youtube].AddTrackerAsync(channelID, Context.Channel.Id, notificationMessage);
+                    try
+                    {
+                        await Trackers[ITracker.TrackerType.Youtube].AddTrackerAsync(channelID, Context.Channel.Id, notificationMessage);
 
-                    await ReplyAsync("Keeping track of " + channelID + "'s videos, from now on!");
+                        await ReplyAsync("Keeping track of " + channelID + "'s videos, from now on!");
 
-                }
-                catch (Exception e)
-                {
-                    await ReplyAsync("**Error**: " + e.InnerException.Message);
+                    }
+                    catch (Exception e)
+                    {
+                        await ReplyAsync("**Error**: " + e.InnerException.Message);
+                    }
                 }
             }
 
@@ -263,16 +272,19 @@ namespace MopsBot.Module
             [RequireBotPermission(ChannelPermission.ManageMessages)]
             public async Task trackStreamer(string streamerName, [Remainder]string notificationMessage = "Stream went live!")
             {
-                try
+                using (Context.Channel.EnterTypingState())
                 {
-                    await Trackers[ITracker.TrackerType.Twitch].AddTrackerAsync(streamerName, Context.Channel.Id, notificationMessage);
+                    try
+                    {
+                        await Trackers[ITracker.TrackerType.Twitch].AddTrackerAsync(streamerName, Context.Channel.Id, notificationMessage);
 
-                    await ReplyAsync("Keeping track of " + streamerName + "'s streams, from now on!");
+                        await ReplyAsync("Keeping track of " + streamerName + "'s streams, from now on!");
 
-                }
-                catch (Exception e)
-                {
-                    await ReplyAsync("**Error**: " + e.InnerException.Message);
+                    }
+                    catch (Exception e)
+                    {
+                        await ReplyAsync("**Error**: " + e.InnerException.Message);
+                    }
                 }
             }
 
@@ -319,16 +331,19 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task trackClips(string streamerName, [Remainder]string notificationMessage = "New trending clip found!")
             {
-                try
+                using (Context.Channel.EnterTypingState())
                 {
-                    await Trackers[ITracker.TrackerType.TwitchClip].AddTrackerAsync(streamerName, Context.Channel.Id, notificationMessage);
+                    try
+                    {
+                        await Trackers[ITracker.TrackerType.TwitchClip].AddTrackerAsync(streamerName, Context.Channel.Id, notificationMessage);
 
-                    await ReplyAsync("Keeping track of " + streamerName + "'s top clips above **2** views every 30 minutes, from now on!\nUse the `SetViewThreshold` subcommand to change the threshold.");
+                        await ReplyAsync("Keeping track of " + streamerName + "'s top clips above **2** views every 30 minutes, from now on!\nUse the `SetViewThreshold` subcommand to change the threshold.");
 
-                }
-                catch (Exception e)
-                {
-                    await ReplyAsync("**Error**: " + e.InnerException.Message);
+                    }
+                    catch (Exception e)
+                    {
+                        await ReplyAsync("**Error**: " + e.InnerException.Message);
+                    }
                 }
             }
 
@@ -393,16 +408,19 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task trackSubreddit(string subreddit, string query = null)
             {
-                try
+                using (Context.Channel.EnterTypingState())
                 {
-                    await Trackers[ITracker.TrackerType.Reddit].AddTrackerAsync(String.Join(" ", new string[] { subreddit, query }.Where(x => x != null)), Context.Channel.Id);
+                    try
+                    {
+                        await Trackers[ITracker.TrackerType.Reddit].AddTrackerAsync(String.Join(" ", new string[] { subreddit, query }.Where(x => x != null)), Context.Channel.Id);
 
-                    await ReplyAsync("Keeping track of " + subreddit + $"'s posts, from now on, using {query}!");
+                        await ReplyAsync("Keeping track of " + subreddit + $"'s posts, from now on, using {query}!");
 
-                }
-                catch (Exception e)
-                {
-                    await ReplyAsync("**Error**: " + e.InnerException.Message);
+                    }
+                    catch (Exception e)
+                    {
+                        await ReplyAsync("**Error**: " + e.InnerException.Message);
+                    }
                 }
             }
 
@@ -449,17 +467,20 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task trackOW(string owUser)
             {
-                try
+                using (Context.Channel.EnterTypingState())
                 {
-                    owUser = owUser.Replace("#", "-");
-                    await Trackers[ITracker.TrackerType.Overwatch].AddTrackerAsync(owUser, Context.Channel.Id);
+                    try
+                    {
+                        owUser = owUser.Replace("#", "-");
+                        await Trackers[ITracker.TrackerType.Overwatch].AddTrackerAsync(owUser, Context.Channel.Id);
 
-                    await ReplyAsync("Keeping track of " + owUser + "'s stats, from now on!");
+                        await ReplyAsync("Keeping track of " + owUser + "'s stats, from now on!");
 
-                }
-                catch (Exception e)
-                {
-                    await ReplyAsync("**Error**: " + e.InnerException.Message);
+                    }
+                    catch (Exception e)
+                    {
+                        await ReplyAsync("**Error**: " + e.InnerException.Message);
+                    }
                 }
             }
 
@@ -516,15 +537,17 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task trackNews(string source, [Remainder]string query = "")
             {
-                try
+                using (Context.Channel.EnterTypingState())
                 {
-                    await Trackers[ITracker.TrackerType.News].AddTrackerAsync(String.Join("|", new string[] { source, query }), Context.Channel.Id);
-                    await ReplyAsync($"Keeping track of `{source}`'s articles {(query.Equals("") ? "" : $"including `{query}` from now on!")}");
-
-                }
-                catch (Exception e)
-                {
-                    await ReplyAsync("**Error**: " + e.InnerException.Message);
+                    try
+                    {
+                        await Trackers[ITracker.TrackerType.News].AddTrackerAsync(String.Join("|", new string[] { source, query }), Context.Channel.Id);
+                        await ReplyAsync($"Keeping track of `{source}`'s articles {(query.Equals("") ? "" : $"including `{query}` from now on!")}");
+                    }
+                    catch (Exception e)
+                    {
+                        await ReplyAsync("**Error**: " + e.InnerException.Message);
+                    }
                 }
             }
 
@@ -571,15 +594,18 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task Track(string name, [Remainder]string notification = "")
             {
-                try
+                using (Context.Channel.EnterTypingState())
                 {
-                    await Trackers[ITracker.TrackerType.OSRS].AddTrackerAsync(name, Context.Channel.Id);
-                    await ReplyAsync($"Keeping track of `{name}` stats after each playsession, from now on!");
+                    try
+                    {
+                        await Trackers[ITracker.TrackerType.OSRS].AddTrackerAsync(name, Context.Channel.Id);
+                        await ReplyAsync($"Keeping track of `{name}` stats after each playsession, from now on!");
 
-                }
-                catch (Exception e)
-                {
-                    await ReplyAsync("**Error**: " + e.InnerException.Message);
+                    }
+                    catch (Exception e)
+                    {
+                        await ReplyAsync("**Error**: " + e.InnerException.Message);
+                    }
                 }
             }
 
@@ -647,15 +673,18 @@ namespace MopsBot.Module
             [Summary("Tracks regex on a webpage. Use () around the text you want to track to signify a match.")]
             public async Task TrackRegex(string website, string scrapeRegex)
             {
-                try
+                using (Context.Channel.EnterTypingState())
                 {
-                    await Trackers[ITracker.TrackerType.HTML].AddTrackerAsync(website + "|||" + scrapeRegex, Context.Channel.Id);
-                    await ReplyAsync($"Keeping track of `{website}` data using ```html\n{scrapeRegex}```, from now on!\n\nInitial value was: **{await HTMLTracker.FetchData(website + "|||" + scrapeRegex)}**");
+                    try
+                    {
+                        await Trackers[ITracker.TrackerType.HTML].AddTrackerAsync(website + "|||" + scrapeRegex, Context.Channel.Id);
+                        await ReplyAsync($"Keeping track of `{website}` data using ```html\n{scrapeRegex}```, from now on!\n\nInitial value was: **{await HTMLTracker.FetchData(website + "|||" + scrapeRegex)}**");
 
-                }
-                catch (Exception e)
-                {
-                    await ReplyAsync("**Error**: " + e.InnerException.Message);
+                    }
+                    catch (Exception e)
+                    {
+                        await ReplyAsync("**Error**: " + e.InnerException.Message);
+                    }
                 }
             }
 
@@ -663,44 +692,47 @@ namespace MopsBot.Module
             [Summary("Tracks plain text on a webpage, and notifies whenever that text changes.\nThis command will guide you through the process.")]
             public async Task TrackText(string website, string textToTrack, int leftContextLength = 4, int rightContextLength = 1)
             {
-                if (leftContextLength > 0 && rightContextLength > 0)
+                using (Context.Channel.EnterTypingState())
                 {
-                    string escapedTextToTrack = textToTrack.Replace("?", @"\?").Replace("*", @"\*").Replace(".", @"\.").Replace("+", @"\+").Replace(")", @"\)").Replace("(", @"\(").Replace("[", @"\[").Replace("]", @"\]");
-
-                    MatchCollection matches = await HTMLTracker.FetchAllData(website + "|||" + $"(<[^<>]*?>[^<>]*?){{{leftContextLength}}}({escapedTextToTrack})[^<>]*?(<[^<>]*?>[^<>]*?){{{rightContextLength}}}");
-                    await PagedReplyAsync(matches.Select(x => $"**{textToTrack}** in context\n\n```html\n{x.Value}```"));
-
-                    await ReplyAsync("Which page is the one you want to track?\nIf none are specific enough, consider extending the context, or writing your own regex using the `TrackRegex` subcommand.");
-                    int page = int.Parse((await NextMessageAsync(timeout: new TimeSpan(0, 5, 0))).Content) - 1;
-
-                    //Escape regex symbols
-                    string unescapedMatchString = matches[page].Value.Replace(escapedTextToTrack, textToTrack);
-
-                    //Find out position of text, and replace it with wild characters
-                    var match = Regex.Match(unescapedMatchString, $@">[^<>]*?({escapedTextToTrack})[^<>]*?<", RegexOptions.Singleline);
-                    int position = match.Groups.First(x => x.Value.Equals(textToTrack)).Index;
-                    string scrapeRegex = unescapedMatchString.Remove(position, textToTrack.Length).Insert(position, $@"\(\[^<>\]\*\?\)");
-
-                    //Make any additional occurences of text in context wild characters
-                    scrapeRegex = scrapeRegex.Replace(escapedTextToTrack, @"\[^<>\]\*\?");
-                    scrapeRegex = scrapeRegex.Replace("?", @"\?").Replace("*", @"\*").Replace(".", @"\.").Replace("+", @"\+").Replace(")", @"\)").Replace("(", @"\(").Replace("[", @"\[").Replace("]", @"\]");
-                    scrapeRegex = scrapeRegex.Replace("\\\\?", @"?").Replace("\\\\*", @"*").Replace("\\\\.", @".").Replace("\\\\+", @"+").Replace("\\\\)", @")").Replace("\\\\(", @"(").Replace("\\\\[", @"[").Replace("\\\\]", @"]");
-
-                    await ReplyAsync($"Is there anything, for the sake of context, that you want to have removed (e.g. tracking highest level, but don't want it to be bound to a certain name)?\n\n```html\n{scrapeRegex}```\n\nIf so, please enter the exact texts you want to be generic instead of fixed in a **comma seperated list**.");
-                    string result = (await NextMessageAsync(timeout: new TimeSpan(0, 1, 0)))?.Content;
-
-                    if (result != null)
+                    if (leftContextLength > 0 && rightContextLength > 0)
                     {
-                        foreach (string value in result?.Split(","))
-                        {
-                            if (value.ToLower().Equals("no") || value.ToLower().Equals("n") || value.ToLower().Equals("nope"))
-                                break;
-                            string toRemove = value.Trim();
-                            scrapeRegex = scrapeRegex.Replace(toRemove, "[^<>]*?");
-                        }
-                    }
+                        string escapedTextToTrack = textToTrack.Replace("?", @"\?").Replace("*", @"\*").Replace(".", @"\.").Replace("+", @"\+").Replace(")", @"\)").Replace("(", @"\(").Replace("[", @"\[").Replace("]", @"\]");
 
-                    await TrackRegex(website, scrapeRegex);
+                        MatchCollection matches = await HTMLTracker.FetchAllData(website + "|||" + $"(<[^<>]*?>[^<>]*?){{{leftContextLength}}}({escapedTextToTrack})[^<>]*?(<[^<>]*?>[^<>]*?){{{rightContextLength}}}");
+                        await PagedReplyAsync(matches.Select(x => $"**{textToTrack}** in context\n\n```html\n{x.Value}```"));
+
+                        await ReplyAsync("Which page is the one you want to track?\nIf none are specific enough, consider extending the context, or writing your own regex using the `TrackRegex` subcommand.");
+                        int page = int.Parse((await NextMessageAsync(timeout: new TimeSpan(0, 5, 0))).Content) - 1;
+
+                        //Escape regex symbols
+                        string unescapedMatchString = matches[page].Value.Replace(escapedTextToTrack, textToTrack);
+
+                        //Find out position of text, and replace it with wild characters
+                        var match = Regex.Match(unescapedMatchString, $@">[^<>]*?({escapedTextToTrack})[^<>]*?<", RegexOptions.Singleline);
+                        int position = match.Groups.First(x => x.Value.Equals(textToTrack)).Index;
+                        string scrapeRegex = unescapedMatchString.Remove(position, textToTrack.Length).Insert(position, $@"\(\[^<>\]\*\?\)");
+
+                        //Make any additional occurences of text in context wild characters
+                        scrapeRegex = scrapeRegex.Replace(escapedTextToTrack, @"\[^<>\]\*\?");
+                        scrapeRegex = scrapeRegex.Replace("?", @"\?").Replace("*", @"\*").Replace(".", @"\.").Replace("+", @"\+").Replace(")", @"\)").Replace("(", @"\(").Replace("[", @"\[").Replace("]", @"\]");
+                        scrapeRegex = scrapeRegex.Replace("\\\\?", @"?").Replace("\\\\*", @"*").Replace("\\\\.", @".").Replace("\\\\+", @"+").Replace("\\\\)", @")").Replace("\\\\(", @"(").Replace("\\\\[", @"[").Replace("\\\\]", @"]");
+
+                        await ReplyAsync($"Is there anything, for the sake of context, that you want to have removed (e.g. tracking highest level, but don't want it to be bound to a certain name)?\n\n```html\n{scrapeRegex}```\n\nIf so, please enter the exact texts you want to be generic instead of fixed in a **comma seperated list**.");
+                        string result = (await NextMessageAsync(timeout: new TimeSpan(0, 1, 0)))?.Content;
+
+                        if (result != null)
+                        {
+                            foreach (string value in result?.Split(","))
+                            {
+                                if (value.ToLower().Equals("no") || value.ToLower().Equals("n") || value.ToLower().Equals("nope"))
+                                    break;
+                                string toRemove = value.Trim();
+                                scrapeRegex = scrapeRegex.Replace(toRemove, "[^<>]*?");
+                            }
+                        }
+
+                        await TrackRegex(website, scrapeRegex);
+                    }
                 }
             }
 
@@ -708,14 +740,17 @@ namespace MopsBot.Module
             [Summary("Tests the regex and returns it's value. Handy if you want to check your regex before tracking with it!")]
             public async Task Test(string website, string scrapeRegex)
             {
-                try
+                using (Context.Channel.EnterTypingState())
                 {
-                    await ReplyAsync($"Regex returned value: {await HTMLTracker.FetchData(website + "|||" + scrapeRegex)}");
+                    try
+                    {
+                        await ReplyAsync($"Regex returned value: {await HTMLTracker.FetchData(website + "|||" + scrapeRegex)}");
 
-                }
-                catch (Exception e)
-                {
-                    await ReplyAsync("**Error**: " + e.InnerException.Message);
+                    }
+                    catch (Exception e)
+                    {
+                        await ReplyAsync("**Error**: " + e.InnerException.Message);
+                    }
                 }
             }
 
@@ -723,13 +758,16 @@ namespace MopsBot.Module
             [Summary("Creates a paginator of all trackers, out of which you have to choose one.")]
             public async Task UnTrack()
             {
-                var trackers = Trackers[ITracker.TrackerType.HTML].GetTrackers(Context.Channel.Id).ToList();
-                await PagedReplyAsync(trackers.Select(x => $"```html\n{x.Name}```"));
-                await ReplyAsync("Which tracker do you want to delete?\nPlease enter the page number");
+                using (Context.Channel.EnterTypingState())
+                {
+                    var trackers = Trackers[ITracker.TrackerType.HTML].GetTrackers(Context.Channel.Id).ToList();
+                    await PagedReplyAsync(trackers.Select(x => $"```html\n{x.Name}```"));
+                    await ReplyAsync("Which tracker do you want to delete?\nPlease enter the page number");
 
-                int page = int.Parse((await NextMessageAsync(timeout: new TimeSpan(0, 5, 0))).Content) - 1;
-                if (await Trackers[ITracker.TrackerType.HTML].TryRemoveTrackerAsync(trackers[page].Name, Context.Channel.Id))
-                    await ReplyAsync($"Stopped keeping track of result {page + 1} of paginator!");
+                    int page = int.Parse((await NextMessageAsync(timeout: new TimeSpan(0, 5, 0))).Content) - 1;
+                    if (await Trackers[ITracker.TrackerType.HTML].TryRemoveTrackerAsync(trackers[page].Name, Context.Channel.Id))
+                        await ReplyAsync($"Stopped keeping track of result {page + 1} of paginator!");
+                }
             }
 
             [Command("UnTrackAll")]
@@ -747,13 +785,16 @@ namespace MopsBot.Module
             [Summary("Sets the notification for when the text of a regex match changes.\nRequires only the notification, paginator will guide you.")]
             public async Task SetNotification([Remainder]string notification = "")
             {
-                var trackers = Trackers[ITracker.TrackerType.HTML].GetTrackers(Context.Channel.Id).ToList();
-                await PagedReplyAsync(trackers.Select(x => $"```html\n{x.Name}```"));
-                await ReplyAsync("Which tracker do you want to set the notification for?\nPlease enter the page number");
+                using (Context.Channel.EnterTypingState())
+                {
+                    var trackers = Trackers[ITracker.TrackerType.HTML].GetTrackers(Context.Channel.Id).ToList();
+                    await PagedReplyAsync(trackers.Select(x => $"```html\n{x.Name}```"));
+                    await ReplyAsync("Which tracker do you want to set the notification for?\nPlease enter the page number");
 
-                int page = int.Parse((await NextMessageAsync(timeout: new TimeSpan(0, 5, 0))).Content) - 1;
-                if (await Trackers[ITracker.TrackerType.HTML].TrySetNotificationAsync(trackers[page].Name, Context.Channel.Id, notification))
-                    await ReplyAsync($"Set notification for result {page + 1} of paginator to `{notification}`!");
+                    int page = int.Parse((await NextMessageAsync(timeout: new TimeSpan(0, 5, 0))).Content) - 1;
+                    if (await Trackers[ITracker.TrackerType.HTML].TrySetNotificationAsync(trackers[page].Name, Context.Channel.Id, notification))
+                        await ReplyAsync($"Set notification for result {page + 1} of paginator to `{notification}`!");
+                }
             }
         }
 
@@ -766,15 +807,18 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task Track(string Region, string Realm, string Name)
             {
-                try
+                using (Context.Channel.EnterTypingState())
                 {
-                    await Trackers[ITracker.TrackerType.WoW].AddTrackerAsync(String.Join("|", new string[] { Region, Realm, Name }), Context.Channel.Id);
-                    await ReplyAsync($"Keeping track of `{Name}`'s stats in `{Realm}` from now on.");
+                    try
+                    {
+                        await Trackers[ITracker.TrackerType.WoW].AddTrackerAsync(String.Join("|", new string[] { Region, Realm, Name }), Context.Channel.Id);
+                        await ReplyAsync($"Keeping track of `{Name}`'s stats in `{Realm}` from now on.");
 
-                }
-                catch (Exception e)
-                {
-                    await ReplyAsync("**Error**: " + e.InnerException.Message);
+                    }
+                    catch (Exception e)
+                    {
+                        await ReplyAsync("**Error**: " + e.InnerException.Message);
+                    }
                 }
             }
 
@@ -938,27 +982,30 @@ namespace MopsBot.Module
         [Hide]
         public async Task PruneTrackers(bool testing = true)
         {
-            Dictionary<string, int> pruneCount = new Dictionary<string, int>();
-
-            foreach (var trackerHandler in StaticBase.Trackers)
+            using (Context.Channel.EnterTypingState())
             {
-                pruneCount[trackerHandler.Key.ToString()] = 0;
-                foreach (var tracker in trackerHandler.Value.GetTrackerSet())
-                {
-                    foreach (var channel in tracker.ChannelIds.ToList())
-                    {
-                        if (Program.Client.GetChannel(channel) == null)
-                        {
-                            if (!testing)
-                                await trackerHandler.Value.TryRemoveTrackerAsync(tracker.Name, channel);
+                Dictionary<string, int> pruneCount = new Dictionary<string, int>();
 
-                            pruneCount[trackerHandler.Key.ToString()]++;
+                foreach (var trackerHandler in StaticBase.Trackers)
+                {
+                    pruneCount[trackerHandler.Key.ToString()] = 0;
+                    foreach (var tracker in trackerHandler.Value.GetTrackerSet())
+                    {
+                        foreach (var channel in tracker.ChannelIds.ToList())
+                        {
+                            if (Program.Client.GetChannel(channel) == null)
+                            {
+                                if (!testing)
+                                    await trackerHandler.Value.TryRemoveTrackerAsync(tracker.Name, channel);
+
+                                pruneCount[trackerHandler.Key.ToString()]++;
+                            }
                         }
                     }
                 }
-            }
 
-            await ReplyAsync($"```{"TrackerType",-20}{"PruneCount"}\n{string.Join("\n", pruneCount.Select(x => $"{x.Key,-20}{x.Value,-3}"))}```");
+                await ReplyAsync($"```{"TrackerType",-20}{"PruneCount"}\n{string.Join("\n", pruneCount.Select(x => $"{x.Key,-20}{x.Value,-3}"))}```");
+            }
         }
     }
 }

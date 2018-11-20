@@ -105,6 +105,7 @@ namespace MopsBot
 
             // Create a Command Context
             var context = new SocketCommandContext(client, message);
+
             // Execute the Command, store the result
             var result = await commands.ExecuteAsync(context, argPos, _provider);
 

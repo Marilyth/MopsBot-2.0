@@ -37,7 +37,7 @@ namespace MopsBot.Data.Entities
 
         public static async Task<User> GetUserAsync(ulong id)
         {
-            User user = (await StaticBase.Database.GetCollection<User>("Users").FindAsync(x => x.Id == id)).First();
+            User user = (await StaticBase.Database.GetCollection<User>("Users").FindAsync(x => x.Id == id)).FirstOrDefault();
 
             if (user == null)
             {
