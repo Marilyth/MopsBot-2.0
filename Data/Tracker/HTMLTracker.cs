@@ -11,6 +11,7 @@ using Newtonsoft.Json;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 using MopsBot.Data.Tracker.APIResults.Youtube;
+using MongoDB.Bson.Serialization.Attributes;
 using System.Xml;
 
 namespace MopsBot.Data.Tracker
@@ -18,7 +19,7 @@ namespace MopsBot.Data.Tracker
     public class HTMLTracker : ITracker
     {
         public string Regex;
-        private string oldMatch;
+        public string oldMatch;
 
         public HTMLTracker() : base(60000, ExistingTrackers * 2000)
         {
@@ -51,8 +52,10 @@ namespace MopsBot.Data.Tracker
 
                 if (!string.IsNullOrEmpty(match))
                 {
-                    if (oldMatch == null)
+                    if (oldMatch == null){
                         oldMatch = match;
+                        await StaticBase.Trackers[TrackerType.HTML].UpdateDBAsync(this);
+                    }
 
                     if (!match.Equals(oldMatch))
                         foreach (var channel in ChannelIds.ToList())
