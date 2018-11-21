@@ -128,7 +128,7 @@ namespace MopsBot.Data.Tracker
             e.Color = new Color(255, 87, 156);
             e.Title = $"{beatmapInformation.artist} - {beatmapInformation.title} [{beatmapInformation.version}]";
             e.Url = $"https://osu.ppy.sh/b/{beatmapInformation.beatmap_id}&m={beatmapInformation.mode}";
-            e.Description = Math.Round(double.Parse(beatmapInformation.difficultyrating, CultureInfo.InvariantCulture), 2) + "*, " + (Mods)int.Parse(scoreInformation.enabled_mods);
+            e.Description = Math.Round(double.Parse(beatmapInformation.difficultyrating, CultureInfo.InvariantCulture), 2) + "*\n" + (Mods)int.Parse(scoreInformation.enabled_mods);
             e.Timestamp = DateTime.Parse(scoreInformation.date).AddHours(-6);
 
             EmbedAuthorBuilder author = new EmbedAuthorBuilder();
