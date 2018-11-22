@@ -30,6 +30,7 @@ namespace MopsBot.Module
             [RequireBotPermission(ChannelPermission.ManageMessages)]
             [RequireBotPermission(ChannelPermission.ReadMessageHistory)]
             [RequireUserPermission(GuildPermission.ManageRoles)]
+            [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.ApplyPerChannel)]
             public async Task createInvite(SocketRole role, bool isGerman = false)
             {
                 using (Context.Channel.EnterTypingState())
@@ -56,6 +57,7 @@ namespace MopsBot.Module
         {
             [Command("Create", RunMode = RunMode.Async), Summary("Creates a poll\nExample: !poll \"What should I play\" \"Dark Souls\" \"Osu!\" \"WoW\"")]
             [RequireUserPermission(GuildPermission.ManageChannels)]
+            [Ratelimit(1, 60, Measure.Seconds, RatelimitFlags.ApplyPerChannel)]
             public async Task Create(string title, params string[] options)
             {
                 using (Context.Channel.EnterTypingState())
@@ -88,6 +90,7 @@ namespace MopsBot.Module
         {
             [Command("Create", RunMode = RunMode.Async)]
             [Summary("Creates giveaway.")]
+            [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.ApplyPerChannel)]
             public async Task Create([Remainder]string game)
             {
                 using (Context.Channel.EnterTypingState())
@@ -346,6 +349,7 @@ namespace MopsBot.Module
         [Command("help")]
         [Alias("commands")]
         [Hide]
+        [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.ChannelwideLimit)]
         public async Task help([Remainder]string helpModule = null)
         {
             EmbedBuilder e = new EmbedBuilder();

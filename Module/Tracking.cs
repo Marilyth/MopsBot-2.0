@@ -24,6 +24,7 @@ namespace MopsBot.Module
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified TwitterUser, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
             public async Task trackTwitter(string twitterUser, [Remainder]string tweetNotification = "~Tweet Tweet~")
             {
                 using (Context.Channel.EnterTypingState())
@@ -128,6 +129,7 @@ namespace MopsBot.Module
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified Osu player, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
             public async Task trackOsu([Remainder]string OsuUser)
             {
                 using (Context.Channel.EnterTypingState())
@@ -208,6 +210,7 @@ namespace MopsBot.Module
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified Youtuber, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
             public async Task trackYoutube(string channelID, [Remainder]string notificationMessage = "New Video")
             {
                 using (Context.Channel.EnterTypingState())
@@ -270,6 +273,7 @@ namespace MopsBot.Module
             [RequireBotPermission(ChannelPermission.ReadMessageHistory)]
             [RequireBotPermission(ChannelPermission.AddReactions)]
             [RequireBotPermission(ChannelPermission.ManageMessages)]
+            [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
             public async Task trackStreamer(string streamerName, [Remainder]string notificationMessage = "Stream went live!")
             {
                 using (Context.Channel.EnterTypingState())
@@ -329,6 +333,7 @@ namespace MopsBot.Module
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified streamer's top clips every 30 minutes, in the Channel you are calling this command right now.\nRequires Manage channel permissions.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
             public async Task trackClips(string streamerName, [Remainder]string notificationMessage = "New trending clip found!")
             {
                 using (Context.Channel.EnterTypingState())
@@ -406,6 +411,7 @@ namespace MopsBot.Module
             [Summary("Keeps track of the specified Subreddit, in the Channel you are calling this command right now.\nRequires Manage channel permissions."
             + "\n queries MUST look something like this: `title:mei+title:hanzo`")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
             public async Task trackSubreddit(string subreddit, string query = null)
             {
                 using (Context.Channel.EnterTypingState())
@@ -465,6 +471,7 @@ namespace MopsBot.Module
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified Overwatch player, in the Channel you are calling this command right now.\nParameter: Username-Battletag")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
             public async Task trackOW(string owUser)
             {
                 using (Context.Channel.EnterTypingState())
@@ -535,6 +542,7 @@ namespace MopsBot.Module
             [Summary("Keeps track of articles from the specified source.\n" +
                      "Here is a list of possible sources: https://newsapi.org/sources")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
             public async Task trackNews(string source, [Remainder]string query = "")
             {
                 using (Context.Channel.EnterTypingState())
@@ -592,6 +600,7 @@ namespace MopsBot.Module
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the stats of the OSRS player.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
             public async Task Track(string name, [Remainder]string notification = "")
             {
                 using (Context.Channel.EnterTypingState())
@@ -667,7 +676,7 @@ namespace MopsBot.Module
         [Group("HTML")]
         [RequireUserPermission(ChannelPermission.ManageChannels)]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        [Ratelimit(1, 1, Measure.Minutes, RatelimitFlags.ApplyPerGuild)]
+        [Ratelimit(1, 60, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
         public class HTML : InteractiveBase
         {
             [Command("TrackRegex", RunMode = RunMode.Async)]
@@ -806,6 +815,7 @@ namespace MopsBot.Module
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of changes in stats of the specified WoW player.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
             public async Task Track(string Region, string Realm, string Name)
             {
                 using (Context.Channel.EnterTypingState())

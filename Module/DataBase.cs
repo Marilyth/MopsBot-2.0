@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MopsBot.Data.Entities;
+using MopsBot.Module.Preconditions;
 
 namespace MopsBot.Module
 {
@@ -15,6 +16,7 @@ namespace MopsBot.Module
         [Command("Hug", RunMode = RunMode.Async)]
         [Summary("Hugs the specified person")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
+        [Ratelimit(5, 1, Measure.Hours)]
         public async Task hug(SocketGuildUser person)
         {
             using (Context.Channel.EnterTypingState())
@@ -33,6 +35,7 @@ namespace MopsBot.Module
         [Command("Kiss", RunMode = RunMode.Async)]
         [Summary("Smooches the specified person")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
+        [Ratelimit(5, 1, Measure.Hours)]
         public async Task kiss(SocketGuildUser person)
         {
             using (Context.Channel.EnterTypingState())
@@ -51,6 +54,7 @@ namespace MopsBot.Module
         [Command("Punch", RunMode = RunMode.Async)]
         [Summary("Fucks the specified person up")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
+        [Ratelimit(5, 1, Measure.Hours)]
         public async Task punch(SocketGuildUser person)
         {
             using (Context.Channel.EnterTypingState())

@@ -11,6 +11,7 @@ using Newtonsoft.Json;
 using System.Net.NetworkInformation;
 using System.Net.Http;
 using System.Xml.Serialization;
+using MopsBot.Module.Preconditions;
 
 namespace MopsBot.Module
 {
@@ -35,6 +36,7 @@ namespace MopsBot.Module
 
         [Command("Define", RunMode = RunMode.Async)]
         [Summary("Searches dictionaries for a definition of the specified word or expression")]
+        [Ratelimit(1, 10, Measure.Seconds)]
         public async Task define([Remainder] string text)
         {
             using (Context.Channel.EnterTypingState())
@@ -59,6 +61,7 @@ namespace MopsBot.Module
         [Command("Translate", RunMode = RunMode.Async)]
         [Summary("Translates your text from srcLanguage to tgtLanguage.")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
+        [Ratelimit(1, 10, Measure.Seconds)]
         public async Task translate(string srcLanguage, string tgtLanguage, [Remainder] string text)
         {
             using (Context.Channel.EnterTypingState())
@@ -79,6 +82,7 @@ namespace MopsBot.Module
 
         [Command("Wolfram", RunMode = RunMode.Async)]
         [Summary("Sends a query to wolfram alpha.")]
+        [Ratelimit(1, 10, Measure.Seconds)]
         public async Task wolf([Remainder]string query)
         {
             using (Context.Channel.EnterTypingState())
