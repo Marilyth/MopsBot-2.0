@@ -9,13 +9,13 @@ using MopsBot;
 
 namespace MopsBot.Data.Interactive
 {
-    public class MopsPagniator
+    public class MopsPaginator
     {
         public List<Embed> pages;
         private int curPage;
         public IUserMessage message;
 
-        private MopsPagniator() { }
+        private MopsPaginator() { }
 
         public static async Task CreatePagedMessage(ISocketMessageChannel channel, IEnumerable<Embed> pPages)
         {
@@ -24,7 +24,7 @@ namespace MopsBot.Data.Interactive
 
             var message = channel.SendMessageAsync(embed: pPages.First()).Result;
 
-            var paginator = new MopsPagniator()
+            var paginator = new MopsPaginator()
             {
                 pages = pPages.ToList(),
                 message = message

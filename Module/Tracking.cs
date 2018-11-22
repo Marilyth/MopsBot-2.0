@@ -709,7 +709,7 @@ namespace MopsBot.Module
                         string escapedTextToTrack = textToTrack.Replace("?", @"\?").Replace("*", @"\*").Replace(".", @"\.").Replace("+", @"\+").Replace(")", @"\)").Replace("(", @"\(").Replace("[", @"\[").Replace("]", @"\]");
 
                         MatchCollection matches = await HTMLTracker.FetchAllData(website + "|||" + $"(<[^<>]*?>[^<>]*?){{{leftContextLength}}}({escapedTextToTrack})[^<>]*?(<[^<>]*?>[^<>]*?){{{rightContextLength}}}");
-                        await Data.Interactive.MopsPagniator.CreatePagedMessage(Context.Channel, matches.Select(x => $"**{textToTrack}** in context\n\n```html\n{x.Value}```"));
+                        await Data.Interactive.MopsPaginator.CreatePagedMessage(Context.Channel, matches.Select(x => $"**{textToTrack}** in context\n\n```html\n{x.Value}```"));
 
                         await ReplyAsync("Which page is the one you want to track?\nIf none are specific enough, consider extending the context, or writing your own regex using the `TrackRegex` subcommand.");
                         int page = int.Parse((await NextMessageAsync(timeout: new TimeSpan(0, 5, 0))).Content) - 1;
@@ -771,7 +771,7 @@ namespace MopsBot.Module
                 using (Context.Channel.EnterTypingState())
                 {
                     var trackers = Trackers[ITracker.TrackerType.HTML].GetTrackers(Context.Channel.Id).ToList();
-                    await Data.Interactive.MopsPagniator.CreatePagedMessage(Context.Channel, trackers.Select(x => $"```html\n{x.Name}```"));
+                    await Data.Interactive.MopsPaginator.CreatePagedMessage(Context.Channel, trackers.Select(x => $"```html\n{x.Name}```"));
                     await ReplyAsync("Which tracker do you want to delete?\nPlease enter the page number");
 
                     int page = int.Parse((await NextMessageAsync(timeout: new TimeSpan(0, 5, 0))).Content) - 1;
@@ -798,7 +798,7 @@ namespace MopsBot.Module
                 using (Context.Channel.EnterTypingState())
                 {
                     var trackers = Trackers[ITracker.TrackerType.HTML].GetTrackers(Context.Channel.Id).ToList();
-                    await Data.Interactive.MopsPagniator.CreatePagedMessage(Context.Channel, trackers.Select(x => $"```html\n{x.Name}```"));
+                    await Data.Interactive.MopsPaginator.CreatePagedMessage(Context.Channel, trackers.Select(x => $"```html\n{x.Name}```"));
                     await ReplyAsync("Which tracker do you want to set the notification for?\nPlease enter the page number");
 
                     int page = int.Parse((await NextMessageAsync(timeout: new TimeSpan(0, 5, 0))).Content) - 1;
