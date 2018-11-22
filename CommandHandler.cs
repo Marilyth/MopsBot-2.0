@@ -51,11 +51,13 @@ namespace MopsBot
         private async Task Client_MessageReceived(SocketMessage arg)
         {
             //User Experience
-            Task.Run(() => {
-            if (!arg.Author.IsBot && !arg.Content.StartsWith(GetGuildPrefixAsync(((ITextChannel)(arg.Channel)).GuildId).Result))
+            Task.Run(() =>
             {
-                MopsBot.Data.Entities.User.ModifyUserAsync(arg.Author.Id, x => x.Experience += arg.Content.Length).Wait();
-            }});
+                if (!arg.Author.IsBot && !arg.Content.StartsWith(GetGuildPrefixAsync(((ITextChannel)(arg.Channel)).GuildId).Result))
+                {
+                    MopsBot.Data.Entities.User.ModifyUserAsync(arg.Author.Id, x => x.Experience += arg.Content.Length).Wait();
+                }
+            });
         }
 
         /// <summary>
@@ -106,22 +108,27 @@ namespace MopsBot
             // Create a Command Context
             var context = new SocketCommandContext(client, message);
 
-            // Execute the Command, store the result
-            var result = await commands.ExecuteAsync(context, argPos, _provider);
-
-            // If the command failed, notify the user
-            if (!result.IsSuccess && !result.ErrorReason.Equals(""))
+            //Execute if command exists
+            if (commands.Search(context, argPos).IsSuccess)
             {
-                if (result.ErrorReason.Contains("Object reference not set to an instance of an object"))
-                    await message.Channel.SendMessageAsync($"**Error:** Mops just restarted and needs to initialise things first.\nTry again in a minute!");
-                else if (result.ErrorReason.Contains("The input text has too many parameters"))
-                    await message.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}\nIf your parameter contains spaces, please wrap it around quotation marks like this: `\"A Parameter\"`.");
-                else if (!result.ErrorReason.Contains("Unknown command"))
-                    await message.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}");
-                else
+                var result = await commands.ExecuteAsync(context, argPos, _provider);
+
+                // If the command failed, notify the user
+                if (!result.IsSuccess && !result.ErrorReason.Equals(""))
                 {
-                    await commands.Commands.First(x => x.Name.Equals("UseCustomCommand")).ExecuteAsync(context, new List<object> { $"{context.Message.Content.Substring(argPos)}" }, new List<object> { }, _provider);
+                    if (result.ErrorReason.Contains("Object reference not set to an instance of an object"))
+                        await message.Channel.SendMessageAsync($"**Error:** Mops just restarted and needs to initialise things first.\nTry again in a minute!");
+                    else if (result.ErrorReason.Contains("The input text has too many parameters"))
+                        await message.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}\nIf your parameter contains spaces, please wrap it around quotation marks like this: `\"A Parameter\"`.");
+                    else
+                        await message.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}");
                 }
+            }
+
+            //Else execute custom commands
+            else if (CustomCommands.ContainsKey(context.Guild.Id) && CustomCommands[context.Guild.Id].Commands.ContainsKey(context.Message.Content.Substring(argPos)))
+            {
+                await commands.Commands.First(x => x.Name.Equals("UseCustomCommand")).ExecuteAsync(context, new List<object> { $"{context.Message.Content.Substring(argPos)}" }, new List<object> { }, _provider);
             }
         }
 
