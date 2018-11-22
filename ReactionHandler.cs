@@ -55,7 +55,7 @@ namespace MopsBot
                 if (!stackLength.ContainsKey(reaction.Channel.Id))
                     stackLength[reaction.Channel.Id] = 0;
 
-                await Task.Delay(2000 * (int)stackLength[reaction.Channel.Id]);
+                await Task.Delay(2000 * (int)stackLength[reaction.Channel.Id]++);
 
                 Task.Run(() =>
                 {
@@ -68,8 +68,6 @@ namespace MopsBot
                     context.MessageCache = messageCache;
                     context.Emote = reaction.Emote;
                     context.Reaction = reaction;
-
-                    stackLength[context.Channel.Id]++;
 
                     if (messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.ContainsKey(reaction.Emote))
                         messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value[reaction.Emote](context);
@@ -107,7 +105,7 @@ namespace MopsBot
             if (!stackLength.ContainsKey(message.Channel.Id))
                 stackLength[message.Channel.Id] = 0;
 
-            await Task.Delay(2000 * (int)stackLength[message.Channel.Id]);
+            await Task.Delay(2000 * (int)stackLength[message.Channel.Id]++);
 
             if (clear)
                 await ClearHandler(message);
@@ -117,7 +115,6 @@ namespace MopsBot
                 messageFunctions.Add(message, new Dictionary<IEmote, Func<ReactionHandlerContext, Task>> { { emote, function } });
             // await populate(message);
             if (!emote.Equals(DefaultEmote)){
-                stackLength[message.Channel.Id]++;
                 await message.AddReactionAsync(emote);
                 stackLength[message.Channel.Id]--;
             }
