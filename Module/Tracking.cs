@@ -667,6 +667,7 @@ namespace MopsBot.Module
         [Group("HTML")]
         [RequireUserPermission(ChannelPermission.ManageChannels)]
         [RequireBotPermission(ChannelPermission.SendMessages)]
+        [Ratelimit(1, 1, Measure.Minutes, RatelimitFlags.ApplyPerGuild)]
         public class HTML : InteractiveBase
         {
             [Command("TrackRegex", RunMode = RunMode.Async)]
