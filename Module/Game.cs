@@ -27,7 +27,7 @@ namespace MopsBot.Module
                     var message = await ReplyAsync("Generating fight.");
                     try
                     {
-                        new Data.Updater.Fight(Context.User.Id, enemy, message);
+                        new Data.Interactive.Fight(Context.User.Id, enemy, message);
                     }
                     catch (ArgumentException e)
                     {

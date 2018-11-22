@@ -64,7 +64,7 @@ namespace MopsBot.Module
                 {
                     if (options.Length <= 10)
                     {
-                        Data.Poll poll = new Data.Poll(title, options);
+                        Data.Interactive.Poll poll = new Data.Interactive.Poll(title, options);
                         await StaticBase.Poll.AddPoll((ITextChannel)Context.Channel, poll);
                     }
                     else

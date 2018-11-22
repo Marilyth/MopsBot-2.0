@@ -10,7 +10,7 @@ using System.IO;
 using Newtonsoft.Json;
 using MopsBot.Data;
 using MopsBot.Data.Tracker;
-using MopsBot.Data.Updater;
+using MopsBot.Data.Interactive;
 using Tweetinvi;
 using NewsAPI;
 using WowDotNetAPI;
