@@ -58,11 +58,13 @@ namespace MopsBot.Data.Tracker
                         await StaticBase.Trackers[TrackerType.HTML].UpdateDBAsync(this);
                     }
 
-                    if (!match.Equals(oldMatch))
+                    if (!match.Equals(oldMatch)){
                         foreach (var channel in ChannelMessages.Keys.ToList())
                             await OnMajorChangeTracked(channel, CreateChangeEmbed($"{oldMatch} -> {match}"), ChannelMessages[channel]);
-
-                    oldMatch = match;
+                        
+                        oldMatch = match;
+                        await StaticBase.Trackers[TrackerType.HTML].UpdateDBAsync(this);
+                    }
                 }
             }
             catch (Exception e)
