@@ -14,6 +14,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace MopsBot.Data.Tracker
 {
+    [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
     public class TwitchClipTracker : ITracker
     {
         public uint ViewThreshold;
@@ -61,7 +62,7 @@ namespace MopsBot.Data.Tracker
                 foreach (Clip clip in clips.clips)
                 {
                     var embed = createEmbed(clip);
-                    foreach (ulong channel in ChannelMessages.Keys)
+                    foreach (ulong channel in ChannelMessages.Keys.ToList())
                     {
                         await OnMajorChangeTracked(channel, embed, ChannelMessages[channel]);
                     }

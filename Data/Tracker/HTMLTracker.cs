@@ -16,6 +16,7 @@ using System.Xml;
 
 namespace MopsBot.Data.Tracker
 {
+    [BsonIgnoreExtraElements]
     public class HTMLTracker : ITracker
     {
         public string Regex;
@@ -58,7 +59,7 @@ namespace MopsBot.Data.Tracker
                     }
 
                     if (!match.Equals(oldMatch))
-                        foreach (var channel in ChannelIds.ToList())
+                        foreach (var channel in ChannelMessages.Keys.ToList())
                             await OnMajorChangeTracked(channel, CreateChangeEmbed($"{oldMatch} -> {match}"), ChannelMessages[channel]);
 
                     oldMatch = match;

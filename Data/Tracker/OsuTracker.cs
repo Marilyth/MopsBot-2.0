@@ -12,6 +12,7 @@ using MopsBot.Data.Tracker.APIResults.Osu;
 
 namespace MopsBot.Data.Tracker
 {
+    [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
     public class OsuTracker : ITracker
     {
         public Dictionary<string, double> AllPP;
@@ -73,7 +74,7 @@ namespace MopsBot.Data.Tracker
 
                         Beatmap beatmapInformation = await fetchBeatmap(scoreInformation.beatmap_id, pp.Key);
 
-                        foreach (ulong channel in ChannelIds.ToList())
+                        foreach (ulong channel in ChannelMessages.Keys.ToList())
                         {
                             await OnMajorChangeTracked(channel, createEmbed(userInformation, beatmapInformation, await fetchScore(scoreInformation.beatmap_id, pp.Key),
                                                        Math.Round(double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture) - pp.Value, 2), pp.Key), ChannelMessages[channel]);

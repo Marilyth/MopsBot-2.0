@@ -15,6 +15,7 @@ using Microsoft.Win32.SafeHandles;
 
 namespace MopsBot.Data.Tracker
 {
+    [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
     public class NewsTracker : ITracker
     {
         public string LastNews, Query, Source;
@@ -63,7 +64,7 @@ namespace MopsBot.Data.Tracker
 
                 foreach (Article newArticle in newArticles)
                 {
-                    foreach (ulong channel in ChannelIds.ToList())
+                    foreach (ulong channel in ChannelMessages.Keys.ToList())
                     {
                         await OnMajorChangeTracked(channel, createEmbed(newArticle), ChannelMessages[channel]);
                     }

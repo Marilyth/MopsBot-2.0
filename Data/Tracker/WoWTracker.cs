@@ -14,6 +14,7 @@ using WowDotNetAPI.Models;
 
 namespace MopsBot.Data.Tracker
 {
+    [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
     public class WoWTracker : ITracker
     {
         public static WowExplorer WoWClient;
@@ -67,7 +68,7 @@ namespace MopsBot.Data.Tracker
                 var changes = getChangedStats(newStats);
                 if (changes.Count > 0)
                 {
-                    foreach (ulong channel in ChannelIds.ToList())
+                    foreach (ulong channel in ChannelMessages.Keys.ToList())
                     {
                         await OnMajorChangeTracked(channel, createEmbed(newStats, changes), ChannelMessages[channel]);
                     }

@@ -112,7 +112,7 @@ namespace MopsBot.Data.Tracker
                             
                             ToUpdate = new Dictionary<ulong, ulong>();
                             
-                            foreach (ulong channel in ChannelMessages.Keys)
+                            foreach (ulong channel in ChannelMessages.Keys.ToList())
                                 await OnMinorChangeTracked(channel, $"{Name} went Offline!");
                         }
                     }
@@ -122,7 +122,7 @@ namespace MopsBot.Data.Tracker
                         IsOnline = true;
                         CurGame = StreamerStatus.stream.game;
 
-                        foreach (ulong channel in ChannelMessages.Keys)
+                        foreach (ulong channel in ChannelMessages.Keys.ToList())
                             await OnMinorChangeTracked(channel, ChannelMessages[channel]);
                     }
                     await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
@@ -138,13 +138,13 @@ namespace MopsBot.Data.Tracker
                         CurGame = StreamerStatus.stream.game;
                         ViewerGraph.AddValue(CurGame, StreamerStatus.stream.viewers);
 
-                        foreach (ulong channel in ChannelMessages.Keys)
+                        foreach (ulong channel in ChannelMessages.Keys.ToList())
                             await OnMinorChangeTracked(channel, $"{Name} switched games to **{CurGame}**");
                     }
 
                     await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
 
-                    foreach (ulong channel in ChannelIds.ToList())
+                    foreach (ulong channel in ChannelMessages.Keys.ToList())
                         await OnMajorChangeTracked(channel, createEmbed());
                 }
             }
@@ -230,7 +230,7 @@ namespace MopsBot.Data.Tracker
             {
                 ViewerGraph.Recolour();
 
-                foreach (ulong channel in ChannelIds)
+                foreach (ulong channel in ChannelMessages.Keys.ToList())
                     await OnMajorChangeTracked(channel, createEmbed());
             }
         }
@@ -242,7 +242,7 @@ namespace MopsBot.Data.Tracker
                 isThumbnailLarge = !isThumbnailLarge;
                 await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
 
-                foreach (ulong channel in ChannelIds)
+                foreach (ulong channel in ChannelMessages.Keys.ToList())
                     await OnMajorChangeTracked(channel, createEmbed());
             }
         }

@@ -119,7 +119,7 @@ namespace MopsBot.Data
 
         public override async Task<bool> TryRemoveTrackerAsync(string name, ulong channelId)
         {
-            if (trackers.ContainsKey(name) && trackers[name].ChannelIds.Contains(channelId))
+            if (trackers.ContainsKey(name) && trackers[name].ChannelMessages.ContainsKey(channelId))
             {
                 if (typeof(T) == typeof(Tracker.TwitchTracker))
                     foreach (var channel in (trackers[name] as Tracker.TwitchTracker).ToUpdate.Where(x => x.Key.Equals(channelId)))
@@ -131,10 +131,9 @@ namespace MopsBot.Data
                         {
                         }
 
-                if (trackers[name].ChannelIds.Count > 1)
+                if (trackers[name].ChannelMessages.Keys.Count > 1)
                 {
                     trackers[name].ChannelMessages.Remove(channelId);
-                    trackers[name].ChannelIds.Remove(channelId);
 
                     if (trackers.First().Value.GetType() == typeof(Tracker.TwitchTracker))
                     {
@@ -163,22 +162,21 @@ namespace MopsBot.Data
         {
             if (trackers.ContainsKey(name))
             {
-                if (!trackers[name].ChannelIds.Contains(channelID))
-                    trackers[name].ChannelIds.Add(channelID);
+                if (!trackers[name].ChannelMessages.ContainsKey(channelID)){
+                    trackers[name].ChannelMessages.Add(channelID, notification);
+                    await UpdateDBAsync(trackers[name]);
+                }
             }
             else
             {
                 trackers.Add(name, (T)Activator.CreateInstance(typeof(T), new object[] { name }));
-                trackers[name].ChannelIds.Add(channelID);
+                trackers[name].ChannelMessages.Add(channelID, notification);
                 trackers[name].OnMajorEventFired += OnMajorEvent;
                 trackers[name].OnMinorEventFired += OnMinorEvent;
                 await InsertToDBAsync(trackers[name]);
             }
 
-            trackers[name].ChannelMessages.Add(channelID, notification);
-            Console.WriteLine("\n" + $"{DateTime.Now} Started a new {typeof(T).Name} for {name}\nChannels: {string.Join(",", trackers[name].ChannelIds)}\nMessage: {notification}");
-            
-            await UpdateDBAsync(trackers[name]);
+            Console.WriteLine("\n" + $"{DateTime.Now} Started a new {typeof(T).Name} for {name}\nChannels: {string.Join(",", trackers[name].ChannelMessages.Keys)}\nMessage: {notification}");
         }
 
         public override async Task<bool> TrySetNotificationAsync(string name, ulong channelID, string notificationMessage)
@@ -197,7 +195,7 @@ namespace MopsBot.Data
 
         public override IEnumerable<ITracker> GetTrackers(ulong channelID)
         {
-            return trackers.Select(x => x.Value).Where(x => x.ChannelIds.Contains(channelID));
+            return trackers.Select(x => x.Value).Where(x => x.ChannelMessages.ContainsKey(channelID));
         }
 
         public override Embed GetTrackersEmbed(ulong channelID)
@@ -205,7 +203,7 @@ namespace MopsBot.Data
             EmbedBuilder e = new EmbedBuilder();
             e.WithTitle(typeof(T).Name).WithCurrentTimestamp().WithColor(Discord.Color.Blue);
 
-            e.WithDescription(string.Join("\n", trackers.Where(x => x.Value.ChannelIds.Contains(channelID)).Select(x => x.Value.TrackerUrl() != null ? $"[{x.Key}]({x.Value.TrackerUrl()})" : x.Key)));
+            e.WithDescription(string.Join("\n", trackers.Where(x => x.Value.ChannelMessages.ContainsKey(channelID)).Select(x => x.Value.TrackerUrl() != null ? $"[{x.Key}]({x.Value.TrackerUrl()})" : x.Key)));
 
             return e.Build();
         }
@@ -217,7 +215,7 @@ namespace MopsBot.Data
 
         public override ITracker GetTracker(ulong channelID, string name)
         {
-            return trackers.FirstOrDefault(x => x.Key.Equals(name) && x.Value.ChannelIds.Contains(channelID)).Value;
+            return trackers.FirstOrDefault(x => x.Key.Equals(name) && x.Value.ChannelMessages.ContainsKey(channelID)).Value;
         }
 
         public override HashSet<ITracker> GetTrackerSet()

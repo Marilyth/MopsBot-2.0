@@ -991,7 +991,7 @@ namespace MopsBot.Module
                     pruneCount[trackerHandler.Key.ToString()] = 0;
                     foreach (var tracker in trackerHandler.Value.GetTrackerSet())
                     {
-                        foreach (var channel in tracker.ChannelIds.ToList())
+                        foreach (var channel in tracker.ChannelMessages.Keys.ToList())
                         {
                             if (Program.Client.GetChannel(channel) == null)
                             {

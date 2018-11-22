@@ -17,6 +17,7 @@ namespace MopsBot.Data.Tracker
     /// <summary>
     /// A tracker which keeps track of an Overwatch players stats
     /// </summary>
+    [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
     public class OverwatchTracker : ITracker
     {
         private OStatsResult information;
@@ -67,7 +68,7 @@ namespace MopsBot.Data.Tracker
 
                 if (changedStats.Count != 0)
                 {
-                    foreach (ulong channel in ChannelIds.ToList())
+                    foreach (ulong channel in ChannelMessages.Keys.ToList())
                     {
                         await OnMajorChangeTracked(channel, createEmbed(newInformation, changedStats, getSessionMostPlayed(information.getNotNull().heroes.playtime, newInformation.getNotNull().heroes.playtime)), ChannelMessages[channel]);
                     }

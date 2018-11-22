@@ -15,6 +15,7 @@ using System.Xml;
 
 namespace MopsBot.Data.Tracker
 {
+    [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
     public class OSRSTracker : ITracker
     {
         private string channelThumbnailUrl, uploadPlaylistId;
@@ -63,7 +64,7 @@ namespace MopsBot.Data.Tracker
                 }
 
                 if (changedStats.Count > 0)
-                    foreach (var channel in ChannelMessages.Keys)
+                    foreach (var channel in ChannelMessages.Keys.ToList())
                         await OnMajorChangeTracked(channel, CreateChangeEmbed(changedStats), ChannelMessages[channel]);
 
                 stats = newStats;
