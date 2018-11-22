@@ -159,7 +159,7 @@ namespace MopsBot.Data.Tracker
             }
             e.ImageUrl = $"https://b.ppy.sh/thumb/{beatmapInformation.beatmapset_id}l.jpg";
 
-            e.AddField("Score", scoreInformation.score + $" ({scoreInformation.maxcombo}x)", true);
+            e.AddField("Score", scoreInformation.score + $" ({scoreInformation.maxcombo}/{beatmapInformation.max_combo}x)", true);
             e.AddField("Acc", calcAcc(scoreInformation, int.Parse(beatmapInformation.mode)) + $"% {scoreInformation.rank}", true);
             e.AddField("PP for play", Math.Round(double.Parse(scoreInformation.pp ?? "NaN", CultureInfo.InvariantCulture), 2) + $" (+{ppChange})", true);
             e.AddField("Rank", userInformation.pp_rank, true);
