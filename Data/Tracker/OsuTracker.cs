@@ -14,26 +14,26 @@ namespace MopsBot.Data.Tracker
 {
     public class OsuTracker : ITracker
     {
-        private Dictionary<string, double> allPP;
+        public Dictionary<string, double> AllPP;
         public double PPThreshold;
 
         public OsuTracker() : base(60000, ExistingTrackers * 2000)
         {
-            allPP = new Dictionary<string, double>();
-            allPP.Add("m=0", 0);
-            allPP.Add("m=1", 0);
-            allPP.Add("m=2", 0);
-            allPP.Add("m=3", 0);
+            AllPP = new Dictionary<string, double>();
+            AllPP.Add("m=0", 0);
+            AllPP.Add("m=1", 0);
+            AllPP.Add("m=2", 0);
+            AllPP.Add("m=3", 0);
         }
 
         public OsuTracker(string name) : base(60000)
         {
             Name = name;
-            allPP = new Dictionary<string, double>();
-            allPP.Add("m=0", 0);
-            allPP.Add("m=1", 0);
-            allPP.Add("m=2", 0);
-            allPP.Add("m=3", 0);
+            AllPP = new Dictionary<string, double>();
+            AllPP.Add("m=0", 0);
+            AllPP.Add("m=1", 0);
+            AllPP.Add("m=2", 0);
+            AllPP.Add("m=3", 0);
             PPThreshold = 0.1;
 
             //Check if person exists by forcing Exceptions if not.
@@ -53,15 +53,10 @@ namespace MopsBot.Data.Tracker
         {
             try
             {
-                foreach (var pp in allPP.ToList())
+                foreach (var pp in AllPP.ToList())
                 {
                     OsuResult userInformation = await fetchUser(pp.Key);
                     if (userInformation == null) return;
-                    if (pp.Value == 0)
-                    {
-                        allPP[pp.Key] = allPP[pp.Key] = double.Parse(userInformation.pp_raw ?? "0", CultureInfo.InvariantCulture);
-                        continue;
-                    }
 
                     if (pp.Value > 0 && pp.Value + PPThreshold <= double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture))
                     {
@@ -69,7 +64,8 @@ namespace MopsBot.Data.Tracker
 
                         if (recentScores == null)
                         {
-                            allPP[pp.Key] = double.Parse(userInformation.pp_raw ?? "0", CultureInfo.InvariantCulture);
+                            AllPP[pp.Key] = double.Parse(userInformation.pp_raw ?? "0", CultureInfo.InvariantCulture);
+                            await StaticBase.Trackers[TrackerType.Osu].UpdateDBAsync(this);
                             return;
                         }
 
@@ -83,7 +79,11 @@ namespace MopsBot.Data.Tracker
                                                        Math.Round(double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture) - pp.Value, 2), pp.Key), ChannelMessages[channel]);
                         }
                     }
-                    allPP[pp.Key] = double.Parse(userInformation.pp_raw ?? "0", CultureInfo.InvariantCulture);
+
+                    if(pp.Value != double.Parse(userInformation.pp_raw ?? "0", CultureInfo.InvariantCulture)){
+                        AllPP[pp.Key] = double.Parse(userInformation.pp_raw ?? "0", CultureInfo.InvariantCulture);
+                        await StaticBase.Trackers[TrackerType.Osu].UpdateDBAsync(this);
+                    }
                 }
             }
             catch (Exception e)
