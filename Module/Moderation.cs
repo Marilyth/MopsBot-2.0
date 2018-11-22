@@ -349,7 +349,7 @@ namespace MopsBot.Module
         [Command("help")]
         [Alias("commands")]
         [Hide]
-        [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.ChannelwideLimit)]
+        [Ratelimit(1, 2, Measure.Seconds, RatelimitFlags.ChannelwideLimit)]
         public async Task help([Remainder]string helpModule = null)
         {
             EmbedBuilder e = new EmbedBuilder();
