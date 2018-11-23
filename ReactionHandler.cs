@@ -74,7 +74,7 @@ namespace MopsBot
                     else if (messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.ContainsKey(DefaultEmote))
                         messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value[DefaultEmote](context);
                     message.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
-
+                    Task.Delay(2000);
                     stackLength[context.Channel.Id]--;
                 });
             }
@@ -118,7 +118,7 @@ namespace MopsBot
                 await message.AddReactionAsync(emote);
                 await Task.Delay(2000);
             }
-            
+
             stackLength[message.Channel.Id]--;
         }
 
