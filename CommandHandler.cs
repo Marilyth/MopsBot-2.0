@@ -111,6 +111,7 @@ namespace MopsBot
             //Execute if command exists
             if (commands.Search(context, argPos).IsSuccess)
             {
+                Console.WriteLine($"[{System.DateTime.Now}] executed command: {parameterMessage.Content.Substring(argPos)}");
                 var result = await commands.ExecuteAsync(context, argPos, _provider);
 
                 // If the command failed, notify the user
@@ -128,6 +129,7 @@ namespace MopsBot
             //Else execute custom commands
             else if (CustomCommands.ContainsKey(context.Guild.Id) && CustomCommands[context.Guild.Id].Commands.ContainsKey(context.Message.Content.Substring(argPos)))
             {
+                Console.WriteLine($"[{System.DateTime.Now}] executed command: {parameterMessage.Content.Substring(argPos)}");
                 await commands.Commands.First(x => x.Name.Equals("UseCustomCommand")).ExecuteAsync(context, new List<object> { $"{context.Message.Content.Substring(argPos)}" }, new List<object> { }, _provider);
             }
         }
