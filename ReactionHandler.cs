@@ -104,7 +104,7 @@ namespace MopsBot
         {
             if (!stackLength.ContainsKey(message.Channel.Id))
                 stackLength[message.Channel.Id] = 0;
-
+            
             await Task.Delay(2000 * (int)stackLength[message.Channel.Id]++);
 
             if (clear)
@@ -114,10 +114,12 @@ namespace MopsBot
             else
                 messageFunctions.Add(message, new Dictionary<IEmote, Func<ReactionHandlerContext, Task>> { { emote, function } });
             // await populate(message);
-            if (!emote.Equals(DefaultEmote)){
+            if (!emote.Equals(DefaultEmote) && !message.Reactions.ContainsKey(emote)){
                 await message.AddReactionAsync(emote);
-                stackLength[message.Channel.Id]--;
+                await Task.Delay(2000);
             }
+            
+            stackLength[message.Channel.Id]--;
         }
 
         /// <summary>
