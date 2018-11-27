@@ -17,6 +17,7 @@ using WowDotNetAPI;
 using MongoDB.Driver;
 using MongoDB.Bson.Serialization.Options;
 using MongoDB.Bson.Serialization.Attributes;
+using DiscordBotsList.Api;
 
 namespace MopsBot
 {
@@ -24,6 +25,7 @@ namespace MopsBot
     {
         public static MongoClient DatabaseClient = new MongoClient($"{Program.Config["DatabaseURL"]}");
         public static IMongoDatabase Database = DatabaseClient.GetDatabase("Mops");
+        public static AuthDiscordBotListApi DiscordBotList = new AuthDiscordBotListApi(Program.Client.CurrentUser.Id, Program.Config["DiscordBotListKey"]) ?? null;
         public static Random ran = new Random();
         public static Gfycat.GfycatClient gfy;
         public static List<string> Playlist = new List<string>();
@@ -92,16 +94,18 @@ namespace MopsBot
             }
         }
 
-        public static async Task InsertOrUpdatePrefixAsync(ulong guildId, string prefix){
+        public static async Task InsertOrUpdatePrefixAsync(ulong guildId, string prefix)
+        {
             bool hasEntry = (await Database.GetCollection<Data.Entities.MongoKVP<ulong, string>>("GuildPrefixes").FindAsync(x => x.Key == guildId)).ToList().Count == 1;
 
-            if(!hasEntry)
+            if (!hasEntry)
                 await Database.GetCollection<Data.Entities.MongoKVP<ulong, string>>("GuildPrefixes").InsertOneAsync(new Data.Entities.MongoKVP<ulong, string>(guildId, prefix));
             else
                 await Database.GetCollection<Data.Entities.MongoKVP<ulong, string>>("GuildPrefixes").ReplaceOneAsync(x => x.Key == guildId, new Data.Entities.MongoKVP<ulong, string>(guildId, prefix));
         }
 
-        public static async Task<string> GetGuildPrefixAsync(ulong guildId){
+        public static async Task<string> GetGuildPrefixAsync(ulong guildId)
+        {
             string prefix = (await Database.GetCollection<Data.Entities.MongoKVP<ulong, string>>("GuildPrefixes").FindAsync(x => x.Key == guildId)).FirstOrDefault()?.Value;
             return prefix ?? "!";
         }
@@ -113,6 +117,15 @@ namespace MopsBot
         public static async Task UpdateServerCount()
         {
             await Program.Client.SetActivityAsync(new Game($"{Program.Client.Guilds.Count} servers", ActivityType.Watching));
+            try
+            {
+                if(Program.Client.CurrentUser.Id == 305398845389406209)
+                    await DiscordBotList.UpdateStats(Program.Client.Guilds.Count);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("[Error] by discord bot list api: " + e.Message);
+            }
         }
 
         /// <summary>
