@@ -9,9 +9,14 @@ namespace MopsBot.Module.Preconditions{
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
     public class RequireVoter : PreconditionAttribute
     {
+        private bool requireRecent;
+        public RequireVoter(bool requireRecent){
+            this.requireRecent = requireRecent;
+        }
+
         public async override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services)
         {
-            bool isVoter = (await StaticBase.DiscordBotList.GetVotersAsync()).Any(x => x.Id == context.User.Id);
+            bool isVoter = requireRecent ? await StaticBase.DiscordBotList.HasVoted(context.User.Id) : (await StaticBase.DiscordBotList.GetVotersAsync()).Any(x => x.Id == context.User.Id);
 
             if(isVoter)
                 return PreconditionResult.FromSuccess(); 
