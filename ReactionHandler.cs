@@ -104,7 +104,7 @@ namespace MopsBot
         {
             if (!stackLength.ContainsKey(message.Channel.Id))
                 stackLength[message.Channel.Id] = 0;
-            
+
             await Task.Delay(2000 * (int)stackLength[message.Channel.Id]++);
 
             if (clear)
@@ -114,7 +114,8 @@ namespace MopsBot
             else
                 messageFunctions.Add(message, new Dictionary<IEmote, Func<ReactionHandlerContext, Task>> { { emote, function } });
             // await populate(message);
-            if (!emote.Equals(DefaultEmote) && !message.Reactions.ContainsKey(emote)){
+            if (!emote.Equals(DefaultEmote) && !message.Reactions.ContainsKey(emote))
+            {
                 await message.AddReactionAsync(emote);
                 await Task.Delay(2000);
             }
@@ -133,13 +134,21 @@ namespace MopsBot
         {
             try
             {
+                if (!stackLength.ContainsKey(message.Channel.Id))
+                    stackLength[message.Channel.Id] = 0;
+
+                await Task.Delay(2000 * (int)stackLength[message.Channel.Id]++);
+
                 if (messageFunctions.Any(x => x.Key.Id.Equals(message.Id)))
                     messageFunctions.Remove(messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Key);
                 await message.RemoveAllReactionsAsync();
+
+                stackLength[message.Channel.Id]--;
             }
             catch (Exception e)
             {
                 Console.WriteLine($"Tried to delete message {message.Id} but it did not exist.");
+                stackLength[message.Channel.Id]--;
             }
         }
 
@@ -153,10 +162,17 @@ namespace MopsBot
         {
             if (messageFunctions.Any(x => x.Key.Id.Equals(message.Id)))
             {
+                if (!stackLength.ContainsKey(message.Channel.Id))
+                stackLength[message.Channel.Id] = 0;
+            
+                await Task.Delay(2000 * (int)stackLength[message.Channel.Id]++);
+
                 messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.Remove(emote);
                 if (!messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.Any())
                     messageFunctions.Remove(message);
                 await message.RemoveReactionAsync(emote, client.CurrentUser);
+
+                stackLength[message.Channel.Id]--;
             }
         }
 
