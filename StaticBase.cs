@@ -78,7 +78,7 @@ namespace MopsBot
                 Trackers[ITracker.TrackerType.Reddit] = new TrackerHandler<RedditTracker>();
                 Trackers[ITracker.TrackerType.News] = new TrackerHandler<NewsTracker>();
                 Trackers[ITracker.TrackerType.WoW] = new TrackerHandler<WoWTracker>();
-                Trackers[ITracker.TrackerType.WoWGuild] = new TrackerHandler<WoWGuildTracker>();
+                //Trackers[ITracker.TrackerType.WoWGuild] = new TrackerHandler<WoWGuildTracker>();
                 Trackers[ITracker.TrackerType.OSRS] = new TrackerHandler<OSRSTracker>();
                 Trackers[ITracker.TrackerType.HTML] = new TrackerHandler<HTMLTracker>();
 
@@ -124,7 +124,7 @@ namespace MopsBot
             await Program.Client.SetActivityAsync(new Game("Currently Restarting!", ActivityType.Playing));
             await Task.Delay(60000);
 
-            int status = 12;
+            int status = Enum.GetNames(typeof(ITracker.TrackerType)).Length;
             while (true)
             {
                 try
