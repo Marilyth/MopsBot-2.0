@@ -25,7 +25,7 @@ namespace MopsBot
     {
         public static MongoClient DatabaseClient = new MongoClient($"{Program.Config["DatabaseURL"]}");
         public static IMongoDatabase Database = DatabaseClient.GetDatabase("Mops");
-        public static AuthDiscordBotListApi DiscordBotList = new AuthDiscordBotListApi(Program.Client.CurrentUser.Id, Program.Config["DiscordBotListKey"]) ?? null;
+        public static AuthDiscordBotListApi DiscordBotList = new AuthDiscordBotListApi(305398845389406209, Program.Config["DiscordBotListKey"]);
         public static Random ran = new Random();
         public static Gfycat.GfycatClient gfy;
         public static List<string> Playlist = new List<string>();
