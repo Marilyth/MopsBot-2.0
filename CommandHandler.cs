@@ -141,8 +141,8 @@ namespace MopsBot
         public async Task getCommands(SocketMessage msg, string prefix)
         {
             EmbedBuilder e = new EmbedBuilder();
-            e.WithDescription("For more information regarding a **specific command**, please use **?<command>**\n" +
-                              "To see the commands of a **submodule\\***, please use **help <submodule>**.")
+            e.WithDescription("For more information regarding a **specific command** or **command group***,\nplease use **?<command>** or " +
+                              $"**{prefix}help <command>**")
              .WithColor(Discord.Color.Blue)
              .WithAuthor(async x =>
              {
