@@ -49,8 +49,8 @@ namespace MopsBot
         {
             if (!init)
             {
-                MopsBot.Data.Entities.User.UserVoted += UserVoted;
-                Task.Run(() => MopsBot.Data.Entities.User.CheckUsersVotedLoop());
+                MopsBot.Data.Entities.UserEvent.UserVoted += UserVoted;
+                Task.Run(() => new MopsBot.Data.Entities.UserEvent().CheckUsersVotedLoop());
 
                 Task.Run(() =>
                 {

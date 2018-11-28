@@ -15,9 +15,6 @@ namespace MopsBot.Data.Entities
     [BsonIgnoreExtraElements]
     public class User
     {
-        private static List<DiscordBotsList.Api.Objects.IDblEntity> pastList;
-        public static event UserHasVoted UserVoted;
-        public delegate Task UserHasVoted(IDblEntity voter);
 
         [BsonId]
         public ulong Id;
@@ -92,46 +89,6 @@ namespace MopsBot.Data.Entities
             e.AddField("Votepoints", Money, false);
 
             return e.Build();
-        }
-
-        public static async Task CheckUsersVotedLoop()
-        {
-            while (true)
-            {
-                var voterList = await StaticBase.DiscordBotList.GetVotersAsync();
-                voterList.Reverse();
-
-                var newVoters = new List<IDblEntity>();
-
-                if (pastList == null)
-                    pastList = voterList.ToList();
-
-                if (voterList.Count >= 999)
-                {
-                    int startIndex = pastList.FindIndex(x => x.Id == voterList[0].Id);
-
-                    for (int i = startIndex; i < voterList.Count; i++)
-                    {
-                        if (pastList.Count < i || pastList[i].Id != voterList[i].Id)
-                            newVoters.Add(voterList[i]);
-                    }
-                }
-                else
-                {
-                    for (int i = pastList.Count; i < voterList.Count; i++)
-                    {
-                        newVoters.Add(voterList[i]);
-                    }
-                }
-
-                pastList = voterList;
-
-                if (UserVoted != null)
-                    foreach (var user in newVoters)
-                        await UserVoted.Invoke(user);
-
-                await Task.Delay(60000);
-            }
         }
     }
 }
