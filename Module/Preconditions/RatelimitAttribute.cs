@@ -114,7 +114,7 @@ namespace MopsBot.Module.Preconditions{
             }
         }
 
-        private sealed class CommandTimeout
+        public sealed class CommandTimeout
         {
             public uint TimesInvoked { get; set; }
             public DateTime FirstInvoke { get; }

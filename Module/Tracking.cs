@@ -12,6 +12,7 @@ using System.Text.RegularExpressions;
 using static MopsBot.StaticBase;
 using MopsBot.Data.Tracker;
 using Discord.Addons.Interactive;
+using MopsBot.Module.Preconditions;
 
 namespace MopsBot.Module
 {

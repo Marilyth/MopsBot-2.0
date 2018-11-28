@@ -82,12 +82,10 @@ namespace MopsBot.Data.Interactive
                         Log = new List<string>();
                         var tmpEnemy = StaticBase.Database.GetCollection<Entities.Enemy>("Enemies").FindSync(x => x.Name == Enemy.Name).First();
                         Log.Add($"You gained {tmpEnemy.Health * tmpEnemy.Damage * 10} Experience");
-                        Log.Add($"You gained {tmpEnemy.Health}$");
                         if(loot.Count > 0) Log.Add($"You gained Loot: {string.Join(", ", loot.Select(x => string.Format("[{0}]", x.Name)))}");
                         await MopsBot.Data.Entities.User.ModifyUserAsync(tmpUser.Id, x => {x.Experience += tmpEnemy.Health * tmpEnemy.Damage * 10; 
                                                      x.Inventory = x.Inventory ?? new List<int>();
-                                                     x.Inventory.AddRange(loot.Select(y => y.Id));
-                                                     x.Money += tmpEnemy.Health;});
+                                                     x.Inventory.AddRange(loot.Select(y => y.Id));});
 
                         await Message.ModifyAsync(x => x.Embed = EndEmbed());
                         return;

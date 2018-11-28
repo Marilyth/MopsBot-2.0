@@ -18,6 +18,7 @@ using MongoDB.Driver;
 using MongoDB.Bson.Serialization.Options;
 using MongoDB.Bson.Serialization.Attributes;
 using DiscordBotsList.Api;
+using DiscordBotsList.Api.Objects;
 
 namespace MopsBot
 {
@@ -48,6 +49,9 @@ namespace MopsBot
         {
             if (!init)
             {
+                MopsBot.Data.Entities.User.UserVoted += UserVoted;
+                Task.Run(() => MopsBot.Data.Entities.User.CheckUsersVotedLoop());
+
                 Task.Run(() =>
                 {
                     WelcomeMessages = Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").FindSync(x => true).ToEnumerable().ToDictionary(x => x.GuildId);
@@ -126,6 +130,12 @@ namespace MopsBot
             {
                 Console.WriteLine("[Error] by discord bot list api: " + e.Message);
             }
+        }
+
+        public static async Task UserVoted(IDblEntity user){
+            Console.WriteLine($"[{DateTime.Now}]: User {user.ToString()}({user.Id}) voted. Adding 10 VP to balance!");
+            await MopsBot.Data.Entities.User.ModifyUserAsync(user.Id, x => x.Money += 10);
+            //await (await Program.Client.GetUser(user.Id).GetOrCreateDMChannelAsync()).SendMessageAsync("Thanks for voting for me!\nI have added 10 Votepoints to your balance!");
         }
 
         /// <summary>
