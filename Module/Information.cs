@@ -34,6 +34,14 @@ namespace MopsBot.Module
             await ReplyAsync($"https://discordapp.com/oauth2/authorize?client_id={Context.Client.CurrentUser.Id}&permissions=271969344&scope=bot");
         }
 
+        [Command("Vote")]
+        [Summary("Provides link to vote for me!")]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
+        public async Task Vote()
+        {
+            await ReplyAsync($"https://discordbots.org/bot/{Program.Client.CurrentUser.Id}/vote");
+        }
+
         [Command("Define", RunMode = RunMode.Async)]
         [Summary("Searches dictionaries for a definition of the specified word or expression")]
         [Ratelimit(1, 10, Measure.Seconds)]
