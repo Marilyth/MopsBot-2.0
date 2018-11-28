@@ -12,9 +12,9 @@ namespace MopsBot.Module.Preconditions
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
     public class RequireVoter : PreconditionAttribute
     {
-        public VoterFlag votePeriod;
-        public int invokes;
-        public TimeSpan period;
+        private VoterFlag votePeriod;
+        private  int invokes;
+        private TimeSpan period;
         private readonly Dictionary<(ulong, ulong?), RatelimitAttribute.CommandTimeout> _invokeTracker = new Dictionary<(ulong, ulong?), RatelimitAttribute.CommandTimeout>();
         public RequireVoter(VoterFlag flag = VoterFlag.Month, int invokesWithoutVote = 0, double period = 0, Measure measure = Measure.Minutes)
         {
@@ -72,6 +72,10 @@ namespace MopsBot.Module.Preconditions
 
             else
                 return PreconditionResult.FromSuccess();
+        }
+
+        public override string ToString(){
+            return $"Can be used {invokes}x within {period}\nOr infinite usage if voted in the past {votePeriod}\n";
         }
     }
 

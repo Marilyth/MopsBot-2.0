@@ -220,22 +220,17 @@ namespace MopsBot
 
                 string preconditions = "";
                 foreach(var prec in curCommand.Preconditions){
-                    if(prec.GetType() == typeof(RequireUserVotepoints)){
-                        preconditions += $"Requires {((RequireUserVotepoints)prec).amount} VP to use\n";
-                    }
-                    else if(prec.GetType() == typeof(RequireUserPermissionAttribute)){
+                    if(prec.GetType() == typeof(RequireUserPermissionAttribute)){
                         preconditions += $"Requires UserPermission: {((RequireUserPermissionAttribute)prec).ChannelPermission.Value}\n";
                     }
                     else if(prec.GetType() == typeof(RequireBotPermissionAttribute)){
                         preconditions += $"Requires BotPermission: {((RequireBotPermissionAttribute)prec).ChannelPermission.Value}\n";
                     }
-                    else if(prec.GetType() == typeof(RatelimitAttribute)){
-                        preconditions += $"Can be used {((RatelimitAttribute)prec)._invokeLimit}x within {((RatelimitAttribute)prec)._invokeLimitPeriod}\n";
-                    }
-                    else if(prec.GetType() == typeof(RequireVoter)){
-                        preconditions += $"Can be used {((RequireVoter)prec).invokes}x within {((RequireVoter)prec).period}\nOr infinite usage if voted in the past {((RequireVoter)prec).votePeriod}\n";
+                    else{
+                        preconditions += prec;
                     }
                 }
+                
                 e = createHelpEmbed($"{(curCommand.Module.IsSubmodule ? curCommand.Module.Name + " " + curCommand.Name : curCommand.Name)}", output, curCommand.Summary, e, preconditions);
                 // if(curCommand.Parameters.Any(x=> x.IsOptional)){
                 //     output +="\n\n**Default Values**:";

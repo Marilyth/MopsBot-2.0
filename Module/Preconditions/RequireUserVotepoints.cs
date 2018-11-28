@@ -11,7 +11,7 @@ namespace MopsBot.Module.Preconditions{
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
     public class RequireUserVotepoints : PreconditionAttribute
     {
-        public int amount;
+        private int amount;
         public RequireUserVotepoints(int amount = 1){
             this.amount = amount;
         }
@@ -26,6 +26,10 @@ namespace MopsBot.Module.Preconditions{
             } else {
                 return PreconditionResult.FromError($"This command requires {amount} **Votepoints** to use, but you only have {user.Money} in your balance!\nVote for Mops to recieve 10 **Votepoints**\nhttps://discordbots.org/bot/{Program.Client.CurrentUser.Id}/vote");
             }
+        }
+
+        public override string ToString(){
+            return $"Requires {amount} VP to use.";
         }
     }
 }

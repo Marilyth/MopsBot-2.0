@@ -12,14 +12,14 @@ namespace MopsBot.Module.Preconditions{
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
     public sealed class RatelimitAttribute : PreconditionAttribute
     {
-        public readonly uint _invokeLimit;
+        private readonly uint _invokeLimit;
         private readonly bool _noLimitInDMs;
         private readonly bool _noLimitForAdmins;
         private readonly bool _applyPerGuild;
         private readonly bool _guildwideLimit;
         private readonly bool _applyPerChannel;
         private readonly bool _channelwideLimit;
-        public readonly TimeSpan _invokeLimitPeriod;
+        private readonly TimeSpan _invokeLimitPeriod;
         private readonly Dictionary<(ulong, ulong?), CommandTimeout> _invokeTracker = new Dictionary<(ulong, ulong?), CommandTimeout>();
 
         /// <summary> Sets how often a user is allowed to use this command. </summary>
@@ -112,6 +112,10 @@ namespace MopsBot.Module.Preconditions{
                 var timeLeft = _invokeLimitPeriod - (now - t.FirstInvoke);
                 return Task.FromResult(PreconditionResult.FromError($"{(_guildwideLimit || _channelwideLimit ? "This command is" : "You are")} currently in Timeout.\nPlease try again in: `{timeLeft.Hours}h {timeLeft.Minutes}m {timeLeft.Seconds}s`"));
             }
+        }
+
+        public override string ToString(){
+            return $"Can be used {_invokeLimit}x within {_invokeLimitPeriod}\n";
         }
 
         public sealed class CommandTimeout
