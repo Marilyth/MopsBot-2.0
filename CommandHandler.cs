@@ -171,7 +171,7 @@ namespace MopsBot
             e.Title = command;
             e.ImageUrl = GetCommandHelpImage(command);
 
-            if(preconditions != null)
+            if(!String.IsNullOrEmpty(preconditions))
                 e.AddField("Preconditions", preconditions);
 
             e.AddField("Example usage", usage);
