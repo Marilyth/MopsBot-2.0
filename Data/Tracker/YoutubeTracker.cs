@@ -15,6 +15,7 @@ using System.Xml;
 
 namespace MopsBot.Data.Tracker
 {
+    [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
     public class YoutubeTracker : ITracker
     {
         public string LastTime;
@@ -97,7 +98,7 @@ namespace MopsBot.Data.Tracker
 
                 foreach (Video video in newVideos)
                 {
-                    foreach (ulong channel in ChannelIds.ToList())
+                    foreach (ulong channel in ChannelMessages.Keys.ToList())
                     {
                         await OnMajorChangeTracked(channel, await createEmbed(video), ChannelMessages[channel]);
                     }

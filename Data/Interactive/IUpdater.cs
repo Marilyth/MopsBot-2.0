@@ -9,7 +9,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 
-namespace MopsBot.Data.Updater
+namespace MopsBot.Data.Interactive
 {
     public abstract class IUpdater : IDisposable
     {

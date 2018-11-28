@@ -5,6 +5,7 @@ using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using System.Linq;
+using System.Diagnostics;
 
 namespace MopsBot
 {
@@ -23,6 +24,7 @@ namespace MopsBot
         private IServiceProvider _provider;
         private Dictionary<IUserMessage, Dictionary<IEmote, Func<ReactionHandlerContext, Task>>> messageFunctions;
         public static IEmote DefaultEmote = new Emoji("DEFAULT");
+        private Dictionary<ulong, int> stackLength;
 
         /// <summary>
         /// Subscribes to the ReactionAdded event of the client 
@@ -36,6 +38,7 @@ namespace MopsBot
             client.ReactionAdded += Client_ReactionAdded;
 
             messageFunctions = new Dictionary<IUserMessage, Dictionary<IEmote, Func<ReactionHandlerContext, Task>>>();
+            stackLength = new Dictionary<ulong, int>();
         }
 
         /// <summary>
@@ -47,27 +50,34 @@ namespace MopsBot
         /// <returns></returns>
         private async Task Client_ReactionAdded(Cacheable<IUserMessage, ulong> messageCache, ISocketMessageChannel channel, SocketReaction reaction)
         {
-            Task.Run(() =>
+            if (!reaction.UserId.Equals(client.CurrentUser.Id) && messageFunctions.Any(x => x.Key.Id == messageCache.Id))
             {
-                if (reaction.UserId.Equals(client.CurrentUser.Id))
-                    return;
+                if (!stackLength.ContainsKey(reaction.Channel.Id))
+                    stackLength[reaction.Channel.Id] = 0;
 
-                IUserMessage message = messageCache.GetOrDownloadAsync().Result;
-                ReactionHandlerContext context = new ReactionHandlerContext();
-                context.Channel = channel;
-                context.MessageCache = messageCache;
-                context.Emote = reaction.Emote;
-                context.Reaction = reaction;
+                await Task.Delay(2000 * (int)stackLength[reaction.Channel.Id]++);
 
-                if (messageFunctions.Any(x => x.Key.Id.Equals(message.Id)))
+                Task.Run(() =>
                 {
+                    if (reaction.UserId.Equals(client.CurrentUser.Id))
+                        return;
+
+                    IUserMessage message = messageCache.GetOrDownloadAsync().Result;
+                    ReactionHandlerContext context = new ReactionHandlerContext();
+                    context.Channel = channel;
+                    context.MessageCache = messageCache;
+                    context.Emote = reaction.Emote;
+                    context.Reaction = reaction;
+
                     if (messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.ContainsKey(reaction.Emote))
                         messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value[reaction.Emote](context);
                     else if (messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.ContainsKey(DefaultEmote))
                         messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value[DefaultEmote](context);
                     message.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
-                }
-            });
+                    Task.Delay(2000);
+                    stackLength[context.Channel.Id]--;
+                });
+            }
         }
 
         /// <summary>
@@ -92,6 +102,11 @@ namespace MopsBot
         /// <returns></returns>
         public async Task AddHandler(IUserMessage message, IEmote emote, Func<ReactionHandlerContext, Task> function, bool clear = false)
         {
+            if (!stackLength.ContainsKey(message.Channel.Id))
+                stackLength[message.Channel.Id] = 0;
+
+            await Task.Delay(2000 * (int)stackLength[message.Channel.Id]++);
+
             if (clear)
                 await ClearHandler(message);
             if (messageFunctions.Any(x => x.Key.Id.Equals(message.Id)))
@@ -99,8 +114,13 @@ namespace MopsBot
             else
                 messageFunctions.Add(message, new Dictionary<IEmote, Func<ReactionHandlerContext, Task>> { { emote, function } });
             // await populate(message);
-            if (!emote.Equals(DefaultEmote))
+            if (!emote.Equals(DefaultEmote) && !message.Reactions.ContainsKey(emote))
+            {
                 await message.AddReactionAsync(emote);
+                await Task.Delay(2000);
+            }
+
+            stackLength[message.Channel.Id]--;
         }
 
         /// <summary>
@@ -112,12 +132,23 @@ namespace MopsBot
         /// <returns></returns>
         public async Task ClearHandler(IUserMessage message)
         {
-            try{
+            try
+            {
+                if (!stackLength.ContainsKey(message.Channel.Id))
+                    stackLength[message.Channel.Id] = 0;
+
+                await Task.Delay(2000 * (int)stackLength[message.Channel.Id]++);
+
                 if (messageFunctions.Any(x => x.Key.Id.Equals(message.Id)))
                     messageFunctions.Remove(messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Key);
                 await message.RemoveAllReactionsAsync();
-            } catch (Exception e){
+
+                stackLength[message.Channel.Id]--;
+            }
+            catch (Exception e)
+            {
                 Console.WriteLine($"Tried to delete message {message.Id} but it did not exist.");
+                stackLength[message.Channel.Id]--;
             }
         }
 
@@ -131,10 +162,17 @@ namespace MopsBot
         {
             if (messageFunctions.Any(x => x.Key.Id.Equals(message.Id)))
             {
+                if (!stackLength.ContainsKey(message.Channel.Id))
+                stackLength[message.Channel.Id] = 0;
+            
+                await Task.Delay(2000 * (int)stackLength[message.Channel.Id]++);
+
                 messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.Remove(emote);
                 if (!messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.Any())
                     messageFunctions.Remove(message);
                 await message.RemoveReactionAsync(emote, client.CurrentUser);
+
+                stackLength[message.Channel.Id]--;
             }
         }
 

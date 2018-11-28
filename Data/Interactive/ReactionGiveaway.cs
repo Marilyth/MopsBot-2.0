@@ -14,7 +14,7 @@ using MongoDB.Bson.Serialization.Attributes;
 using MopsBot.Data.Entities;
 using MongoDB.Driver;
 
-namespace MopsBot.Data.Updater
+namespace MopsBot.Data.Interactive
 {
     public class ReactionGiveaway
     {

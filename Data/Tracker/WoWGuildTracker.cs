@@ -14,6 +14,7 @@ using WowDotNetAPI.Models;
 
 namespace MopsBot.Data.Tracker
 {
+    [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
     public class WoWGuildTracker : ITracker
     {
         public Region WoWRegion;
@@ -63,7 +64,7 @@ namespace MopsBot.Data.Tracker
                 var changes = getNewsFeed(newStats);
                 if (changes.Count > 0)
                 {
-                    foreach (ulong channel in ChannelIds.ToList())
+                    foreach (ulong channel in ChannelMessages.Keys.ToList())
                     {
                         foreach (var embed in changes)
                             await OnMajorChangeTracked(channel, embed, ChannelMessages[channel]);

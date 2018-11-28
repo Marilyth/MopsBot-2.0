@@ -13,6 +13,7 @@ using System.Text.RegularExpressions;
 using MopsBot.Data.Tracker;
 using MongoDB.Driver;
 using static MopsBot.StaticBase;
+using Discord.Addons.Interactive;
 
 namespace MopsBot.Module
 {
@@ -29,17 +30,21 @@ namespace MopsBot.Module
             [RequireBotPermission(ChannelPermission.ManageMessages)]
             [RequireBotPermission(ChannelPermission.ReadMessageHistory)]
             [RequireUserPermission(GuildPermission.ManageRoles)]
+            [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.ApplyPerChannel)]
             public async Task createInvite(SocketRole role, bool isGerman = false)
             {
-                var highestRole = ((SocketGuildUser)await Context.Guild.GetCurrentUserAsync()).Roles.OrderByDescending(x => x.Position).First();
+                using (Context.Channel.EnterTypingState())
+                {
+                    var highestRole = ((SocketGuildUser)await Context.Guild.GetCurrentUserAsync()).Roles.OrderByDescending(x => x.Position).First();
 
-                if (role != null && role.Position < highestRole.Position)
-                    if (isGerman)
-                        await StaticBase.ReactRoleJoin.AddInviteGerman((ITextChannel)Context.Channel, role);
+                    if (role != null && role.Position < highestRole.Position)
+                        if (isGerman)
+                            await StaticBase.ReactRoleJoin.AddInviteGerman((ITextChannel)Context.Channel, role);
+                        else
+                            await StaticBase.ReactRoleJoin.AddInvite((ITextChannel)Context.Channel, role);
                     else
-                        await StaticBase.ReactRoleJoin.AddInvite((ITextChannel)Context.Channel, role);
-                else
-                    await ReplyAsync($"**Error**: Role `{role.Name}` could either not be found, or was beyond Mops' permissions.");
+                        await ReplyAsync($"**Error**: Role `{role.Name}` could either not be found, or was beyond Mops' permissions.");
+                }
             }
         }
 
@@ -52,20 +57,27 @@ namespace MopsBot.Module
         {
             [Command("Create", RunMode = RunMode.Async), Summary("Creates a poll\nExample: !poll \"What should I play\" \"Dark Souls\" \"Osu!\" \"WoW\"")]
             [RequireUserPermission(GuildPermission.ManageChannels)]
+            [Ratelimit(1, 60, Measure.Seconds, RatelimitFlags.ApplyPerChannel)]
             public async Task Create(string title, params string[] options)
             {
-                if (options.Length <= 10)
+                using (Context.Channel.EnterTypingState())
                 {
-                    Data.Poll poll = new Data.Poll(title, options);
-                    await StaticBase.Poll.AddPoll((ITextChannel)Context.Channel, poll);
+                    if (options.Length <= 10)
+                    {
+                        Data.Interactive.Poll poll = new Data.Interactive.Poll(title, options);
+                        await StaticBase.Poll.AddPoll((ITextChannel)Context.Channel, poll);
+                    }
+                    else
+                        await ReplyAsync("Can't have more than 10 options per poll.");
                 }
-                else
-                    await ReplyAsync("Can't have more than 10 options per poll.");
             }
 
             [Command("Get")]
-            public async Task Get(){
-                await ReplyAsync(String.Join("\n", StaticBase.Poll.Polls[Context.Channel.Id].Select(x => $"https://discordapp.com/channels/{Context.Guild.Id}/{Context.Channel.Id}/{x.MessageID} - {x.Question}")));
+            [Summary("Returns a list of all open polls, and a link to their corresponding message.")]
+            public async Task Get()
+            {
+                var infoEmbed = new EmbedBuilder().WithDescription(String.Join("\n", StaticBase.Poll.Polls[Context.Channel.Id].Select(x => $"[{x.Question}](https://discordapp.com/channels/{Context.Guild.Id}/{Context.Channel.Id}/{x.MessageID})")));
+                await ReplyAsync(embed: infoEmbed.Build());
             }
         }
 
@@ -78,77 +90,93 @@ namespace MopsBot.Module
         {
             [Command("Create", RunMode = RunMode.Async)]
             [Summary("Creates giveaway.")]
+            [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.ApplyPerChannel)]
             public async Task Create([Remainder]string game)
             {
-                await ReactGiveaways.AddGiveaway(Context.Channel, game, Context.User);
+                using (Context.Channel.EnterTypingState())
+                {
+                    await ReactGiveaways.AddGiveaway(Context.Channel, game, Context.User);
+                }
             }
 
             [Command("Get", RunMode = RunMode.Async)]
             [Summary("Returns message links to all active giveaways.")]
             public async Task Get()
             {
-                await ReplyAsync(String.Join("\n", ReactGiveaways.Giveaways[Context.Channel.Id].Select(x => $"https://discordapp.com/channels/{Context.Guild.Id}/{Context.Channel.Id}/{x.Key}")));
+                using (Context.Channel.EnterTypingState())
+                {
+                    var allEmbeds = ReactGiveaways.Giveaways[Context.Channel.Id].Select(x => Tuple.Create(Context.Channel.GetMessageAsync(x.Key).Result.Embeds.First(), x.Key));
+                    var infoEmbed = new EmbedBuilder().WithDescription(String.Join("\n", allEmbeds.Select(x => $"[{x.Item1.Title} by {x.Item1.Author.Value.Name}](https://discordapp.com/channels/{Context.Guild.Id}/{Context.Channel.Id}/{x.Item2})")));
+
+                    await ReplyAsync(embed: infoEmbed.Build());
+                }
             }
         }
 
-        [Command("SetPrefix")]
+        [Command("SetPrefix", RunMode = RunMode.Async)]
         [Summary("Changes the prefix of Mops in the current Guild")]
         [RequireUserPermission(ChannelPermission.ManageChannels)]
         public async Task setPrefix([Remainder]string prefix)
         {
-            if (prefix.StartsWith("?"))
+            using (Context.Channel.EnterTypingState())
             {
-                await ReplyAsync($"`?` is required for Mops functionality. Cannot change prefix to `{prefix}`");
-                return;
+                if (prefix.StartsWith("?"))
+                {
+                    await ReplyAsync($"`?` is required for Mops functionality. Cannot change prefix to `{prefix}`");
+                    return;
+                }
+
+                string oldPrefix = await GetGuildPrefixAsync(Context.Guild.Id);
+
+                await InsertOrUpdatePrefixAsync(Context.Guild.Id, prefix);
+
+                await ReplyAsync($"Changed prefix from `{oldPrefix}` to `{prefix}`");
             }
-
-            string oldPrefix = await GetGuildPrefixAsync(Context.Guild.Id);
-
-            await InsertOrUpdatePrefixAsync(Context.Guild.Id, prefix);
-
-            await ReplyAsync($"Changed prefix from `{oldPrefix}` to `{prefix}`");
         }
 
         [Group("WelcomeMessage")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public class WelcomeMessage : ModuleBase
         {
-            [Command("Create")]
+            [Command("Create", RunMode = RunMode.Async)]
             [Summary("Makes Mops greet people, in the channel you are calling this command in.\n" +
                      "Name of user: **{User.Username}**\n" +
                      "Mention of user: **{User.Mention}**")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task WelcomeCreate([Remainder] string WelcomeMessage)
             {
-                if (!StaticBase.WelcomeMessages.ContainsKey(Context.Guild.Id))
+                using (Context.Channel.EnterTypingState())
                 {
-                    StaticBase.WelcomeMessages.Add(Context.Guild.Id, new Data.Entities.WelcomeMessage(Context.Guild.Id, Context.Channel.Id, WelcomeMessage));
-                    await Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").InsertOneAsync(StaticBase.WelcomeMessages[Context.Guild.Id]);
-                    await ReplyAsync($"Created welcome message:\n{WelcomeMessage}");
-                }
-
-                else
-                {
-                    var handler = StaticBase.WelcomeMessages[Context.Guild.Id];
-
-                    if (handler.IsWebhook)
+                    if (!StaticBase.WelcomeMessages.ContainsKey(Context.Guild.Id))
                     {
-                        handler.IsWebhook = false;
-                        await handler.RemoveWebhookAsync();
-                        handler.WebhookId = 0;
-                        handler.WebhookToken = null;
-                        handler.AvatarUrl = null;
-                        handler.Name = null;
+                        StaticBase.WelcomeMessages.Add(Context.Guild.Id, new Data.Entities.WelcomeMessage(Context.Guild.Id, Context.Channel.Id, WelcomeMessage));
+                        await Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").InsertOneAsync(StaticBase.WelcomeMessages[Context.Guild.Id]);
+                        await ReplyAsync($"Created welcome message:\n{WelcomeMessage}");
                     }
 
-                    handler.ChannelId = Context.Channel.Id;
-                    handler.Notification = WelcomeMessage;
-                    await Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").ReplaceOneAsync(x => x.GuildId == Context.Guild.Id, StaticBase.WelcomeMessages[Context.Guild.Id]);
-                    await ReplyAsync($"Replaced welcome message with:\n{WelcomeMessage}");
+                    else
+                    {
+                        var handler = StaticBase.WelcomeMessages[Context.Guild.Id];
+
+                        if (handler.IsWebhook)
+                        {
+                            handler.IsWebhook = false;
+                            await handler.RemoveWebhookAsync();
+                            handler.WebhookId = 0;
+                            handler.WebhookToken = null;
+                            handler.AvatarUrl = null;
+                            handler.Name = null;
+                        }
+
+                        handler.ChannelId = Context.Channel.Id;
+                        handler.Notification = WelcomeMessage;
+                        await Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").ReplaceOneAsync(x => x.GuildId == Context.Guild.Id, StaticBase.WelcomeMessages[Context.Guild.Id]);
+                        await ReplyAsync($"Replaced welcome message with:\n{WelcomeMessage}");
+                    }
                 }
             }
 
-            [Command("CreateWebhook")]
+            [Command("CreateWebhook", RunMode = RunMode.Async)]
             [Summary("Makes Mops greet people, in the channel you are calling this command in.\n" +
                      "Additionally, avatar and name of the notification account can be set.\n" +
                      "Name of user: **{User.Username}**\n" +
@@ -157,49 +185,55 @@ namespace MopsBot.Module
             [RequireBotPermission(ChannelPermission.ManageWebhooks)]
             public async Task WelcomeCreateWebhook(string WelcomeMessage, string Name = null, string AvatarUrl = null)
             {
-                if (!StaticBase.WelcomeMessages.ContainsKey(Context.Guild.Id))
+                using (Context.Channel.EnterTypingState())
                 {
-                    var webhook = await ((SocketTextChannel)Context.Channel).CreateWebhookAsync($"{Name ?? "Mops"} - Welcome Messages");
-                    StaticBase.WelcomeMessages.Add(Context.Guild.Id, new Data.Entities.WelcomeMessage(Context.Guild.Id, Context.Channel.Id, WelcomeMessage, webhook.Id, webhook.Token, Name, AvatarUrl));
-                    await Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").InsertOneAsync(StaticBase.WelcomeMessages[Context.Guild.Id]);
-                    await ReplyAsync($"Created welcome message:\n{WelcomeMessage}");
-                }
-
-                else
-                {
-                    var handler = StaticBase.WelcomeMessages[Context.Guild.Id];
-
-                    if (!handler.IsWebhook || handler.ChannelId != Context.Channel.Id)
+                    if (!StaticBase.WelcomeMessages.ContainsKey(Context.Guild.Id))
                     {
-                        await handler.RemoveWebhookAsync();
-
                         var webhook = await ((SocketTextChannel)Context.Channel).CreateWebhookAsync($"{Name ?? "Mops"} - Welcome Messages");
-                        handler.WebhookId = webhook.Id;
-                        handler.WebhookToken = webhook.Token;
-                        handler.IsWebhook = true;
-                        handler.ChannelId = Context.Channel.Id;
+                        StaticBase.WelcomeMessages.Add(Context.Guild.Id, new Data.Entities.WelcomeMessage(Context.Guild.Id, Context.Channel.Id, WelcomeMessage, webhook.Id, webhook.Token, Name, AvatarUrl));
+                        await Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").InsertOneAsync(StaticBase.WelcomeMessages[Context.Guild.Id]);
+                        await ReplyAsync($"Created welcome message:\n{WelcomeMessage}");
                     }
 
-                    handler.Name = Name;
-                    handler.AvatarUrl = AvatarUrl;
-                    handler.Notification = WelcomeMessage;
-                    await Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").ReplaceOneAsync(x => x.GuildId == Context.Guild.Id, StaticBase.WelcomeMessages[Context.Guild.Id]);
-                    await ReplyAsync($"Replaced welcome message with:\n{WelcomeMessage}");
+                    else
+                    {
+                        var handler = StaticBase.WelcomeMessages[Context.Guild.Id];
+
+                        if (!handler.IsWebhook || handler.ChannelId != Context.Channel.Id)
+                        {
+                            await handler.RemoveWebhookAsync();
+
+                            var webhook = await ((SocketTextChannel)Context.Channel).CreateWebhookAsync($"{Name ?? "Mops"} - Welcome Messages");
+                            handler.WebhookId = webhook.Id;
+                            handler.WebhookToken = webhook.Token;
+                            handler.IsWebhook = true;
+                            handler.ChannelId = Context.Channel.Id;
+                        }
+
+                        handler.Name = Name;
+                        handler.AvatarUrl = AvatarUrl;
+                        handler.Notification = WelcomeMessage;
+                        await Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").ReplaceOneAsync(x => x.GuildId == Context.Guild.Id, StaticBase.WelcomeMessages[Context.Guild.Id]);
+                        await ReplyAsync($"Replaced welcome message with:\n{WelcomeMessage}");
+                    }
                 }
             }
 
-            [Command("Delete")]
+            [Command("Delete", RunMode = RunMode.Async)]
             [Summary("Stops Mops from sending welcome messages.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task WelcomeDelete()
             {
-                if (StaticBase.WelcomeMessages.ContainsKey(Context.Guild.Id))
+                using (Context.Channel.EnterTypingState())
                 {
-                    await StaticBase.WelcomeMessages[Context.Guild.Id].RemoveWebhookAsync();
+                    if (StaticBase.WelcomeMessages.ContainsKey(Context.Guild.Id))
+                    {
+                        await StaticBase.WelcomeMessages[Context.Guild.Id].RemoveWebhookAsync();
 
-                    StaticBase.WelcomeMessages.Remove(Context.Guild.Id);
-                    await Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").DeleteOneAsync(x => x.GuildId == Context.Guild.Id);
-                    await ReplyAsync($"Removed welcome message!");
+                        StaticBase.WelcomeMessages.Remove(Context.Guild.Id);
+                        await Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").DeleteOneAsync(x => x.GuildId == Context.Guild.Id);
+                        await ReplyAsync($"Removed welcome message!");
+                    }
                 }
             }
         }
@@ -249,10 +283,13 @@ namespace MopsBot.Module
         [Hide()]
         public async Task UseCustomCommand(string command)
         {
-            var reply = StaticBase.CustomCommands[Context.Guild.Id].Commands[command];
-            reply = reply.Replace("{User.Username}", $"{Context.User.Username}")
-                         .Replace("{User.Mention}", $"{Context.User.Mention}");
-            await ReplyAsync(reply);
+            using (Context.Channel.EnterTypingState())
+            {
+                var reply = StaticBase.CustomCommands[Context.Guild.Id].Commands[command];
+                reply = reply.Replace("{User.Username}", $"{Context.User.Username}")
+                             .Replace("{User.Mention}", $"{Context.User.Mention}");
+                await ReplyAsync(reply);
+            }
         }
 
         [Command("kill")]
@@ -270,7 +307,10 @@ namespace MopsBot.Module
         [Hide]
         public async Task openfiles()
         {
-            await ReplyAsync(DateTime.Now + $" open files were {System.Diagnostics.Process.GetCurrentProcess().HandleCount}");
+            using (Context.Channel.EnterTypingState())
+            {
+                await ReplyAsync(DateTime.Now + $" open files were {System.Diagnostics.Process.GetCurrentProcess().HandleCount}");
+            }
         }
 
         [Command("eval", RunMode = RunMode.Async)]
@@ -278,39 +318,43 @@ namespace MopsBot.Module
         [Hide]
         public async Task eval([Remainder]string expression)
         {
-            try
+            using (Context.Channel.EnterTypingState())
             {
-                var imports = Microsoft.CodeAnalysis.Scripting.ScriptOptions.Default.WithReferences(typeof(MopsBot.Program).Assembly, typeof(Discord.Attachment).Assembly).WithImports("MopsBot", "Discord");
-                var preCompilationTime = DateTime.Now.Ticks / 10000;
-                var script = CSharpScript.Create(expression, globalsType: typeof(MopsBot.Module.Moderation)).WithOptions(imports);
-                script.Compile();
-                var preExecutionTime = DateTime.Now.Ticks / 10000;
-                var result = await script.RunAsync(this);
-                var postExecutionTime = DateTime.Now.Ticks / 10000;
+                try
+                {
+                    var imports = Microsoft.CodeAnalysis.Scripting.ScriptOptions.Default.WithReferences(typeof(MopsBot.Program).Assembly, typeof(Discord.Attachment).Assembly).WithImports("MopsBot", "Discord");
+                    var preCompilationTime = DateTime.Now.Ticks / 10000;
+                    var script = CSharpScript.Create(expression, globalsType: typeof(MopsBot.Module.Moderation)).WithOptions(imports);
+                    script.Compile();
+                    var preExecutionTime = DateTime.Now.Ticks / 10000;
+                    var result = await script.RunAsync(this);
+                    var postExecutionTime = DateTime.Now.Ticks / 10000;
 
-                var embed = new EmbedBuilder();
-                embed.Author = new EmbedAuthorBuilder().WithName(Context.User.Username).WithIconUrl(Context.User.GetAvatarUrl());
-                embed.WithDescription($"```csharp\n{expression}```").WithTitle("Evaluation of code");
-                embed.AddField("Compilation time", $"{preExecutionTime - preCompilationTime}ms", true);
-                embed.AddField("Execution time", $"{postExecutionTime - preExecutionTime}ms", true);
-                embed.AddField("Return value", result.ReturnValue?.ToString() ?? "`null or void`");
+                    var embed = new EmbedBuilder();
+                    embed.Author = new EmbedAuthorBuilder().WithName(Context.User.Username).WithIconUrl(Context.User.GetAvatarUrl());
+                    embed.WithDescription($"```csharp\n{expression}```").WithTitle("Evaluation of code");
+                    embed.AddField("Compilation time", $"{preExecutionTime - preCompilationTime}ms", true);
+                    embed.AddField("Execution time", $"{postExecutionTime - preExecutionTime}ms", true);
+                    embed.AddField("Return value", result.ReturnValue?.ToString() ?? "`null or void`");
 
-                await ReplyAsync("", embed: embed.Build());
-            }
-            catch (Exception e)
-            {
-                await ReplyAsync("**Error:** " + e.Message);
+                    await ReplyAsync("", embed: embed.Build());
+                }
+                catch (Exception e)
+                {
+                    await ReplyAsync("**Error:** " + e.Message);
+                }
             }
         }
 
         [Command("help")]
         [Alias("commands")]
         [Hide]
+        [Ratelimit(1, 2, Measure.Seconds, RatelimitFlags.ChannelwideLimit)]
         public async Task help([Remainder]string helpModule = null)
         {
             EmbedBuilder e = new EmbedBuilder();
-            e.WithDescription("For more information regarding a **specific command**, please use **?<command>**\n" +
-                              "To see the commands of a **submodule\\***, please use **help <submodule>**.")
+            e.WithDescription("For more information regarding a **specific command** or **command group***,\nplease use **?<command>** or " +
+                              $"**{await StaticBase.GetGuildPrefixAsync(Context.Guild.Id)}help <command>**")
              .WithColor(Discord.Color.Blue)
              .WithAuthor(async x =>
              {

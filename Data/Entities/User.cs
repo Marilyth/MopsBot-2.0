@@ -8,12 +8,14 @@ using MongoDB.Driver;
 using MongoDB.Bson.Serialization.Options;
 using MongoDB.Bson.Serialization.Attributes;
 using Discord;
+using DiscordBotsList.Api.Objects;
 
 namespace MopsBot.Data.Entities
 {
     [BsonIgnoreExtraElements]
     public class User
     {
+
         [BsonId]
         public ulong Id;
         public int Money, Experience, Punched, Hugged, Kissed;
@@ -37,7 +39,7 @@ namespace MopsBot.Data.Entities
 
         public static async Task<User> GetUserAsync(ulong id)
         {
-            User user = (await StaticBase.Database.GetCollection<User>("Users").FindAsync(x => x.Id == id)).First();
+            User user = (await StaticBase.Database.GetCollection<User>("Users").FindAsync(x => x.Id == id)).FirstOrDefault();
 
             if (user == null)
             {
@@ -84,7 +86,7 @@ namespace MopsBot.Data.Entities
 
             e.AddField("Level", $"{CalcCurLevel()} ({Experience}/{CalcExperience(CalcCurLevel() + 1)}xp)\n{DrawProgressBar()}", true);
             e.AddField("Interactions", $"**Kissed** {Kissed} times\n**Hugged** {Hugged} times\n**Punched** {Punched} times", true);
-            e.AddField("Money", Money, false);
+            e.AddField("Votepoints", Money, false);
 
             return e.Build();
         }

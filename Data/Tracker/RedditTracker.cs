@@ -16,6 +16,7 @@ namespace MopsBot.Data.Tracker
     /// <summary>
     /// A tracker which keeps track of a Subreddit
     /// </summary>
+    [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
     public class RedditTracker : ITracker
     {
         public double lastCheck;
@@ -66,7 +67,7 @@ namespace MopsBot.Data.Tracker
 
                     newPosts = newPosts.Reverse().ToArray();
                     foreach (var post in newPosts)
-                        foreach (ulong channel in ChannelIds.ToList())
+                        foreach (ulong channel in ChannelMessages.Keys.ToList())
                         {
                             await OnMajorChangeTracked(channel, await createEmbed(post.data), "");
                         }

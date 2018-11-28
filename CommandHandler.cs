@@ -51,10 +51,13 @@ namespace MopsBot
         private async Task Client_MessageReceived(SocketMessage arg)
         {
             //User Experience
-            if (!arg.Author.IsBot && !arg.Content.StartsWith(await GetGuildPrefixAsync(((ITextChannel)(arg.Channel)).GuildId)))
+            Task.Run(() =>
             {
-                await MopsBot.Data.Entities.User.ModifyUserAsync(arg.Author.Id, x => x.Experience += arg.Content.Length);
-            }
+                if (!arg.Author.IsBot && !arg.Content.StartsWith(GetGuildPrefixAsync(((ITextChannel)(arg.Channel)).GuildId).Result))
+                {
+                    MopsBot.Data.Entities.User.ModifyUserAsync(arg.Author.Id, x => x.Experience += arg.Content.Length).Wait();
+                }
+            });
         }
 
         /// <summary>
@@ -104,22 +107,30 @@ namespace MopsBot
 
             // Create a Command Context
             var context = new SocketCommandContext(client, message);
-            // Execute the Command, store the result
-            var result = await commands.ExecuteAsync(context, argPos, _provider);
 
-            // If the command failed, notify the user
-            if (!result.IsSuccess && !result.ErrorReason.Equals(""))
+            //Execute if command exists
+            if (commands.Search(context, argPos).IsSuccess)
             {
-                if (result.ErrorReason.Contains("Object reference not set to an instance of an object"))
-                    await message.Channel.SendMessageAsync($"**Error:** Mops just restarted and needs to initialise things first.\nTry again in a minute!");
-                else if (result.ErrorReason.Contains("The input text has too many parameters"))
-                    await message.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}\nIf your parameter contains spaces, please wrap it around quotation marks like this: `\"A Parameter\"`.");
-                else if (!result.ErrorReason.Contains("Unknown command"))
-                    await message.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}");
-                else
+                Console.WriteLine($"[{System.DateTime.Now}] executed command: {parameterMessage.Content.Substring(argPos)}");
+                var result = await commands.ExecuteAsync(context, argPos, _provider);
+
+                // If the command failed, notify the user
+                if (!result.IsSuccess && !result.ErrorReason.Equals(""))
                 {
-                    await commands.Commands.First(x => x.Name.Equals("UseCustomCommand")).ExecuteAsync(context, new List<object> { $"{context.Message.Content.Substring(argPos)}" }, new List<object> { }, _provider);
+                    if (result.ErrorReason.Contains("Object reference not set to an instance of an object"))
+                        await message.Channel.SendMessageAsync($"**Error:** Mops just restarted and needs to initialise things first.\nTry again in a minute!");
+                    else if (result.ErrorReason.Contains("The input text has too many parameters"))
+                        await message.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}\nIf your parameter contains spaces, please wrap it around quotation marks like this: `\"A Parameter\"`.");
+                    else
+                        await message.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}");
                 }
+            }
+
+            //Else execute custom commands
+            else if (CustomCommands.ContainsKey(context.Guild.Id) && CustomCommands[context.Guild.Id].Commands.ContainsKey(context.Message.Content.Substring(argPos)))
+            {
+                Console.WriteLine($"[{System.DateTime.Now}] executed command: {parameterMessage.Content.Substring(argPos)}");
+                await commands.Commands.First(x => x.Name.Equals("UseCustomCommand")).ExecuteAsync(context, new List<object> { $"{context.Message.Content.Substring(argPos)}" }, new List<object> { }, _provider);
             }
         }
 
@@ -130,8 +141,8 @@ namespace MopsBot
         public async Task getCommands(SocketMessage msg, string prefix)
         {
             EmbedBuilder e = new EmbedBuilder();
-            e.WithDescription("For more information regarding a **specific command**, please use **?<command>**\n" +
-                              "To see the commands of a **submodule\\***, please use **help <submodule>**.")
+            e.WithDescription("For more information regarding a **specific command** or **command group***,\nplease use **?<command>** or " +
+                              $"**{prefix}help <command>**")
              .WithColor(Discord.Color.Blue)
              .WithAuthor(async x =>
              {
@@ -154,13 +165,17 @@ namespace MopsBot
         /// <param name="command">The command to create the embed for</param>
         /// <param name="usage">The usage example to include in the embed</param>
         /// <param name="description">The desciption to include in the embed</param>
-        private EmbedBuilder createHelpEmbed(string command, string usage, string description, EmbedBuilder e)
+        private EmbedBuilder createHelpEmbed(string command, string usage, string description, EmbedBuilder e, string preconditions = null)
         {
             //EmbedBuilder e = new EmbedBuilder();
             e.Title = command;
             e.ImageUrl = GetCommandHelpImage(command);
 
+            if(!String.IsNullOrEmpty(preconditions))
+                e.AddField("Preconditions", preconditions);
+
             e.AddField("Example usage", usage);
+
             e.Description = description;
 
             return e;
@@ -196,13 +211,27 @@ namespace MopsBot
                     throw new Exception("Command not found");
                 }
                 output += $"`{prefix}{(curCommand.Module.IsSubmodule ? curCommand.Module.Name + " " + curCommand.Name : curCommand.Name)}";
+
                 foreach (Discord.Commands.ParameterInfo p in curCommand.Parameters)
                 {
                     output += $" {(p.IsOptional ? $"[Optional: {p.Name}]" : $"<{p.Name}>")}";
                 }
                 output += "`";
 
-                e = createHelpEmbed($"{(curCommand.Module.IsSubmodule ? curCommand.Module.Name + " " + curCommand.Name : curCommand.Name)}", output, curCommand.Summary, e);
+                string preconditions = "";
+                foreach(var prec in curCommand.Preconditions){
+                    if(prec.GetType() == typeof(RequireUserPermissionAttribute)){
+                        preconditions += $"Requires UserPermission: {((RequireUserPermissionAttribute)prec).ChannelPermission.Value}\n";
+                    }
+                    else if(prec.GetType() == typeof(RequireBotPermissionAttribute)){
+                        preconditions += $"Requires BotPermission: {((RequireBotPermissionAttribute)prec).ChannelPermission.Value}\n";
+                    }
+                    else{
+                        preconditions += prec;
+                    }
+                }
+                
+                e = createHelpEmbed($"{(curCommand.Module.IsSubmodule ? curCommand.Module.Name + " " + curCommand.Name : curCommand.Name)}", output, curCommand.Summary, e, preconditions);
                 // if(curCommand.Parameters.Any(x=> x.IsOptional)){
                 //     output +="\n\n**Default Values**:";
                 //     foreach(var p in curCommand.Parameters.Where(x=>x.IsOptional))

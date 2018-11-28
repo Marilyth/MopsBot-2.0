@@ -10,13 +10,15 @@ using System.IO;
 using Newtonsoft.Json;
 using MopsBot.Data;
 using MopsBot.Data.Tracker;
-using MopsBot.Data.Updater;
+using MopsBot.Data.Interactive;
 using Tweetinvi;
 using NewsAPI;
 using WowDotNetAPI;
 using MongoDB.Driver;
 using MongoDB.Bson.Serialization.Options;
 using MongoDB.Bson.Serialization.Attributes;
+using DiscordBotsList.Api;
+using DiscordBotsList.Api.Objects;
 
 namespace MopsBot
 {
@@ -24,6 +26,7 @@ namespace MopsBot
     {
         public static MongoClient DatabaseClient = new MongoClient($"{Program.Config["DatabaseURL"]}");
         public static IMongoDatabase Database = DatabaseClient.GetDatabase("Mops");
+        public static AuthDiscordBotListApi DiscordBotList = new AuthDiscordBotListApi(305398845389406209, Program.Config["DiscordBotListKey"]);
         public static Random ran = new Random();
         public static Gfycat.GfycatClient gfy;
         public static List<string> Playlist = new List<string>();
@@ -46,6 +49,9 @@ namespace MopsBot
         {
             if (!init)
             {
+                MopsBot.Data.Entities.UserEvent.UserVoted += UserVoted;
+                Task.Run(() => new MopsBot.Data.Entities.UserEvent().CheckUsersVotedLoop());
+
                 Task.Run(() =>
                 {
                     WelcomeMessages = Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").FindSync(x => true).ToEnumerable().ToDictionary(x => x.GuildId);
@@ -78,7 +84,7 @@ namespace MopsBot
                 Trackers[ITracker.TrackerType.Reddit] = new TrackerHandler<RedditTracker>();
                 Trackers[ITracker.TrackerType.News] = new TrackerHandler<NewsTracker>();
                 Trackers[ITracker.TrackerType.WoW] = new TrackerHandler<WoWTracker>();
-                Trackers[ITracker.TrackerType.WoWGuild] = new TrackerHandler<WoWGuildTracker>();
+                //Trackers[ITracker.TrackerType.WoWGuild] = new TrackerHandler<WoWGuildTracker>();
                 Trackers[ITracker.TrackerType.OSRS] = new TrackerHandler<OSRSTracker>();
                 Trackers[ITracker.TrackerType.HTML] = new TrackerHandler<HTMLTracker>();
 
@@ -92,16 +98,18 @@ namespace MopsBot
             }
         }
 
-        public static async Task InsertOrUpdatePrefixAsync(ulong guildId, string prefix){
+        public static async Task InsertOrUpdatePrefixAsync(ulong guildId, string prefix)
+        {
             bool hasEntry = (await Database.GetCollection<Data.Entities.MongoKVP<ulong, string>>("GuildPrefixes").FindAsync(x => x.Key == guildId)).ToList().Count == 1;
 
-            if(!hasEntry)
+            if (!hasEntry)
                 await Database.GetCollection<Data.Entities.MongoKVP<ulong, string>>("GuildPrefixes").InsertOneAsync(new Data.Entities.MongoKVP<ulong, string>(guildId, prefix));
             else
                 await Database.GetCollection<Data.Entities.MongoKVP<ulong, string>>("GuildPrefixes").ReplaceOneAsync(x => x.Key == guildId, new Data.Entities.MongoKVP<ulong, string>(guildId, prefix));
         }
 
-        public static async Task<string> GetGuildPrefixAsync(ulong guildId){
+        public static async Task<string> GetGuildPrefixAsync(ulong guildId)
+        {
             string prefix = (await Database.GetCollection<Data.Entities.MongoKVP<ulong, string>>("GuildPrefixes").FindAsync(x => x.Key == guildId)).FirstOrDefault()?.Value;
             return prefix ?? "!";
         }
@@ -113,6 +121,21 @@ namespace MopsBot
         public static async Task UpdateServerCount()
         {
             await Program.Client.SetActivityAsync(new Game($"{Program.Client.Guilds.Count} servers", ActivityType.Watching));
+            try
+            {
+                if(Program.Client.CurrentUser.Id == 305398845389406209)
+                    await DiscordBotList.UpdateStats(Program.Client.Guilds.Count);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("[Error] by discord bot list api: " + e.Message);
+            }
+        }
+
+        public static async Task UserVoted(IDblEntity user){
+            Console.WriteLine($"\n[{DateTime.Now}]: User {user.ToString()}({user.Id}) voted. Adding 10 VP to balance!");
+            await MopsBot.Data.Entities.User.ModifyUserAsync(user.Id, x => x.Money += 10);
+            //await (await Program.Client.GetUser(user.Id).GetOrCreateDMChannelAsync()).SendMessageAsync("Thanks for voting for me!\nI have added 10 Votepoints to your balance!");
         }
 
         /// <summary>
@@ -124,7 +147,7 @@ namespace MopsBot
             await Program.Client.SetActivityAsync(new Game("Currently Restarting!", ActivityType.Playing));
             await Task.Delay(60000);
 
-            int status = 12;
+            int status = Enum.GetNames(typeof(ITracker.TrackerType)).Length;
             while (true)
             {
                 try

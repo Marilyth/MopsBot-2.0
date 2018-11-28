@@ -14,6 +14,7 @@ using Microsoft.Win32.SafeHandles;
 
 namespace MopsBot.Data.Tracker
 {
+    [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
     public class TwitterTracker : ITracker
     {
         public long lastMessage;
@@ -47,7 +48,7 @@ namespace MopsBot.Data.Tracker
 
                 foreach (ITweet newTweet in newTweets)
                 {
-                    foreach (ulong channel in ChannelIds.ToList())
+                    foreach (ulong channel in ChannelMessages.Keys.ToList())
                     {
                         if (newTweet.InReplyToScreenName == null && !newTweet.IsRetweet)
                         {

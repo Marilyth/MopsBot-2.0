@@ -12,28 +12,29 @@ using MopsBot.Data.Tracker.APIResults.Osu;
 
 namespace MopsBot.Data.Tracker
 {
+    [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
     public class OsuTracker : ITracker
     {
-        private Dictionary<string, double> allPP;
+        public Dictionary<string, double> AllPP;
         public double PPThreshold;
 
         public OsuTracker() : base(60000, ExistingTrackers * 2000)
         {
-            allPP = new Dictionary<string, double>();
-            allPP.Add("m=0", 0);
-            allPP.Add("m=1", 0);
-            allPP.Add("m=2", 0);
-            allPP.Add("m=3", 0);
+            AllPP = new Dictionary<string, double>();
+            AllPP.Add("m=0", 0);
+            AllPP.Add("m=1", 0);
+            AllPP.Add("m=2", 0);
+            AllPP.Add("m=3", 0);
         }
 
         public OsuTracker(string name) : base(60000)
         {
             Name = name;
-            allPP = new Dictionary<string, double>();
-            allPP.Add("m=0", 0);
-            allPP.Add("m=1", 0);
-            allPP.Add("m=2", 0);
-            allPP.Add("m=3", 0);
+            AllPP = new Dictionary<string, double>();
+            AllPP.Add("m=0", 0);
+            AllPP.Add("m=1", 0);
+            AllPP.Add("m=2", 0);
+            AllPP.Add("m=3", 0);
             PPThreshold = 0.1;
 
             //Check if person exists by forcing Exceptions if not.
@@ -53,41 +54,43 @@ namespace MopsBot.Data.Tracker
         {
             try
             {
-                foreach (var pp in allPP.ToList())
+                foreach (var pp in AllPP.ToList())
                 {
                     OsuResult userInformation = await fetchUser(pp.Key);
                     if (userInformation == null) return;
-                    if (pp.Value == 0){
-                        allPP[pp.Key] = allPP[pp.Key] = double.Parse(userInformation.pp_raw ?? "0", CultureInfo.InvariantCulture);
-                        continue;
-                    }
 
                     if (pp.Value > 0 && pp.Value + PPThreshold <= double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture))
                     {
                         var recentScores = await fetchRecent(pp.Key);
 
-                        if(recentScores == null){
-                            allPP[pp.Key] = double.Parse(userInformation.pp_raw ?? "0", CultureInfo.InvariantCulture);
+                        if (recentScores == null)
+                        {
+                            AllPP[pp.Key] = double.Parse(userInformation.pp_raw ?? "0", CultureInfo.InvariantCulture);
+                            await StaticBase.Trackers[TrackerType.Osu].UpdateDBAsync(this);
                             return;
                         }
-                        
+
                         RecentScore scoreInformation = recentScores.First(x => !x.rank.Equals("F"));
 
                         Beatmap beatmapInformation = await fetchBeatmap(scoreInformation.beatmap_id, pp.Key);
 
-                        foreach (ulong channel in ChannelIds.ToList())
+                        foreach (ulong channel in ChannelMessages.Keys.ToList())
                         {
                             await OnMajorChangeTracked(channel, createEmbed(userInformation, beatmapInformation, await fetchScore(scoreInformation.beatmap_id, pp.Key),
                                                        Math.Round(double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture) - pp.Value, 2), pp.Key), ChannelMessages[channel]);
                         }
                     }
-                    allPP[pp.Key] = double.Parse(userInformation.pp_raw ?? "0", CultureInfo.InvariantCulture);
+
+                    if(pp.Value != double.Parse(userInformation.pp_raw ?? "0", CultureInfo.InvariantCulture)){
+                        AllPP[pp.Key] = double.Parse(userInformation.pp_raw ?? "0", CultureInfo.InvariantCulture);
+                        await StaticBase.Trackers[TrackerType.Osu].UpdateDBAsync(this);
+                    }
                 }
             }
             catch (Exception e)
             {
-                if(!e.StackTrace.StartsWith("The read operation failed"))
-                    Console.WriteLine("\n" +  $"[ERROR] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+                if (!e.StackTrace.StartsWith("The read operation failed"))
+                    Console.WriteLine("\n" + $"[ERROR] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
             }
         }
 
@@ -126,8 +129,8 @@ namespace MopsBot.Data.Tracker
             e.Color = new Color(255, 87, 156);
             e.Title = $"{beatmapInformation.artist} - {beatmapInformation.title} [{beatmapInformation.version}]";
             e.Url = $"https://osu.ppy.sh/b/{beatmapInformation.beatmap_id}&m={beatmapInformation.mode}";
-            e.Description = Math.Round(double.Parse(beatmapInformation.difficultyrating, CultureInfo.InvariantCulture), 2) + "*";
-            e.Timestamp = DateTime.Parse(scoreInformation.date).AddHours(-6);
+            e.Description = Math.Round(double.Parse(beatmapInformation.difficultyrating, CultureInfo.InvariantCulture), 2) + "*\n" + (Mods)int.Parse(scoreInformation.enabled_mods);
+            e.Timestamp = DateTime.Parse(scoreInformation.date).AddHours(1);
 
             EmbedAuthorBuilder author = new EmbedAuthorBuilder();
             author.Name = Name;
@@ -157,7 +160,7 @@ namespace MopsBot.Data.Tracker
             }
             e.ImageUrl = $"https://b.ppy.sh/thumb/{beatmapInformation.beatmapset_id}l.jpg";
 
-            e.AddField("Score", scoreInformation.score + $" ({scoreInformation.maxcombo}x)", true);
+            e.AddField("Score", scoreInformation.score + $" ({scoreInformation.maxcombo}/{beatmapInformation.max_combo}x)", true);
             e.AddField("Acc", calcAcc(scoreInformation, int.Parse(beatmapInformation.mode)) + $"% {scoreInformation.rank}", true);
             e.AddField("PP for play", Math.Round(double.Parse(scoreInformation.pp ?? "NaN", CultureInfo.InvariantCulture), 2) + $" (+{ppChange})", true);
             e.AddField("Rank", userInformation.pp_rank, true);
@@ -201,7 +204,48 @@ namespace MopsBot.Data.Tracker
             return 0;
         }
 
-        public override string TrackerUrl(){
+        [Flags]
+        public enum Mods
+        {
+            NoMod = 0,
+            NoFail = 1,
+            Easy = 2,
+            TouchDevice = 4,
+            Hidden = 8,
+            HardRock = 16,
+            SuddenDeath = 32,
+            DoubleTime = 64,
+            Relax = 128,
+            HalfTime = 256,
+            Nightcore = 512, // Only set along with DoubleTime. i.e: NC only gives 576
+            Flashlight = 1024,
+            Autoplay = 2048,
+            SpunOut = 4096,
+            Relax2 = 8192,  // Autopilot
+            Perfect = 16384, // Only set along with SuddenDeath. i.e: PF only gives 16416  
+            Key4 = 32768,
+            Key5 = 65536,
+            Key6 = 131072,
+            Key7 = 262144,
+            Key8 = 524288,
+            FadeIn = 1048576,
+            Random = 2097152,
+            Cinema = 4194304,
+            Target = 8388608,
+            Key9 = 16777216,
+            KeyCoop = 33554432,
+            Key1 = 67108864,
+            Key3 = 134217728,
+            Key2 = 268435456,
+            ScoreV2 = 536870912,
+            LastMod = 1073741824,
+            KeyMod = Key1 | Key2 | Key3 | Key4 | Key5 | Key6 | Key7 | Key8 | Key9 | KeyCoop,
+            FreeModAllowed = NoFail | Easy | Hidden | HardRock | SuddenDeath | Flashlight | FadeIn | Relax | Relax2 | SpunOut | KeyMod,
+            ScoreIncreaseMods = Hidden | HardRock | DoubleTime | Flashlight | FadeIn
+        }
+
+        public override string TrackerUrl()
+        {
             return "https://osu.ppy.sh/u/" + Name;
         }
     }
