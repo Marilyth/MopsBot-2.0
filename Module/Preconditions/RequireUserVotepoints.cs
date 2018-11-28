@@ -11,7 +11,7 @@ namespace MopsBot.Module.Preconditions{
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
     public class RequireUserVotepoints : PreconditionAttribute
     {
-        private int amount;
+        public int amount;
         public RequireUserVotepoints(int amount = 1){
             this.amount = amount;
         }

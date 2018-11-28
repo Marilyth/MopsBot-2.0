@@ -165,13 +165,17 @@ namespace MopsBot
         /// <param name="command">The command to create the embed for</param>
         /// <param name="usage">The usage example to include in the embed</param>
         /// <param name="description">The desciption to include in the embed</param>
-        private EmbedBuilder createHelpEmbed(string command, string usage, string description, EmbedBuilder e)
+        private EmbedBuilder createHelpEmbed(string command, string usage, string description, EmbedBuilder e, string preconditions = null)
         {
             //EmbedBuilder e = new EmbedBuilder();
             e.Title = command;
             e.ImageUrl = GetCommandHelpImage(command);
 
+            if(preconditions != null)
+                e.AddField("Preconditions", preconditions);
+
             e.AddField("Example usage", usage);
+
             e.Description = description;
 
             return e;
@@ -207,13 +211,32 @@ namespace MopsBot
                     throw new Exception("Command not found");
                 }
                 output += $"`{prefix}{(curCommand.Module.IsSubmodule ? curCommand.Module.Name + " " + curCommand.Name : curCommand.Name)}";
+
                 foreach (Discord.Commands.ParameterInfo p in curCommand.Parameters)
                 {
                     output += $" {(p.IsOptional ? $"[Optional: {p.Name}]" : $"<{p.Name}>")}";
                 }
                 output += "`";
 
-                e = createHelpEmbed($"{(curCommand.Module.IsSubmodule ? curCommand.Module.Name + " " + curCommand.Name : curCommand.Name)}", output, curCommand.Summary, e);
+                string preconditions = "";
+                foreach(var prec in curCommand.Preconditions){
+                    if(prec.GetType() == typeof(RequireUserVotepoints)){
+                        preconditions += $"Requires {((RequireUserVotepoints)prec).amount} VP to use\n";
+                    }
+                    else if(prec.GetType() == typeof(RequireUserPermissionAttribute)){
+                        preconditions += $"Requires UserPermission: {((RequireUserPermissionAttribute)prec).ChannelPermission.Value}\n";
+                    }
+                    else if(prec.GetType() == typeof(RequireBotPermissionAttribute)){
+                        preconditions += $"Requires BotPermission: {((RequireBotPermissionAttribute)prec).ChannelPermission.Value}\n";
+                    }
+                    else if(prec.GetType() == typeof(RatelimitAttribute)){
+                        preconditions += $"Can be used {((RatelimitAttribute)prec)._invokeLimit}x within {((RatelimitAttribute)prec)._invokeLimitPeriod}\n";
+                    }
+                    else if(prec.GetType() == typeof(RequireVoter)){
+                        preconditions += $"Can be used {((RequireVoter)prec).invokes}x within {((RequireVoter)prec).period}\nOr infinite usage if voted in the past {((RequireVoter)prec).votePeriod}\n";
+                    }
+                }
+                e = createHelpEmbed($"{(curCommand.Module.IsSubmodule ? curCommand.Module.Name + " " + curCommand.Name : curCommand.Name)}", output, curCommand.Summary, e, preconditions);
                 // if(curCommand.Parameters.Any(x=> x.IsOptional)){
                 //     output +="\n\n**Default Values**:";
                 //     foreach(var p in curCommand.Parameters.Where(x=>x.IsOptional))

@@ -91,6 +91,7 @@ namespace MopsBot.Module
         [Command("Wolfram", RunMode = RunMode.Async)]
         [Summary("Sends a query to wolfram alpha.")]
         [Ratelimit(1, 10, Measure.Seconds)]
+        [RequireUserVotepoints(1)]
         public async Task wolf([Remainder]string query)
         {
             using (Context.Channel.EnterTypingState())

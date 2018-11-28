@@ -12,14 +12,14 @@ namespace MopsBot.Module.Preconditions{
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
     public sealed class RatelimitAttribute : PreconditionAttribute
     {
-        private readonly uint _invokeLimit;
+        public readonly uint _invokeLimit;
         private readonly bool _noLimitInDMs;
         private readonly bool _noLimitForAdmins;
         private readonly bool _applyPerGuild;
         private readonly bool _guildwideLimit;
         private readonly bool _applyPerChannel;
         private readonly bool _channelwideLimit;
-        private readonly TimeSpan _invokeLimitPeriod;
+        public readonly TimeSpan _invokeLimitPeriod;
         private readonly Dictionary<(ulong, ulong?), CommandTimeout> _invokeTracker = new Dictionary<(ulong, ulong?), CommandTimeout>();
 
         /// <summary> Sets how often a user is allowed to use this command. </summary>
