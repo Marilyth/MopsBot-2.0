@@ -5,6 +5,9 @@ using System;
 using MopsBot.Data.Entities;
 
 namespace MopsBot.Module.Preconditions{
+    /// <summary>
+    /// Sets that the user must pay any amount of VP to use the command.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
     public class RequireUserVotepoints : PreconditionAttribute
     {
