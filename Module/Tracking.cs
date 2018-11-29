@@ -85,7 +85,7 @@ namespace MopsBot.Module
             [Command("SetNonMainNotification")]
             [Summary("Sets the notification text that is used each time a new retweet or reply is found.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNonMainNotification(string TwitterName, [Remainder]string notification = "~Tweet Tweet~")
+            public async Task SetNonMainNotification(string TwitterName, [Remainder]string notification = "")
             {
                 var twitter = StaticBase.Trackers[ITracker.TrackerType.Twitter].GetTracker(Context.Channel.Id, TwitterName);
                 try
