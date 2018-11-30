@@ -279,9 +279,9 @@ namespace MopsBot.Data.Tracker.APIResults.Overwatch
         public int ties { get; set; }
         public double win_rate { get; set; }
         public int level { get; set; }
-        public int endorsement_shotcaller { get; set; }
-        public int endorsement_sportsmanship { get; set; }
-        public int endorsement_teammate { get; set; }
+        public string endorsement_shotcaller { get; set; }
+        public string endorsement_sportsmanship { get; set; }
+        public string endorsement_teammate { get; set; }
         public int endorsement_level { get; set; }
 
     }
