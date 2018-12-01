@@ -26,16 +26,16 @@ namespace MopsBot.Data.Interactive
         {
             //using (StreamReader read = new StreamReader(new FileStream($"mopsdata//ReactionGiveaways.json", FileMode.OpenOrCreate)))
             //{
-                try
-                {
-                    //Giveaways = JsonConvert.DeserializeObject<Dictionary<ulong, Dictionary<ulong, List<ulong>>>>(read.ReadToEnd());
-                    //StaticBase.Database.GetCollection<MongoKVP<ulong, List<KeyValuePair<ulong, List<ulong>>>>>(this.GetType().Name).InsertMany(MongoKVP<ulong, List<KeyValuePair<ulong, List<ulong>>>>.DictToMongoKVP(Giveaways.ToDictionary(x => x.Key, x=> x.Value.ToList())));
-                    Giveaways = new Dictionary<ulong, Dictionary<ulong, List<ulong>>>(StaticBase.Database.GetCollection<MongoKVP<ulong, List<KeyValuePair<ulong, List<ulong>>>>>(this.GetType().Name).FindSync(x => true).ToList().Select(x => new KeyValuePair<ulong, Dictionary<ulong, List<ulong>>>(x.Key, x.Value.ToDictionary(y => y.Key, y => y.Value))));
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine("\n" +  e.Message + e.StackTrace);
-                }
+            try
+            {
+                //Giveaways = JsonConvert.DeserializeObject<Dictionary<ulong, Dictionary<ulong, List<ulong>>>>(read.ReadToEnd());
+                //StaticBase.Database.GetCollection<MongoKVP<ulong, List<KeyValuePair<ulong, List<ulong>>>>>(this.GetType().Name).InsertMany(MongoKVP<ulong, List<KeyValuePair<ulong, List<ulong>>>>.DictToMongoKVP(Giveaways.ToDictionary(x => x.Key, x=> x.Value.ToList())));
+                Giveaways = new Dictionary<ulong, Dictionary<ulong, List<ulong>>>(StaticBase.Database.GetCollection<MongoKVP<ulong, List<KeyValuePair<ulong, List<ulong>>>>>(this.GetType().Name).FindSync(x => true).ToList().Select(x => new KeyValuePair<ulong, Dictionary<ulong, List<ulong>>>(x.Key, x.Value.ToDictionary(y => y.Key, y => y.Value))));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("\n" + e.Message + e.StackTrace);
+            }
             //}
             Giveaways = Giveaways ?? new Dictionary<ulong, Dictionary<ulong, List<ulong>>>();
 
@@ -71,12 +71,12 @@ namespace MopsBot.Data.Interactive
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine("\n" +  $"[ERROR] by ReactionGiveaway for [{channel.Key}][{message.Key}] at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+                        Console.WriteLine("\n" + $"[ERROR] by ReactionGiveaway for [{channel.Key}][{message.Key}] at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
 
-                        if ((e.Message.Contains("Object reference not set to an instance of an object.") || e.Message.Contains("Value cannot be null.")) 
+                        if ((e.Message.Contains("Object reference not set to an instance of an object.") || e.Message.Contains("Value cannot be null."))
                             && Program.Client.ConnectionState.Equals(ConnectionState.Connected))
                         {
-                            Console.WriteLine("\n" +  $"Removing Giveaway due to missing message: [{channel.Key}][{message.Key}]");
+                            Console.WriteLine("\n" + $"Removing Giveaway due to missing message: [{channel.Key}][{message.Key}]");
 
                             if (channel.Value.Count > 1)
                                 channel.Value.Remove(message.Key);
@@ -88,15 +88,18 @@ namespace MopsBot.Data.Interactive
             }
         }
 
-        public async Task InsertIntoDBAsync(ulong key){
+        public async Task InsertIntoDBAsync(ulong key)
+        {
             await StaticBase.Database.GetCollection<MongoKVP<ulong, List<KeyValuePair<ulong, List<ulong>>>>>(this.GetType().Name).InsertOneAsync(new MongoKVP<ulong, List<KeyValuePair<ulong, List<ulong>>>>(key, Giveaways[key].ToList()));
         }
 
-        public async Task UpdateDBAsync(ulong key){
+        public async Task UpdateDBAsync(ulong key)
+        {
             await StaticBase.Database.GetCollection<MongoKVP<ulong, List<KeyValuePair<ulong, List<ulong>>>>>(this.GetType().Name).ReplaceOneAsync(x => x.Key == key, new MongoKVP<ulong, List<KeyValuePair<ulong, List<ulong>>>>(key, Giveaways[key].ToList()));
         }
 
-        public async Task RemoveFromDBAsync(ulong key){
+        public async Task RemoveFromDBAsync(ulong key)
+        {
             await StaticBase.Database.GetCollection<MongoKVP<ulong, List<KeyValuePair<ulong, List<ulong>>>>>(this.GetType().Name).DeleteOneAsync(x => x.Key == key);
         }
 
@@ -126,11 +129,13 @@ namespace MopsBot.Data.Interactive
             participants.Add(creator.Id);
 
             messages.Add(message.Id, participants);
-            if (Giveaways.ContainsKey(channel.Id)){
+            if (Giveaways.ContainsKey(channel.Id))
+            {
                 Giveaways[channel.Id].Add(message.Id, participants);
                 await UpdateDBAsync(channel.Id);
             }
-            else{
+            else
+            {
                 Giveaways.Add(channel.Id, messages);
                 await InsertIntoDBAsync(channel.Id);
             }
@@ -184,22 +189,36 @@ namespace MopsBot.Data.Interactive
             {
                 await Program.ReactionHandler.ClearHandler(context.Message);
 
-                ulong winnerId = Giveaways[context.Channel.Id][context.Message.Id].Count > 1 ? Giveaways[context.Channel.Id][context.Message.Id]
-                               [StaticBase.ran.Next(1, Giveaways[context.Channel.Id][context.Message.Id].Count)]
-                               : context.Reaction.UserId;
+                int.TryParse(context.Message.Embeds.First().Title.Split("x")[0], out int winnerCount);
+                string winnerDescription = "";
 
-                IUser winner = await context.Channel.GetUserAsync(winnerId);
-                await context.Channel.SendMessageAsync($"{winner.Mention} won the "
-                                                      + $"`{context.Message.Embeds.First().Title}`");
+                if (winnerCount == 0) winnerCount = 1;
+                if (winnerCount > Giveaways[context.Channel.Id][context.Message.Id].Count) winnerCount = Giveaways[context.Channel.Id][context.Message.Id].Count;
 
-                var embed = context.Message.Embeds.First().ToEmbedBuilder().WithDescription(winner.Mention + " won the giveaway!");
+                for (int i = 0; i < winnerCount; i++)
+                {
+                    ulong winnerId = Giveaways[context.Channel.Id][context.Message.Id].Count > 1 ? Giveaways[context.Channel.Id][context.Message.Id]
+                                   [StaticBase.ran.Next(1, Giveaways[context.Channel.Id][context.Message.Id].Count)]
+                                   : context.Reaction.UserId;
+
+                    IUser winner = await context.Channel.GetUserAsync(winnerId);
+                    winnerDescription += $"{winner.Mention} won the "
+                                       + $"`{context.Message.Embeds.First().Title}`\n";
+                    Giveaways[context.Channel.Id][context.Message.Id].Remove(winnerId);
+                }
+
+                await context.Channel.SendMessageAsync(winnerDescription);
+
+                var embed = context.Message.Embeds.First().ToEmbedBuilder().WithDescription(winnerDescription);
                 await context.Message.ModifyAsync(x => x.Embed = embed.Build());
 
-                if (Giveaways[context.Channel.Id].Count == 1){
+                if (Giveaways[context.Channel.Id].Count == 1)
+                {
                     Giveaways.Remove(context.Channel.Id);
                     await RemoveFromDBAsync(context.Channel.Id);
                 }
-                else{
+                else
+                {
                     Giveaways[context.Channel.Id].Remove(context.Message.Id);
                     await UpdateDBAsync(context.Channel.Id);
                 }
@@ -212,22 +231,36 @@ namespace MopsBot.Data.Interactive
             {
                 await Program.ReactionHandler.ClearHandler(message);
 
-                ulong winnerId = Giveaways[message.Channel.Id][message.Id].Count > 1 ? Giveaways[message.Channel.Id][message.Id]
-                               [StaticBase.ran.Next(1, Giveaways[message.Channel.Id][message.Id].Count)]
-                               : userId;
+                int.TryParse(message.Embeds.First().Title.Split("x")[0], out int winnerCount);
+                string winnerDescription = "";
 
-                IUser winner = await message.Channel.GetUserAsync(winnerId);
-                await message.Channel.SendMessageAsync($"{winner.Mention} won the "
-                                                      + $"`{message.Embeds.First().Title}`");
-                
-                var embed = message.Embeds.First().ToEmbedBuilder().WithDescription(winner.Mention + " won the giveaway!");
+                if (winnerCount == 0) winnerCount = 1;
+                if (winnerCount > Giveaways[message.Channel.Id][message.Id].Count) winnerCount = Giveaways[message.Channel.Id][message.Id].Count;
+
+                for (int i = 0; i < winnerCount; i++)
+                {
+                    ulong winnerId = Giveaways[message.Channel.Id][message.Id].Count > 1 ? Giveaways[message.Channel.Id][message.Id]
+                                   [StaticBase.ran.Next(1, Giveaways[message.Channel.Id][message.Id].Count)]
+                                   : userId;
+
+                    IUser winner = await message.Channel.GetUserAsync(winnerId);
+                    winnerDescription += $"{winner.Mention} won the "
+                                       + $"`{message.Embeds.First().Title}`\n";
+                    Giveaways[message.Channel.Id][message.Id].Remove(winnerId);
+                }
+
+                await message.Channel.SendMessageAsync(winnerDescription);
+
+                var embed = message.Embeds.First().ToEmbedBuilder().WithDescription(winnerDescription);
                 await message.ModifyAsync(x => x.Embed = embed.Build());
 
-                if (Giveaways[message.Channel.Id].Count == 1){
+                if (Giveaways[message.Channel.Id].Count == 1)
+                {
                     Giveaways.Remove(message.Channel.Id);
                     await RemoveFromDBAsync(message.Channel.Id);
                 }
-                else{
+                else
+                {
                     Giveaways[message.Channel.Id].Remove(message.Id);
                     await UpdateDBAsync(message.Channel.Id);
                 }

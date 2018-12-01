@@ -136,7 +136,8 @@ namespace MopsBot
             Console.WriteLine($"\n[{DateTime.Now}]: User {user.ToString()}({user.Id}) voted. Adding 10 VP to balance!");
             await MopsBot.Data.Entities.User.ModifyUserAsync(user.Id, x => x.Money += 10);
             try{
-                await (await Program.Client.GetUser(user.Id).GetOrCreateDMChannelAsync()).SendMessageAsync("Thanks for voting for me!\nI have added 10 Votepoints to your balance!");
+                if(Program.Client.CurrentUser.Id == 305398845389406209)
+                    await (await Program.Client.GetUser(user.Id).GetOrCreateDMChannelAsync()).SendMessageAsync("Thanks for voting for me!\nI have added 10 Votepoints to your balance!");
             } catch(Exception e){
                 Console.WriteLine("[Error] while messaging voter: " + e.Message);
             }
