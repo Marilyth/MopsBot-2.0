@@ -13,6 +13,7 @@ using MongoDB.Bson.Serialization.Options;
 using MongoDB.Bson.Serialization.Attributes;
 using MopsBot.Data.Entities;
 using MongoDB.Driver;
+using Accord.Statistics.Distributions.Univariate;
 
 namespace MopsBot.Data.Interactive
 {
@@ -277,10 +278,18 @@ namespace MopsBot.Data.Interactive
             {
                 if (field.Name.Equals("Participants"))
                     field.Value = Giveaways[message.Channel.Id][message.Id].Count - 1;
-                else
+                else{
+                    int.TryParse(message.Embeds.First().Title.Split("x")[0], out int winnerCount);
+
+                    if (winnerCount == 0) winnerCount = 1;
+                    if (winnerCount > Giveaways[message.Channel.Id][message.Id].Count) winnerCount = Giveaways[message.Channel.Id][message.Id].Count;
+                    var probability = Accord.Math.Special.Binomial(Giveaways[message.Channel.Id][message.Id].Count - 1, winnerCount - 1)/
+                                      Accord.Math.Special.Binomial(Giveaways[message.Channel.Id][message.Id].Count, winnerCount);
+
                     field.Value = Giveaways[message.Channel.Id][message.Id].Count > 1 ?
-                                  Math.Round((1.0 / (Giveaways[message.Channel.Id][message.Id].Count - 1)) * 100, 2) + "%"
+                                   probability*100 + "%"
                                   : Double.NaN.ToString();
+                }
             }
 
             await message.ModifyAsync(x =>

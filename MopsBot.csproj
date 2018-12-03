@@ -24,6 +24,7 @@
     <PackageReference Include="MongoDB.Bson" Version="2.7.0" />
     <PackageReference Include="MongoDB.Driver" Version="2.7.0" />
     <PackageReference Include="DiscordBotsList.Api" Version="1.3.0" />
+    <PackageReference Include="Accord.Statistics" Version="3.8.0"/>
   </ItemGroup>
 
   <ItemGroup>
