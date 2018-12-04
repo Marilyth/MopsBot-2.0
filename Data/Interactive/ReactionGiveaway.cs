@@ -283,8 +283,8 @@ namespace MopsBot.Data.Interactive
 
                     if (winnerCount == 0) winnerCount = 1;
                     if (winnerCount > Giveaways[message.Channel.Id][message.Id].Count) winnerCount = Giveaways[message.Channel.Id][message.Id].Count;
-                    var probability = Accord.Math.Special.Binomial(Giveaways[message.Channel.Id][message.Id].Count - 1, winnerCount - 1)/
-                                      Accord.Math.Special.Binomial(Giveaways[message.Channel.Id][message.Id].Count, winnerCount);
+                    var probability = Accord.Math.Special.Binomial(Giveaways[message.Channel.Id][message.Id].Count - 2, winnerCount - 1)/
+                                      Accord.Math.Special.Binomial(Giveaways[message.Channel.Id][message.Id].Count - 1, winnerCount);
 
                     field.Value = Giveaways[message.Channel.Id][message.Id].Count > 1 ?
                                    probability*100 + "%"
