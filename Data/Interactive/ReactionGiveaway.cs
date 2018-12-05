@@ -287,7 +287,7 @@ namespace MopsBot.Data.Interactive
                                       Accord.Math.Special.Binomial(Giveaways[message.Channel.Id][message.Id].Count - 1, winnerCount);
 
                     field.Value = Giveaways[message.Channel.Id][message.Id].Count > 1 ?
-                                   probability*100 + "%"
+                                   Math.Round(probability*100, 2) + "%"
                                   : Double.NaN.ToString();
                 }
             }
