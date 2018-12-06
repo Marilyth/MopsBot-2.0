@@ -286,7 +286,7 @@ namespace MopsBot.Data.Interactive
 
                     double probability = 1;
                     if(Giveaways[message.Channel.Id][message.Id].Count - 1 != 0)
-                        probability = (1/Giveaways[message.Channel.Id][message.Id].Count - 1) * winnerCount;
+                        probability = (1.0 / Giveaways[message.Channel.Id][message.Id].Count - 1) * winnerCount;
 
                     field.Value = Math.Round(probability*100, 2) + "%";
                 }
