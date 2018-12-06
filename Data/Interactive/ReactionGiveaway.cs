@@ -282,7 +282,7 @@ namespace MopsBot.Data.Interactive
                     int.TryParse(message.Embeds.First().Title.Split("x")[0], out int winnerCount);
 
                     if (winnerCount == 0) winnerCount = 1;
-                    if (winnerCount > Giveaways[message.Channel.Id][message.Id].Count) winnerCount = Giveaways[message.Channel.Id][message.Id].Count;
+                    if (winnerCount > Giveaways[message.Channel.Id][message.Id].Count - 1) winnerCount = Giveaways[message.Channel.Id][message.Id].Count - 1;
 
                     double probability = 1;
                     if(Giveaways[message.Channel.Id][message.Id].Count - 1 != 0)
