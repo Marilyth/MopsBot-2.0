@@ -21,7 +21,7 @@ namespace MopsBot.Data
         public string ID;
         public Dictionary<string, double> Categories;
 
-        public BarPlot(string name, bool keepTrack = false, params string[] categories)
+        public BarPlot(string name, params string[] categories)
         {
             ID = name;
             Categories = new Dictionary<string, double>();
@@ -29,10 +29,6 @@ namespace MopsBot.Data
                 Categories.Add(category, 0);
 
             initPlot();
-            if (keepTrack)
-            {
-                readPlotPoints();
-            }
         }
 
         private void initPlot()
@@ -75,7 +71,7 @@ namespace MopsBot.Data
         }
 
         public static string DrawPlot(string name, Dictionary<string, double> dict){
-            var tmpBarPlot = new BarPlot(name, false, dict.Keys.ToArray());
+            var tmpBarPlot = new BarPlot(name, dict.Keys.ToArray());
             foreach(var key in dict.Keys){
                 tmpBarPlot.AddValue(key, dict[key]);
             }
@@ -113,14 +109,6 @@ namespace MopsBot.Data
                 f.Delete();
 
             return $"http://5.45.104.29/StreamCharts/{ID.Replace(" ", "%20")}barplot.png?rand={StaticBase.ran.Next(0, 999999999)}";
-        }
-
-        private void readPlotPoints()
-        {
-            using (StreamReader read = new StreamReader(new FileStream($"mopsdata//plots//{ID}barplot.json", FileMode.OpenOrCreate)))
-            {
-                Categories = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, double>>(read.ReadToEnd());
-            }
         }
 
         /// <summary>
@@ -163,15 +151,11 @@ namespace MopsBot.Data
         [BsonId]
         public string ID;
 
-        public Plot(string name, string xName = "x", string yName = "y", bool keepTrack = false)
+        public Plot(string name, string xName = "x", string yName = "y")
         {
             ID = name;
             PlotPoints = new List<KeyValuePair<string, double>>();
             InitPlot(xName, yName);
-            if (keepTrack)
-            {
-                readPlotPoints();
-            }
         }
 
         public void InitPlot(string xAxis = "Time In Minutes", string yAxis = "Viewers")
@@ -212,15 +196,6 @@ namespace MopsBot.Data
             }
         }
 
-        private void writePlotPoints()
-        {
-            /*using (StreamWriter write = new StreamWriter(new FileStream($"mopsdata//plots//{ID}plot.json", FileMode.Create)))
-            {
-                string plot = Newtonsoft.Json.JsonConvert.SerializeObject(PlotPoints, Newtonsoft.Json.Formatting.Indented);
-                write.WriteLine(plot);
-            }*/
-        }
-
         /// <summary>
         /// Saves the plot as a .png and returns the URL.
         /// </summary>
@@ -249,21 +224,6 @@ namespace MopsBot.Data
                 f.Delete();
 
             return $"http://5.45.104.29/StreamCharts/{ID}plot.png?rand={StaticBase.ran.Next(0, 999999999)}";
-        }
-
-        private void readPlotPoints()
-        {
-            /*using (StreamReader read = new StreamReader(new FileStream($"mopsdata//plots//{ID}plot.json", FileMode.OpenOrCreate)))
-            {
-                PlotPoints = Newtonsoft.Json.JsonConvert.DeserializeObject<List<KeyValuePair<string, double>>>(read.ReadToEnd());
-            }
-
-            PlotPoints = PlotPoints ?? new List<KeyValuePair<string, double>>();
-
-            foreach (var plotPoint in PlotPoints)
-            {
-                AddValue(plotPoint.Key, plotPoint.Value, false);
-            }*/
         }
 
         /// <summary>
@@ -301,7 +261,6 @@ namespace MopsBot.Data
             if (savePlot)
             {
                 PlotPoints.Add(new KeyValuePair<string, double>(name, value));
-                writePlotPoints();
             }
         }
 

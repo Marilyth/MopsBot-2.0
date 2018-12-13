@@ -15,14 +15,11 @@ using MongoDB.Bson.Serialization.Attributes;
 namespace MopsBot.Data.Tracker
 {
     [BsonIgnoreExtraElements]
-    public class TwitchTracker : ITracker
+    public class TwitchTracker : IUpdatingTracker
     {
         private static KeyValuePair<string, string> acceptHeader = new KeyValuePair<string, string>("Accept", "application/vnd.twitchtv.v5+json");
         public Plot ViewerGraph;
         private TwitchResult StreamerStatus;
-
-        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
-        public Dictionary<ulong, ulong> ToUpdate;
         public Boolean IsOnline;
         public string CurGame;
         public bool isThumbnailLarge;
@@ -56,7 +53,7 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public async Task setReaction(IUserMessage message)
+        public async override Task setReaction(IUserMessage message)
         {
             //await message.RemoveAllReactionsAsync();
             await Program.ReactionHandler.AddHandler(message, new Emoji("🖌"), recolour);
@@ -118,7 +115,7 @@ namespace MopsBot.Data.Tracker
                     }
                     else
                     {
-                        ViewerGraph = new Plot(Name, "Time In Minutes", "Viewers", IsOnline);
+                        ViewerGraph = new Plot(Name, "Time In Minutes", "Viewers");
                         IsOnline = true;
                         CurGame = StreamerStatus.stream.game;
 

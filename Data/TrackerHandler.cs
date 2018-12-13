@@ -121,8 +121,8 @@ namespace MopsBot.Data
         {
             if (trackers.ContainsKey(name) && trackers[name].ChannelMessages.ContainsKey(channelId))
             {
-                if (typeof(T) == typeof(Tracker.TwitchTracker))
-                    foreach (var channel in (trackers[name] as Tracker.TwitchTracker).ToUpdate.Where(x => x.Key.Equals(channelId)))
+                if (typeof(T) == typeof(IUpdatingTracker))
+                    foreach (var channel in (trackers[name] as IUpdatingTracker).ToUpdate.Where(x => x.Key.Equals(channelId)))
                         try
                         {
                             Program.ReactionHandler.ClearHandler((IUserMessage)((ITextChannel)Program.Client.GetChannel(channelId)).GetMessageAsync(channel.Value).Result).Wait();
@@ -138,6 +138,11 @@ namespace MopsBot.Data
                     if (trackers.First().Value.GetType() == typeof(Tracker.TwitchTracker))
                     {
                         (trackers[name] as Tracker.TwitchTracker).ToUpdate.Remove(channelId);
+                    }
+
+                    else if (trackers.First().Value.GetType() == typeof(Tracker.YoutubeLiveTracker))
+                    {
+                        (trackers[name] as Tracker.YoutubeLiveTracker).ToUpdate.Remove(channelId);
                     }
 
                     await UpdateDBAsync(trackers[name]);
@@ -276,9 +281,9 @@ namespace MopsBot.Data
                 return;
             try
             {
-                if (sender is Tracker.TwitchTracker)
+                if (sender is IUpdatingTracker)
                 {
-                    Tracker.TwitchTracker tracker = sender as Tracker.TwitchTracker;
+                    IUpdatingTracker tracker = sender as IUpdatingTracker;
                     if (tracker.ToUpdate.ContainsKey(channelID))
                     {
                         var message = ((IUserMessage)((ITextChannel)Program.Client.GetChannel(channelID)).GetMessageAsync(tracker.ToUpdate[channelID]).Result);
