@@ -50,7 +50,7 @@ namespace MopsBot.Module
             public async Task unTrackYoutube(string channelID)
             {
                 if (await Trackers[ITracker.TrackerType.YoutubeLive].TryRemoveTrackerAsync(channelID, Context.Channel.Id))
-                    await ReplyAsync("Stopped keeping track of " + channelID + "'s videos!");
+                    await ReplyAsync("Stopped keeping track of " + channelID + "'s streams!");
                 else
                     await ReplyAsync($"Could not find tracker for `{channelID}`\n" +
                                      $"Currently tracked Youtubers are:", embed: StaticBase.Trackers[ITracker.TrackerType.YoutubeLive].GetTrackersEmbed(Context.Channel.Id));
@@ -64,7 +64,7 @@ namespace MopsBot.Module
             }
 
             [Command("SetNotification")]
-            [Summary("Sets the notification text that is used each time a new video appears.")]
+            [Summary("Sets the notification text that is used each time a new stream goes live.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task SetNotification(string channelID, [Remainder]string notification = "")
             {
