@@ -166,7 +166,7 @@ namespace MopsBot.Data.Tracker
                 {
                     VideoId = null;
                     checkForChange.Change(300000, 300000);
-                    Console.WriteLine("\n" + $"{DateTime.Now} {Name} went Offline (Youtube)");
+                    Console.WriteLine("\n" + $"{DateTime.Now} {liveStatus.snippet.channelTitle} went Offline (Youtube)");
                     ViewerGraph.Dispose();
                     ViewerGraph = null;
 
