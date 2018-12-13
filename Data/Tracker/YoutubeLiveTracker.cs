@@ -176,7 +176,7 @@ namespace MopsBot.Data.Tracker
                     ToUpdate = new Dictionary<ulong, ulong>();
 
                     foreach (ulong channel in ChannelMessages.Keys.ToList())
-                        await OnMinorChangeTracked(channel, $"{Name} went Offline!");
+                        await OnMinorChangeTracked(channel, $"{liveStatus.snippet.channelTitle} went Offline!");
                 }
                 else
                 {
