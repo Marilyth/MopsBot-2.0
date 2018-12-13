@@ -63,19 +63,12 @@ namespace MopsBot.Data.Tracker
                 }
                 catch
                 {
-                    // if(Program.Client.GetChannel(channelMessage.Key)==null){
-                    //     StaticBase.Trackers["twitch"].TryRemoveTracker(Name, channelMessage.Key);
-                    //     Console.WriteLine("\n" + $"remove tracker for {Name} in channel: {channelMessage.Key}");  
-                    // }
-                    //
-                    // the Tracker Should be removed on the first Event Call
                 }
             }
         }
 
         public async override Task setReaction(IUserMessage message)
         {
-            //await message.RemoveAllReactionsAsync();
             await Program.ReactionHandler.AddHandler(message, new Emoji("🖌"), recolour);
             await Program.ReactionHandler.AddHandler(message, new Emoji("🔄"), switchThumbnail);
         }
