@@ -24,6 +24,9 @@ namespace MopsBot.Module
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified Youtubers livestreams, in the Channel you are calling this command in.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [RequireBotPermission(ChannelPermission.ReadMessageHistory)]
+            [RequireBotPermission(ChannelPermission.AddReactions)]
+            [RequireBotPermission(ChannelPermission.ManageMessages)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
             [RequireUserVotepoints(2)]
             public async Task trackYoutube(string channelID, [Remainder]string notificationMessage = "New Stream")
