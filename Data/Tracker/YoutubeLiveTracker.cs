@@ -76,9 +76,6 @@ namespace MopsBot.Data.Tracker
         private async Task<string> fetchLivestreamId()
         {
             string query = await MopsBot.Module.Information.ReadURLAsync($"https://www.googleapis.com/youtube/v3/search?part=snippet&channelId={Name}&eventType=live&type=video&key={Program.Config["YoutubeLive"]}");
-            var tmp = Program.Config["Youtube"];
-            Program.Config["Youtube"] = Program.Config["Youtube2"];
-            Program.Config["Youtube2"] = tmp;
 
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {
@@ -98,9 +95,6 @@ namespace MopsBot.Data.Tracker
         private async Task<LiveVideoItem> fetchLiveVideoContent()
         {
             string query = await MopsBot.Module.Information.ReadURLAsync($"https://www.googleapis.com/youtube/v3/videos?part=snippet%2C+liveStreamingDetails&id={VideoId}&key={Program.Config["YoutubeLive"]}");
-            var tmp = Program.Config["Youtube"];
-            Program.Config["Youtube"] = Program.Config["Youtube2"];
-            Program.Config["Youtube2"] = tmp;
 
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {
@@ -120,9 +114,6 @@ namespace MopsBot.Data.Tracker
         private async Task<ChannelItem> fetchChannel()
         {
             string query = await MopsBot.Module.Information.ReadURLAsync($"https://www.googleapis.com/youtube/v3/channels?part=contentDetails,snippet&id={Name}&key={Program.Config["YoutubeLive"]}");
-            var tmp = Program.Config["Youtube"];
-            Program.Config["Youtube"] = Program.Config["Youtube2"];
-            Program.Config["Youtube2"] = tmp;
 
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {
@@ -214,7 +205,7 @@ namespace MopsBot.Data.Tracker
             e.Footer = footer;
 
             e.ThumbnailUrl = IsThumbnailLarge ? ViewerGraph.DrawPlot() : $"{liveStatus.snippet.thumbnails.medium.url}?rand={StaticBase.ran.Next(0, 99999999)}";
-            e.ImageUrl = IsThumbnailLarge ? $"{liveStatus.snippet.thumbnails.maxres.url}?rand={StaticBase.ran.Next(0, 99999999)}" : ViewerGraph.DrawPlot();
+            e.ImageUrl = IsThumbnailLarge ? $"{liveStatus.snippet.thumbnails.maxres?.url ?? liveStatus.snippet.thumbnails.medium.url}?rand={StaticBase.ran.Next(0, 99999999)}" : ViewerGraph.DrawPlot();
 
             e.AddField("Viewers", liveStatus.liveStreamingDetails.concurrentViewers, true);
 
