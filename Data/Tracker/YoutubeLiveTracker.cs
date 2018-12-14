@@ -20,7 +20,7 @@ namespace MopsBot.Data.Tracker
     [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
     public class YoutubeLiveTracker : IUpdatingTracker
     {
-        public string VideoId;
+        public string VideoId, IconUrl;
         private string channelThumbnailUrl;
         public Plot ViewerGraph;
         public bool IsThumbnailLarge;
@@ -146,6 +146,8 @@ namespace MopsBot.Data.Tracker
                             await OnMinorChangeTracked(channel, ChannelMessages[channel]);
                         
                         checkForChange.Change(60000, 60000);
+
+                        IconUrl = (await fetchChannel()).snippet.thumbnails.medium.url;
                     }
                 }
 
@@ -196,7 +198,7 @@ namespace MopsBot.Data.Tracker
             EmbedAuthorBuilder author = new EmbedAuthorBuilder();
             author.Name = liveStatus.snippet.channelTitle;
             author.Url = $"https://www.youtube.com/channel/{liveStatus.snippet.channelId}";
-            author.IconUrl = liveStatus.snippet.thumbnails.standard.url;
+            author.IconUrl = IconUrl ?? liveStatus.snippet.thumbnails.standard.url;
             e.Author = author;
 
             EmbedFooterBuilder footer = new EmbedFooterBuilder();
