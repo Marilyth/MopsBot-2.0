@@ -12,99 +12,33 @@ namespace MopsBot.Api.Controllers
     [Route("api/[controller]")]
     public class TrackerController : Controller
     {
+        public static List<string> Parameters = new List<string>(){"Name", "Notification", "Channel"};
+
         public TrackerController()
         {
 
         }
 
-        [HttpGet("{channel}")]
-        public IActionResult GetTracks(ulong channel)
-        {
-            var result = new Dictionary<string, string>();
-            var fields = typeof(StaticBase).GetFields().Where(x => x.FieldType.Name.Contains("TrackerHandler"));
-            foreach (var field in fields)
-            {
-
-                try
-                {
-                    Type t = typeof(TrackerHandler<>).MakeGenericType(field.FieldType.GenericTypeArguments.First());
-                    var obj = Convert.ChangeType(field.GetValue(null), t);
-                    var value = obj.GetType().GetMethod("getTracker").Invoke(obj, new[] { (object)channel }).ToString();
-                    if (value != "")
-                    {
-                        string name = obj.GetType().GetMethod("getTrackerType").Invoke(obj, new object[0]).ToString();
-                        result.Add(name, value);
-                    }
-                }
-                catch (Exception e)
-                {
-                    System.Console.WriteLine("\n" + e);
-                };
-
-            }
-
-            if (!result.Any())
-                return BadRequest();
-            return new ObjectResult(result);
-
-        }
-
-        /*[HttpGet()]
-        public IActionResult GetTracks()
+        [HttpGet()]
+        public IActionResult GetTrackers()
         {
             Dictionary<string, string[]> parameters = HttpContext.Request.Query.ToDictionary(x => x.Key, x => x.Value.ToArray());
             bool allTypes = !parameters.ContainsKey("type");
             bool allChannels = !parameters.ContainsKey("channel");
+            IEnumerable<ulong> channels = parameters.ContainsKey("channel") ? parameters["channels"].Select(x => ulong.Parse(x)) :
+                                          Program.Client.GetGuild(ulong.Parse(parameters["guild"].First())).Channels.Select(x => x.Id);
 
-            Dictionary<ITracker.TrackerType, TrackerWrapper> allTrackers = StaticBase.Trackers;
-            HashSet<ITracker> allResults = new HashSet<ITracker>();
+            IEnumerable<IContent> allResults = new List<IContent>();
 
-            allTrackers = allTrackers.
-                Where(x => allTypes || parameters["type"].Contains(x.Key)).ToDictionary(x => x.Key, x => x.Value);
-
-            foreach (var key in allTrackers.Keys)
-                allResults = allResults.Concat(allTrackers[key].GetTrackerSet().
-                    Where(x => allChannels ||
-                    parameters["channel"].Any(y => x.ChannelIds.Contains(ulong.Parse(y)))))
-                    .ToHashSet();
-
-            var result = allResults.GroupBy(x => x.GetType()).ToDictionary(x => x.Key.Name,
-                x => x.ToDictionary(y => y.Name, y => y.ChannelIds.
-                Where(z => allChannels || parameters["channel"].Contains(z.ToString()))));
+            allResults = StaticBase.Trackers.First(x => parameters["type"].Any(y => y.Equals(x.Key.ToString())))
+                        .Value.GetTrackers().Where(x => channels.Any(y => x.Value.ChannelMessages.ContainsKey(y)))
+                        .Select(x => new IContent(){Name=x.Value.Name, 
+                                                    Channel=x.Value.ChannelMessages.First(y => channels.ToList().Contains(y.Key)).Key,
+                                                    Notification=x.Value.ChannelMessages.First(y => channels.ToList().Contains(y.Key)).Value});
+            
+            ParameterPair<IEnumerable<IContent>> result = new ParameterPair<IEnumerable<IContent>>(Parameters, allResults);
 
             return new ObjectResult(JsonConvert.SerializeObject(result, Formatting.Indented));
-        }*/
-
-        [HttpGet("{channel}/{type}")]
-        public IActionResult GetTracks(ulong channel, string type)
-        {
-            string result = "";
-            var fields = typeof(StaticBase).GetFields().Where(x => x.FieldType.Name.Contains("TrackerHandler"));
-            foreach (var field in fields)
-            {
-
-                try
-                {
-                    Type t = typeof(TrackerHandler<>).MakeGenericType(field.FieldType.GenericTypeArguments.First());
-                    var obj = Convert.ChangeType(field.GetValue(null), t);
-                    var value = obj.GetType().GetMethod("getTracker").Invoke(obj, new[] { (object)channel }).ToString();
-                    string name = obj.GetType().GetMethod("getTrackerType").Invoke(obj, new object[0]).ToString().ToLower();
-                    if (name.Contains(type))
-                    {
-                        result += value;
-                        break;
-                    }
-                }
-                catch (Exception e)
-                {
-                    System.Console.WriteLine("\n" + e);
-                };
-
-            }
-
-            if (result.Equals(""))
-                return BadRequest();
-            return new ObjectResult(result);
         }
 
         /*[HttpGet("add/{token}/{channel}/{type}/{name}/{notification}")]
@@ -144,5 +78,20 @@ namespace MopsBot.Api.Controllers
             }
             return new ObjectResult("Wrong token");
         }*/
+    }
+
+    public class IContent{
+        public string Name;
+        public ulong Channel;
+        public string Notification;
+    }
+
+    public class ParameterPair<T>{
+        public T Content;
+        public List<string> Parameters;
+        public ParameterPair(List<string> parameters, T values){
+            Content = values;
+            Parameters = parameters;
+        }
     }
 }
