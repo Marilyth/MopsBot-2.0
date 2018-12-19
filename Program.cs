@@ -82,11 +82,13 @@ namespace MopsBot
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
                 .UseUrls("http://0.0.0.0:5000/")
-                .ConfigureServices(x => x.AddCors(options => options.AddPolicy("AllowAllHeaders",
+                .ConfigureServices(x => x.AddCors(options => options.AddPolicy("AllowAll",
                     builder =>
                     {
-                        builder.WithOrigins("*")
-                               .AllowAnyHeader();
+                        builder.AllowAnyOrigin()
+                               .AllowAnyHeader()
+                               .AllowAnyMethod()
+                               .AllowCredentials();
                     })))
                 .UseKestrel()
                 .UseContentRoot(Directory.GetCurrentDirectory())

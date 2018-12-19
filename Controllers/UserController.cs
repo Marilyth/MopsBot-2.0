@@ -38,8 +38,7 @@ namespace MopsBot.Api.Controllers
 
         [HttpGet("guilds/{id}", Name = "GetUserGuilds")]
         public async Task<IActionResult> GetGuilds(ulong id)
-        {   
-            Response.Headers.Add("Access-Control-Allow-Origin", "*");
+        {
             var infoDict = new Dictionary<ulong, Discord.GuildPermissions>();
             var client = Program.Client;
             foreach(var guild in client.Guilds){

@@ -22,6 +22,7 @@ namespace MopsBot.Api.Controllers
         [HttpGet()]
         public IActionResult GetTrackers()
         {
+            //HttpContext.Response.Headers.Append(new KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>("Access-Control-Allow-Origin", "http://0.0.0.0"));
             Dictionary<string, string[]> parameters = HttpContext.Request.Query.ToDictionary(x => x.Key, x => x.Value.ToArray());
             bool allTypes = !parameters.ContainsKey("type");
             bool allChannels = !parameters.ContainsKey("channel");
