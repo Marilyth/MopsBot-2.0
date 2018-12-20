@@ -43,5 +43,23 @@ namespace MopsBot.Api.Controllers
 
             return new ObjectResult(JsonConvert.SerializeObject(result, Formatting.Indented));
         }
+
+        [HttpPost("add")]
+        public IActionResult AddContent()
+        {
+            return new ObjectResult("Not done yet :d");
+        }
+
+        [HttpPost("update")]
+        public IActionResult UpdateContent()
+        {
+            return new ObjectResult("Not done yet :d");
+        }
+
+        [HttpPost("remove")]
+        public IActionResult RemoveContent()
+        {
+            return new ObjectResult("Not done yet :d");
+        }
     }
 }
