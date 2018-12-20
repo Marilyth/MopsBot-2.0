@@ -14,10 +14,9 @@ using MongoDB.Driver;
 
 namespace MopsBot.Data
 {
-    public abstract class TrackerWrapper
+    public abstract class TrackerWrapper : MopsBot.Api.IAPIHandler
     {
         public abstract Task UpdateDBAsync(ITracker tracker);
-        //public abstract void SaveJson();
         protected abstract Task RemoveFromDBAsync(ITracker tracker);
         protected abstract Task InsertToDBAsync(ITracker tracker);
         public abstract Task<bool> TryRemoveTrackerAsync(string name, ulong channelID);
@@ -30,6 +29,10 @@ namespace MopsBot.Data
         public abstract ITracker GetTracker(ulong channelID, string name);
         public abstract Type GetTrackerType();
         public abstract void PostInitialisation();
+        public abstract Task TryAddContent(params string[] args);
+        public abstract Task TryUpdateContent(string[] args, string[] oldArgs);
+        public abstract Task TryRemoveContent(params string[] args);
+        public abstract Dictionary<string, object> GetContent(ulong userId, ulong guildId);
     }
 
     /// <summary>
@@ -63,14 +66,14 @@ namespace MopsBot.Data
         {
             //using (StreamReader read = new StreamReader(new FileStream($"mopsdata//{typeof(T).Name}.json", FileMode.OpenOrCreate)))
             //{
-                //try
-                //{
-                    //trackers = JsonConvert.DeserializeObject<Dictionary<string, T>>(read.ReadToEnd());
-                //}
-                //catch (Exception e)
-                //{
-                    //Console.WriteLine("\n" +  e.Message + e.StackTrace);
-                //}
+            //try
+            //{
+            //trackers = JsonConvert.DeserializeObject<Dictionary<string, T>>(read.ReadToEnd());
+            //}
+            //catch (Exception e)
+            //{
+            //Console.WriteLine("\n" +  e.Message + e.StackTrace);
+            //}
             //}
             var collection = StaticBase.Database.GetCollection<T>(typeof(T).Name).FindSync<T>(x => true).ToList();
             trackers = collection.ToDictionary(x => x.Name);
@@ -111,7 +114,7 @@ namespace MopsBot.Data
         {
             await StaticBase.Database.GetCollection<ITracker>(typeof(T).Name).InsertOneAsync(tracker);
         }
-        
+
         protected override async Task RemoveFromDBAsync(ITracker tracker)
         {
             await StaticBase.Database.GetCollection<T>(typeof(T).Name).DeleteOneAsync(x => x.Name.Equals(tracker.Name));
@@ -167,7 +170,8 @@ namespace MopsBot.Data
         {
             if (trackers.ContainsKey(name))
             {
-                if (!trackers[name].ChannelMessages.ContainsKey(channelID)){
+                if (!trackers[name].ChannelMessages.ContainsKey(channelID))
+                {
                     trackers[name].ChannelMessages.Add(channelID, notification);
                     await UpdateDBAsync(trackers[name]);
                 }
@@ -231,6 +235,47 @@ namespace MopsBot.Data
         public override Type GetTrackerType()
         {
             return typeof(T);
+        }
+
+        //IAPIHandler implementation
+        public async override Task TryAddContent(params string[] args)
+        {
+            await AddTrackerAsync(args[0], ulong.Parse(args[2]), args[1]);
+            if (args.Length > 3)
+            {
+                trackers[args[0]].Update(args);
+
+                await UpdateDBAsync(trackers[args[0]]);
+            }
+        }
+
+        public async override Task TryUpdateContent(string[] args, string[] oldArgs)
+        {
+            if (oldArgs[2] != args[2])
+            {
+                await TryAddContent(args);
+                await TryRemoveContent(oldArgs);
+            } else {
+                trackers[args[0]].Update(args);
+            }
+        }
+
+        public async override Task TryRemoveContent(params string[] args)
+        {
+            await TryRemoveTrackerAsync(args[0], ulong.Parse(args[2]));
+        }
+
+        public override Dictionary<string, object> GetContent(ulong userId, ulong guildId)
+        {
+
+            var tmp = ((T)Activator.CreateInstance(typeof(T)));
+            var parameters = tmp.GetParameters(guildId);
+            tmp.Dispose();
+
+            List<ulong> channels = ((ulong[])((Dictionary<string, object>)parameters["Parameters"])["Channel"]).ToList();
+            parameters["Content"] = trackers.Values.Select(x => x.GetAsScope(x.ChannelMessages.Keys.First(y => channels.Contains(y))));
+
+            return parameters;
         }
 
 

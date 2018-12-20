@@ -114,5 +114,31 @@ namespace MopsBot.Data.Tracker
 
             return e.Build();
         }
+
+        public override Dictionary<string, object> GetParameters(ulong guildId)
+        {
+            ulong[] channels = Program.Client.GetGuild(guildId).Channels.Select(x => x.Id).ToArray();
+
+            return new Dictionary<string, object>(){
+                {"Parameters", new Dictionary<string, object>(){{"Name", ""}, {"Notification", "New content!"}, {"Channel", channels}}}
+            };
+        }
+
+        public override object GetAsScope(ulong channelId){
+            return new ContentScope(){
+                Source = this.Source,
+                Query = this.Query,
+                Notification = this.ChannelMessages[channelId],
+                Channel = channelId
+            };
+        }
+
+        public new struct ContentScope
+        {
+            public string Source;
+            public string Query;
+            public string Notification;
+            public ulong Channel;
+        }
     }
 }

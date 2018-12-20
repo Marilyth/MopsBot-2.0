@@ -16,11 +16,11 @@ using MongoDB.Bson.Serialization.Attributes;
 namespace MopsBot.Data.Tracker
 {
     [BsonIgnoreExtraElements]
-    public abstract class ITracker : IDisposable
+    public abstract class ITracker : MopsBot.Api.IAPIContent, IDisposable
     {
         //Avoid ratelimit by placing a gap between all trackers.
         public static int ExistingTrackers = 0;
-        public enum TrackerType {Twitch, TwitchClip, Twitter, Osu, Overwatch, Youtube, YoutubeLive, Reddit, News, WoW, OSRS, HTML };
+        public enum TrackerType { Twitch, TwitchClip, Twitter, Osu, Overwatch, Youtube, YoutubeLive, Reddit, News, WoW, OSRS, HTML };
         private bool disposed = false;
         private SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
         protected System.Threading.Timer checkForChange;
@@ -48,7 +48,8 @@ namespace MopsBot.Data.Tracker
 
         protected abstract void CheckForChange_Elapsed(object stateinfo);
 
-        public virtual string TrackerUrl(){
+        public virtual string TrackerUrl()
+        {
             return null;
         }
 
@@ -81,6 +82,42 @@ namespace MopsBot.Data.Tracker
             }
 
             disposed = true;
+        }
+
+        public static Dictionary<string, object> GetParametersStatic(ulong guildId)
+        {
+            ulong[] channels = Program.Client.GetGuild(guildId).Channels.Select(x => x.Id).ToArray();
+
+            return new Dictionary<string, object>(){
+                {"Parameters", new Dictionary<string, object>(){
+                                {"Name", ""}, 
+                                {"Notification", "New content!"}, 
+                                {"Channel", channels}}}
+            };
+        }
+
+        public override Dictionary<string, object> GetParameters(ulong guildId)
+        {
+            return ITracker.GetParametersStatic(guildId);
+        }
+
+        public override object GetAsScope(ulong channelId){
+            return new ContentScope(){
+                Name = this.Name,
+                Notification = this.ChannelMessages[channelId],
+                Channel = channelId
+            };
+        }
+
+        public override void Update(params string[] args){
+            ChannelMessages[ulong.Parse(args[2])] = args[1];
+        }
+
+        public new struct ContentScope
+        {
+            public string Name;
+            public string Notification;
+            public ulong Channel;
         }
     }
 }
