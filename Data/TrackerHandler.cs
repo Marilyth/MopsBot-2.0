@@ -267,18 +267,13 @@ namespace MopsBot.Data
 
         public override Dictionary<string, object> GetContent(ulong userId, ulong guildId)
         {
-
             var tmp = ((T)Activator.CreateInstance(typeof(T)));
             var parameters = tmp.GetParameters(guildId);
             tmp.Dispose();
 
-            List<ulong> channels = ((ulong[])((Dictionary<string, object>)parameters["Parameters"])["Channel"]).ToList();
+            List<ulong> channels = ((string[])((Dictionary<string, object>)parameters["Parameters"])["Channel"]).Select(x => ulong.Parse((x.Split(":")[1]))).ToList();
 
-            try{
-                parameters["Content"] = trackers.Values.Where(x => x.ChannelMessages.Any(y => channels.Contains(y.Key))).Select(x => x.GetAsScope(x.ChannelMessages.Keys.FirstOrDefault(y => channels.Contains(y))));
-            } catch (Exception e){
-                Console.WriteLine("\n[ERROR]: Jeez, apparently " + string.Join(", ", channels) + " contains no element of " + string.Join(", ", trackers.Values.Select(x => x.ChannelMessages.Keys)));
-            }
+            parameters["Content"] = trackers.Values.Where(x => x.ChannelMessages.Any(y => channels.Contains(y.Key))).Select(x => x.GetAsScope(x.ChannelMessages.Keys.FirstOrDefault(y => channels.Contains(y))));
 
             return parameters;
         }

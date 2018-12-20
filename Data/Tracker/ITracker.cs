@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Discord;
+using Discord.WebSocket;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
@@ -86,7 +87,7 @@ namespace MopsBot.Data.Tracker
 
         public static Dictionary<string, object> GetParametersStatic(ulong guildId)
         {
-            ulong[] channels = Program.Client.GetGuild(guildId).Channels.Select(x => x.Id).ToArray();
+            string[] channels = Program.Client.GetGuild(guildId).Channels.Select(x => $"#{x.Name}:{x.Id}").ToArray();
 
             return new Dictionary<string, object>(){
                 {"Parameters", new Dictionary<string, object>(){
@@ -105,7 +106,7 @@ namespace MopsBot.Data.Tracker
             return new ContentScope(){
                 Name = this.Name,
                 Notification = this.ChannelMessages[channelId],
-                Channel = channelId
+                Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId
             };
         }
 
@@ -117,7 +118,7 @@ namespace MopsBot.Data.Tracker
         {
             public string Name;
             public string Notification;
-            public ulong Channel;
+            public string Channel;
         }
     }
 }
