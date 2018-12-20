@@ -87,7 +87,7 @@ namespace MopsBot.Data.Tracker
 
         public static Dictionary<string, object> GetParametersStatic(ulong guildId)
         {
-            string[] channels = Program.Client.GetGuild(guildId).Channels.Select(x => $"#{x.Name}:{x.Id}").ToArray();
+            string[] channels = Program.Client.GetGuild(guildId).TextChannels.Select(x => $"#{x.Name}:{x.Id}").ToArray();
 
             return new Dictionary<string, object>(){
                 {"Parameters", new Dictionary<string, object>(){
