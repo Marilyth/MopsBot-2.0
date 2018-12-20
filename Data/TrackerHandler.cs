@@ -275,7 +275,7 @@ namespace MopsBot.Data
             List<ulong> channels = ((ulong[])((Dictionary<string, object>)parameters["Parameters"])["Channel"]).ToList();
 
             try{
-                parameters["Content"] = trackers.Values.Select(x => x.GetAsScope(x.ChannelMessages.Keys.First(y => channels.Contains(y))));
+                parameters["Content"] = trackers.Values.Where(x => x.ChannelMessages.Any(y => channels.Contains(y.Key))).Select(x => x.GetAsScope(x.ChannelMessages.Keys.FirstOrDefault(y => channels.Contains(y))));
             } catch (Exception e){
                 Console.WriteLine("\n[ERROR]: Jeez, apparently " + string.Join(", ", channels) + " contains no element of " + string.Join(", ", trackers.Values.Select(x => x.ChannelMessages.Keys)));
             }
