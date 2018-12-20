@@ -129,7 +129,7 @@ namespace MopsBot.Data.Tracker
                 Source = this.Source,
                 Query = this.Query,
                 Notification = this.ChannelMessages[channelId],
-                Channel = channelId
+                Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId
             };
         }
 
@@ -138,7 +138,7 @@ namespace MopsBot.Data.Tracker
             public string Source;
             public string Query;
             public string Notification;
-            public ulong Channel;
+            public string Channel;
         }
     }
 }
