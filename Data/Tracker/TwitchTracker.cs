@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Discord;
+using Discord.WebSocket;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
@@ -255,6 +256,36 @@ namespace MopsBot.Data.Tracker
         public override string TrackerUrl()
         {
             return "https://www.twitch.tv/" + Name;
+        }
+
+        public override Dictionary<string, object> GetParameters(ulong guildId)
+        {
+            var parentParameters = base.GetParameters(guildId);
+            (parentParameters["Parameters"] as Dictionary<string, object>)["IsThumbnailLarge"] = new bool[]{true, false};
+            return parentParameters;
+        }
+
+        public override object GetAsScope(ulong channelId){
+            return new ContentScope(){
+                Name = this.Name,
+                Notification = this.ChannelMessages[channelId],
+                Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId,
+                IsThumbnailLarge = this.isThumbnailLarge
+            };
+        }
+
+        public override void Update(params string[] args){
+            var channelId = ulong.Parse(args[2].Split(":")[1]);
+            ChannelMessages[channelId] = args[1];
+            isThumbnailLarge = bool.Parse(args[3]);
+        }
+
+        public new struct ContentScope
+        {
+            public string Name;
+            public string Notification;
+            public string Channel;
+            public bool IsThumbnailLarge;
         }
     }
 }

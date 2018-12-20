@@ -30,7 +30,7 @@ namespace MopsBot.Data.Tracker
             //Check if person exists by forcing Exceptions if not.
             try
             {
-                if(twitterName.Contains(" ")) throw new Exception();
+                if (twitterName.Contains(" ")) throw new Exception();
                 lastMessage = getNewTweets().Last().Id;
             }
             catch (Exception)
@@ -147,8 +147,55 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public override string TrackerUrl(){
+        public override string TrackerUrl()
+        {
             return "https://twitter.com/" + Name;
+        }
+
+        public override Dictionary<string, object> GetParameters(ulong guildId)
+        {
+            var parentParameters = base.GetParameters(guildId);
+            (parentParameters["Parameters"] as Dictionary<string, object>)["TrackMainTweets"] = new bool[]{true, false};
+            (parentParameters["Parameters"] as Dictionary<string, object>)["TrackNonMainTweets"] = new bool[]{true, false};
+            return parentParameters;
+        }
+
+        public override object GetAsScope(ulong channelId)
+        {
+            return new ContentScope()
+            {
+                Name = this.Name,
+                Notification = this.ChannelMessages[channelId],
+                Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId,
+                TrackMainTweets = !this.ChannelMessages[channelId].Split("|")[0].Equals("NONE"),
+                TrackNonMainTweets = !this.ChannelMessages[channelId].Split("|")[1].Equals("NONE")
+            };
+        }
+
+        public override void Update(params string[] args)
+        {
+            var channelId = ulong.Parse(args[2].Split(":")[1]);
+            Name = args[0];
+            ChannelMessages[channelId] = args[1];
+
+            if (bool.Parse(args[3]))
+                ChannelMessages[channelId] = args[1] + "|" + ChannelMessages[channelId].Split("|")[1];
+            else
+                ChannelMessages[channelId] = "NONE|" + ChannelMessages[channelId].Split("|")[1];
+
+            if (bool.Parse(args[4]))
+                ChannelMessages[channelId] = ChannelMessages[channelId].Split("|")[0] + "|" + args[1];
+            else
+                ChannelMessages[channelId] = ChannelMessages[channelId].Split("|")[0] + "|NONE";
+        }
+
+        public new struct ContentScope
+        {
+            public string Name;
+            public string Notification;
+            public string Channel;
+            public bool TrackMainTweets;
+            public bool TrackNonMainTweets;
         }
     }
 }

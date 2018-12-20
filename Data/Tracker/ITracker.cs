@@ -85,7 +85,7 @@ namespace MopsBot.Data.Tracker
             disposed = true;
         }
 
-        public static Dictionary<string, object> GetParametersStatic(ulong guildId)
+        public override Dictionary<string, object> GetParameters(ulong guildId)
         {
             string[] channels = Program.Client.GetGuild(guildId).TextChannels.Select(x => $"#{x.Name}:{x.Id}").ToArray();
 
@@ -97,11 +97,6 @@ namespace MopsBot.Data.Tracker
             };
         }
 
-        public override Dictionary<string, object> GetParameters(ulong guildId)
-        {
-            return ITracker.GetParametersStatic(guildId);
-        }
-
         public override object GetAsScope(ulong channelId){
             return new ContentScope(){
                 Name = this.Name,
@@ -111,7 +106,8 @@ namespace MopsBot.Data.Tracker
         }
 
         public override void Update(params string[] args){
-            ChannelMessages[ulong.Parse(args[2])] = args[1];
+            var channelId = ulong.Parse(args[2].Split(":")[1]);
+            ChannelMessages[channelId] = args[1];
         }
 
         public new struct ContentScope

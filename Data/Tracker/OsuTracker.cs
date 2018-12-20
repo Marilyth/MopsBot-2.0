@@ -1,6 +1,7 @@
 using System;
 using Discord;
 using Discord.Net;
+using Discord.WebSocket;
 using Newtonsoft.Json;
 using System.Globalization;
 using System.Collections.Generic;
@@ -247,6 +248,36 @@ namespace MopsBot.Data.Tracker
         public override string TrackerUrl()
         {
             return "https://osu.ppy.sh/u/" + Name;
+        }
+
+        public override Dictionary<string, object> GetParameters(ulong guildId)
+        {
+            var parentParameters = base.GetParameters(guildId);
+            (parentParameters["Parameters"] as Dictionary<string, object>)["PPThreshold"] = 0.1;
+            return parentParameters;
+        }
+
+        public override object GetAsScope(ulong channelId){
+            return new ContentScope(){
+                Name = this.Name,
+                Notification = this.ChannelMessages[channelId],
+                Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId,
+                PPThreshold = this.PPThreshold
+            };
+        }
+
+        public override void Update(params string[] args){
+            var channelId = ulong.Parse(args[2].Split(":")[1]);
+            ChannelMessages[channelId] = args[1];
+            PPThreshold = double.Parse(args[3]);
+        }
+
+        public new struct ContentScope
+        {
+            public string Name;
+            public string Notification;
+            public string Channel;
+            public double PPThreshold;
         }
     }
 }

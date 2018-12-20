@@ -168,5 +168,35 @@ namespace MopsBot.Data.Tracker
         public override string TrackerUrl(){
             return $"https://www.twitch.tv/{Name}/clips";
         }
+
+        public override Dictionary<string, object> GetParameters(ulong guildId)
+        {
+            var parentParameters = base.GetParameters(guildId);
+            (parentParameters["Parameters"] as Dictionary<string, object>)["ViewThreshold"] = 1;
+            return parentParameters;
+        }
+
+        public override object GetAsScope(ulong channelId){
+            return new ContentScope(){
+                Name = this.Name,
+                Notification = this.ChannelMessages[channelId],
+                Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId,
+                ViewThreshold = this.ViewThreshold
+            };
+        }
+
+        public override void Update(params string[] args){
+            var channelId = ulong.Parse(args[2].Split(":")[1]);
+            ChannelMessages[channelId] = args[1];
+            ViewThreshold = uint.Parse(args[3]);
+        }
+
+        public new struct ContentScope
+        {
+            public string Name;
+            public string Notification;
+            public string Channel;
+            public uint ViewThreshold;
+        }
     }
 }
