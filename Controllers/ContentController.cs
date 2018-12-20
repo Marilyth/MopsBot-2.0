@@ -17,7 +17,7 @@ namespace MopsBot.Api.Controllers
 
         }
 
-        [HttpGet("content")]
+        [HttpGet()]
         public IActionResult GetContent()
         {
             Dictionary<string, string[]> parameters = HttpContext.Request.Query.ToDictionary(x => x.Key, x => x.Value.ToArray());
