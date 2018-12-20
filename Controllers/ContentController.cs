@@ -10,18 +10,18 @@ using System;
 namespace MopsBot.Api.Controllers
 {
     [Route("api/[controller]")]
-    public class InterfaceInputController : Controller
+    public class ContentController : Controller
     {
-        public InterfaceInputController()
+        public ContentController()
         {
 
         }
 
-        [HttpGet()]
+        [HttpGet("content")]
         public IActionResult GetContent()
         {
             Dictionary<string, string[]> parameters = HttpContext.Request.Query.ToDictionary(x => x.Key, x => x.Value.ToArray());
-            
+
             IEnumerable<ulong> channels = parameters.ContainsKey("channel") ? parameters["channels"].Select(x => ulong.Parse(x)) :
                                           Program.Client.GetGuild(ulong.Parse(parameters["guild"].First())).Channels.Select(x => x.Id);
 
