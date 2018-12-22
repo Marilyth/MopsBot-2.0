@@ -37,7 +37,7 @@ namespace MopsBot
         public static ReactionRoleJoin ReactRoleJoin;
         public static ReactionPoll Poll;
         //public static Crosswords Crosswords;
-        public static Dictionary<ITracker.TrackerType, TrackerWrapper> Trackers;
+        public static Dictionary<BaseTracker.TrackerType, TrackerWrapper> Trackers;
         public static NewsApiClient NewsClient;
 
         public static bool init = false;
@@ -74,20 +74,20 @@ namespace MopsBot
 
                 WoWTracker.WoWClient = new WowExplorer(Region.EU, Locale.en_GB, Program.Config["WoWKey"]);
 
-                Trackers = new Dictionary<ITracker.TrackerType, Data.TrackerWrapper>();
-                Trackers[ITracker.TrackerType.Osu] = new TrackerHandler<OsuTracker>();
-                Trackers[ITracker.TrackerType.Overwatch] = new TrackerHandler<OverwatchTracker>();
-                Trackers[ITracker.TrackerType.Twitch] = new TrackerHandler<TwitchTracker>();
-                Trackers[ITracker.TrackerType.TwitchClip] = new TrackerHandler<TwitchClipTracker>();
-                Trackers[ITracker.TrackerType.Twitter] = new TrackerHandler<TwitterTracker>();
-                Trackers[ITracker.TrackerType.Youtube] = new TrackerHandler<YoutubeTracker>();
-                Trackers[ITracker.TrackerType.YoutubeLive] = new TrackerHandler<YoutubeLiveTracker>();
-                Trackers[ITracker.TrackerType.Reddit] = new TrackerHandler<RedditTracker>();
-                Trackers[ITracker.TrackerType.News] = new TrackerHandler<NewsTracker>();
-                Trackers[ITracker.TrackerType.WoW] = new TrackerHandler<WoWTracker>();
+                Trackers = new Dictionary<BaseTracker.TrackerType, Data.TrackerWrapper>();
+                Trackers[BaseTracker.TrackerType.Osu] = new TrackerHandler<OsuTracker>();
+                Trackers[BaseTracker.TrackerType.Overwatch] = new TrackerHandler<OverwatchTracker>();
+                Trackers[BaseTracker.TrackerType.Twitch] = new TrackerHandler<TwitchTracker>();
+                Trackers[BaseTracker.TrackerType.TwitchClip] = new TrackerHandler<TwitchClipTracker>();
+                Trackers[BaseTracker.TrackerType.Twitter] = new TrackerHandler<TwitterTracker>();
+                Trackers[BaseTracker.TrackerType.Youtube] = new TrackerHandler<YoutubeTracker>();
+                Trackers[BaseTracker.TrackerType.YoutubeLive] = new TrackerHandler<YoutubeLiveTracker>();
+                Trackers[BaseTracker.TrackerType.Reddit] = new TrackerHandler<RedditTracker>();
+                Trackers[BaseTracker.TrackerType.News] = new TrackerHandler<NewsTracker>();
+                Trackers[BaseTracker.TrackerType.WoW] = new TrackerHandler<WoWTracker>();
                 //Trackers[ITracker.TrackerType.WoWGuild] = new TrackerHandler<WoWGuildTracker>();
-                Trackers[ITracker.TrackerType.OSRS] = new TrackerHandler<OSRSTracker>();
-                Trackers[ITracker.TrackerType.HTML] = new TrackerHandler<HTMLTracker>();
+                Trackers[BaseTracker.TrackerType.OSRS] = new TrackerHandler<OSRSTracker>();
+                Trackers[BaseTracker.TrackerType.HTML] = new TrackerHandler<HTMLTracker>();
 
                 foreach (var tracker in Trackers)
                 {
@@ -153,12 +153,12 @@ namespace MopsBot
             await Program.Client.SetActivityAsync(new Game("Currently Restarting!", ActivityType.Playing));
             await Task.Delay(60000);
 
-            int status = Enum.GetNames(typeof(ITracker.TrackerType)).Length;
+            int status = Enum.GetNames(typeof(BaseTracker.TrackerType)).Length;
             while (true)
             {
                 try
                 {
-                    ITracker.TrackerType type = (ITracker.TrackerType)status++;
+                    BaseTracker.TrackerType type = (BaseTracker.TrackerType)status++;
                     var trackerCount = Trackers[type].GetTrackers().Count;
                     await Program.Client.SetActivityAsync(new Game($"{trackerCount} {type.ToString()} Trackers", ActivityType.Watching));
                 }

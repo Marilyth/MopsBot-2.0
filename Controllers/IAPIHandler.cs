@@ -14,7 +14,7 @@ namespace MopsBot.Api
         Dictionary<string, object> GetContent(ulong userId, ulong guildId);
     }
 
-    public abstract class IAPIContent
+    public abstract class BaseAPIContent
     {
         //Defines the ContentScope attributes along with their default values
         public abstract Dictionary<string, object> GetParameters(ulong guildId);
@@ -33,7 +33,7 @@ namespace MopsBot.Api
 
         //Defines which attributes can be seen/modified, please define own version
         public struct ContentScope{
-            public IAPIContent Content;
+            public BaseAPIContent Content;
         }
     }
 }

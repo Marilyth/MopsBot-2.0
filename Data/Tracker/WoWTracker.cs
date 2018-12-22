@@ -15,7 +15,7 @@ using WowDotNetAPI.Models;
 namespace MopsBot.Data.Tracker
 {
     [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
-    public class WoWTracker : ITracker
+    public class WoWTracker : BaseTracker
     {
         public static WowExplorer WoWClient;
         public Region WoWRegion;

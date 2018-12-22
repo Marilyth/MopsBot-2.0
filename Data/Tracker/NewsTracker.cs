@@ -16,7 +16,7 @@ using Microsoft.Win32.SafeHandles;
 namespace MopsBot.Data.Tracker
 {
     [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
-    public class NewsTracker : ITracker
+    public class NewsTracker : BaseTracker
     {
         public string LastNews, Query, Source;
 

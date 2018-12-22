@@ -16,12 +16,12 @@ using MongoDB.Bson.Serialization.Attributes;
 namespace MopsBot.Data.Tracker
 {
     [BsonIgnoreExtraElements]
-    public abstract class IUpdatingTracker : ITracker
+    public abstract class BaseUpdatingTracker : BaseTracker
     {
         [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
         public Dictionary<ulong, ulong> ToUpdate;
 
-        public IUpdatingTracker(int interval, int gap = 5000) : base(interval, gap){
+        public BaseUpdatingTracker(int interval, int gap = 5000) : base(interval, gap){
             ToUpdate = new Dictionary<ulong, ulong>();
         }
 

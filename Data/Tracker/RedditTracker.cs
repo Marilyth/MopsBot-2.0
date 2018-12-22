@@ -17,7 +17,7 @@ namespace MopsBot.Data.Tracker
     /// A tracker which keeps track of a Subreddit
     /// </summary>
     [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
-    public class RedditTracker : ITracker
+    public class RedditTracker : BaseTracker
     {
         public double lastCheck;
 

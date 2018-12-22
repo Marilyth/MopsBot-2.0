@@ -14,7 +14,7 @@ using MopsBot.Data.Tracker.APIResults.Osu;
 namespace MopsBot.Data.Tracker
 {
     [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
-    public class OsuTracker : ITracker
+    public class OsuTracker : BaseTracker
     {
         public Dictionary<string, double> AllPP;
         public double PPThreshold;

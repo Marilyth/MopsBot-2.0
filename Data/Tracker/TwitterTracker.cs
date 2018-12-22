@@ -15,7 +15,7 @@ using Microsoft.Win32.SafeHandles;
 namespace MopsBot.Data.Tracker
 {
     [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
-    public class TwitterTracker : ITracker
+    public class TwitterTracker : BaseTracker
     {
         public long lastMessage;
 

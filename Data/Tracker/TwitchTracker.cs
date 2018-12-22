@@ -16,7 +16,7 @@ using MongoDB.Bson.Serialization.Attributes;
 namespace MopsBot.Data.Tracker
 {
     [BsonIgnoreExtraElements]
-    public class TwitchTracker : IUpdatingTracker
+    public class TwitchTracker : BaseUpdatingTracker
     {
         private static KeyValuePair<string, string> acceptHeader = new KeyValuePair<string, string>("Accept", "application/vnd.twitchtv.v5+json");
         public Plot ViewerGraph;

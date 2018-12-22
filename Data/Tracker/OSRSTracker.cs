@@ -16,7 +16,7 @@ using System.Xml;
 namespace MopsBot.Data.Tracker
 {
     [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
-    public class OSRSTracker : ITracker
+    public class OSRSTracker : BaseTracker
     {
         private string channelThumbnailUrl, uploadPlaylistId;
         private List<long[]> stats;

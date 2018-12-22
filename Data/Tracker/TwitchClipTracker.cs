@@ -15,7 +15,7 @@ using MongoDB.Bson.Serialization.Attributes;
 namespace MopsBot.Data.Tracker
 {
     [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
-    public class TwitchClipTracker : ITracker
+    public class TwitchClipTracker : BaseTracker
     {
         public uint ViewThreshold;
         

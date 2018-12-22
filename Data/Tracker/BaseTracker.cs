@@ -17,7 +17,7 @@ using MongoDB.Bson.Serialization.Attributes;
 namespace MopsBot.Data.Tracker
 {
     [BsonIgnoreExtraElements]
-    public abstract class ITracker : MopsBot.Api.IAPIContent, IDisposable
+    public abstract class BaseTracker : MopsBot.Api.BaseAPIContent, IDisposable
     {
         //Avoid ratelimit by placing a gap between all trackers.
         public static int ExistingTrackers = 0;
@@ -27,15 +27,15 @@ namespace MopsBot.Data.Tracker
         protected System.Threading.Timer checkForChange;
         public event MainEventHandler OnMajorEventFired;
         public event MinorEventHandler OnMinorEventFired;
-        public delegate Task MinorEventHandler(ulong channelID, ITracker self, string notificationText);
-        public delegate Task MainEventHandler(ulong channelID, Embed embed, ITracker self, string notificationText = "");
+        public delegate Task MinorEventHandler(ulong channelID, BaseTracker self, string notificationText);
+        public delegate Task MainEventHandler(ulong channelID, Embed embed, BaseTracker self, string notificationText = "");
         [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
         public Dictionary<ulong, string> ChannelMessages;
 
         [BsonId]
         public string Name;
 
-        public ITracker(int interval, int gap = 5000)
+        public BaseTracker(int interval, int gap = 5000)
         {
             ExistingTrackers++;
             ChannelMessages = new Dictionary<ulong, string>();

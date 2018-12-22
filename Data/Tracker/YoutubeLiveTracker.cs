@@ -18,7 +18,7 @@ using MongoDB.Bson.Serialization.Attributes;
 namespace MopsBot.Data.Tracker
 {
     [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
-    public class YoutubeLiveTracker : IUpdatingTracker
+    public class YoutubeLiveTracker : BaseUpdatingTracker
     {
         public string VideoId, IconUrl;
         private string channelThumbnailUrl;

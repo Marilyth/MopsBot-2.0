@@ -16,7 +16,7 @@ using System.Xml;
 namespace MopsBot.Data.Tracker
 {
     [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
-    public class YoutubeTracker : ITracker
+    public class YoutubeTracker : BaseTracker
     {
         public string LastTime;
         private string channelThumbnailUrl, uploadPlaylistId;

@@ -17,7 +17,7 @@ using System.Xml;
 namespace MopsBot.Data.Tracker
 {
     [BsonIgnoreExtraElements]
-    public class HTMLTracker : ITracker
+    public class HTMLTracker : BaseTracker
     {
         public string Regex;
         public string oldMatch;

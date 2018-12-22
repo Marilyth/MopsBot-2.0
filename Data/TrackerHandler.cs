@@ -16,17 +16,17 @@ namespace MopsBot.Data
 {
     public abstract class TrackerWrapper : MopsBot.Api.IAPIHandler
     {
-        public abstract Task UpdateDBAsync(ITracker tracker);
-        protected abstract Task RemoveFromDBAsync(ITracker tracker);
-        protected abstract Task InsertToDBAsync(ITracker tracker);
+        public abstract Task UpdateDBAsync(BaseTracker tracker);
+        protected abstract Task RemoveFromDBAsync(BaseTracker tracker);
+        protected abstract Task InsertToDBAsync(BaseTracker tracker);
         public abstract Task<bool> TryRemoveTrackerAsync(string name, ulong channelID);
         public abstract Task<bool> TrySetNotificationAsync(string name, ulong channelID, string notificationMessage);
         public abstract Task AddTrackerAsync(string name, ulong channelID, string notification = "");
-        public abstract HashSet<Tracker.ITracker> GetTrackerSet();
-        public abstract Dictionary<string, Tracker.ITracker> GetTrackers();
-        public abstract IEnumerable<ITracker> GetTrackers(ulong channelID);
+        public abstract HashSet<Tracker.BaseTracker> GetTrackerSet();
+        public abstract Dictionary<string, Tracker.BaseTracker> GetTrackers();
+        public abstract IEnumerable<BaseTracker> GetTrackers(ulong channelID);
         public abstract Embed GetTrackersEmbed(ulong channelID);
-        public abstract ITracker GetTracker(ulong channelID, string name);
+        public abstract BaseTracker GetTracker(ulong channelID, string name);
         public abstract Type GetTrackerType();
         public abstract void PostInitialisation();
         public abstract Task TryAddContent(params string[] args);
@@ -38,7 +38,7 @@ namespace MopsBot.Data
     /// <summary>
     /// A class containing all Trackers
     /// </summary>
-    public class TrackerHandler<T> : TrackerWrapper where T : Tracker.ITracker
+    public class TrackerHandler<T> : TrackerWrapper where T : Tracker.BaseTracker
     {
         public Dictionary<string, T> trackers;
         public TrackerHandler()
@@ -101,21 +101,21 @@ namespace MopsBot.Data
                 write.Write(dictAsJson);
         }*/
 
-        public override async Task UpdateDBAsync(ITracker tracker)
+        public override async Task UpdateDBAsync(BaseTracker tracker)
         {
             /*string dictAsJson = JsonConvert.SerializeObject(trackers, Formatting.Indented);
             using (StreamWriter write = new StreamWriter(new FileStream($"mopsdata//{typeof(T).Name}.json", FileMode.Create)))
                 write.Write(dictAsJson);*/
 
-            await StaticBase.Database.GetCollection<ITracker>(typeof(T).Name).ReplaceOneAsync(x => x.Name.Equals(tracker.Name), tracker);
+            await StaticBase.Database.GetCollection<BaseTracker>(typeof(T).Name).ReplaceOneAsync(x => x.Name.Equals(tracker.Name), tracker);
         }
 
-        protected override async Task InsertToDBAsync(ITracker tracker)
+        protected override async Task InsertToDBAsync(BaseTracker tracker)
         {
-            await StaticBase.Database.GetCollection<ITracker>(typeof(T).Name).InsertOneAsync(tracker);
+            await StaticBase.Database.GetCollection<BaseTracker>(typeof(T).Name).InsertOneAsync(tracker);
         }
 
-        protected override async Task RemoveFromDBAsync(ITracker tracker)
+        protected override async Task RemoveFromDBAsync(BaseTracker tracker)
         {
             await StaticBase.Database.GetCollection<T>(typeof(T).Name).DeleteOneAsync(x => x.Name.Equals(tracker.Name));
         }
@@ -124,8 +124,8 @@ namespace MopsBot.Data
         {
             if (trackers.ContainsKey(name) && trackers[name].ChannelMessages.ContainsKey(channelId))
             {
-                if (typeof(T) == typeof(IUpdatingTracker))
-                    foreach (var channel in (trackers[name] as IUpdatingTracker).ToUpdate.Where(x => x.Key.Equals(channelId)))
+                if (typeof(T) == typeof(BaseUpdatingTracker))
+                    foreach (var channel in (trackers[name] as BaseUpdatingTracker).ToUpdate.Where(x => x.Key.Equals(channelId)))
                         try
                         {
                             Program.ReactionHandler.ClearHandler((IUserMessage)((ITextChannel)Program.Client.GetChannel(channelId)).GetMessageAsync(channel.Value).Result).Wait();
@@ -202,7 +202,7 @@ namespace MopsBot.Data
             return false;
         }
 
-        public override IEnumerable<ITracker> GetTrackers(ulong channelID)
+        public override IEnumerable<BaseTracker> GetTrackers(ulong channelID)
         {
             return trackers.Select(x => x.Value).Where(x => x.ChannelMessages.ContainsKey(channelID));
         }
@@ -217,19 +217,19 @@ namespace MopsBot.Data
             return e.Build();
         }
 
-        public override Dictionary<string, ITracker> GetTrackers()
+        public override Dictionary<string, BaseTracker> GetTrackers()
         {
-            return trackers.Select(x => new KeyValuePair<string, ITracker>(x.Key, (ITracker)x.Value)).ToDictionary(x => x.Key, x => x.Value);
+            return trackers.Select(x => new KeyValuePair<string, BaseTracker>(x.Key, (BaseTracker)x.Value)).ToDictionary(x => x.Key, x => x.Value);
         }
 
-        public override ITracker GetTracker(ulong channelID, string name)
+        public override BaseTracker GetTracker(ulong channelID, string name)
         {
             return trackers.FirstOrDefault(x => x.Key.Equals(name) && x.Value.ChannelMessages.ContainsKey(channelID)).Value;
         }
 
-        public override HashSet<ITracker> GetTrackerSet()
+        public override HashSet<BaseTracker> GetTrackerSet()
         {
-            return trackers.Values.Select(x => (ITracker)x).ToHashSet();
+            return trackers.Values.Select(x => (BaseTracker)x).ToHashSet();
         }
 
         public override Type GetTrackerType()
@@ -283,7 +283,7 @@ namespace MopsBot.Data
         /// Event that is called when the Tracker fetches new data containing no Embed
         /// </summary>
         /// <returns>A Task that can be awaited</returns>
-        private async Task OnMinorEvent(ulong channelID, Tracker.ITracker sender, string notification)
+        private async Task OnMinorEvent(ulong channelID, Tracker.BaseTracker sender, string notification)
         {
             if (!Program.Client.ConnectionState.Equals(Discord.ConnectionState.Connected))
                 return;
@@ -320,15 +320,15 @@ namespace MopsBot.Data
         /// Updates or creates the notification message with it
         /// </summary>
         /// <returns>A Task that can be awaited</returns>
-        private async Task OnMajorEvent(ulong channelID, Embed embed, Tracker.ITracker sender, string notification)
+        private async Task OnMajorEvent(ulong channelID, Embed embed, Tracker.BaseTracker sender, string notification)
         {
             if (!Program.Client.ConnectionState.Equals(Discord.ConnectionState.Connected))
                 return;
             try
             {
-                if (sender is IUpdatingTracker)
+                if (sender is BaseUpdatingTracker)
                 {
-                    IUpdatingTracker tracker = sender as IUpdatingTracker;
+                    BaseUpdatingTracker tracker = sender as BaseUpdatingTracker;
                     if (tracker.ToUpdate.ContainsKey(channelID))
                     {
                         var message = ((IUserMessage)((ITextChannel)Program.Client.GetChannel(channelID)).GetMessageAsync(tracker.ToUpdate[channelID]).Result);

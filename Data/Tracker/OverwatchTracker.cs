@@ -18,7 +18,7 @@ namespace MopsBot.Data.Tracker
     /// A tracker which keeps track of an Overwatch players stats
     /// </summary>
     [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
-    public class OverwatchTracker : ITracker
+    public class OverwatchTracker : BaseTracker
     {
         private OStatsResult information;
 
