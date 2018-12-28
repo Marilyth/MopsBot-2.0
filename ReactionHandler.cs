@@ -74,7 +74,7 @@ namespace MopsBot
                         messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value[DefaultEmote](context);
                     //message.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
                     //Task.Delay(2000);
-                    stackLength[context.Channel.Id]--;
+                    //stackLength[context.Channel.Id]--;
                }
             });
         }
@@ -104,7 +104,7 @@ namespace MopsBot
             if (!stackLength.ContainsKey(message.Channel.Id))
                 stackLength[message.Channel.Id] = 0;
 
-            await Task.Delay(2000 * (int)stackLength[message.Channel.Id]++);
+            //await Task.Delay(2000 * (int)stackLength[message.Channel.Id]++);
 
             if (clear)
                 await ClearHandler(message);
@@ -116,10 +116,10 @@ namespace MopsBot
             if (!emote.Equals(DefaultEmote) && !message.Reactions.ContainsKey(emote))
             {
                 await message.AddReactionAsync(emote);
-                await Task.Delay(2000);
+                //await Task.Delay(2000);
             }
 
-            stackLength[message.Channel.Id]--;
+            //stackLength[message.Channel.Id]--;
         }
 
         /// <summary>
@@ -136,18 +136,18 @@ namespace MopsBot
                 if (!stackLength.ContainsKey(message.Channel.Id))
                     stackLength[message.Channel.Id] = 0;
 
-                await Task.Delay(2000 * (int)stackLength[message.Channel.Id]++);
+                //await Task.Delay(2000 * (int)stackLength[message.Channel.Id]++);
 
                 if (messageFunctions.Any(x => x.Key.Id.Equals(message.Id)))
                     messageFunctions.Remove(messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Key);
                 await message.RemoveAllReactionsAsync();
 
-                stackLength[message.Channel.Id]--;
+                //stackLength[message.Channel.Id]--;
             }
             catch (Exception e)
             {
                 Console.WriteLine($"Tried to delete message {message.Id} but it did not exist.");
-                stackLength[message.Channel.Id]--;
+                //stackLength[message.Channel.Id]--;
             }
         }
 
@@ -164,14 +164,14 @@ namespace MopsBot
                 if (!stackLength.ContainsKey(message.Channel.Id))
                 stackLength[message.Channel.Id] = 0;
             
-                await Task.Delay(2000 * (int)stackLength[message.Channel.Id]++);
+                //await Task.Delay(2000 * (int)stackLength[message.Channel.Id]++);
 
                 messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.Remove(emote);
                 if (!messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.Any())
                     messageFunctions.Remove(message);
                 await message.RemoveReactionAsync(emote, client.CurrentUser);
 
-                stackLength[message.Channel.Id]--;
+                //stackLength[message.Channel.Id]--;
             }
         }
 
