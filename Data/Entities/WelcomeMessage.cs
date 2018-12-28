@@ -31,12 +31,12 @@ namespace MopsBot.Data.Entities
                     Client = new Discord.Webhook.DiscordWebhookClient(WebhookId, WebhookToken);
                 }
 
-                await Client.SendMessageAsync(Notification.Replace("{User.Mention}", User.Mention).Replace("{User.Username}", User.Username), username: Name, avatarUrl: AvatarUrl ?? Program.Client.CurrentUser.GetAvatarUrl());
+                Client.SendMessageAsync(Notification.Replace("{User.Mention}", User.Mention).Replace("{User.Username}", User.Username), username: Name, avatarUrl: AvatarUrl ?? Program.Client.CurrentUser.GetAvatarUrl());
             }
 
             else
             {
-                await ((ITextChannel)Program.Client.GetChannel(ChannelId)).SendMessageAsync(Notification.Replace("{User.Mention}", User.Mention).Replace("{User.Username}", User.Username));
+                ((ITextChannel)Program.Client.GetChannel(ChannelId)).SendMessageAsync(Notification.Replace("{User.Mention}", User.Mention).Replace("{User.Username}", User.Username));
             }
             });
         }
