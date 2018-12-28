@@ -55,7 +55,7 @@ namespace MopsBot
                 if (!stackLength.ContainsKey(reaction.Channel.Id))
                     stackLength[reaction.Channel.Id] = 0;
 
-                await Task.Delay(2000 * (int)stackLength[reaction.Channel.Id]++);
+                //await Task.Delay(2000 * (int)stackLength[reaction.Channel.Id]++);
 
                 Task.Run(() =>
                 {
