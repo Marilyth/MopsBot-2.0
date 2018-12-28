@@ -50,15 +50,14 @@ namespace MopsBot
         /// <returns></returns>
         private async Task Client_ReactionAdded(Cacheable<IUserMessage, ulong> messageCache, ISocketMessageChannel channel, SocketReaction reaction)
         {
-            if (!reaction.UserId.Equals(client.CurrentUser.Id) && messageFunctions.Any(x => x.Key.Id == messageCache.Id))
+            Task.Run(() => {
+                if (!reaction.UserId.Equals(client.CurrentUser.Id) && messageFunctions.Any(x => x.Key.Id == messageCache.Id))
             {
                 if (!stackLength.ContainsKey(reaction.Channel.Id))
                     stackLength[reaction.Channel.Id] = 0;
 
                 //await Task.Delay(2000 * (int)stackLength[reaction.Channel.Id]++);
-
-                Task.Run(() =>
-                {
+                    
                     if (reaction.UserId.Equals(client.CurrentUser.Id))
                         return;
 
@@ -76,8 +75,8 @@ namespace MopsBot
                     //message.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
                     //Task.Delay(2000);
                     stackLength[context.Channel.Id]--;
-                });
-            }
+               }
+            });
         }
 
         /// <summary>
