@@ -53,7 +53,7 @@ namespace MopsBot.Data.Interactive
 
                         //Task.Run(async () =>
                         //{
-                        foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("✅"), 100).First().Result.Where(x => !x.IsBot))
+                        foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("✅"), 1000).First().Result.Where(x => !x.IsBot))
                         {
                             JoinGiveaway(user.Id, textmessage);
                             //textmessage.RemoveReactionAsync(new Emoji("✅"), user);
