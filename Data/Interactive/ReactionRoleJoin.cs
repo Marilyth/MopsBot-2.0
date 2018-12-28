@@ -56,16 +56,16 @@ namespace MopsBot.Data.Interactive
                         foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("✅"), 100).First().Result.Where(x => !x.IsBot))
                         {
                             JoinRole(user.Id, textmessage);
-                            textmessage.RemoveReactionAsync(new Emoji("✅"), user);
+                            //textmessage.RemoveReactionAsync(new Emoji("✅"), user);
                         }
                         foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("❎"), 100).First().Result.Where(x => !x.IsBot))
                         {
                             LeaveRole(user.Id, textmessage);
-                            textmessage.RemoveReactionAsync(new Emoji("❎"), user);
+                            //textmessage.RemoveReactionAsync(new Emoji("❎"), user);
                         }
                         foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("🗑"), 100).First().Result.Where(x => !x.IsBot))
                         {
-                            textmessage.RemoveReactionAsync(new Emoji("🗑"), user);
+                            //textmessage.RemoveReactionAsync(new Emoji("🗑"), user);
                             DeleteInvite(user.Id, textmessage);
                         }
                         //});
