@@ -73,8 +73,8 @@ namespace MopsBot
                         messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value[reaction.Emote](context);
                     else if (messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.ContainsKey(DefaultEmote))
                         messageFunctions.First(x => x.Key.Id.Equals(message.Id)).Value[DefaultEmote](context);
-                    message.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
-                    Task.Delay(2000);
+                    //message.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
+                    //Task.Delay(2000);
                     stackLength[context.Channel.Id]--;
                 });
             }
