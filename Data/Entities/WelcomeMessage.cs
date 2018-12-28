@@ -23,6 +23,7 @@ namespace MopsBot.Data.Entities
 
         public async Task SendWelcomeMessageAsync(SocketGuildUser User)
         {
+            Task.Run(() => {
             if (IsWebhook)
             {
                 if (Client == null)
@@ -37,6 +38,7 @@ namespace MopsBot.Data.Entities
             {
                 await ((ITextChannel)Program.Client.GetChannel(ChannelId)).SendMessageAsync(Notification.Replace("{User.Mention}", User.Mention).Replace("{User.Username}", User.Username));
             }
+            });
         }
 
         public WelcomeMessage(ulong guildId, ulong channelId, string notification, ulong webhookId, string webhookToken, string username = null, string avatarUrl = null)
