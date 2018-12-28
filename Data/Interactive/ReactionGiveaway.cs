@@ -125,6 +125,8 @@ namespace MopsBot.Data.Interactive
             participants.Add(creator.Id);
 
             var message = await channel.SendMessageAsync("", embed: e.Build());
+            messages.Add(message.Id, participants);
+            
             if (Giveaways.ContainsKey(channel.Id))
             {
                 Giveaways[channel.Id].Add(message.Id, participants);
