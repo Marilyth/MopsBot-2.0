@@ -119,6 +119,10 @@ namespace MopsBot.Data.Interactive
             e.Author = author;
             e.AddField("Participants", 0, true);
             e.AddField("Chance to win", Double.NaN, true);
+            
+            Dictionary<ulong, List<ulong>> messages = new Dictionary<ulong, List<ulong>>();
+            List<ulong> participants = new List<ulong>();
+            participants.Add(creator.Id);
 
             var message = await channel.SendMessageAsync("", embed: e.Build());
             if (Giveaways.ContainsKey(channel.Id))
@@ -135,10 +139,6 @@ namespace MopsBot.Data.Interactive
             await Program.ReactionHandler.AddHandler(message, new Emoji("✅"), JoinGiveaway);
             await Program.ReactionHandler.AddHandler(message, new Emoji("❎"), LeaveGiveaway);
             await Program.ReactionHandler.AddHandler(message, new Emoji("🎁"), DrawGiveaway);
-
-            Dictionary<ulong, List<ulong>> messages = new Dictionary<ulong, List<ulong>>();
-            List<ulong> participants = new List<ulong>();
-            participants.Add(creator.Id);
         }
 
         private async Task JoinGiveaway(ReactionHandlerContext context)
