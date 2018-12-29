@@ -239,7 +239,7 @@ namespace MopsBot.Data.Tracker
                 e.Description += "\n**VOD Segments**";
                 foreach (var segment in games.Skip(Math.Max(0, games.Count - 10)))
                 {
-                    e.Description += $"\n[{segment.Key}]({VodUrl}t={segment.Value}m)";
+                    e.Description += $"\n[{segment.Key}]({VodUrl}?t={segment.Value}m)";
                 }
             }
 
