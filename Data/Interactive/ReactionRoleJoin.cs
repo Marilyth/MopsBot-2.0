@@ -153,11 +153,7 @@ namespace MopsBot.Data.Interactive
 
         private async Task JoinRole(ReactionHandlerContext context)
         {
-            var roleID = ulong.Parse(context.Message.Embeds.First().Title.Split(new string[] { ":" }, StringSplitOptions.None).Last());
-            var role = ((ITextChannel)context.Channel).Guild.GetRole(roleID);
-            var user = await ((ITextChannel)context.Channel).Guild.GetUserAsync(context.Reaction.UserId);
-            await user.AddRoleAsync(role);
-            await updateMessage(context, (SocketRole)role);
+            await JoinRole(context.Reaction.UserId, context.Message);
         }
 
         private async Task JoinRole(ulong userId, IUserMessage message)
@@ -171,11 +167,7 @@ namespace MopsBot.Data.Interactive
 
         private async Task LeaveRole(ReactionHandlerContext context)
         {
-            var roleID = ulong.Parse(context.Message.Embeds.First().Title.Split(new string[] { ":" }, StringSplitOptions.None).Last());
-            var role = ((ITextChannel)context.Channel).Guild.GetRole(roleID);
-            var user = await ((ITextChannel)context.Channel).Guild.GetUserAsync(context.Reaction.UserId);
-            await user.RemoveRoleAsync(role);
-            await updateMessage(context, (SocketRole)role);
+            await LeaveRole(context.Reaction.UserId, context.Message);
         }
 
         private async Task LeaveRole(ulong userId, IUserMessage message)
@@ -189,22 +181,7 @@ namespace MopsBot.Data.Interactive
 
         private async Task DeleteInvite(ReactionHandlerContext context)
         {
-            var user = await ((ITextChannel)context.Channel).Guild.GetUserAsync(context.Reaction.UserId);
-            if (user.GuildPermissions.ManageRoles)
-            {
-                await Program.ReactionHandler.ClearHandler(context.Message);
-
-                if (RoleInvites[context.Channel.Id].Count > 1){
-                    RoleInvites[context.Channel.Id].Remove(context.Message.Id);
-                    await UpdateDBAsync(context.Channel.Id);
-                }
-                else{
-                    RoleInvites.Remove(context.Channel.Id);
-                    await RemoveFromDBAsync(context.Channel.Id);
-                }
-
-                await context.Message.DeleteAsync();
-            }
+            await DeleteInvite(context.Reaction.UserId, context.Message);
         }
 
         private async Task DeleteInvite(ulong userId, IUserMessage message)
