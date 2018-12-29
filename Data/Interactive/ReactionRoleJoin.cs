@@ -158,11 +158,13 @@ namespace MopsBot.Data.Interactive
 
         private async Task JoinRole(ulong userId, IUserMessage message)
         {
-            var roleID = ulong.Parse(message.Embeds.First().Title.Split(new string[] { ":" }, StringSplitOptions.None).Last());
-            var role = ((ITextChannel)message.Channel).Guild.GetRole(roleID);
+            var roleId = ulong.Parse(message.Embeds.First().Title.Split(new string[] { ":" }, StringSplitOptions.None).Last());
+            var role = ((ITextChannel)message.Channel).Guild.GetRole(roleId);
             var user = await ((ITextChannel)message.Channel).Guild.GetUserAsync(userId);
-            await user.AddRoleAsync(role);
-            await updateMessage(message, (SocketRole)role);
+            if(!user.RoleIds.Contains(roleId)){
+                await user.AddRoleAsync(role);
+                await updateMessage(message, (SocketRole)role);
+            }
         }
 
         private async Task LeaveRole(ReactionHandlerContext context)
@@ -172,11 +174,13 @@ namespace MopsBot.Data.Interactive
 
         private async Task LeaveRole(ulong userId, IUserMessage message)
         {
-            var roleID = ulong.Parse(message.Embeds.First().Title.Split(new string[] { ":" }, StringSplitOptions.None).Last());
-            var role = ((ITextChannel)message.Channel).Guild.GetRole(roleID);
+            var roleId = ulong.Parse(message.Embeds.First().Title.Split(new string[] { ":" }, StringSplitOptions.None).Last());
+            var role = ((ITextChannel)message.Channel).Guild.GetRole(roleId);
             var user = await ((ITextChannel)message.Channel).Guild.GetUserAsync(userId);
-            await user.RemoveRoleAsync(role);
-            await updateMessage(message, (SocketRole)role);
+            if(user.RoleIds.Contains(roleId)){
+                await user.RemoveRoleAsync(role);
+                await updateMessage(message, (SocketRole)role);
+            }
         }
 
         private async Task DeleteInvite(ReactionHandlerContext context)
