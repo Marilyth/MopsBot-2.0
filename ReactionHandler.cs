@@ -63,6 +63,7 @@ namespace MopsBot
         {
             Task.Run(() =>
             {
+                try{
                 if (!reaction.UserId.Equals(client.CurrentUser.Id) && wasRemoved ? emojiRemovedFunctions.Any(x => x.Key.Id == messageCache.Id) : emojiAddedFunctions.Any(x => x.Key.Id == messageCache.Id))
                 {
                     if (reaction.UserId.Equals(client.CurrentUser.Id))
@@ -86,6 +87,9 @@ namespace MopsBot
                         else if (emojiAddedFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.ContainsKey(DefaultEmote))
                             emojiAddedFunctions.First(x => x.Key.Id.Equals(message.Id)).Value[DefaultEmote](context);
                     }
+                }
+                } catch (Exception e){
+                    Console.WriteLine($"\n[Error] reactionhandler for message {messageCache.Id} emote {reaction.Emote.Name}\n{e.Message}");
                 }
             });
         }

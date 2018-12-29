@@ -49,7 +49,7 @@ namespace MopsBot.Data.Interactive
                     {
                         var textmessage = (IUserMessage)((ITextChannel)Program.Client.GetChannel(channel.Key)).GetMessageAsync(message).Result;
                         Program.ReactionHandler.AddHandler(textmessage, new Emoji("✅"), JoinRole).Wait();
-                        Program.ReactionHandler.AddHandler(textmessage, new Emoji("✅"), LeaveRole, false).Wait();
+                        Program.ReactionHandler.AddHandler(textmessage, new Emoji("✅"), LeaveRole, true).Wait();
                         Program.ReactionHandler.AddHandler(textmessage, new Emoji("🗑"), DeleteInvite).Wait();
 
                         foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("✅"), 1000).First().Result.Where(x => !x.IsBot).Reverse())
