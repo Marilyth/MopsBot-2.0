@@ -22,7 +22,7 @@ namespace MopsBot.Data.Tracker
         public Plot ViewerGraph;
         private TwitchResult StreamerStatus;
         public Boolean IsOnline;
-        public string CurGame;
+        public string CurGame, VodUrl;
         public bool isThumbnailLarge;
         public int TimeoutCount;
         public ulong TwitchId;
@@ -33,8 +33,8 @@ namespace MopsBot.Data.Tracker
 
         public async override void PostInitialisation()
         {
-            if(ViewerGraph != null)
-              ViewerGraph.InitPlot();
+            if (ViewerGraph != null)
+                ViewerGraph.InitPlot();
 
             foreach (var channelMessage in ToUpdate)
             {
@@ -84,7 +84,8 @@ namespace MopsBot.Data.Tracker
         {
             try
             {
-                if(TwitchId == 0){
+                if (TwitchId == 0)
+                {
                     TwitchId = await GetIdFromUsername(Name);
                     await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
                 }
@@ -107,9 +108,9 @@ namespace MopsBot.Data.Tracker
 
                             foreach (var channelMessage in ToUpdate)
                                 await Program.ReactionHandler.ClearHandler((IUserMessage)await ((ITextChannel)Program.Client.GetChannel(channelMessage.Key)).GetMessageAsync(channelMessage.Value));
-                            
+
                             ToUpdate = new Dictionary<ulong, ulong>();
-                            
+
                             foreach (ulong channel in ChannelMessages.Keys.ToList())
                                 await OnMinorChangeTracked(channel, $"{Name} went Offline!");
                         }
@@ -130,6 +131,8 @@ namespace MopsBot.Data.Tracker
 
                 if (isStreaming)
                 {
+                    if (VodUrl == null)
+                        VodUrl = await GetVodAsync();
                     ViewerGraph.AddValue(CurGame, StreamerStatus.stream.viewers);
                     if (CurGame.CompareTo(StreamerStatus.stream.game) != 0)
                     {
@@ -185,11 +188,27 @@ namespace MopsBot.Data.Tracker
             return tmpResult;
         }
 
-        public static async Task<ulong> GetIdFromUsername(string name){
+        public static async Task<ulong> GetIdFromUsername(string name)
+        {
             var result = await MopsBot.Module.Information.ReadURLAsync($"https://api.twitch.tv/kraken/users?login={name}&client_id={Program.Config["Twitch"]}", acceptHeader);
             var tmpResult = JsonConvert.DeserializeObject<dynamic>(result);
 
             return tmpResult["users"][0]["_id"];
+        }
+
+        public async Task<string> GetVodAsync()
+        {
+            var result = await MopsBot.Module.Information.ReadURLAsync($"https://api.twitch.tv/kraken/channels/{TwitchId}/videos?client_id={Program.Config["Twitch"]}", acceptHeader);
+            var tmpResult = JsonConvert.DeserializeObject<dynamic>(result);
+
+            try
+            {
+                return tmpResult["videos"][0]["url"];
+            }
+            catch (Exception e)
+            {
+                return null;
+            }
         }
 
         public Embed createEmbed()
@@ -200,7 +219,29 @@ namespace MopsBot.Data.Tracker
             e.Color = new Color(0x6441A4);
             e.Title = streamer.status;
             e.Url = streamer.url;
-            e.Description = "**For people with manage channel permission**:\n🖌: Change chart colour\n🔄: Switch thumbnail and chart position";
+            e.Description = "**For people with manage channel permission**:\n🖌: Change chart colour\n🔄: Switch thumbnail and chart position\n";
+
+            if (VodUrl != null)
+            {
+                List<KeyValuePair<string, int>> games = new List<KeyValuePair<string, int>>();
+                for (int i = 0; i < ViewerGraph.PlotPoints.Count; i++)
+                {
+                    string current = ViewerGraph.PlotPoints[i].Key;
+                    games.Add(new KeyValuePair<string, int>(current, i));
+
+                    while (i < ViewerGraph.PlotPoints.Count && ViewerGraph.PlotPoints[i].Key.Equals(current))
+                    {
+                        i++;
+                    }
+                    i--;
+                }
+
+                e.Description += "\n**VOD Segments**";
+                foreach (var segment in games.Skip(Math.Max(0, games.Count - 10)))
+                {
+                    e.Description += $"\n[{segment.Key}]({VodUrl}t={segment.Value}m)";
+                }
+            }
 
             EmbedAuthorBuilder author = new EmbedAuthorBuilder();
             author.Name = Name;
@@ -261,12 +302,14 @@ namespace MopsBot.Data.Tracker
         public override Dictionary<string, object> GetParameters(ulong guildId)
         {
             var parentParameters = base.GetParameters(guildId);
-            (parentParameters["Parameters"] as Dictionary<string, object>)["IsThumbnailLarge"] = new bool[]{true, false};
+            (parentParameters["Parameters"] as Dictionary<string, object>)["IsThumbnailLarge"] = new bool[] { true, false };
             return parentParameters;
         }
 
-        public override object GetAsScope(ulong channelId){
-            return new ContentScope(){
+        public override object GetAsScope(ulong channelId)
+        {
+            return new ContentScope()
+            {
                 Name = this.Name,
                 Notification = this.ChannelMessages[channelId],
                 Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId,
@@ -274,7 +317,8 @@ namespace MopsBot.Data.Tracker
             };
         }
 
-        public override void Update(params string[] args){
+        public override void Update(params string[] args)
+        {
             var channelId = ulong.Parse(args[2].Split(":")[1]);
             ChannelMessages[channelId] = args[1];
             isThumbnailLarge = bool.Parse(args[3]);
