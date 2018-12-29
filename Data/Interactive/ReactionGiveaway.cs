@@ -51,11 +51,11 @@ namespace MopsBot.Data.Interactive
                         Program.ReactionHandler.AddHandler(textmessage, new Emoji("✅"), LeaveGiveaway, true).Wait();
                         Program.ReactionHandler.AddHandler(textmessage, new Emoji("🎁"), DrawGiveaway).Wait();
 
-                        foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("✅"), 1000).First().Result.Where(x => !x.IsBot))
+                        foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("✅"), textmessage.Reactions[new Emoji("✅")].ReactionCount).First().Result.Where(x => !x.IsBot))
                         {
                             JoinGiveaway(user.Id, textmessage);
                         }
-                        foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("🎁"), 100).First().Result.Where(x => !x.IsBot))
+                        foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("🎁"), textmessage.Reactions[new Emoji("🎁")].ReactionCount).First().Result.Where(x => !x.IsBot))
                         {
                             DrawGiveaway(user.Id, textmessage);
                         }

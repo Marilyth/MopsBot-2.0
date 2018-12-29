@@ -52,15 +52,15 @@ namespace MopsBot.Data.Interactive
                         Program.ReactionHandler.AddHandler(textmessage, new Emoji("✅"), LeaveRole, true).Wait();
                         Program.ReactionHandler.AddHandler(textmessage, new Emoji("🗑"), DeleteInvite).Wait();
 
-                        foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("✅"), 1000).First().Result.Where(x => !x.IsBot).Reverse())
+                        foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("✅"), textmessage.Reactions[new Emoji("✅")].ReactionCount).First().Result.Where(x => !x.IsBot).Reverse())
                         {
                             JoinRole(user.Id, textmessage);
                         }
-                        foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("❎"), 100).First().Result.Where(x => !x.IsBot).Reverse())
+                        foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("❎"), textmessage.Reactions[new Emoji("❎")].ReactionCount).First().Result.Where(x => !x.IsBot).Reverse())
                         {
                             LeaveRole(user.Id, textmessage);
                         }
-                        foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("🗑"), 100).First().Result.Where(x => !x.IsBot).Reverse())
+                        foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("🗑"), textmessage.Reactions[new Emoji("🗑")].ReactionCount).First().Result.Where(x => !x.IsBot).Reverse())
                         {
                             DeleteInvite(user.Id, textmessage);
                         }
