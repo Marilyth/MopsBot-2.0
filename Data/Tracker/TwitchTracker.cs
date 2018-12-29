@@ -103,6 +103,7 @@ namespace MopsBot.Data.Tracker
                             TimeoutCount = 0;
                             IsOnline = false;
                             Console.WriteLine("\n" + $"{DateTime.Now} {Name} went Offline");
+                            VodUrl = null;
                             ViewerGraph.Dispose();
                             ViewerGraph = null;
 
