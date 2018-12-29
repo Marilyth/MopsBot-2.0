@@ -49,26 +49,21 @@ namespace MopsBot.Data.Interactive
                     {
                         var textmessage = (IUserMessage)((ITextChannel)Program.Client.GetChannel(channel.Key)).GetMessageAsync(message).Result;
                         Program.ReactionHandler.AddHandler(textmessage, new Emoji("✅"), JoinRole).Wait();
-                        Program.ReactionHandler.AddHandler(textmessage, new Emoji("❎"), LeaveRole).Wait();
+                        Program.ReactionHandler.AddHandler(textmessage, new Emoji("✅"), LeaveRole, false).Wait();
                         Program.ReactionHandler.AddHandler(textmessage, new Emoji("🗑"), DeleteInvite).Wait();
 
-                        //Task.Run(async () => {
-                        foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("✅"), 100).First().Result.Where(x => !x.IsBot))
+                        foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("✅"), 1000).First().Result.Where(x => !x.IsBot).Reverse())
                         {
                             JoinRole(user.Id, textmessage);
-                            //textmessage.RemoveReactionAsync(new Emoji("✅"), user);
                         }
-                        foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("❎"), 100).First().Result.Where(x => !x.IsBot))
+                        foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("❎"), 100).First().Result.Where(x => !x.IsBot).Reverse())
                         {
                             LeaveRole(user.Id, textmessage);
-                            //textmessage.RemoveReactionAsync(new Emoji("❎"), user);
                         }
-                        foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("🗑"), 100).First().Result.Where(x => !x.IsBot))
+                        foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("🗑"), 100).First().Result.Where(x => !x.IsBot).Reverse())
                         {
-                            //textmessage.RemoveReactionAsync(new Emoji("🗑"), user);
                             DeleteInvite(user.Id, textmessage);
                         }
-                        //});
                     }
                     catch (Exception e)
                     {
@@ -104,7 +99,7 @@ namespace MopsBot.Data.Interactive
         {
             EmbedBuilder e = new EmbedBuilder();
             e.Title = role.Name + $" Einladung :{role.Id}";
-            e.Description = $"Um der Rolle " + (role.IsMentionable ? role.Mention : $"**{role.Name}**") + " beizutreten, oder sie zu verlassen, drücke bitte die ✅/❎ Icons unter dieser Nachricht!\n" +
+            e.Description = $"Um der Rolle " + (role.IsMentionable ? role.Mention : $"**{role.Name}**") + " beizutreten, oder sie zu verlassen, füge bitte das ✅ Icon unter dieser Nachricht hinzu, oder entferne es!\n" +
                             "Falls du die Manage Role Permission besitzt, kannst du diese Einladung mit einem Druck auf den 🗑 Icon löschen.";
             e.Color = role.Color;
 
@@ -113,7 +108,7 @@ namespace MopsBot.Data.Interactive
 
             var message = await channel.SendMessageAsync("", embed: e.Build());
             await Program.ReactionHandler.AddHandler(message, new Emoji("✅"), JoinRole);
-            await Program.ReactionHandler.AddHandler(message, new Emoji("❎"), LeaveRole);
+            await Program.ReactionHandler.AddHandler(message, new Emoji("✅"), LeaveRole, true);
             await Program.ReactionHandler.AddHandler(message, new Emoji("🗑"), DeleteInvite);
 
             if (RoleInvites.ContainsKey(channel.Id)){
@@ -132,7 +127,7 @@ namespace MopsBot.Data.Interactive
         {
             EmbedBuilder e = new EmbedBuilder();
             e.Title = role.Name + $" Role Invite :{role.Id}";
-            e.Description = $"To join/leave the " + (role.IsMentionable ? role.Mention : $"**{role.Name}**") + " role, press the ✅/❎ Icons below this message!\n" +
+            e.Description = $"To join/leave the " + (role.IsMentionable ? role.Mention : $"**{role.Name}**") + " role, add/remove the ✅ Icon below this message!\n" +
                             "If you can manage Roles, you may delete this invitation by pressing the 🗑 Icon.";
             e.Color = role.Color;
 
@@ -141,7 +136,7 @@ namespace MopsBot.Data.Interactive
 
             var message = await channel.SendMessageAsync("", embed: e.Build());
             await Program.ReactionHandler.AddHandler(message, new Emoji("✅"), JoinRole);
-            await Program.ReactionHandler.AddHandler(message, new Emoji("❎"), LeaveRole);
+            await Program.ReactionHandler.AddHandler(message, new Emoji("✅"), LeaveRole, true);
             await Program.ReactionHandler.AddHandler(message, new Emoji("🗑"), DeleteInvite);
 
             if (RoleInvites.ContainsKey(channel.Id)){
