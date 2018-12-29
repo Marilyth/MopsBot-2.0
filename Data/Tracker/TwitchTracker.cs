@@ -258,8 +258,8 @@ namespace MopsBot.Data.Tracker
             e.ThumbnailUrl = isThumbnailLarge ? ViewerGraph.DrawPlot() : $"{StreamerStatus.stream.preview.medium}?rand={StaticBase.ran.Next(0, 99999999)}";
             e.ImageUrl = isThumbnailLarge ? $"{StreamerStatus.stream.preview.large}?rand={StaticBase.ran.Next(0, 99999999)}" : ViewerGraph.DrawPlot();
 
-            e.AddField("Game", CurGame, true);
-            e.AddField("Viewers", StreamerStatus.stream.viewers, true);
+            //e.AddField("Game", CurGame, true);
+            //e.AddField("Viewers", StreamerStatus.stream.viewers, true);
 
             return e.Build();
         }
