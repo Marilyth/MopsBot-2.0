@@ -98,7 +98,7 @@ namespace MopsBot.Data.Interactive
         {
             EmbedBuilder e = new EmbedBuilder();
             e.Title = name + " Giveaway!";
-            e.Description = "To join/leave the giveaway, adding/removing the ✅ Icon below this message!\n" +
+            e.Description = "To join/leave the giveaway, add/remove the ✅ Icon below this message!\n" +
                             "The Creator may draw a winner at any time, by pressing the 🎁 Icon.";
             e.Color = new Color(100, 100, 0);
 
