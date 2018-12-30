@@ -238,9 +238,11 @@ namespace MopsBot.Data.Tracker
                 }
 
                 e.Description += "\n**VOD Segments**";
-                foreach (var segment in games.Skip(Math.Max(0, games.Count - 10)))
+                for (int i = Math.Max(0, games.Count - 10); i < games.Count; i++)
                 {
-                    e.Description += $"\n[{segment.Key}]({VodUrl}?t={segment.Value}m)";
+                    TimeSpan duration = TimeSpan.FromMinutes(i != games.Count - 1 ? games[i + 1].Value - games[i].Value : 
+                                                                                    ViewerGraph.PlotPoints.Count - games[i].Value);
+                    e.Description += $"\n[{games[i].Key}]({VodUrl}?t={games[i].Value}m) ({duration.Hours}h {duration.Minutes}m)";
                 }
             }
 
