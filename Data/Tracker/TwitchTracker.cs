@@ -118,7 +118,7 @@ namespace MopsBot.Data.Tracker
                     }
                     else
                     {
-                        ViewerGraph = new Plot(Name, "Time In Minutes", "Viewers");
+                        ViewerGraph = new Plot(Name, "UTC Time", "Viewers");
                         IsOnline = true;
                         CurGame = StreamerStatus.stream.game;
                         ViewerGraph.AddValue(CurGame, 0, DateTime.Parse(StreamerStatus.stream.created_at).AddHours(-1));
@@ -246,7 +246,7 @@ namespace MopsBot.Data.Tracker
                     TimeSpan duration = i != games.Count - 1 ? OxyPlot.Axes.DateTimeAxis.ToDateTime(games[i + 1].Value) - OxyPlot.Axes.DateTimeAxis.ToDateTime(games[i].Value)
                                                              : DateTime.UtcNow - OxyPlot.Axes.DateTimeAxis.ToDateTime(games[i].Value);
                     TimeSpan timestamp = OxyPlot.Axes.DateTimeAxis.ToDateTime(games[i].Value) - OxyPlot.Axes.DateTimeAxis.ToDateTime(games[0].Value);
-                    e.Description += $"\n[{games[i].Key}]({VodUrl}?t={timestamp.TotalMinutes}m) ({duration.Hours}h {duration.Minutes}m)";
+                    e.Description += $"\n[{games[i].Key}]({VodUrl}?t={(int)timestamp.TotalMinutes}m) ({duration.Hours}h {duration.Minutes}m)";
                 }
             }
 
