@@ -145,8 +145,9 @@ namespace MopsBot.Data
         private PlotModel viewerChart;
         private List<OxyPlot.Series.LineSeries> lineSeries;
         private static string COLLECTIONNAME = "TwitchTracker";
-        public List<KeyValuePair<string, double>> PlotPoints;
-        private int CurX;
+        //public List<KeyValuePair<string, double>> PlotPoints;
+        public List<KeyValuePair<string, KeyValuePair<double, double>>> PlotDataPoints;
+        //private int CurX;
         
         [BsonId]
         public string ID;
@@ -154,12 +155,15 @@ namespace MopsBot.Data
         public Plot(string name, string xName = "x", string yName = "y")
         {
             ID = name;
-            PlotPoints = new List<KeyValuePair<string, double>>();
+            //PlotPoints = new List<KeyValuePair<string, double>>();
+            PlotDataPoints = new List<KeyValuePair<string, KeyValuePair<double, double>>>();
             InitPlot(xName, yName);
         }
 
-        public void InitPlot(string xAxis = "Time In Minutes", string yAxis = "Viewers")
+        public void InitPlot(string xAxis = "UTC Time", string yAxis = "Viewers")
         {
+            if(PlotDataPoints == null) PlotDataPoints = new List<KeyValuePair<string, KeyValuePair<double, double>>>();
+
             viewerChart = new PlotModel();
             viewerChart.TextColor = OxyColor.FromRgb(175, 175, 175);
             viewerChart.PlotAreaBorderThickness = new OxyThickness(0);
@@ -174,14 +178,15 @@ namespace MopsBot.Data
                 AxislineColor = OxyColor.FromRgb(125, 125, 155)
             };
 
-            var valueAxisX = new OxyPlot.Axes.LinearAxis
+            var valueAxisX = new OxyPlot.Axes.DateTimeAxis
             {
                 Position = OxyPlot.Axes.AxisPosition.Bottom,
                 TicklineColor = OxyColor.FromRgb(125, 125, 155),
                 Title = xAxis,
                 FontSize = 24,
                 AxislineStyle = LineStyle.Solid,
-                AxislineColor = OxyColor.FromRgb(125, 125, 155)
+                AxislineColor = OxyColor.FromRgb(125, 125, 155),
+                StringFormat = "HH:mm"
             };
 
             viewerChart.Axes.Add(valueAxisY);
@@ -190,9 +195,12 @@ namespace MopsBot.Data
             viewerChart.LegendPosition = LegendPosition.BottomCenter;
 
             lineSeries = new List<OxyPlot.Series.LineSeries>();
-            foreach (var plotPoint in PlotPoints)
+            /*foreach (var plotPoint in PlotPoints)
             {
                 AddValue(plotPoint.Key, plotPoint.Value, false);
+            }*/
+            foreach(var dataPoint in PlotDataPoints){
+                AddValue(dataPoint.Key, dataPoint.Value.Value, DateTimeAxis.ToDateTime(dataPoint.Value.Key), false);
             }
         }
 
@@ -220,20 +228,18 @@ namespace MopsBot.Data
 
             var dir = new DirectoryInfo("mopsdata//");
             var files = dir.GetFiles().Where(x => x.Name.Contains($"{ID}plot"));
-            foreach (var f in files)
-                f.Delete();
+            //foreach (var f in files)
+                //f.Delete();
 
             return $"http://5.45.104.29/StreamCharts/{ID}plot.png?rand={StaticBase.ran.Next(0, 999999999)}";
         }
 
-        /// <summary>
-        /// Adds a Value to the plot, under the given name
-        /// </summary>
-        /// <param name="value">The Value to add to the plot</param>
-        public void AddValue(string name, double value, bool savePlot = true)
+        public void AddValue(string name, double viewerCount, DateTime? xValue = null, bool savePlot = true)
         {
+            if(xValue == null) xValue = DateTime.UtcNow;
+
             if (lineSeries.LastOrDefault()?.Title?.Equals(name) ?? false)
-                lineSeries.Last().Points.Add(new DataPoint(++CurX, value));
+                lineSeries.Last().Points.Add(new DataPoint(DateTimeAxis.ToDouble(xValue), viewerCount));
 
             else
             {
@@ -252,15 +258,15 @@ namespace MopsBot.Data
                     series.Title = name;
 
                 series.StrokeThickness = 3;
-                series.Points.Add(new DataPoint(CurX, lineSeries.LastOrDefault()?.Points.Last().Y ?? 0));
-                series.Points.Add(new DataPoint(++CurX, value));
+                lineSeries.LastOrDefault()?.Points?.Add(new DataPoint(DateTimeAxis.ToDouble(xValue), viewerCount));
+                series.Points.Add(new DataPoint(DateTimeAxis.ToDouble(xValue), viewerCount));
                 viewerChart.Series.Add(series);
                 lineSeries.Add(series);
             }
 
             if (savePlot)
             {
-                PlotPoints.Add(new KeyValuePair<string, double>(name, value));
+                PlotDataPoints.Add(new KeyValuePair<string, KeyValuePair<double, double>>(name, new KeyValuePair<double, double>(DateTimeAxis.ToDouble(xValue), viewerCount)));
             }
         }
 

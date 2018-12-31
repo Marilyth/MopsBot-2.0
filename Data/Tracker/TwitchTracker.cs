@@ -224,13 +224,13 @@ namespace MopsBot.Data.Tracker
 
             if (VodUrl != null)
             {
-                List<KeyValuePair<string, int>> games = new List<KeyValuePair<string, int>>();
-                for (int i = 0; i < ViewerGraph.PlotPoints.Count; i++)
+                List<KeyValuePair<string, double>> games = new List<KeyValuePair<string, double>>();
+                for (int i = 0; i < ViewerGraph.PlotDataPoints.Count; i++)
                 {
-                    string current = ViewerGraph.PlotPoints[i].Key;
-                    games.Add(new KeyValuePair<string, int>(current, i));
+                    string current = ViewerGraph.PlotDataPoints[i].Key;
+                    games.Add(new KeyValuePair<string, double>(current, ViewerGraph.PlotDataPoints[i].Value.Key));
 
-                    while (i < ViewerGraph.PlotPoints.Count && ViewerGraph.PlotPoints[i].Key.Equals(current))
+                    while (i < ViewerGraph.PlotDataPoints.Count && ViewerGraph.PlotDataPoints[i].Key.Equals(current))
                     {
                         i++;
                     }
@@ -240,8 +240,8 @@ namespace MopsBot.Data.Tracker
                 e.Description += "\n**VOD Segments**";
                 for (int i = Math.Max(0, games.Count - 10); i < games.Count; i++)
                 {
-                    TimeSpan duration = TimeSpan.FromMinutes(i != games.Count - 1 ? games[i + 1].Value - games[i].Value : 
-                                                                                    ViewerGraph.PlotPoints.Count - games[i].Value);
+                    TimeSpan duration = i != games.Count - 1 ? OxyPlot.Axes.DateTimeAxis.ToDateTime(games[i + 1].Value) - OxyPlot.Axes.DateTimeAxis.ToDateTime(games[i].Value)
+                                                             : DateTime.UtcNow - OxyPlot.Axes.DateTimeAxis.ToDateTime(games[i].Value);
                     e.Description += $"\n[{games[i].Key}]({VodUrl}?t={games[i].Value}m) ({duration.Hours}h {duration.Minutes}m)";
                 }
             }
