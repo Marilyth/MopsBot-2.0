@@ -147,7 +147,7 @@ namespace MopsBot.Data
         private static string COLLECTIONNAME = "TwitchTracker";
         //public List<KeyValuePair<string, double>> PlotPoints;
         public List<KeyValuePair<string, KeyValuePair<double, double>>> PlotDataPoints;
-        //private int CurX;
+        private DateTime? StartTime;
         
         [BsonId]
         public string ID;
@@ -237,9 +237,11 @@ namespace MopsBot.Data
         public void AddValue(string name, double viewerCount, DateTime? xValue = null, bool savePlot = true)
         {
             if(xValue == null) xValue = DateTime.UtcNow;
+            if(StartTime == null) StartTime = xValue;
+            var relativeXValue = new DateTime(1970, 01, 01).Add((xValue - StartTime).Value);
 
             if (lineSeries.LastOrDefault()?.Title?.Equals(name) ?? false)
-                lineSeries.Last().Points.Add(new DataPoint(DateTimeAxis.ToDouble(xValue), viewerCount));
+                lineSeries.Last().Points.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), viewerCount));
 
             else
             {
@@ -258,8 +260,8 @@ namespace MopsBot.Data
                     series.Title = name;
 
                 series.StrokeThickness = 3;
-                lineSeries.LastOrDefault()?.Points?.Add(new DataPoint(DateTimeAxis.ToDouble(xValue), viewerCount));
-                series.Points.Add(new DataPoint(DateTimeAxis.ToDouble(xValue), viewerCount));
+                lineSeries.LastOrDefault()?.Points?.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), viewerCount));
+                series.Points.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), viewerCount));
                 viewerChart.Series.Add(series);
                 lineSeries.Add(series);
             }
