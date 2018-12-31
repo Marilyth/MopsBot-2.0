@@ -140,7 +140,7 @@ namespace MopsBot.Data.Tracker
                     //New livestream
                     else
                     {
-                        ViewerGraph = new Plot(Name, "UTC Time", "Viewers");
+                        ViewerGraph = new Plot(Name, "Time since start", "Viewers");
 
                         foreach (ulong channel in ChannelMessages.Keys.ToList())
                             await OnMinorChangeTracked(channel, ChannelMessages[channel]);

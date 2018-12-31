@@ -160,7 +160,7 @@ namespace MopsBot.Data
             InitPlot(xName, yName);
         }
 
-        public void InitPlot(string xAxis = "UTC Time", string yAxis = "Viewers")
+        public void InitPlot(string xAxis = "Time", string yAxis = "Viewers")
         {
             if(PlotDataPoints == null) PlotDataPoints = new List<KeyValuePair<string, KeyValuePair<double, double>>>();
 
