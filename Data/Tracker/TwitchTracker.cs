@@ -135,15 +135,17 @@ namespace MopsBot.Data.Tracker
                 {
                     if (VodUrl == null)
                         VodUrl = await GetVodAsync();
-                    ViewerGraph.AddValue(CurGame, StreamerStatus.stream.viewers);
+                    
                     if (CurGame.CompareTo(StreamerStatus.stream.game) != 0)
                     {
                         CurGame = StreamerStatus.stream.game;
-                        ViewerGraph.AddValue(CurGame, StreamerStatus.stream.viewers);
+                        //ViewerGraph.AddValue(CurGame, StreamerStatus.stream.viewers);
 
                         foreach (ulong channel in ChannelMessages.Keys.ToList())
                             await OnMinorChangeTracked(channel, $"{Name} switched games to **{CurGame}**");
                     }
+
+                    ViewerGraph.AddValue(CurGame, StreamerStatus.stream.viewers);
 
                     await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
 
