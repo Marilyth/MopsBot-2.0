@@ -228,8 +228,8 @@ namespace MopsBot.Data
 
             var dir = new DirectoryInfo("mopsdata//");
             var files = dir.GetFiles().Where(x => x.Name.Contains($"{ID}plot"));
-            //foreach (var f in files)
-                //f.Delete();
+            foreach (var f in files)
+                f.Delete();
 
             return $"http://5.45.104.29/StreamCharts/{ID}plot.png?rand={StaticBase.ran.Next(0, 999999999)}";
         }
