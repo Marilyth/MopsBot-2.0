@@ -118,7 +118,7 @@ namespace MopsBot.Data.Tracker
                     }
                     else
                     {
-                        ViewerGraph = new Plot(Name, "Time In Minutes", "Viewers");
+                        ViewerGraph = new Plot(Name, "UTC Time", "Viewers");
                         IsOnline = true;
                         CurGame = StreamerStatus.stream.game;
                         ViewerGraph.AddValue(CurGame, 0, DateTime.Parse(StreamerStatus.stream.created_at).AddHours(-1));
