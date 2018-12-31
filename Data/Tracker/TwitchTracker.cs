@@ -242,7 +242,8 @@ namespace MopsBot.Data.Tracker
                 {
                     TimeSpan duration = i != games.Count - 1 ? OxyPlot.Axes.DateTimeAxis.ToDateTime(games[i + 1].Value) - OxyPlot.Axes.DateTimeAxis.ToDateTime(games[i].Value)
                                                              : DateTime.UtcNow - OxyPlot.Axes.DateTimeAxis.ToDateTime(games[i].Value);
-                    e.Description += $"\n[{games[i].Key}]({VodUrl}?t={games[i].Value}m) ({duration.Hours}h {duration.Minutes}m)";
+                    TimeSpan timestamp = OxyPlot.Axes.DateTimeAxis.ToDateTime(games[i].Value) - OxyPlot.Axes.DateTimeAxis.ToDateTime(games[0].Value);
+                    e.Description += $"\n[{games[i].Key}]({VodUrl}?t={timestamp.TotalMinutes}m) ({duration.Hours}h {duration.Minutes}m)";
                 }
             }
 
