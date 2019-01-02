@@ -106,7 +106,7 @@ namespace MopsBot.Data.Tracker
         /// <returns>An OStatsResult representing the fetched JSON as an object</returns>
         private async Task<OStatsResult> overwatchInformation()
         {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"http://5.45.104.29:4444/api/v3/u/{Name}/blob");
+            string query = await MopsBot.Module.Information.ReadURLAsync($"http://localhost:4444/api/v3/u/{Name}/blob");
 
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {
