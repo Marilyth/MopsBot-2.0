@@ -247,7 +247,7 @@ namespace MopsBot.Data.Tracker
             OverallStats quickNew = newStats.getNotNull().stats.quickplay.overall_stats;
             OverallStats quickOld = oldStats.getNotNull().stats.quickplay.overall_stats;
 
-            if (Name.Equals("Togira-21607") || (quickNew.level + (quickNew.prestige * 100)) != (quickOld.level + (quickOld.prestige * 100)))
+            if ((quickNew.level + (quickNew.prestige * 100)) != (quickOld.level + (quickOld.prestige * 100)))
             {
                 changedStats.Add("Level", (await OverallStats.GetLevelAsync(Name)) +
                                 $" (+{(quickNew.level) - (quickOld.level)})");
