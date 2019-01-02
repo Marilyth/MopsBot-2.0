@@ -124,6 +124,7 @@ namespace MopsBot.Module
         public static async Task<string> ReadURLAsync(string URL, params KeyValuePair<string, string>[] headers)
         {
             var request = (System.Net.HttpWebRequest)System.Net.WebRequest.Create(URL);
+            request.CachePolicy = new System.Net.Cache.HttpRequestCachePolicy(System.Net.Cache.HttpRequestCacheLevel.NoCacheNoStore);
             foreach (var header in headers)
                 request.Headers.Add(header.Key, header.Value);
 
