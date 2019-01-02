@@ -104,7 +104,7 @@ namespace MopsBot.Data.Tracker
         /// <returns>An OStatsResult representing the fetched JSON as an object</returns>
         private async Task<OStatsResult> overwatchInformation()
         {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"http://localhost:4444/api/v3/u/{Name}/blob");
+            string query = await MopsBot.Module.Information.ReadURLAsync($"http://5.45.104.29:4444/api/v3/u/{Name}/blob");
 
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {
@@ -168,7 +168,7 @@ namespace MopsBot.Data.Tracker
                             $"\nGold: {stats.game_stats.medals_gold}", true);
 
             e.AddField("General", $"Time played: {stats.game_stats.time_played}hrs" +
-                            $"\nLevel: {stats.overall_stats.level + (100 * stats.overall_stats.prestige)}" +
+                            $"\nLevel: {await OverallStats.GetLevelAsync(owName)}" +
                             $"\nWon Games: {stats.overall_stats.wins}" +
                             $"\n Endorsement Level: {stats.overall_stats.endorsement_level}", true);
 
