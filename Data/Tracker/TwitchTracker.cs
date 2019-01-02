@@ -19,7 +19,7 @@ namespace MopsBot.Data.Tracker
     public class TwitchTracker : BaseUpdatingTracker
     {
         private static KeyValuePair<string, string> acceptHeader = new KeyValuePair<string, string>("Accept", "application/vnd.twitchtv.v5+json");
-        public Plot ViewerGraph;
+        public DatePlot ViewerGraph;
         private TwitchResult StreamerStatus;
         public Boolean IsOnline;
         public string CurGame, VodUrl;
@@ -118,7 +118,7 @@ namespace MopsBot.Data.Tracker
                     }
                     else
                     {
-                        ViewerGraph = new Plot(Name, "Time since start", "Viewers");
+                        ViewerGraph = new DatePlot(Name, "Time since start", "Viewers");
                         IsOnline = true;
                         CurGame = StreamerStatus.stream.game;
                         ViewerGraph.AddValue(CurGame, 0, DateTime.Parse(StreamerStatus.stream.created_at).AddHours(-1));

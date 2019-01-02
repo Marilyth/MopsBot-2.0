@@ -21,12 +21,13 @@ namespace MopsBot.Data.Tracker
     public class OverwatchTracker : BaseTracker
     {
         private OStatsResult information;
+        public DatePlot StatGraph;
 
         /// <summary>
         /// Initialises the tracker by setting attributes and setting up a Timer with a 10 minutes interval
         /// </summary>
         /// <param Name="OWName"> The Name-Battletag combination of the player to track </param>
-        public OverwatchTracker() : base(600000, ExistingTrackers * 20000)
+        public OverwatchTracker() : base(60000, ExistingTrackers * 2000)
         {
         }
 
@@ -47,6 +48,12 @@ namespace MopsBot.Data.Tracker
             }
         }
 
+        public async override void PostInitialisation()
+        {
+            if (StatGraph != null)
+                StatGraph.InitPlot(format: "dd-MMM-yy", relative: false);
+        }
+
         /// <summary>
         /// Event for the Timer, to check for changed stats
         /// </summary>
@@ -57,6 +64,12 @@ namespace MopsBot.Data.Tracker
             {
                 OStatsResult newInformation = await overwatchInformation();
 
+                if(StatGraph == null){
+                    StatGraph = new DatePlot(Name, "Date", "Level", "dd-MMM-yy", false);
+                    StatGraph.AddValue("Level", await OverallStats.GetLevelAsync(Name), relative: false);
+                    await StaticBase.Trackers[TrackerType.Overwatch].UpdateDBAsync(this);
+                }
+
                 if (information == null)
                 {
                     information = newInformation;
@@ -64,13 +77,15 @@ namespace MopsBot.Data.Tracker
 
                 if (newInformation == null) return;
 
-                var changedStats = getChangedStats(information, newInformation);
+                var changedStats = await getChangedStatsAsync(information, newInformation);
 
                 if (changedStats.Count != 0)
                 {
                     foreach (ulong channel in ChannelMessages.Keys.ToList())
                     {
                         await OnMajorChangeTracked(channel, createEmbed(newInformation, changedStats, getSessionMostPlayed(information.getNotNull().heroes.playtime, newInformation.getNotNull().heroes.playtime)), ChannelMessages[channel]);
+                        StatGraph.AddValue("Level", await OverallStats.GetLevelAsync(Name), relative: false);
+                        await StaticBase.Trackers[TrackerType.Overwatch].UpdateDBAsync(this);
                     }
                     information = newInformation;
                 }
@@ -201,8 +216,6 @@ namespace MopsBot.Data.Tracker
             e.Timestamp = DateTime.Now;
             e.Footer = footer;
 
-            e.ThumbnailUrl = stats.avatar;
-
             foreach (var kvPair in changedStats)
             {
                 e.AddField(kvPair.Key, kvPair.Value, true);
@@ -211,9 +224,11 @@ namespace MopsBot.Data.Tracker
             e.AddField("Sessions most played Hero", $"{mostPlayed.Item2}");
             if (mostPlayed.Item1.Equals("Ana") || mostPlayed.Item1.Equals("Moira") || mostPlayed.Item1.Equals("Orisa") || mostPlayed.Item1.Equals("Doomfist") || 
                 mostPlayed.Item1.Equals("Sombra") || mostPlayed.Item1.Equals("Brigitte") || mostPlayed.Item1.Equals("Wrecking-Ball") || mostPlayed.Item1.Equals("Ashe"))
-                e.ImageUrl = $"https://blzgdapipro-a.akamaihd.net/hero/{mostPlayed.Item1.ToLower()}/full-portrait.png";
+                e.ThumbnailUrl = $"https://blzgdapipro-a.akamaihd.net/hero/{mostPlayed.Item1.ToLower()}/full-portrait.png";
             else
-                e.ImageUrl = $"https://blzgdapipro-a.akamaihd.net/media/thumbnail/{mostPlayed.Item1.ToLower()}-gameplay.jpg";
+                e.ThumbnailUrl = $"https://blzgdapipro-a.akamaihd.net/media/thumbnail/{mostPlayed.Item1.ToLower()}-gameplay.jpg";
+
+            e.ImageUrl = StatGraph.DrawPlot();
 
             return e.Build();
         }
@@ -225,17 +240,17 @@ namespace MopsBot.Data.Tracker
         /// <param Name="oldStats">OStatsResult representing the stats before the Timer elapsed</param>
         /// <param Name="newStats">OStatsResult representing the stats after the Timer elapsed</param>
         /// <returns>A Dictionary with changed stats as Key, and a string presenting them as Value</returns>
-        private Dictionary<string, string> getChangedStats(OStatsResult oldStats, OStatsResult newStats)
+        private async Task<Dictionary<string, string>> getChangedStatsAsync(OStatsResult oldStats, OStatsResult newStats)
         {
             Dictionary<string, string> changedStats = new Dictionary<string, string>();
 
             OverallStats quickNew = newStats.getNotNull().stats.quickplay.overall_stats;
             OverallStats quickOld = oldStats.getNotNull().stats.quickplay.overall_stats;
 
-            if ((quickNew.level + (quickNew.prestige * 100)) > (quickOld.level + (quickOld.prestige * 100)))
+            if (Name.Equals("Togira-21607") || (quickNew.level + (quickNew.prestige * 100)) != (quickOld.level + (quickOld.prestige * 100)))
             {
-                changedStats.Add("Level", (quickNew.level + (quickNew.prestige * 100)).ToString() +
-                                $" (+{(quickNew.level + (quickNew.prestige * 100)) - (quickOld.level + (quickOld.prestige * 100))})");
+                changedStats.Add("Level", (await OverallStats.GetLevelAsync(Name)) +
+                                $" (+{(quickNew.level) - (quickOld.level)})");
             }
 
             if (quickNew.wins > quickOld.wins)

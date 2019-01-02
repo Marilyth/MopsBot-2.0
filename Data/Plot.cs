@@ -140,7 +140,7 @@ namespace MopsBot.Data
     /// A Class that handles drawing plots.
     /// </summary>
     [BsonIgnoreExtraElements]
-    public class Plot
+    public class DatePlot
     {
         private PlotModel viewerChart;
         private List<OxyPlot.Series.LineSeries> lineSeries;
@@ -152,15 +152,15 @@ namespace MopsBot.Data
         [BsonId]
         public string ID;
 
-        public Plot(string name, string xName = "x", string yName = "y")
+        public DatePlot(string name, string xName = "x", string yName = "y", string format = "HH:mm", bool relativeTime = true)
         {
             ID = name;
             //PlotPoints = new List<KeyValuePair<string, double>>();
             PlotDataPoints = new List<KeyValuePair<string, KeyValuePair<double, double>>>();
-            InitPlot(xName, yName);
+            InitPlot(xName, yName, format, relative: relativeTime);
         }
 
-        public void InitPlot(string xAxis = "Time", string yAxis = "Viewers")
+        public void InitPlot(string xAxis = "Time", string yAxis = "Viewers", string format = "HH:mm", bool relative = true)
         {
             if(PlotDataPoints == null) PlotDataPoints = new List<KeyValuePair<string, KeyValuePair<double, double>>>();
 
@@ -172,11 +172,11 @@ namespace MopsBot.Data
                 Position = OxyPlot.Axes.AxisPosition.Left,
                 TicklineColor = OxyColor.FromRgb(125, 125, 155),
                 Title = yAxis,
-                Minimum = 0,
                 FontSize = 24,
                 AxislineStyle = LineStyle.Solid,
                 AxislineColor = OxyColor.FromRgb(125, 125, 155)
             };
+            if(relative) valueAxisY.Minimum = 0;
 
             var valueAxisX = new OxyPlot.Axes.DateTimeAxis
             {
@@ -186,7 +186,7 @@ namespace MopsBot.Data
                 FontSize = 24,
                 AxislineStyle = LineStyle.Solid,
                 AxislineColor = OxyColor.FromRgb(125, 125, 155),
-                StringFormat = "HH:mm"
+                StringFormat = format
             };
 
             viewerChart.Axes.Add(valueAxisY);
@@ -200,7 +200,7 @@ namespace MopsBot.Data
                 AddValue(plotPoint.Key, plotPoint.Value, false);
             }*/
             foreach(var dataPoint in PlotDataPoints){
-                AddValue(dataPoint.Key, dataPoint.Value.Value, DateTimeAxis.ToDateTime(dataPoint.Value.Key), false);
+                AddValue(dataPoint.Key, dataPoint.Value.Value, DateTimeAxis.ToDateTime(dataPoint.Value.Key), false, relative);
             }
         }
 
@@ -234,11 +234,11 @@ namespace MopsBot.Data
             return $"http://5.45.104.29/StreamCharts/{ID}plot.png?rand={StaticBase.ran.Next(0, 999999999)}";
         }
 
-        public void AddValue(string name, double viewerCount, DateTime? xValue = null, bool savePlot = true)
+        public void AddValue(string name, double viewerCount, DateTime? xValue = null, bool savePlot = true, bool relative = true)
         {
             if(xValue == null) xValue = DateTime.UtcNow;
             if(StartTime == null) StartTime = xValue;
-            var relativeXValue = new DateTime(1970, 01, 01).Add((xValue - StartTime).Value);
+            var relativeXValue = relative ? new DateTime(1970, 01, 01).Add((xValue - StartTime).Value) : xValue;
 
             if (lineSeries.LastOrDefault()?.Title?.Equals(name) ?? false)
                 lineSeries.Last().Points.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), viewerCount));

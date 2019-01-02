@@ -22,7 +22,7 @@ namespace MopsBot.Data.Tracker
     {
         public string VideoId, IconUrl;
         private string channelThumbnailUrl;
-        public Plot ViewerGraph;
+        public DatePlot ViewerGraph;
         public bool IsThumbnailLarge;
         private LiveVideoItem liveStatus;
 
@@ -140,7 +140,7 @@ namespace MopsBot.Data.Tracker
                     //New livestream
                     else
                     {
-                        ViewerGraph = new Plot(Name, "Time since start", "Viewers");
+                        ViewerGraph = new DatePlot(Name, "Time since start", "Viewers");
 
                         foreach (ulong channel in ChannelMessages.Keys.ToList())
                             await OnMinorChangeTracked(channel, ChannelMessages[channel]);

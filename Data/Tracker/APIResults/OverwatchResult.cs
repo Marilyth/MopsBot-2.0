@@ -288,6 +288,20 @@ namespace MopsBot.Data.Tracker.APIResults.Overwatch
         public string endorsement_teammate { get; set; }
         public int endorsement_level { get; set; }
 
+        public async static Task<int> GetLevelAsync(string name){
+            var query = await MopsBot.Module.Information.ReadURLAsync($"https://playoverwatch.com/en-us/search/account-by-name/{name.Split("-")[0]}");
+
+            var tmpResult = JsonConvert.DeserializeObject<dynamic>(query);
+            foreach(var cur in tmpResult){
+                string playerName = cur["urlName"].ToString();
+                if(playerName == name){
+                    return cur["level"];
+                };
+            }
+
+            return 0;
+        }
+
     }
 
     public class AverageStats
