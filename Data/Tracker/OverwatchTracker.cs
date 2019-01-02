@@ -27,11 +27,11 @@ namespace MopsBot.Data.Tracker
         /// Initialises the tracker by setting attributes and setting up a Timer with a 10 minutes interval
         /// </summary>
         /// <param Name="OWName"> The Name-Battletag combination of the player to track </param>
-        public OverwatchTracker() : base(600000, ExistingTrackers * 20000)
+        public OverwatchTracker() : base(60000, ExistingTrackers * 2000)
         {
         }
 
-        public OverwatchTracker(string OWName) : base(600000)
+        public OverwatchTracker(string OWName) : base(60000)
         {
             Name = OWName;
 
@@ -51,7 +51,7 @@ namespace MopsBot.Data.Tracker
         public async override void PostInitialisation()
         {
             if (StatGraph != null)
-                StatGraph.InitPlot(format: "dd-MMM-yy", relative: false);
+                StatGraph.InitPlot("Date", "Level", format: "dd-MMM-yy", relative: false);
         }
 
         /// <summary>
@@ -83,8 +83,9 @@ namespace MopsBot.Data.Tracker
                 {
                     foreach (ulong channel in ChannelMessages.Keys.ToList())
                     {
-                        await OnMajorChangeTracked(channel, createEmbed(newInformation, changedStats, getSessionMostPlayed(information.getNotNull().heroes.playtime, newInformation.getNotNull().heroes.playtime)), ChannelMessages[channel]);
+                        StatGraph.AddValue("Level", StatGraph.PlotDataPoints.Last().Value.Value, relative: false);
                         StatGraph.AddValue("Level", await OverallStats.GetLevelAsync(Name), relative: false);
+                        await OnMajorChangeTracked(channel, createEmbed(newInformation, changedStats, getSessionMostPlayed(information.getNotNull().heroes.playtime, newInformation.getNotNull().heroes.playtime)), ChannelMessages[channel]);
                         await StaticBase.Trackers[TrackerType.Overwatch].UpdateDBAsync(this);
                     }
                     information = newInformation;
@@ -247,10 +248,11 @@ namespace MopsBot.Data.Tracker
             OverallStats quickNew = newStats.getNotNull().stats.quickplay.overall_stats;
             OverallStats quickOld = oldStats.getNotNull().stats.quickplay.overall_stats;
 
-            if ((quickNew.level + (quickNew.prestige * 100)) != (quickOld.level + (quickOld.prestige * 100)))
+            var curLevel = await OverallStats.GetLevelAsync(Name);
+            if (StatGraph.PlotDataPoints.Last().Value.Value < curLevel)
             {
-                changedStats.Add("Level", (await OverallStats.GetLevelAsync(Name)) +
-                                $" (+{(quickNew.level) - (quickOld.level)})");
+                changedStats.Add("Level", (curLevel) +
+                                $" (+{(curLevel) - (StatGraph.PlotDataPoints.Last().Value.Value)})");
             }
 
             if (quickNew.wins > quickOld.wins)
