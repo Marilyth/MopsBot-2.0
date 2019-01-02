@@ -81,14 +81,16 @@ namespace MopsBot.Data.Tracker
 
                 if (changedStats.Count != 0)
                 {
+                    StatGraph.AddValue("Level", StatGraph.PlotDataPoints.Last().Value.Value, relative: false);
+                    StatGraph.AddValue("Level", await OverallStats.GetLevelAsync(Name), relative: false);
+
                     foreach (ulong channel in ChannelMessages.Keys.ToList())
                     {
-                        StatGraph.AddValue("Level", StatGraph.PlotDataPoints.Last().Value.Value, relative: false);
-                        StatGraph.AddValue("Level", await OverallStats.GetLevelAsync(Name), relative: false);
                         await OnMajorChangeTracked(channel, createEmbed(newInformation, changedStats, getSessionMostPlayed(information.getNotNull().heroes.playtime, newInformation.getNotNull().heroes.playtime)), ChannelMessages[channel]);
-                        await StaticBase.Trackers[TrackerType.Overwatch].UpdateDBAsync(this);
                     }
+                    
                     information = newInformation;
+                    await StaticBase.Trackers[TrackerType.Overwatch].UpdateDBAsync(this);
                 }
             }
             catch (Exception e)
