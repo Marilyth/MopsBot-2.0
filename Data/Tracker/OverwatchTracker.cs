@@ -41,7 +41,7 @@ namespace MopsBot.Data.Tracker
                 var checkExists = overwatchInformation().Result;
                 var test = checkExists.eu;
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 Dispose();
                 throw new Exception($"Player {TrackerUrl()} could not be found on Overwatch!\nPerhaps the profile is private?");
@@ -96,6 +96,12 @@ namespace MopsBot.Data.Tracker
             catch (Exception e)
             {
                 Console.WriteLine("\n" +  $"[ERROR] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+
+                if(e.Message.Contains("TOO MANY REQUESTS")){
+                    var nextElapse = StaticBase.ran.Next(10000, 300000);
+                    checkForChange.Change(nextElapse, 300000);
+                    Console.WriteLine("Trying again in " + nextElapse + "ms");
+                }
             }
         }
 
@@ -106,7 +112,7 @@ namespace MopsBot.Data.Tracker
         /// <returns>An OStatsResult representing the fetched JSON as an object</returns>
         private async Task<OStatsResult> overwatchInformation()
         {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"http://localhost:4444/api/v3/u/{Name}/blob");
+            string query = await MopsBot.Module.Information.ReadURLAsync($"https://owapi.net/api/v3/u/{Name}/blob");
 
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {
@@ -123,7 +129,7 @@ namespace MopsBot.Data.Tracker
         /// <returns>An OStatsResult representing the fetched JSON as an object</returns>
         public static async Task<Embed> overwatchInformation(string owName)
         {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"http://localhost:4444/api/v3/u/{owName}/blob");
+            string query = await MopsBot.Module.Information.ReadURLAsync($"https://owapi.net/api/v3/u/{owName}/blob");
 
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {
