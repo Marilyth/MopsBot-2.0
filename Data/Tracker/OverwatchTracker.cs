@@ -51,7 +51,7 @@ namespace MopsBot.Data.Tracker
         public async override void PostInitialisation()
         {
             if (StatGraph != null)
-                StatGraph.InitPlot("Date", "Level", format: "dd-MMM-yy", relative: false);
+                StatGraph.InitPlot("Date", "Level", format: "dd-MMM", relative: false);
         }
 
         /// <summary>
@@ -65,7 +65,7 @@ namespace MopsBot.Data.Tracker
                 OStatsResult newInformation = await overwatchInformation();
 
                 if(StatGraph == null){
-                    StatGraph = new DatePlot(Name, "Date", "Level", "dd-MMM-yy", false);
+                    StatGraph = new DatePlot(Name, "Date", "Level", "dd-MMM", false);
                     StatGraph.AddValue("Level", await OverallStats.GetLevelAsync(Name), relative: false);
                     await StaticBase.Trackers[TrackerType.Overwatch].UpdateDBAsync(this);
                 }
