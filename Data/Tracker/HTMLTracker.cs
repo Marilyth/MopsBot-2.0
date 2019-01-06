@@ -21,6 +21,7 @@ namespace MopsBot.Data.Tracker
     {
         public string Regex;
         public string oldMatch;
+        public DatePlot DataGraph;
 
         public HTMLTracker() : base(60000, ExistingTrackers * 2000)
         {
@@ -45,6 +46,12 @@ namespace MopsBot.Data.Tracker
             }
         }
 
+        public async override void PostInitialisation()
+        {
+            if (DataGraph != null)
+                DataGraph.InitPlot("Date", "Value", format: "dd-MMM", relative: false);
+        }
+
         protected async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
@@ -53,14 +60,27 @@ namespace MopsBot.Data.Tracker
 
                 if (!string.IsNullOrEmpty(match))
                 {
+                    bool isNumeric;
+
                     if (oldMatch == null){
                         oldMatch = match;
                         await StaticBase.Trackers[TrackerType.HTML].UpdateDBAsync(this);
                     }
 
+                    if((isNumeric = Double.TryParse(oldMatch, out double value)) && DataGraph == null){
+                        DataGraph = new DatePlot("HTML" + Name.GetHashCode(), "Date", "Value", "dd-MMM", false);
+                        DataGraph.AddValue("Value", value, relative: false);
+                    }
+
                     if (!match.Equals(oldMatch)){
+                        if(isNumeric){
+                            DataGraph.AddValue("Value", value, relative: false);
+                            var success = Double.TryParse(match, out value);
+                            if(success) DataGraph.AddValue("Value", value, relative: false);
+                        }
+
                         foreach (var channel in ChannelMessages.Keys.ToList())
-                            await OnMajorChangeTracked(channel, CreateChangeEmbed($"{oldMatch} -> {match}"), ChannelMessages[channel]);
+                            await OnMajorChangeTracked(channel, CreateChangeEmbed($"{oldMatch} -> {match}", isNumeric), ChannelMessages[channel]);
                         
                         oldMatch = match;
                         await StaticBase.Trackers[TrackerType.HTML].UpdateDBAsync(this);
@@ -94,7 +114,7 @@ namespace MopsBot.Data.Tracker
             return match;
         }
 
-        private Embed CreateChangeEmbed(string changedData)
+        private Embed CreateChangeEmbed(string changedData, bool showGraph = false)
         {
             EmbedBuilder e = new EmbedBuilder();
 
@@ -102,6 +122,7 @@ namespace MopsBot.Data.Tracker
             e.Title = $"Data changed!";
             e.Description = changedData;
             e.WithCurrentTimestamp();
+            if(showGraph) e.ImageUrl = DataGraph.DrawPlot();
 
             return e.Build();
         }
