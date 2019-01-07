@@ -35,8 +35,7 @@ namespace MopsBot.Data.Tracker
 
             try
             {
-                string query = MopsBot.Module.Information.ReadURLAsync($"https://api.twitch.tv/kraken/channels/{Name}?client_id={Program.Config["Twitch"]}").Result;
-                APIResults.Twitch.Channel checkExists = JsonConvert.DeserializeObject<APIResults.Twitch.Channel>(query);
+                var checkExists = FetchDataAsync<APIResults.Twitch.Channel>($"https://api.twitch.tv/kraken/channels/{Name}?client_id={Program.Config["Twitch"]}").Result;
                 var test = checkExists.broadcaster_language;
             }
             catch (Exception)
@@ -89,14 +88,8 @@ namespace MopsBot.Data.Tracker
             try
             {
                 var acceptHeader = new KeyValuePair<string, string>("Accept", "application/vnd.twitchtv.v5+json");
-                string query = await MopsBot.Module.Information.ReadURLAsync($"https://api.twitch.tv/kraken/clips/top?client_id={Program.Config["Twitch"]}&channel={name}&period=day{(!cursor.Equals("") ? $"&cursor={cursor}" : "")}", acceptHeader);
+                var tmpResult = await FetchDataAsync<TwitchClipResult>($"https://api.twitch.tv/kraken/clips/top?client_id={Program.Config["Twitch"]}&channel={name}&period=day{(!cursor.Equals("") ? $"&cursor={cursor}" : "")}", acceptHeader);
 
-                JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
-                {
-                    NullValueHandling = NullValueHandling.Ignore
-                };
-
-                var tmpResult = JsonConvert.DeserializeObject<TwitchClipResult>(query, _jsonWriter);
                 if (tmpResult.clips != null)
                 {
                     foreach (var clip in tmpResult.clips.Where(p => !TrackedClips.ContainsKey(p.created_at) && p.created_at > DateTime.UtcNow.AddMinutes(-30) && p.views >= ViewThreshold))

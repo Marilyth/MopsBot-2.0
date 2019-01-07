@@ -22,6 +22,7 @@ namespace MopsBot.Data.Tracker
     {
         private OStatsResult information;
         public DatePlot StatGraph;
+        private static readonly object APILock = new object();
 
         /// <summary>
         /// Initialises the tracker by setting attributes and setting up a Timer with a 10 minutes interval
@@ -36,15 +37,19 @@ namespace MopsBot.Data.Tracker
             Name = OWName;
 
             //Check if person exists by forcing Exceptions if not.
-            try
+            lock (APILock)
             {
-                var checkExists = overwatchInformation().Result;
-                var test = checkExists.eu;
-            }
-            catch (Exception e)
-            {
-                Dispose();
-                throw new Exception($"Player {TrackerUrl()} could not be found on Overwatch!\nPerhaps the profile is private?");
+                try
+                {
+                    var checkExists = FetchDataAsync<OStatsResult>($"https://owapi.net/api/v3/u/{Name}/blob").Result;
+                    Task.Delay(2500).Wait();
+                    var test = checkExists.eu;
+                }
+                catch (Exception e)
+                {
+                    Dispose();
+                    throw new Exception($"Player {TrackerUrl()} could not be found on Overwatch!\nPerhaps the profile is private?");
+                }
             }
         }
 
@@ -62,9 +67,16 @@ namespace MopsBot.Data.Tracker
         {
             try
             {
-                OStatsResult newInformation = await overwatchInformation();
+                OStatsResult newInformation;
 
-                if(StatGraph == null){
+                lock (APILock)
+                {
+                    newInformation = FetchDataAsync<OStatsResult>($"https://owapi.net/api/v3/u/{Name}/blob").Result;
+                    Task.Delay(2500).Wait();
+                }
+
+                if (StatGraph == null)
+                {
                     StatGraph = new DatePlot(Name, "Date", "Level", "dd-MMM", false);
                     StatGraph.AddValue("Level", await OverallStats.GetLevelAsync(Name), relative: false);
                     await StaticBase.Trackers[TrackerType.Overwatch].UpdateDBAsync(this);
@@ -88,16 +100,17 @@ namespace MopsBot.Data.Tracker
                     {
                         await OnMajorChangeTracked(channel, createEmbed(newInformation, changedStats, getSessionMostPlayed(information.getNotNull().heroes.playtime, newInformation.getNotNull().heroes.playtime)), ChannelMessages[channel]);
                     }
-                    
+
                     information = newInformation;
                     await StaticBase.Trackers[TrackerType.Overwatch].UpdateDBAsync(this);
                 }
             }
             catch (Exception e)
             {
-                Console.WriteLine("\n" +  $"[ERROR] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+                Console.WriteLine("\n" + $"[ERROR] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
 
-                if(e.Message.Contains("TOO MANY REQUESTS")){
+                if (e.Message.Contains("TOO MANY REQUESTS"))
+                {
                     var nextElapse = StaticBase.ran.Next(10000, 300000);
                     checkForChange.Change(nextElapse, 300000);
                     Console.WriteLine("Trying again in " + nextElapse + "ms");
@@ -110,33 +123,16 @@ namespace MopsBot.Data.Tracker
         /// Then converts it into OStatsResult
         /// </summary>
         /// <returns>An OStatsResult representing the fetched JSON as an object</returns>
-        private async Task<OStatsResult> overwatchInformation()
+        public static async Task<Embed> GetStatEmbedAsync(string owName)
         {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://owapi.net/api/v3/u/{Name}/blob");
+            OStatsResult info;
 
-            JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
+            lock (APILock)
             {
-                NullValueHandling = NullValueHandling.Ignore
-            };
+                info = FetchDataAsync<OStatsResult>($"https://owapi.net/api/v3/u/{owName}/blob").Result;
+                Task.Delay(2500).Wait();
+            }
 
-            return JsonConvert.DeserializeObject<OStatsResult>(query, _jsonWriter);
-        }
-
-        /// <summary>
-        /// Queries the API to fetch a JSON containing all the stats for the player
-        /// Then converts it into OStatsResult
-        /// </summary>
-        /// <returns>An OStatsResult representing the fetched JSON as an object</returns>
-        public static async Task<Embed> overwatchInformation(string owName)
-        {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://owapi.net/api/v3/u/{owName}/blob");
-
-            JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
-            {
-                NullValueHandling = NullValueHandling.Ignore
-            };
-
-            OStatsResult info = JsonConvert.DeserializeObject<OStatsResult>(query, _jsonWriter);
             Quickplay stats = info.getNotNull().stats.quickplay;
             var mostPlayed = getMostPlayed(info.getNotNull().heroes.playtime);
 
@@ -180,7 +176,8 @@ namespace MopsBot.Data.Tracker
                             $"\nWon Games: {stats.overall_stats.wins}" +
                             $"\n Endorsement Level: {stats.overall_stats.endorsement_level}", true);
 
-            if(info.getNotNull().stats.competitive != null){
+            if (info.getNotNull().stats.competitive != null)
+            {
                 author.IconUrl = info.getNotNull().stats.competitive.overall_stats.tier_image;
                 e.AddField("Competitive", $"Time played: {info.getNotNull().stats.competitive.game_stats.time_played}hrs" +
                             $"\nWin Rate: {info.getNotNull().stats.competitive.overall_stats.win_rate}%" +
@@ -190,7 +187,7 @@ namespace MopsBot.Data.Tracker
 
             e.AddField("Most Played", mostPlayed.Item2);
 
-            if (mostPlayed.Item1.Equals("Ana") || mostPlayed.Item1.Equals("Moira") || mostPlayed.Item1.Equals("Orisa") || 
+            if (mostPlayed.Item1.Equals("Ana") || mostPlayed.Item1.Equals("Moira") || mostPlayed.Item1.Equals("Orisa") ||
                 mostPlayed.Item1.Equals("Doomfist") || mostPlayed.Item1.Equals("Sombra") || mostPlayed.Item1.Equals("Wrecking-Ball") ||
                 mostPlayed.Item1.Equals("Brigitte"))
                 e.ImageUrl = $"https://blzgdapipro-a.akamaihd.net/hero/{mostPlayed.Item1.ToLower()}/full-portrait.png";
@@ -231,7 +228,7 @@ namespace MopsBot.Data.Tracker
             }
 
             e.AddField("Sessions most played Hero", $"{mostPlayed.Item2}");
-            if (mostPlayed.Item1.Equals("Ana") || mostPlayed.Item1.Equals("Moira") || mostPlayed.Item1.Equals("Orisa") || mostPlayed.Item1.Equals("Doomfist") || 
+            if (mostPlayed.Item1.Equals("Ana") || mostPlayed.Item1.Equals("Moira") || mostPlayed.Item1.Equals("Orisa") || mostPlayed.Item1.Equals("Doomfist") ||
                 mostPlayed.Item1.Equals("Sombra") || mostPlayed.Item1.Equals("Brigitte") || mostPlayed.Item1.Equals("Wrecking-Ball") || mostPlayed.Item1.Equals("Ashe"))
                 e.ThumbnailUrl = $"https://blzgdapipro-a.akamaihd.net/hero/{mostPlayed.Item1.ToLower()}/full-portrait.png";
             else
@@ -288,7 +285,8 @@ namespace MopsBot.Data.Tracker
                 }
             }
 
-            if(quickNew.endorsement_level != quickOld.endorsement_level){
+            if (quickNew.endorsement_level != quickOld.endorsement_level)
+            {
                 changedStats.Add("Endorsement Level", quickNew.endorsement_level.ToString());
             }
 
@@ -345,7 +343,8 @@ namespace MopsBot.Data.Tracker
             return Tuple.Create("CannotFetchArcade", "CannotFetchArcade");
         }
 
-        public override string TrackerUrl(){
+        public override string TrackerUrl()
+        {
             return "https://playoverwatch.com/en-us/career/pc/eu/" + Name;
         }
     }

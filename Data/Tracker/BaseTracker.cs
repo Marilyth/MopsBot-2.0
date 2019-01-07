@@ -47,6 +47,17 @@ namespace MopsBot.Data.Tracker
         {
         }
 
+        protected static async Task<T> FetchDataAsync<T>(string url, params KeyValuePair<string, string>[] headers){
+            string query = await MopsBot.Module.Information.ReadURLAsync(url);
+            
+            JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
+            {
+                NullValueHandling = NullValueHandling.Ignore
+            };
+
+            return JsonConvert.DeserializeObject<T>(query, _jsonWriter);
+        }
+
         protected abstract void CheckForChange_Elapsed(object stateinfo);
 
         public virtual string TrackerUrl()

@@ -81,15 +81,8 @@ namespace MopsBot.Data.Tracker
 
         private async Task<RedditResult> fetchPosts()
         {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://www.reddit.com/r/{Name.Split(" ")[0]}/" +
+            return await FetchDataAsync<RedditResult>($"https://www.reddit.com/r/{Name.Split(" ")[0]}/" +
                                                                         $"{(Name.Split(" ").Length > 1 ? $"search.json?sort=new&restrict_sr=on&q={Name.Split(" ")[1]}" : "new.json?restrict_sr=on")}");
-
-            JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
-            {
-                NullValueHandling = NullValueHandling.Ignore
-            };
-
-            return JsonConvert.DeserializeObject<RedditResult>(query, _jsonWriter);
         }
 
         ///<summary>Builds an embed out of the changed stats, and sends it as a Discord message </summary>

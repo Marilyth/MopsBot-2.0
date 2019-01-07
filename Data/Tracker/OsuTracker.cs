@@ -104,16 +104,14 @@ namespace MopsBot.Data.Tracker
 
         public async Task<List<RecentScore>> fetchRecent(string mode = "m=0")
         {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://osu.ppy.sh/api/get_user_recent?u={Name}&limit=50&{mode}&k={Program.Config["Osu"]}");
-
-            return JsonConvert.DeserializeObject<List<RecentScore>>(query);
+            return await FetchDataAsync<List<RecentScore>>($"https://osu.ppy.sh/api/get_user_recent?u={Name}&limit=50&{mode}&k={Program.Config["Osu"]}");
         }
 
         public async Task<Score> fetchScore(string beatmapID, string mode = "m=0")
         {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://osu.ppy.sh/api/get_scores?b={beatmapID}&{mode}&u={Name}&limit=1&k={Program.Config["Osu"]}");
+            var tmpResult = await FetchDataAsync<List<Score>>($"https://osu.ppy.sh/api/get_scores?b={beatmapID}&{mode}&u={Name}&limit=1&k={Program.Config["Osu"]}");
 
-            return JsonConvert.DeserializeObject<List<Score>>(query).OrderByDescending(x => DateTime.Parse(x.date)).FirstOrDefault();
+            return tmpResult.OrderByDescending(x => DateTime.Parse(x.date)).FirstOrDefault();
         }
 
         public async Task<Beatmap> fetchBeatmap(string beatmapID, string mode = "m=0")

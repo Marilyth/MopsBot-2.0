@@ -49,35 +49,22 @@ namespace MopsBot.Data.Tracker
         {
             var lastDateTime = DateTime.Parse(LastTime).ToUniversalTime();
             var lastStringDateTime = XmlConvert.ToString(lastDateTime.AddSeconds(1), XmlDateTimeSerializationMode.Utc);
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId={uploadPlaylistId}&key={Program.Config["Youtube"]}");
+            var tmpResult = await FetchDataAsync<Playlist>($"https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId={uploadPlaylistId}&key={Program.Config["Youtube"]}");
 
             var tmp = Program.Config["Youtube"];
             Program.Config["Youtube"] = Program.Config["Youtube2"];
             Program.Config["Youtube2"] = tmp;
-
-            JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
-            {
-                NullValueHandling = NullValueHandling.Ignore
-            };
-
-            Playlist tmpResult = JsonConvert.DeserializeObject<Playlist>(query, _jsonWriter);
 
             return tmpResult.items.Where(x => x.snippet.publishedAt > lastDateTime).OrderByDescending(x => x.snippet.publishedAt).ToArray();
         }
 
         private async Task<ChannelItem> fetchChannel()
         {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://www.googleapis.com/youtube/v3/channels?part=contentDetails,snippet&id={Name}&key={Program.Config["Youtube"]}");
+            var tmpResult = await FetchDataAsync<Channel>($"https://www.googleapis.com/youtube/v3/channels?part=contentDetails,snippet&id={Name}&key={Program.Config["Youtube"]}");
+            
             var tmp = Program.Config["Youtube"];
             Program.Config["Youtube"] = Program.Config["Youtube2"];
             Program.Config["Youtube2"] = tmp;
-
-            JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
-            {
-                NullValueHandling = NullValueHandling.Ignore
-            };
-
-            Channel tmpResult = JsonConvert.DeserializeObject<Channel>(query, _jsonWriter);
 
             return tmpResult.items.First();
         }

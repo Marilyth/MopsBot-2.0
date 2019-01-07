@@ -161,31 +161,8 @@ namespace MopsBot.Data.Tracker
 
         private async Task<TwitchResult> streamerInformation()
         {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://api.twitch.tv/kraken/streams/{TwitchId}?client_id={Program.Config["Twitch"]}", acceptHeader);
+            TwitchResult tmpResult = await FetchDataAsync<TwitchResult>($"https://api.twitch.tv/kraken/streams/{TwitchId}?client_id={Program.Config["Twitch"]}", acceptHeader);
 
-            JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
-            {
-                NullValueHandling = NullValueHandling.Ignore
-            };
-
-            TwitchResult tmpResult = JsonConvert.DeserializeObject<TwitchResult>(query, _jsonWriter);
-
-            if (tmpResult.stream == null) tmpResult.stream = new APIResults.Twitch.Stream();
-            if (tmpResult.stream.game == "" || tmpResult.stream.game == null) tmpResult.stream.game = "Nothing";
-
-            return tmpResult;
-        }
-
-        private async static Task<TwitchResult> streamerInformation(string name)
-        {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://api.twitch.tv/kraken/streams/{await GetIdFromUsername(name)}?client_id={Program.Config["Twitch"]}", acceptHeader);
-
-            JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
-            {
-                NullValueHandling = NullValueHandling.Ignore
-            };
-
-            TwitchResult tmpResult = JsonConvert.DeserializeObject<TwitchResult>(query, _jsonWriter);
             if (tmpResult.stream == null) tmpResult.stream = new APIResults.Twitch.Stream();
             if (tmpResult.stream.game == "" || tmpResult.stream.game == null) tmpResult.stream.game = "Nothing";
 
@@ -194,17 +171,15 @@ namespace MopsBot.Data.Tracker
 
         public static async Task<ulong> GetIdFromUsername(string name)
         {
-            var result = await MopsBot.Module.Information.ReadURLAsync($"https://api.twitch.tv/kraken/users?login={name}&client_id={Program.Config["Twitch"]}", acceptHeader);
-            var tmpResult = JsonConvert.DeserializeObject<dynamic>(result);
+            var tmpResult = await FetchDataAsync<dynamic>($"https://api.twitch.tv/kraken/users?login={name}&client_id={Program.Config["Twitch"]}", acceptHeader);
 
             return tmpResult["users"][0]["_id"];
         }
 
         public async Task<string> GetVodAsync()
         {
-            var result = await MopsBot.Module.Information.ReadURLAsync($"https://api.twitch.tv/kraken/channels/{TwitchId}/videos?client_id={Program.Config["Twitch"]}", acceptHeader);
-            var tmpResult = JsonConvert.DeserializeObject<dynamic>(result);
-
+            var tmpResult = await FetchDataAsync<dynamic>($"https://api.twitch.tv/kraken/channels/{TwitchId}/videos?client_id={Program.Config["Twitch"]}", acceptHeader);
+            
             try
             {
                 return tmpResult["videos"][0]["url"];
