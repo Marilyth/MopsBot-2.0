@@ -48,7 +48,7 @@ namespace MopsBot.Data.Tracker
         }
 
         protected static async Task<T> FetchDataAsync<T>(string url, params KeyValuePair<string, string>[] headers){
-            string query = await MopsBot.Module.Information.ReadURLAsync(url);
+            string query = await MopsBot.Module.Information.ReadURLAsync(url, headers);
             
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {
