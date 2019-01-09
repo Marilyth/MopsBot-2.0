@@ -120,8 +120,8 @@ namespace MopsBot.Data.Tracker
         public override void Update(Dictionary<string, Dictionary<string, string>> args){
             SetBaseValues(args["NewValue"]);
 
-            var newChannelId = ulong.Parse(args["OldValue"]["Channel"].Split(":")[1]);
-            var oldChannelId = ulong.Parse(args["NewValue"]["Channel"].Split(":")[1]);
+            var newChannelId = ulong.Parse(args["NewValue"]["Channel"].Split(":")[1]);
+            var oldChannelId = ulong.Parse(args["OldValue"]["Channel"].Split(":")[1]);
             if(newChannelId != oldChannelId)
                 ChannelMessages.Remove(oldChannelId);
         }
