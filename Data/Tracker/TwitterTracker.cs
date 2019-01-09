@@ -184,7 +184,7 @@ namespace MopsBot.Data.Tracker
             return new ContentScope()
             {
                 Id = this.Name,
-                Name = this.Name,
+                _Name = this.Name,
                 MainNotification = this.ChannelMessages[channelId].Split("|")[0],
                 NonMainNotification = this.ChannelMessages[channelId].Split("|")[1],
                 Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId,
@@ -210,7 +210,7 @@ namespace MopsBot.Data.Tracker
         public new struct ContentScope
         {
             public string Id;
-            public string Name;
+            public string _Name;
             public string MainNotification;
             public string NonMainNotification;
             public string Channel;

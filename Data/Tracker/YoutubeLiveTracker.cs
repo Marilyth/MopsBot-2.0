@@ -246,7 +246,7 @@ namespace MopsBot.Data.Tracker
         public override object GetAsScope(ulong channelId){
             return new ContentScope(){
                 Id = this.Name,
-                Name = this.Name,
+                _Name = this.Name,
                 Notification = this.ChannelMessages[channelId],
                 Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId,
                 IsThumbnailLarge = this.IsThumbnailLarge
@@ -256,7 +256,7 @@ namespace MopsBot.Data.Tracker
         public new struct ContentScope
         {
             public string Id;
-            public string Name;
+            public string _Name;
             public string Notification;
             public string Channel;
             public bool IsThumbnailLarge;

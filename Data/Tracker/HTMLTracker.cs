@@ -158,7 +158,7 @@ namespace MopsBot.Data.Tracker
         public override object GetAsScope(ulong channelId){
             return new ContentScope(){
                 Id = this.Name,
-                Name = this.Name.Split("|||")[0],
+                _Name = this.Name.Split("|||")[0],
                 Regex = this.Regex,
                 Notification = this.ChannelMessages[channelId],
                 Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId
@@ -168,7 +168,7 @@ namespace MopsBot.Data.Tracker
         public new struct ContentScope
         {
             public string Id;
-            public string Name;
+            public string _Name;
             public string Regex;
             public string Notification;
             public string Channel;

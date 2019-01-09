@@ -102,7 +102,7 @@ namespace MopsBot.Data.Tracker
 
             return new Dictionary<string, object>(){
                 {"Parameters", new Dictionary<string, object>(){
-                                {"Name", ""}, 
+                                {"_Name", ""}, 
                                 {"Notification", "New content!"}, 
                                 {"Channel", channels}}}
             };
