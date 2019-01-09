@@ -32,17 +32,17 @@ namespace MopsBot.Data.Tracker
         }
 
         public TwitchTracker(Dictionary<string, string> args) : base(60000, 60000){
-            if(!StaticBase.Trackers[TrackerType.Twitch].GetTrackers().ContainsKey(args["Name"])){
+            if(!StaticBase.Trackers[TrackerType.Twitch].GetTrackers().ContainsKey(args["_Name"])){
                 base.SetBaseValues(args, true);
                 isThumbnailLarge = bool.Parse(args["IsThumbnailLarge"]);
             } else {
                 this.Dispose();
-                var curTracker = StaticBase.Trackers[TrackerType.Twitch].GetTrackers()[args["Name"]];
+                var curTracker = StaticBase.Trackers[TrackerType.Twitch].GetTrackers()[args["_Name"]];
                 var curGuild = ((ITextChannel)Program.Client.GetChannel(ulong.Parse(args["Channel"]))).GuildId;
 
                 var OldValues = JsonConvert.DeserializeObject<Dictionary<string, string>>(JsonConvert.SerializeObject(curTracker.GetAsScope(curGuild)));
                 StaticBase.Trackers[TrackerType.Twitch].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", OldValues}});
-                throw new ArgumentException($"Tracker for {args["Name"]} existed already, updated instead!");
+                throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
             }
         }
 

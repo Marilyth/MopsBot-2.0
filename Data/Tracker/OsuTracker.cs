@@ -30,7 +30,7 @@ namespace MopsBot.Data.Tracker
         }
 
         public OsuTracker(Dictionary<string, string> args) : base(60000, 60000){
-            if(!StaticBase.Trackers[TrackerType.Osu].GetTrackers().ContainsKey(args["Name"])){
+            if(!StaticBase.Trackers[TrackerType.Osu].GetTrackers().ContainsKey(args["_Name"])){
                 AllPP = new Dictionary<string, double>();
                 AllPP.Add("m=0", 0);
                 AllPP.Add("m=1", 0);
@@ -41,12 +41,12 @@ namespace MopsBot.Data.Tracker
                 PPThreshold = double.Parse(args["PPThreshold"]);
             } else {
                 this.Dispose();
-                var curTracker = StaticBase.Trackers[TrackerType.Osu].GetTrackers()[args["Name"]];
+                var curTracker = StaticBase.Trackers[TrackerType.Osu].GetTrackers()[args["_Name"]];
                 var curGuild = ((ITextChannel)Program.Client.GetChannel(ulong.Parse(args["Channel"]))).GuildId;
 
                 var OldValues = JsonConvert.DeserializeObject<Dictionary<string, string>>(JsonConvert.SerializeObject(curTracker.GetAsScope(curGuild)));
                 StaticBase.Trackers[TrackerType.Osu].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", OldValues}});
-                throw new ArgumentException($"Tracker for {args["Name"]} existed already, updated instead!");
+                throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
             }
         }
 

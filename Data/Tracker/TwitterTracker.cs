@@ -24,17 +24,17 @@ namespace MopsBot.Data.Tracker
         }
 
         public TwitterTracker(Dictionary<string, string> args) : base(600000, 60000){
-            if(!StaticBase.Trackers[TrackerType.Twitter].GetTrackers().ContainsKey(args["Name"])){
+            if(!StaticBase.Trackers[TrackerType.Twitter].GetTrackers().ContainsKey(args["_Name"])){
                 base.SetBaseValues(args, true);
                 Update(new Dictionary<string, Dictionary<string, string>>(){{"NewValue", args}, {"OldValue", args}});
             } else {
                 this.Dispose();
-                var curTracker = StaticBase.Trackers[TrackerType.Twitter].GetTrackers()[args["Name"]];
+                var curTracker = StaticBase.Trackers[TrackerType.Twitter].GetTrackers()[args["_Name"]];
                 var curGuild = ((ITextChannel)Program.Client.GetChannel(ulong.Parse(args["Channel"]))).GuildId;
 
                 var OldValues = JsonConvert.DeserializeObject<Dictionary<string, string>>(JsonConvert.SerializeObject(curTracker.GetAsScope(curGuild)));
                 StaticBase.Trackers[TrackerType.Twitter].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", OldValues}});
-                throw new ArgumentException($"Tracker for {args["Name"]} existed already, updated instead!");
+                throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
             }
         }
 

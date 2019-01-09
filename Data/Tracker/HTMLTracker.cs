@@ -28,18 +28,18 @@ namespace MopsBot.Data.Tracker
         }
 
         public HTMLTracker(Dictionary<string, string> args) : base(120000, 60000){
-            if(!StaticBase.Trackers[TrackerType.HTML].GetTrackers().ContainsKey(args["Name"] + "|||" + args["Regex"])){
+            if(!StaticBase.Trackers[TrackerType.HTML].GetTrackers().ContainsKey(args["_Name"] + "|||" + args["Regex"])){
                 base.SetBaseValues(args);
-                Name = args["Name"] + "|||" + args["Regex"];
+                Name = args["_Name"] + "|||" + args["Regex"];
                 Regex = args["Regex"];
             } else {
                 this.Dispose();
-                var curTracker = StaticBase.Trackers[TrackerType.HTML].GetTrackers()[args["Name"] + "|||" + args["Regex"]];
+                var curTracker = StaticBase.Trackers[TrackerType.HTML].GetTrackers()[args["_Name"] + "|||" + args["Regex"]];
                 var curGuild = ((ITextChannel)Program.Client.GetChannel(ulong.Parse(args["Channel"]))).GuildId;
 
                 var OldValues = JsonConvert.DeserializeObject<Dictionary<string, string>>(JsonConvert.SerializeObject(curTracker.GetAsScope(curGuild)));
                 StaticBase.Trackers[TrackerType.HTML].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", OldValues}});
-                throw new ArgumentException($"Tracker for {args["Name"]} existed already, updated instead!");
+                throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
             }
         }
 
@@ -152,7 +152,7 @@ namespace MopsBot.Data.Tracker
         public override void Update(Dictionary<string, Dictionary<string, string>> args){
             base.Update(args);
             Regex = args["NewValue"]["Regex"];
-            Name = args["NewValue"]["Name"] + Regex;
+            Name = args["NewValue"]["_Name"] + Regex;
         }
 
         public override object GetAsScope(ulong channelId){
