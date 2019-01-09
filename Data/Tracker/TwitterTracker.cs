@@ -23,6 +23,21 @@ namespace MopsBot.Data.Tracker
         {
         }
 
+        public TwitterTracker(Dictionary<string, string> args) : base(600000, 60000){
+            if(!StaticBase.Trackers[TrackerType.Twitter].GetTrackers().ContainsKey(args["Name"])){
+                base.SetBaseValues(args, true);
+                Update(new Dictionary<string, Dictionary<string, string>>(){{"NewValue", args}, {"OldValue", args}});
+            } else {
+                this.Dispose();
+                var curTracker = StaticBase.Trackers[TrackerType.Twitter].GetTrackers()[args["Name"]];
+                var curGuild = ((ITextChannel)Program.Client.GetChannel(ulong.Parse(args["Channel"]))).GuildId;
+
+                var OldValues = JsonConvert.DeserializeObject<Dictionary<string, string>>(JsonConvert.SerializeObject(curTracker.GetAsScope(curGuild)));
+                StaticBase.Trackers[TrackerType.Twitter].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", OldValues}});
+                throw new ArgumentException($"Tracker for {args["Name"]} existed already, updated instead!");
+            }
+        }
+
         public TwitterTracker(string twitterName) : base(600000)
         {
             Name = twitterName;
@@ -55,8 +70,9 @@ namespace MopsBot.Data.Tracker
                             if (!ChannelMessages[channel].Split("|")[0].Equals("NONE"))
                                 await OnMajorChangeTracked(channel, createEmbed(newTweet), ChannelMessages[channel].Split("|")[0]);
                         }
-                        else if (!ChannelMessages[channel].Split("|")[1].Equals("NONE"))
+                        else if (!ChannelMessages[channel].Split("|")[1].Equals("NONE")){
                             await OnMajorChangeTracked(channel, createEmbed(newTweet), ChannelMessages[channel].Split("|")[1]);
+                        }
                     }
                 }
 
@@ -164,6 +180,7 @@ namespace MopsBot.Data.Tracker
         {
             return new ContentScope()
             {
+                Id = this.Name,
                 Name = this.Name,
                 Notification = this.ChannelMessages[channelId],
                 Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId,
@@ -172,25 +189,25 @@ namespace MopsBot.Data.Tracker
             };
         }
 
-        public override void Update(params string[] args)
+        public override void Update(Dictionary<string, Dictionary<string, string>> args)
         {
-            var channelId = ulong.Parse(args[2].Split(":")[1]);
-            Name = args[0];
-            ChannelMessages[channelId] = args[1];
+            base.Update(args);
+            var channelId = ulong.Parse(args["NewValue"]["Channel"].Split(":")[1]);
 
-            if (bool.Parse(args[3]))
-                ChannelMessages[channelId] = args[1] + "|" + ChannelMessages[channelId].Split("|")[1];
+            if (bool.Parse(args["NewValue"]["TrackMainTweets"]))
+                ChannelMessages[channelId] = args["Notification"] + "|" + ChannelMessages[channelId].Split("|")[1];
             else
                 ChannelMessages[channelId] = "NONE|" + ChannelMessages[channelId].Split("|")[1];
 
-            if (bool.Parse(args[4]))
-                ChannelMessages[channelId] = ChannelMessages[channelId].Split("|")[0] + "|" + args[1];
+            if (bool.Parse(args["NewValue"]["TrackNonMainTweets"]))
+                ChannelMessages[channelId] = ChannelMessages[channelId].Split("|")[0] + "|" + args["Notification"];
             else
                 ChannelMessages[channelId] = ChannelMessages[channelId].Split("|")[0] + "|NONE";
         }
 
         public new struct ContentScope
         {
+            public string Id;
             public string Name;
             public string Notification;
             public string Channel;

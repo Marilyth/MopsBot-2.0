@@ -30,6 +30,21 @@ namespace MopsBot.Data.Tracker
         {
         }
 
+        public YoutubeLiveTracker(Dictionary<string, string> args) : base(300000, 60000){
+            if(!StaticBase.Trackers[TrackerType.YoutubeLive].GetTrackers().ContainsKey(args["Name"])){
+                base.SetBaseValues(args, true);
+                IsThumbnailLarge = bool.Parse(args["IsThumbnailLarge"]);
+            } else {
+                this.Dispose();
+                var curTracker = StaticBase.Trackers[TrackerType.YoutubeLive].GetTrackers()[args["Name"]];
+                var curGuild = ((ITextChannel)Program.Client.GetChannel(ulong.Parse(args["Channel"]))).GuildId;
+
+                var OldValues = JsonConvert.DeserializeObject<Dictionary<string, string>>(JsonConvert.SerializeObject(curTracker.GetAsScope(curGuild)));
+                StaticBase.Trackers[TrackerType.YoutubeLive].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", OldValues}});
+                throw new ArgumentException($"Tracker for {args["Name"]} existed already, updated instead!");
+            }
+        }
+
         public YoutubeLiveTracker(string channelId) : base(300000)
         {
             Name = channelId;
@@ -223,8 +238,14 @@ namespace MopsBot.Data.Tracker
             return parentParameters;
         }
 
+        public override void Update(Dictionary<string, Dictionary<string, string>> args){
+            base.Update(args);
+            IsThumbnailLarge = bool.Parse(args["NewValue"]["IsThumbnailLarge"]);
+        }
+
         public override object GetAsScope(ulong channelId){
             return new ContentScope(){
+                Id = this.Name,
                 Name = this.Name,
                 Notification = this.ChannelMessages[channelId],
                 Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId,
@@ -232,14 +253,9 @@ namespace MopsBot.Data.Tracker
             };
         }
 
-        public override void Update(params string[] args){
-            var channelId = ulong.Parse(args[2].Split(":")[1]);
-            ChannelMessages[channelId] = args[1];
-            IsThumbnailLarge = bool.Parse(args[3]);
-        }
-
         public new struct ContentScope
         {
+            public string Id;
             public string Name;
             public string Notification;
             public string Channel;

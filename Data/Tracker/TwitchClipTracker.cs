@@ -25,6 +25,21 @@ namespace MopsBot.Data.Tracker
         {
         }
 
+        public TwitchClipTracker(Dictionary<string, string> args) : base(600000, 60000){
+            if(!StaticBase.Trackers[TrackerType.TwitchClip].GetTrackers().ContainsKey(args["Name"])){
+                base.SetBaseValues(args, true);
+                ViewThreshold = uint.Parse(args["ViewThreshold"]);
+            } else {
+                this.Dispose();
+                var curTracker = StaticBase.Trackers[TrackerType.TwitchClip].GetTrackers()[args["Name"]];
+                var curGuild = ((ITextChannel)Program.Client.GetChannel(ulong.Parse(args["Channel"]))).GuildId;
+
+                var OldValues = JsonConvert.DeserializeObject<Dictionary<string, string>>(JsonConvert.SerializeObject(curTracker.GetAsScope(curGuild)));
+                StaticBase.Trackers[TrackerType.TwitchClip].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", OldValues}});
+                throw new ArgumentException($"Tracker for {args["Name"]} existed already, updated instead!");
+            }
+        }
+
         public TwitchClipTracker(string streamerName) : base(600000)
         {
             Console.WriteLine("\n" + $"{DateTime.Now} Started TwitchClipTracker for {streamerName}");
@@ -171,6 +186,7 @@ namespace MopsBot.Data.Tracker
 
         public override object GetAsScope(ulong channelId){
             return new ContentScope(){
+                Id = this.Name,
                 Name = this.Name,
                 Notification = this.ChannelMessages[channelId],
                 Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId,
@@ -178,14 +194,14 @@ namespace MopsBot.Data.Tracker
             };
         }
 
-        public override void Update(params string[] args){
-            var channelId = ulong.Parse(args[2].Split(":")[1]);
-            ChannelMessages[channelId] = args[1];
-            ViewThreshold = uint.Parse(args[3]);
+        public override void Update(Dictionary<string, Dictionary<string, string>> args){
+            base.Update(args);
+            ViewThreshold = uint.Parse(args["NewValue"]["ViewThreshold"]);
         }
 
         public new struct ContentScope
         {
+            public string Id;
             public string Name;
             public string Notification;
             public string Channel;

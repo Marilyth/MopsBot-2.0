@@ -110,19 +110,36 @@ namespace MopsBot.Data.Tracker
 
         public override object GetAsScope(ulong channelId){
             return new ContentScope(){
+                Id = this.Name,
                 Name = this.Name,
                 Notification = this.ChannelMessages[channelId],
                 Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId
             };
         }
 
-        public override void Update(params string[] args){
-            var channelId = ulong.Parse(args[2].Split(":")[1]);
-            ChannelMessages[channelId] = args[1];
+        public override void Update(Dictionary<string, Dictionary<string, string>> args){
+            SetBaseValues(args["NewValue"]);
+
+            var newChannelId = ulong.Parse(args["OldValue"]["Channel"].Split(":")[1]);
+            var oldChannelId = ulong.Parse(args["NewValue"]["Channel"].Split(":")[1]);
+            if(newChannelId != oldChannelId)
+                ChannelMessages.Remove(oldChannelId);
+        }
+
+        public void SetBaseValues(Dictionary<string, string> args, bool setName = false){
+            try{
+                if(setName) Name = args["Name"];
+                var newChannelId = ulong.Parse(args["Channel"].Split(":")[1]);
+                ChannelMessages[newChannelId] = args["Notification"];
+            } catch (Exception e){
+                Dispose();
+                throw e;
+            }
         }
 
         public new struct ContentScope
         {
+            public string Id;
             public string Name;
             public string Notification;
             public string Channel;

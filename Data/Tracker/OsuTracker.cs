@@ -10,6 +10,7 @@ using System.Text;
 using System.IO;
 using System.Threading.Tasks;
 using MopsBot.Data.Tracker.APIResults.Osu;
+using MopsBot.Api;
 
 namespace MopsBot.Data.Tracker
 {
@@ -26,6 +27,27 @@ namespace MopsBot.Data.Tracker
             AllPP.Add("m=1", 0);
             AllPP.Add("m=2", 0);
             AllPP.Add("m=3", 0);
+        }
+
+        public OsuTracker(Dictionary<string, string> args) : base(60000, 60000){
+            if(!StaticBase.Trackers[TrackerType.Osu].GetTrackers().ContainsKey(args["Name"])){
+                AllPP = new Dictionary<string, double>();
+                AllPP.Add("m=0", 0);
+                AllPP.Add("m=1", 0);
+                AllPP.Add("m=2", 0);
+                AllPP.Add("m=3", 0);
+
+                base.SetBaseValues(args, true);
+                PPThreshold = double.Parse(args["PPThreshold"]);
+            } else {
+                this.Dispose();
+                var curTracker = StaticBase.Trackers[TrackerType.Osu].GetTrackers()[args["Name"]];
+                var curGuild = ((ITextChannel)Program.Client.GetChannel(ulong.Parse(args["Channel"]))).GuildId;
+
+                var OldValues = JsonConvert.DeserializeObject<Dictionary<string, string>>(JsonConvert.SerializeObject(curTracker.GetAsScope(curGuild)));
+                StaticBase.Trackers[TrackerType.Osu].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", OldValues}});
+                throw new ArgumentException($"Tracker for {args["Name"]} existed already, updated instead!");
+            }
         }
 
         public OsuTracker(string name) : base(60000)
@@ -257,6 +279,7 @@ namespace MopsBot.Data.Tracker
 
         public override object GetAsScope(ulong channelId){
             return new ContentScope(){
+                Id = this.Name,
                 Name = this.Name,
                 Notification = this.ChannelMessages[channelId],
                 Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId,
@@ -264,14 +287,14 @@ namespace MopsBot.Data.Tracker
             };
         }
 
-        public override void Update(params string[] args){
-            var channelId = ulong.Parse(args[2].Split(":")[1]);
-            ChannelMessages[channelId] = args[1];
-            PPThreshold = double.Parse(args[3]);
+        public override void Update(Dictionary<string, Dictionary<string, string>> args){
+            base.Update(args);
+            PPThreshold = double.Parse(args["NewValue"]["PPThreshold"]);
         }
 
         public new struct ContentScope
         {
+            public string Id;
             public string Name;
             public string Notification;
             public string Channel;

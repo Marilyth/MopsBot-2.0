@@ -24,6 +24,22 @@ namespace MopsBot.Data.Tracker
         {
         }
 
+        public NewsTracker(Dictionary<string, string> args) : base(600000, 60000){
+            if(!StaticBase.Trackers[TrackerType.News].GetTrackers().ContainsKey(args["Name"] + "|" + args["Query"])){
+                base.SetBaseValues(args);
+                Name = args["Name"] + "|" + args["Query"];
+                Query = args["Query"];
+            } else {
+                this.Dispose();
+                var curTracker = StaticBase.Trackers[TrackerType.News].GetTrackers()[args["Name"] + "|||" + args["Regex"]];
+                var curGuild = ((ITextChannel)Program.Client.GetChannel(ulong.Parse(args["Channel"]))).GuildId;
+
+                var OldValues = JsonConvert.DeserializeObject<Dictionary<string, string>>(JsonConvert.SerializeObject(curTracker.GetAsScope(curGuild)));
+                StaticBase.Trackers[TrackerType.HTML].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValues", args}, {"OldValues", OldValues}});
+                throw new ArgumentException($"Tracker for {args["Name"]} existed already, updated instead!");
+            }
+        }
+
         public NewsTracker(string NewsQuery) : base(600000)
         {
             var request = NewsQuery.Split("|");
@@ -117,16 +133,22 @@ namespace MopsBot.Data.Tracker
 
         public override Dictionary<string, object> GetParameters(ulong guildId)
         {
-            ulong[] channels = Program.Client.GetGuild(guildId).Channels.Select(x => x.Id).ToArray();
+            var parameters = base.GetParameters(guildId);
+            (parameters["Parameters"] as Dictionary<string, object>)["Name"] = "";
+            (parameters["Parameters"] as Dictionary<string, object>)["Query"] = "";
 
-            return new Dictionary<string, object>(){
-                {"Parameters", new Dictionary<string, object>(){{"Name", ""}, {"Notification", "New content!"}, {"Channel", channels}}}
-            };
+            return parameters;
+        }
+
+        public override void Update(Dictionary<string, Dictionary<string, string>> args){
+            base.Update(args);
+            Query = args["NewValue"]["Query"];
         }
 
         public override object GetAsScope(ulong channelId){
             return new ContentScope(){
-                Source = this.Source,
+                Id = this.Name,
+                Name = this.Source,
                 Query = this.Query,
                 Notification = this.ChannelMessages[channelId],
                 Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId
@@ -135,7 +157,8 @@ namespace MopsBot.Data.Tracker
 
         public new struct ContentScope
         {
-            public string Source;
+            public string Id;
+            public string Name;
             public string Query;
             public string Notification;
             public string Channel;

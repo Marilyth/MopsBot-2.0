@@ -27,6 +27,22 @@ namespace MopsBot.Data.Tracker
         {
         }
 
+        public HTMLTracker(Dictionary<string, string> args) : base(120000, 60000){
+            if(!StaticBase.Trackers[TrackerType.HTML].GetTrackers().ContainsKey(args["Name"] + "|||" + args["Regex"])){
+                base.SetBaseValues(args);
+                Name = args["Name"] + "|||" + args["Regex"];
+                Regex = args["Regex"];
+            } else {
+                this.Dispose();
+                var curTracker = StaticBase.Trackers[TrackerType.HTML].GetTrackers()[args["Name"] + "|||" + args["Regex"]];
+                var curGuild = ((ITextChannel)Program.Client.GetChannel(ulong.Parse(args["Channel"]))).GuildId;
+
+                var OldValues = JsonConvert.DeserializeObject<Dictionary<string, string>>(JsonConvert.SerializeObject(curTracker.GetAsScope(curGuild)));
+                StaticBase.Trackers[TrackerType.HTML].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", OldValues}});
+                throw new ArgumentException($"Tracker for {args["Name"]} existed already, updated instead!");
+            }
+        }
+
         public HTMLTracker(string name) : base(120000)
         {
             Name = name;
@@ -125,6 +141,31 @@ namespace MopsBot.Data.Tracker
             if(showGraph) e.ImageUrl = DataGraph.DrawPlot();
 
             return e.Build();
+        }
+
+        public override void Update(Dictionary<string, Dictionary<string, string>> args){
+            base.Update(args);
+            Regex = args["NewValue"]["Regex"];
+            Name = args["NewValue"]["Name"] + Regex;
+        }
+
+        public override object GetAsScope(ulong channelId){
+            return new ContentScope(){
+                Id = this.Name,
+                Name = this.Name.Split("|||")[0],
+                Regex = this.Regex,
+                Notification = this.ChannelMessages[channelId],
+                Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId
+            };
+        }
+
+        public new struct ContentScope
+        {
+            public string Id;
+            public string Name;
+            public string Regex;
+            public string Notification;
+            public string Channel;
         }
     }
 }

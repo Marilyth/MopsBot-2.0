@@ -8,9 +8,9 @@ namespace MopsBot.Api
 {
     public interface IAPIHandler
     {
-        Task TryAddContent(params string[] args);
-        Task TryUpdateContent(string[] newArgs, string[] oldArgs);
-        Task TryRemoveContent(params string[] args);
+        Task AddContent(Dictionary<string, string> args);
+        Task UpdateContent(Dictionary<string, Dictionary<string, string>> args);
+        Task RemoveContent(Dictionary<string, string> args);
         Dictionary<string, object> GetContent(ulong userId, ulong guildId);
     }
 
@@ -20,20 +20,16 @@ namespace MopsBot.Api
         public abstract Dictionary<string, object> GetParameters(ulong guildId);
 
         //Returns self as ContentScope, please define own version
-        public virtual object GetAsScope(){
-            return new ContentScope(){Content = this};
-        }
+        public virtual object GetAsScope(){ return null;}
 
         //Returns self as ContentScope, if channel is required. Please define own version
-        public virtual object GetAsScope(ulong channelId){
-            return new ContentScope(){Content = this};
-        }
+        public abstract object GetAsScope(ulong channelId);
 
-        public abstract void Update(params string[] args);
+        public abstract void Update(Dictionary<string, Dictionary<string, string>> args);
 
         //Defines which attributes can be seen/modified, please define own version
         public struct ContentScope{
-            public BaseAPIContent Content;
+            public string Id;
         }
     }
 }

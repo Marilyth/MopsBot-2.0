@@ -6,6 +6,8 @@ using MopsBot.Data;
 using MopsBot.Data.Tracker;
 using Newtonsoft.Json;
 using System;
+using System.Threading.Tasks;
+using System.IO;
 
 namespace MopsBot.Api.Controllers
 {
@@ -27,39 +29,133 @@ namespace MopsBot.Api.Controllers
 
             Dictionary<string, object> result = new Dictionary<string, object>();
 
-            if(parameters["type"].First().Contains("Tracker")){
+            if (parameters["type"].First().Contains("Tracker"))
+            {
                 result = StaticBase.Trackers.First(x => parameters["type"].Any(y => y.Split("Tracker")[0].Equals(x.Key.ToString())))
                              .Value.GetContent(0, ulong.Parse(parameters["guild"].First()));
             }
-            else if(parameters["type"].First().Contains("Giveaway")){
+            else if (parameters["type"].First().Contains("Giveaway"))
+            {
 
             }
-            else if(parameters["type"].First().Contains("Poll")){
-                
+            else if (parameters["type"].First().Contains("Poll"))
+            {
+
             }
-            else if(parameters["type"].First().Contains("RoleInvite")){
-                
+            else if (parameters["type"].First().Contains("RoleInvite"))
+            {
+
             }
 
             return new ObjectResult(JsonConvert.SerializeObject(result, Formatting.Indented));
         }
 
         [HttpPost("add")]
-        public IActionResult AddContent()
+        public async Task<IActionResult> AddContent()
         {
-            return new ObjectResult("Not done yet :d");
+            string body = new StreamReader(Request.Body).ReadToEnd();
+
+            try
+            {
+                var add = JsonConvert.DeserializeObject<Dictionary<string, string>>(body);
+                if (!Request.Headers["User"].Equals("110431936635207680")
+                    && !Request.Headers["User"].Equals("110429968252555264")) throw new Exception("You cannot use this service");
+                if (Request.Headers["Type"].ToString().Contains("Tracker"))
+                {
+                    await StaticBase.Trackers.First(x => Request.Headers["Type"].Any(y => y.Split("Tracker")[0].Equals(x.Key.ToString())))
+                             .Value.AddContent(add);
+                }
+                else if (Request.Headers["Type"].Contains("Giveaway"))
+                {
+
+                }
+                else if (Request.Headers["Type"].Contains("Poll"))
+                {
+
+                }
+                else if (Request.Headers["Type"].Contains("RoleInvite"))
+                {
+
+                }
+
+                return new ObjectResult("Success");
+            }
+            catch (Exception e)
+            {
+                return new ObjectResult($"ERROR: {e.Message}");
+            }
         }
 
         [HttpPost("update")]
-        public IActionResult UpdateContent()
+        public async Task<IActionResult> UpdateContent()
         {
-            return new ObjectResult("Not done yet :d");
+            string body = new StreamReader(Request.Body).ReadToEnd();
+
+            try
+            {
+                var update = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, string>>>(body);
+                if (!Request.Headers["User"].Equals("110431936635207680")
+                    && !Request.Headers["User"].Equals("110429968252555264")) throw new Exception("You cannot use this service");
+                if (Request.Headers["Type"].ToString().Contains("Tracker"))
+                {
+                    await StaticBase.Trackers.First(x => Request.Headers["Type"].Any(y => y.Split("Tracker")[0].Equals(x.Key.ToString())))
+                             .Value.UpdateContent(update);
+                }
+                else if (Request.Headers["Type"].Contains("Giveaway"))
+                {
+
+                }
+                else if (Request.Headers["Type"].Contains("Poll"))
+                {
+
+                }
+                else if (Request.Headers["Type"].Contains("RoleInvite"))
+                {
+
+                }
+
+                return new ObjectResult("Success");
+            }
+            catch (Exception e)
+            {
+                return new ObjectResult($"ERROR: {e.Message}");
+            }
         }
 
         [HttpPost("remove")]
-        public IActionResult RemoveContent()
+        public async Task<IActionResult> RemoveContent()
         {
-            return new ObjectResult("Not done yet :d");
+            string body = new StreamReader(Request.Body).ReadToEnd();
+
+            try
+            {
+                var remove = JsonConvert.DeserializeObject<Dictionary<string, string>>(body);
+                if (!Request.Headers["User"].Equals("110431936635207680")
+                    && !Request.Headers["User"].Equals("110429968252555264")) throw new Exception("You cannot use this service");
+                if (Request.Headers["Type"].ToString().Contains("Tracker"))
+                {
+                    await StaticBase.Trackers.First(x => Request.Headers["Type"].Any(y => y.Split("Tracker")[0].Equals(x.Key.ToString())))
+                             .Value.RemoveContent(remove);
+                }
+                else if (Request.Headers["Type"].Contains("Giveaway"))
+                {
+
+                }
+                else if (Request.Headers["Type"].Contains("Poll"))
+                {
+
+                }
+                else if (Request.Headers["Type"].Contains("RoleInvite"))
+                {
+
+                }
+
+                return new ObjectResult("Success");
+            }
+            catch (Exception e)
+            {
+                return new ObjectResult($"ERROR: {e.Message}");
+            }
         }
     }
 }

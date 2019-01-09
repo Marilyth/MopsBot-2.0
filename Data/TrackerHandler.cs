@@ -17,8 +17,8 @@ namespace MopsBot.Data
     public abstract class TrackerWrapper : MopsBot.Api.IAPIHandler
     {
         public abstract Task UpdateDBAsync(BaseTracker tracker);
-        protected abstract Task RemoveFromDBAsync(BaseTracker tracker);
-        protected abstract Task InsertToDBAsync(BaseTracker tracker);
+        public abstract Task RemoveFromDBAsync(BaseTracker tracker);
+        public abstract Task InsertToDBAsync(BaseTracker tracker);
         public abstract Task<bool> TryRemoveTrackerAsync(string name, ulong channelID);
         public abstract Task<bool> TrySetNotificationAsync(string name, ulong channelID, string notificationMessage);
         public abstract Task AddTrackerAsync(string name, ulong channelID, string notification = "");
@@ -29,9 +29,9 @@ namespace MopsBot.Data
         public abstract BaseTracker GetTracker(ulong channelID, string name);
         public abstract Type GetTrackerType();
         public abstract void PostInitialisation();
-        public abstract Task TryAddContent(params string[] args);
-        public abstract Task TryUpdateContent(string[] args, string[] oldArgs);
-        public abstract Task TryRemoveContent(params string[] args);
+        public abstract Task AddContent(Dictionary<string, string> args);
+        public abstract Task UpdateContent(Dictionary<string, Dictionary<string, string>> args);
+        public abstract Task RemoveContent(Dictionary<string, string> args);
         public abstract Dictionary<string, object> GetContent(ulong userId, ulong guildId);
     }
 
@@ -110,12 +110,12 @@ namespace MopsBot.Data
             await StaticBase.Database.GetCollection<BaseTracker>(typeof(T).Name).ReplaceOneAsync(x => x.Name.Equals(tracker.Name), tracker);
         }
 
-        protected override async Task InsertToDBAsync(BaseTracker tracker)
+        public override async Task InsertToDBAsync(BaseTracker tracker)
         {
             await StaticBase.Database.GetCollection<BaseTracker>(typeof(T).Name).InsertOneAsync(tracker);
         }
 
-        protected override async Task RemoveFromDBAsync(BaseTracker tracker)
+        public override async Task RemoveFromDBAsync(BaseTracker tracker)
         {
             await StaticBase.Database.GetCollection<T>(typeof(T).Name).DeleteOneAsync(x => x.Name.Equals(tracker.Name));
         }
@@ -238,31 +238,22 @@ namespace MopsBot.Data
         }
 
         //IAPIHandler implementation
-        public async override Task TryAddContent(params string[] args)
+        public async override Task AddContent(Dictionary<string, string> args)
         {
-            await AddTrackerAsync(args[0], ulong.Parse(args[2]), args[1]);
-            if (args.Length > 3)
-            {
-                trackers[args[0]].Update(args);
-
-                await UpdateDBAsync(trackers[args[0]]);
-            }
+            T tmp = (T)Activator.CreateInstance(typeof(T), new object[] { args });
+            trackers[tmp.Name] = tmp;
+            await InsertToDBAsync(tmp);
         }
 
-        public async override Task TryUpdateContent(string[] args, string[] oldArgs)
+        public async override Task UpdateContent(Dictionary<string, Dictionary<string, string>> args)
         {
-            if (oldArgs[2] != args[2])
-            {
-                await TryAddContent(args);
-                await TryRemoveContent(oldArgs);
-            } else {
-                trackers[args[0]].Update(args);
-            }
+            trackers[args["OldValue"]["Id"]].Update(args);
+            await UpdateDBAsync(trackers[args["OldValue"]["Id"]]);
         }
 
-        public async override Task TryRemoveContent(params string[] args)
+        public async override Task RemoveContent(Dictionary<string, string> args)
         {
-            await TryRemoveTrackerAsync(args[0], ulong.Parse(args[2]));
+            await TryRemoveTrackerAsync(args["Id"], ulong.Parse(args["Channel"].Split(":")[1]));
         }
 
         public override Dictionary<string, object> GetContent(ulong userId, ulong guildId)
