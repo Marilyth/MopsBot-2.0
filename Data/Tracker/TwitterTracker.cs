@@ -171,8 +171,11 @@ namespace MopsBot.Data.Tracker
         public override Dictionary<string, object> GetParameters(ulong guildId)
         {
             var parentParameters = base.GetParameters(guildId);
+            (parentParameters["Parameters"] as Dictionary<string, object>)["MainNotification"] = "New main tweet!";
+            (parentParameters["Parameters"] as Dictionary<string, object>)["NonMainNotification"] = "New reply or retweet!";
             (parentParameters["Parameters"] as Dictionary<string, object>)["TrackMainTweets"] = new bool[]{true, false};
             (parentParameters["Parameters"] as Dictionary<string, object>)["TrackNonMainTweets"] = new bool[]{true, false};
+            (parentParameters["Parameters"] as Dictionary<string, object>).Remove("Notification");
             return parentParameters;
         }
 
@@ -182,7 +185,8 @@ namespace MopsBot.Data.Tracker
             {
                 Id = this.Name,
                 Name = this.Name,
-                Notification = this.ChannelMessages[channelId],
+                MainNotification = this.ChannelMessages[channelId].Split("|")[0],
+                NonMainNotification = this.ChannelMessages[channelId].Split("|")[1],
                 Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId,
                 TrackMainTweets = !this.ChannelMessages[channelId].Split("|")[0].Equals("NONE"),
                 TrackNonMainTweets = !this.ChannelMessages[channelId].Split("|")[1].Equals("NONE")
@@ -193,15 +197,13 @@ namespace MopsBot.Data.Tracker
         {
             base.Update(args);
             var channelId = ulong.Parse(args["NewValue"]["Channel"].Split(":")[1]);
+            var newChannelId = ulong.Parse(args["NewValue"]["Channel"].Split(":")[1]);
+            ChannelMessages[newChannelId] = args["NewValue"]["MainNotification"] + "|" + args["NewValue"]["NonMainNotification"];
 
-            if (bool.Parse(args["NewValue"]["TrackMainTweets"]))
-                ChannelMessages[channelId] = args["Notification"] + "|" + ChannelMessages[channelId].Split("|")[1];
-            else
+            if (!bool.Parse(args["NewValue"]["TrackMainTweets"]))
                 ChannelMessages[channelId] = "NONE|" + ChannelMessages[channelId].Split("|")[1];
 
-            if (bool.Parse(args["NewValue"]["TrackNonMainTweets"]))
-                ChannelMessages[channelId] = ChannelMessages[channelId].Split("|")[0] + "|" + args["Notification"];
-            else
+            if (!bool.Parse(args["NewValue"]["TrackNonMainTweets"]))
                 ChannelMessages[channelId] = ChannelMessages[channelId].Split("|")[0] + "|NONE";
         }
 
@@ -209,7 +211,8 @@ namespace MopsBot.Data.Tracker
         {
             public string Id;
             public string Name;
-            public string Notification;
+            public string MainNotification;
+            public string NonMainNotification;
             public string Channel;
             public bool TrackMainTweets;
             public bool TrackNonMainTweets;
