@@ -242,6 +242,8 @@ namespace MopsBot.Data
         {
             T tmp = (T)Activator.CreateInstance(typeof(T), new object[] { args });
             trackers[tmp.Name] = tmp;
+            tmp.OnMajorEventFired += OnMajorEvent;
+            tmp.OnMinorEventFired += OnMinorEvent;
             await InsertToDBAsync(tmp);
         }
 
