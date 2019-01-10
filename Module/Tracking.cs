@@ -809,7 +809,7 @@ namespace MopsBot.Module
             }
         }
 
-        [Group("WoW")]
+        /*[Group("WoW")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public class WoW : ModuleBase
         {
@@ -871,7 +871,7 @@ namespace MopsBot.Module
                 else
                     await ReplyAsync($"Could not find tracker for `{Region} {Realm} {Name}`\n"+
                                      $"Currently tracked players are: ``{String.Join(", ", StaticBase.Trackers[ITracker.TrackerType.WoW].GetTrackers(Context.Channel.Id).Select(x => x.Name.Replace("|", " ")))}``");
-            }*/
+            }
 
             [Command("ChangeEQTrack")]
             [Summary("Notifies on change of equipment.")]
@@ -908,7 +908,7 @@ namespace MopsBot.Module
                 await StaticBase.Trackers[BaseTracker.TrackerType.WoW].UpdateDBAsync(tracker);
                 await ReplyAsync($"Changed FeedTrack for `{Region} {Realm} {Name}` to `{tracker.trackFeed}`");
             }
-        }
+        }*/
 
         /*[Group("WoWGuild")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
@@ -1021,3 +1021,4 @@ namespace MopsBot.Module
         }
     }
 }
+

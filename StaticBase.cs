@@ -13,7 +13,7 @@ using MopsBot.Data.Tracker;
 using MopsBot.Data.Interactive;
 using Tweetinvi;
 using NewsAPI;
-using WowDotNetAPI;
+using SharprWowApi;
 using MongoDB.Driver;
 using MongoDB.Bson.Serialization.Options;
 using MongoDB.Bson.Serialization.Attributes;
@@ -71,8 +71,7 @@ namespace MopsBot
                 gfy = new Gfycat.GfycatClient(Program.Config["GfyID"], Program.Config["GfySecret"]);
 
                 NewsClient = new NewsApiClient(Program.Config["NewsAPI"]);
-
-                WoWTracker.WoWClient = new WowExplorer(Region.EU, Locale.en_GB, Program.Config["WoWKey"]);
+                //WoWTracker.WoWClient = new SharprWowApi.WowClient(Region.EU, Locale.en_GB, Program.Config["WoWKey"]);
 
                 Trackers = new Dictionary<BaseTracker.TrackerType, Data.TrackerWrapper>();
                 Trackers[BaseTracker.TrackerType.Osu] = new TrackerHandler<OsuTracker>();
@@ -84,7 +83,7 @@ namespace MopsBot
                 Trackers[BaseTracker.TrackerType.YoutubeLive] = new TrackerHandler<YoutubeLiveTracker>();
                 Trackers[BaseTracker.TrackerType.Reddit] = new TrackerHandler<RedditTracker>();
                 Trackers[BaseTracker.TrackerType.News] = new TrackerHandler<NewsTracker>();
-                Trackers[BaseTracker.TrackerType.WoW] = new TrackerHandler<WoWTracker>();
+                //Trackers[BaseTracker.TrackerType.WoW] = new TrackerHandler<WoWTracker>();
                 //Trackers[ITracker.TrackerType.WoWGuild] = new TrackerHandler<WoWGuildTracker>();
                 Trackers[BaseTracker.TrackerType.OSRS] = new TrackerHandler<OSRSTracker>();
                 Trackers[BaseTracker.TrackerType.HTML] = new TrackerHandler<HTMLTracker>();

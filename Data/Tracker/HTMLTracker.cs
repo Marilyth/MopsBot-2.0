@@ -28,17 +28,18 @@ namespace MopsBot.Data.Tracker
         }
 
         public HTMLTracker(Dictionary<string, string> args) : base(120000, 60000){
-            if(!StaticBase.Trackers[TrackerType.HTML].GetTrackers().ContainsKey(args["_Name"] + "|||" + args["Regex"])){
-                base.SetBaseValues(args);
-                Name = args["_Name"] + "|||" + args["Regex"];
-                Regex = args["Regex"];
-            } else {
-                this.Dispose();
-                var curTracker = StaticBase.Trackers[TrackerType.HTML].GetTrackers()[args["_Name"] + "|||" + args["Regex"]];
-                var curGuild = ((ITextChannel)Program.Client.GetChannel(ulong.Parse(args["Channel"]))).GuildId;
+            base.SetBaseValues(args);
+            Name = args["_Name"] + "|||" + args["Regex"];
+            Regex = args["Regex"];
 
-                var OldValues = JsonConvert.DeserializeObject<Dictionary<string, string>>(JsonConvert.SerializeObject(curTracker.GetAsScope(curGuild)));
-                StaticBase.Trackers[TrackerType.HTML].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", OldValues}});
+            if(StaticBase.Trackers[TrackerType.HTML].GetTrackers().ContainsKey(args["_Name"] + "|||" + args["Regex"])){
+                this.Dispose();
+
+                args["Id"] = Name;
+                var curTracker = StaticBase.Trackers[TrackerType.HTML].GetTrackers()[Name];
+                curTracker.ChannelMessages[ulong.Parse(args["Channel"].Split(":")[1])] = args["Notification"];
+                StaticBase.Trackers[TrackerType.HTML].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", args}}).Wait();
+
                 throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
             }
         }

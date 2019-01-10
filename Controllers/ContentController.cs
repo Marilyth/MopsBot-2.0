@@ -82,7 +82,8 @@ namespace MopsBot.Api.Controllers
             }
             catch (Exception e)
             {
-                return new ObjectResult($"ERROR: {e.Message}");
+                if(e.GetBaseException().Message.Contains("updated")) return new ObjectResult("Success");
+                return new ObjectResult($"ERROR: {e.GetBaseException().Message}");
             }
         }
 

@@ -265,8 +265,14 @@ namespace MopsBot.Data
             tmp.Dispose();
 
             List<ulong> channels = ((string[])((Dictionary<string, object>)parameters["Parameters"])["Channel"]).Select(x => ulong.Parse((x.Split(":")[1]))).ToList();
+            var rawTrackers = trackers.Values.Where(x => x.ChannelMessages.Any(y => channels.Contains(y.Key)));
 
-            parameters["Content"] = trackers.Values.Where(x => x.ChannelMessages.Any(y => channels.Contains(y.Key))).Select(x => x.GetAsScope(x.ChannelMessages.Keys.FirstOrDefault(y => channels.Contains(y))));
+            parameters["Content"] = new List<object>();
+            foreach(var tracker in rawTrackers){
+                foreach(var channel in tracker.ChannelMessages.Keys.Where(x => channels.Contains(x))){
+                    (parameters["Content"] as List<object>).Add(tracker.GetAsScope(channel));
+                }
+            }
 
             return parameters;
         }

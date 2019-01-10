@@ -1,4 +1,4 @@
-using System;
+/*using System;
 using System.Collections.Generic;
 using System.Linq;
 using Discord;
@@ -26,6 +26,21 @@ namespace MopsBot.Data.Tracker
 
         public WoWGuildTracker() : base(300000, ExistingTrackers * 2000)
         {
+        }
+
+        public WoWGuildTracker(Dictionary<string, string> args) : base(300000, 60000){
+            base.SetBaseValues(args, true);
+
+            if(StaticBase.Trackers[TrackerType.HTML].GetTrackers().ContainsKey(Name)){
+                this.Dispose();
+
+                args["Id"] = Name;
+                var curTracker = StaticBase.Trackers[TrackerType.WoWGuild].GetTrackers()[Name];
+                curTracker.ChannelMessages[ulong.Parse(args["Channel"].Split(":")[1])] = args["Notification"];
+                StaticBase.Trackers[TrackerType.WoWGuild].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", args}}).Wait();
+
+                throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
+            }
         }
 
         public WoWGuildTracker(string WoWInformation) : base(300000)
@@ -142,4 +157,4 @@ namespace MopsBot.Data.Tracker
             return newsEmbeds;
         }
     }
-}
+}*/

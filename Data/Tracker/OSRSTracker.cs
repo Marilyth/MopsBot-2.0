@@ -26,15 +26,16 @@ namespace MopsBot.Data.Tracker
         }
 
         public OSRSTracker(Dictionary<string, string> args) : base(60000, 60000){
-            if(!StaticBase.Trackers[TrackerType.OSRS].GetTrackers().ContainsKey(args["_Name"])){
-                base.SetBaseValues(args, true);
-            } else {
-                this.Dispose();
-                var curTracker = StaticBase.Trackers[TrackerType.OSRS].GetTrackers()[args["_Name"]];
-                var curGuild = ((ITextChannel)Program.Client.GetChannel(ulong.Parse(args["Channel"]))).GuildId;
+            base.SetBaseValues(args, true);
 
-                var OldValues = JsonConvert.DeserializeObject<Dictionary<string, string>>(JsonConvert.SerializeObject(curTracker.GetAsScope(curGuild)));
-                StaticBase.Trackers[TrackerType.OSRS].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", OldValues}});
+            if(StaticBase.Trackers[TrackerType.OSRS].GetTrackers().ContainsKey(Name)){
+                this.Dispose();
+
+                args["Id"] = Name;
+                var curTracker = StaticBase.Trackers[TrackerType.OSRS].GetTrackers()[Name];
+                curTracker.ChannelMessages[ulong.Parse(args["Channel"].Split(":")[1])] = args["Notification"];
+                StaticBase.Trackers[TrackerType.OSRS].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", args}}).Wait();
+
                 throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
             }
         }

@@ -31,16 +31,17 @@ namespace MopsBot.Data.Tracker
         }
 
         public YoutubeLiveTracker(Dictionary<string, string> args) : base(300000, 60000){
-            if(!StaticBase.Trackers[TrackerType.YoutubeLive].GetTrackers().ContainsKey(args["_Name"])){
-                base.SetBaseValues(args, true);
-                IsThumbnailLarge = bool.Parse(args["IsThumbnailLarge"]);
-            } else {
-                this.Dispose();
-                var curTracker = StaticBase.Trackers[TrackerType.YoutubeLive].GetTrackers()[args["_Name"]];
-                var curGuild = ((ITextChannel)Program.Client.GetChannel(ulong.Parse(args["Channel"]))).GuildId;
+            IsThumbnailLarge = bool.Parse(args["IsThumbnailLarge"]);
+            base.SetBaseValues(args, true);
 
-                var OldValues = JsonConvert.DeserializeObject<Dictionary<string, string>>(JsonConvert.SerializeObject(curTracker.GetAsScope(curGuild)));
-                StaticBase.Trackers[TrackerType.YoutubeLive].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", OldValues}});
+            if(StaticBase.Trackers[TrackerType.YoutubeLive].GetTrackers().ContainsKey(Name)){
+                this.Dispose();
+
+                args["Id"] = Name;
+                var curTracker = StaticBase.Trackers[TrackerType.YoutubeLive].GetTrackers()[Name];
+                curTracker.ChannelMessages[ulong.Parse(args["Channel"].Split(":")[1])] = args["Notification"];
+                StaticBase.Trackers[TrackerType.YoutubeLive].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", args}}).Wait();
+
                 throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
             }
         }

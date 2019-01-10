@@ -30,22 +30,22 @@ namespace MopsBot.Data.Tracker
         }
 
         public OsuTracker(Dictionary<string, string> args) : base(60000, 60000){
-            if(!StaticBase.Trackers[TrackerType.Osu].GetTrackers().ContainsKey(args["_Name"])){
-                AllPP = new Dictionary<string, double>();
-                AllPP.Add("m=0", 0);
-                AllPP.Add("m=1", 0);
-                AllPP.Add("m=2", 0);
-                AllPP.Add("m=3", 0);
+            base.SetBaseValues(args, true);
+            AllPP = new Dictionary<string, double>();
+            AllPP.Add("m=0", 0);
+            AllPP.Add("m=1", 0);
+            AllPP.Add("m=2", 0);
+            AllPP.Add("m=3", 0);
+            PPThreshold = double.Parse(args["PPThreshold"]);
 
-                base.SetBaseValues(args, true);
-                PPThreshold = double.Parse(args["PPThreshold"]);
-            } else {
+            if(StaticBase.Trackers[TrackerType.Osu].GetTrackers().ContainsKey(Name)){
                 this.Dispose();
-                var curTracker = StaticBase.Trackers[TrackerType.Osu].GetTrackers()[args["_Name"]];
-                var curGuild = ((ITextChannel)Program.Client.GetChannel(ulong.Parse(args["Channel"]))).GuildId;
 
-                var OldValues = JsonConvert.DeserializeObject<Dictionary<string, string>>(JsonConvert.SerializeObject(curTracker.GetAsScope(curGuild)));
-                StaticBase.Trackers[TrackerType.Osu].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", OldValues}});
+                args["Id"] = Name;
+                var curTracker = StaticBase.Trackers[TrackerType.Osu].GetTrackers()[Name];
+                curTracker.ChannelMessages[ulong.Parse(args["Channel"].Split(":")[1])] = args["Notification"];
+                StaticBase.Trackers[TrackerType.Osu].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", args}}).Wait();
+
                 throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
             }
         }
