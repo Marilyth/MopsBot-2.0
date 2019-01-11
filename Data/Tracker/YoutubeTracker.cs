@@ -28,6 +28,14 @@ namespace MopsBot.Data.Tracker
         public YoutubeTracker(Dictionary<string, string> args) : base(180000, 60000){
             base.SetBaseValues(args, true);
 
+            //Check if Name ist valid
+            try{
+                new YoutubeTracker(Name).Dispose();
+            } catch (Exception e){
+                this.Dispose();
+                throw e;
+            }
+
             if(StaticBase.Trackers[TrackerType.Youtube].GetTrackers().ContainsKey(Name)){
                 this.Dispose();
 

@@ -27,6 +27,14 @@ namespace MopsBot.Data.Tracker
             Update(new Dictionary<string, Dictionary<string, string>>(){{"NewValue", args}, {"OldValue", args}});
             base.SetBaseValues(args, true);
 
+            //Check if Name ist valid
+            try{
+                new TwitterTracker(Name).Dispose();
+            } catch (Exception e){
+                this.Dispose();
+                throw e;
+            }
+
             if(StaticBase.Trackers[TrackerType.Twitter].GetTrackers().ContainsKey(Name)){
                 this.Dispose();
 

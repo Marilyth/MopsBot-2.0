@@ -29,6 +29,14 @@ namespace MopsBot.Data.Tracker
             ViewThreshold = uint.Parse(args["ViewThreshold"]);
             base.SetBaseValues(args, true);
 
+            //Check if Name ist valid
+            try{
+                new TwitchClipTracker(Name).Dispose();
+            } catch (Exception e){
+                this.Dispose();
+                throw e;
+            }
+
             if(StaticBase.Trackers[TrackerType.TwitchClip].GetTrackers().ContainsKey(Name)){
                 this.Dispose();
 

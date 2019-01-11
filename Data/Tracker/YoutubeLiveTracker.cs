@@ -34,6 +34,14 @@ namespace MopsBot.Data.Tracker
             IsThumbnailLarge = bool.Parse(args["IsThumbnailLarge"]);
             base.SetBaseValues(args, true);
 
+            //Check if Name ist valid
+            try{
+                new YoutubeLiveTracker(Name).Dispose();
+            } catch (Exception e){
+                this.Dispose();
+                throw e;
+            }
+
             if(StaticBase.Trackers[TrackerType.YoutubeLive].GetTrackers().ContainsKey(Name)){
                 this.Dispose();
 

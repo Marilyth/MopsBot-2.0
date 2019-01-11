@@ -35,6 +35,14 @@ namespace MopsBot.Data.Tracker
         public OverwatchTracker(Dictionary<string, string> args) : base(300000, 60000){
             base.SetBaseValues(args, true);
 
+            //Check if Name ist valid
+            try{
+                new OverwatchTracker(Name).Dispose();
+            } catch (Exception e){
+                this.Dispose();
+                throw e;
+            }
+
             if(StaticBase.Trackers[TrackerType.Overwatch].GetTrackers().ContainsKey(Name)){
                 this.Dispose();
 

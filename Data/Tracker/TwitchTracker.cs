@@ -35,6 +35,14 @@ namespace MopsBot.Data.Tracker
             isThumbnailLarge = bool.Parse(args["IsThumbnailLarge"]);
             base.SetBaseValues(args, true);
 
+            //Check if Name ist valid
+            try{
+                new TwitchTracker(Name).Dispose();
+            } catch (Exception e){
+                this.Dispose();
+                throw e;
+            }
+
             if(StaticBase.Trackers[TrackerType.Twitch].GetTrackers().ContainsKey(Name)){
                 this.Dispose();
 
@@ -79,8 +87,6 @@ namespace MopsBot.Data.Tracker
 
         public TwitchTracker(string streamerName) : base(60000)
         {
-            ToUpdate = new Dictionary<ulong, ulong>();
-            ChannelMessages = new Dictionary<ulong, string>();
             Name = streamerName;
             IsOnline = false;
 
@@ -286,7 +292,7 @@ namespace MopsBot.Data.Tracker
 
         public new void Dispose()
         {
-            Dispose(true);
+            base.Dispose(true);
             GC.SuppressFinalize(this);
             ViewerGraph?.Dispose();
             ViewerGraph = null;

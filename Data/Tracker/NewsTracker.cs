@@ -29,6 +29,14 @@ namespace MopsBot.Data.Tracker
             Name = args["_Name"] + "|" + args["Query"];
             Query = args["Query"];
 
+            //Check if Name ist valid
+            try{
+                new NewsTracker(Name).Dispose();
+            } catch (Exception e){
+                this.Dispose();
+                throw e;
+            }
+
             if(StaticBase.Trackers[TrackerType.News].GetTrackers().ContainsKey(Name)){
                 this.Dispose();
 

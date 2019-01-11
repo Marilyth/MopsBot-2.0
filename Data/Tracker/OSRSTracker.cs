@@ -28,6 +28,14 @@ namespace MopsBot.Data.Tracker
         public OSRSTracker(Dictionary<string, string> args) : base(60000, 60000){
             base.SetBaseValues(args, true);
 
+            //Check if Name ist valid
+            try{
+                new OSRSTracker(Name).Dispose();
+            } catch (Exception e){
+                this.Dispose();
+                throw e;
+            }
+
             if(StaticBase.Trackers[TrackerType.OSRS].GetTrackers().ContainsKey(Name)){
                 this.Dispose();
 

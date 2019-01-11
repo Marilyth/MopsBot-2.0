@@ -54,12 +54,14 @@ namespace MopsBot.Api.Controllers
         public async Task<IActionResult> AddContent()
         {
             string body = new StreamReader(Request.Body).ReadToEnd();
+            var token = Request.Headers["Token"].ToString();
+            var id = await GetUserViaTokenAsync(token);
 
             try
             {
                 var add = JsonConvert.DeserializeObject<Dictionary<string, string>>(body);
-                if (!Request.Headers["User"].Equals("110431936635207680")
-                    && !Request.Headers["User"].Equals("110429968252555264")) throw new Exception("You cannot use this service");
+                if (!id.Equals(110431936635207680)
+                    && !id.Equals(110429968252555264)) throw new Exception("You cannot use this service");
                 if (Request.Headers["Type"].ToString().Contains("Tracker"))
                 {
                     await StaticBase.Trackers.First(x => Request.Headers["Type"].Any(y => y.Split("Tracker")[0].Equals(x.Key.ToString())))
@@ -91,12 +93,14 @@ namespace MopsBot.Api.Controllers
         public async Task<IActionResult> UpdateContent()
         {
             string body = new StreamReader(Request.Body).ReadToEnd();
+            var token = Request.Headers["Token"].ToString();
+            var id = await GetUserViaTokenAsync(token);
 
             try
             {
                 var update = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, string>>>(body);
-                if (!Request.Headers["User"].Equals("110431936635207680")
-                    && !Request.Headers["User"].Equals("110429968252555264")) throw new Exception("You cannot use this service");
+                if (!id.Equals(110431936635207680)
+                    && !id.Equals(110429968252555264)) throw new Exception("You cannot use this service");
                 if (Request.Headers["Type"].ToString().Contains("Tracker"))
                 {
                     await StaticBase.Trackers.First(x => Request.Headers["Type"].Any(y => y.Split("Tracker")[0].Equals(x.Key.ToString())))
@@ -127,12 +131,14 @@ namespace MopsBot.Api.Controllers
         public async Task<IActionResult> RemoveContent()
         {
             string body = new StreamReader(Request.Body).ReadToEnd();
+            var token = Request.Headers["Token"].ToString();
+            var id = await GetUserViaTokenAsync(token);
 
             try
             {
                 var remove = JsonConvert.DeserializeObject<Dictionary<string, string>>(body);
-                if (!Request.Headers["User"].Equals("110431936635207680")
-                    && !Request.Headers["User"].Equals("110429968252555264")) throw new Exception("You cannot use this service");
+                if (!id.Equals(110431936635207680)
+                    && !id.Equals(110429968252555264)) throw new Exception("You cannot use this service");
                 if (Request.Headers["Type"].ToString().Contains("Tracker"))
                 {
                     await StaticBase.Trackers.First(x => Request.Headers["Type"].Any(y => y.Split("Tracker")[0].Equals(x.Key.ToString())))
@@ -157,6 +163,14 @@ namespace MopsBot.Api.Controllers
             {
                 return new ObjectResult($"ERROR: {e.Message}");
             }
+        }
+
+        private async Task<ulong> GetUserViaTokenAsync(string token){
+            var contentHeader = new KeyValuePair<string, string>("Content-Type", "application/json");
+            var tokenHeader = new KeyValuePair<string, string>("Authorization", "Bearer " + token);
+            var response = await MopsBot.Module.Information.ReadURLAsync("https://discordapp.com/api/v6/users/@me", tokenHeader, contentHeader);
+
+            return JsonConvert.DeserializeObject<dynamic>(response)["id"];
         }
     }
 }

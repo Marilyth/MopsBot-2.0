@@ -32,6 +32,14 @@ namespace MopsBot.Data.Tracker
         public RedditTracker(Dictionary<string, string> args) : base(600000, 60000){
             base.SetBaseValues(args, true);
 
+            //Check if Name ist valid
+            try{
+                new RedditTracker(Name).Dispose();
+            } catch (Exception e){
+                this.Dispose();
+                throw e;
+            }
+
             if(StaticBase.Trackers[TrackerType.Reddit].GetTrackers().ContainsKey(Name)){
                 this.Dispose();
 

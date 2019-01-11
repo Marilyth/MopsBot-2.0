@@ -31,6 +31,15 @@ namespace MopsBot.Data.Tracker
 
         public OsuTracker(Dictionary<string, string> args) : base(60000, 60000){
             base.SetBaseValues(args, true);
+            
+            //Check if Name ist valid
+            try{
+                new OsuTracker(Name).Dispose();
+            } catch (Exception e){
+                this.Dispose();
+                throw e;
+            }
+
             AllPP = new Dictionary<string, double>();
             AllPP.Add("m=0", 0);
             AllPP.Add("m=1", 0);

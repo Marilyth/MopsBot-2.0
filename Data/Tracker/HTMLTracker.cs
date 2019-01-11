@@ -32,6 +32,14 @@ namespace MopsBot.Data.Tracker
             Name = args["_Name"] + "|||" + args["Regex"];
             Regex = args["Regex"];
 
+            //Check if Name ist valid
+            try{
+                new HTMLTracker(Name).Dispose();
+            } catch (Exception e){
+                this.Dispose();
+                throw e;
+            }
+
             if(StaticBase.Trackers[TrackerType.HTML].GetTrackers().ContainsKey(args["_Name"] + "|||" + args["Regex"])){
                 this.Dispose();
 
