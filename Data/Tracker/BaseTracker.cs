@@ -104,7 +104,8 @@ namespace MopsBot.Data.Tracker
                 {"Parameters", new Dictionary<string, object>(){
                                 {"_Name", ""}, 
                                 {"Notification", "New content!"}, 
-                                {"Channel", channels}}}
+                                {"Channel", channels}}},
+                {"Permissions", GuildPermission.ManageChannels}
             };
         }
 
