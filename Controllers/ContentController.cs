@@ -60,8 +60,7 @@ namespace MopsBot.Api.Controllers
             try
             {
                 var add = JsonConvert.DeserializeObject<Dictionary<string, string>>(body);
-                if (!id.Equals(110431936635207680)
-                    && !id.Equals(110429968252555264)) throw new Exception("You cannot use this service");
+                if (!(await StaticBase.DiscordBotList.HasVoted(id)) && !Program.Config["BotManager"].Split(":").Contains(id.ToString())) throw new Exception("You cannot use this service!");
                 if (Request.Headers["Type"].ToString().Contains("Tracker"))
                 {
                     await StaticBase.Trackers.First(x => Request.Headers["Type"].Any(y => y.Split("Tracker")[0].Equals(x.Key.ToString())))
@@ -99,8 +98,7 @@ namespace MopsBot.Api.Controllers
             try
             {
                 var update = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, string>>>(body);
-                if (!id.Equals(110431936635207680)
-                    && !id.Equals(110429968252555264)) throw new Exception("You cannot use this service");
+                if (!(await StaticBase.DiscordBotList.HasVoted(id)) && !Program.Config["BotManager"].Split(":").Contains(id.ToString())) throw new Exception("You cannot use this service");
                 if (Request.Headers["Type"].ToString().Contains("Tracker"))
                 {
                     await StaticBase.Trackers.First(x => Request.Headers["Type"].Any(y => y.Split("Tracker")[0].Equals(x.Key.ToString())))
@@ -137,8 +135,7 @@ namespace MopsBot.Api.Controllers
             try
             {
                 var remove = JsonConvert.DeserializeObject<Dictionary<string, string>>(body);
-                if (!id.Equals(110431936635207680)
-                    && !id.Equals(110429968252555264)) throw new Exception("You cannot use this service");
+                if (!(await StaticBase.DiscordBotList.HasVoted(id)) && !Program.Config["BotManager"].Split(":").Contains(id.ToString())) throw new Exception("You cannot use this service");
                 if (Request.Headers["Type"].ToString().Contains("Tracker"))
                 {
                     await StaticBase.Trackers.First(x => Request.Headers["Type"].Any(y => y.Split("Tracker")[0].Equals(x.Key.ToString())))

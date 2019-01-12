@@ -282,7 +282,7 @@ namespace MopsBot.Data.Tracker
         public override Dictionary<string, object> GetParameters(ulong guildId)
         {
             var parentParameters = base.GetParameters(guildId);
-            (parentParameters["Parameters"] as Dictionary<string, object>)["PPThreshold"] = 0.1;
+            (parentParameters["Parameters"] as Dictionary<string, object>)["PPThreshold"] = "0,1";
             return parentParameters;
         }
 
