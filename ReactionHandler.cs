@@ -63,32 +63,38 @@ namespace MopsBot
         {
             Task.Run(() =>
             {
-                try{
-                if (!reaction.UserId.Equals(client.CurrentUser.Id) && wasRemoved ? emojiRemovedFunctions.Any(x => x.Key.Id == messageCache.Id) : emojiAddedFunctions.Any(x => x.Key.Id == messageCache.Id))
+                try
                 {
-                    if (reaction.UserId.Equals(client.CurrentUser.Id))
-                        return;
+                    if (!reaction.UserId.Equals(client.CurrentUser.Id) && wasRemoved ? emojiRemovedFunctions.Any(x => x.Key.Id == messageCache.Id) : emojiAddedFunctions.Any(x => x.Key.Id == messageCache.Id))
+                    {
+                        if (reaction.UserId.Equals(client.CurrentUser.Id))
+                            return;
 
-                    IUserMessage message = messageCache.GetOrDownloadAsync().Result;
-                    ReactionHandlerContext context = new ReactionHandlerContext();
-                    context.Channel = channel;
-                    context.MessageCache = messageCache;
-                    context.Emote = reaction.Emote;
-                    context.Reaction = reaction;
+                        IUserMessage message = messageCache.GetOrDownloadAsync().Result;
+                        ReactionHandlerContext context = new ReactionHandlerContext();
+                        context.Channel = channel;
+                        context.MessageCache = messageCache;
+                        context.Emote = reaction.Emote;
+                        context.Reaction = reaction;
 
-                    if(wasRemoved){
-                        if (emojiRemovedFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.ContainsKey(reaction.Emote))
-                            emojiRemovedFunctions.First(x => x.Key.Id.Equals(message.Id)).Value[reaction.Emote](context);
-                        else if (emojiRemovedFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.ContainsKey(DefaultEmote))
-                            emojiRemovedFunctions.First(x => x.Key.Id.Equals(message.Id)).Value[DefaultEmote](context);
-                    } else {
-                        if (emojiAddedFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.ContainsKey(reaction.Emote))
-                            emojiAddedFunctions.First(x => x.Key.Id.Equals(message.Id)).Value[reaction.Emote](context);
-                        else if (emojiAddedFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.ContainsKey(DefaultEmote))
-                            emojiAddedFunctions.First(x => x.Key.Id.Equals(message.Id)).Value[DefaultEmote](context);
+                        if (wasRemoved)
+                        {
+                            if (emojiRemovedFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.ContainsKey(reaction.Emote))
+                                emojiRemovedFunctions.First(x => x.Key.Id.Equals(message.Id)).Value[reaction.Emote](context);
+                            else if (emojiRemovedFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.ContainsKey(DefaultEmote))
+                                emojiRemovedFunctions.First(x => x.Key.Id.Equals(message.Id)).Value[DefaultEmote](context);
+                        }
+                        else
+                        {
+                            if (emojiAddedFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.ContainsKey(reaction.Emote))
+                                emojiAddedFunctions.First(x => x.Key.Id.Equals(message.Id)).Value[reaction.Emote](context);
+                            else if (emojiAddedFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.ContainsKey(DefaultEmote))
+                                emojiAddedFunctions.First(x => x.Key.Id.Equals(message.Id)).Value[DefaultEmote](context);
+                        }
                     }
                 }
-                } catch (Exception e){
+                catch (Exception e)
+                {
                     Console.WriteLine($"\n[Error] reactionhandler for message {messageCache.Id} emote {reaction.Emote.Name}\n{e.Message}");
                 }
             });
@@ -116,12 +122,15 @@ namespace MopsBot
         /// <returns></returns>
         public async Task AddHandler(IUserMessage message, IEmote emote, Func<ReactionHandlerContext, Task> function, bool onRemove = false)
         {
-            if(onRemove){
+            if (onRemove)
+            {
                 if (emojiRemovedFunctions.Any(x => x.Key.Id.Equals(message.Id)))
                     emojiRemovedFunctions.First(x => x.Key.Id.Equals(message.Id)).Value[emote] = function;
                 else
                     emojiRemovedFunctions.Add(message, new Dictionary<IEmote, Func<ReactionHandlerContext, Task>> { { emote, function } });
-            } else {
+            }
+            else
+            {
                 if (emojiAddedFunctions.Any(x => x.Key.Id.Equals(message.Id)))
                     emojiAddedFunctions.First(x => x.Key.Id.Equals(message.Id)).Value[emote] = function;
                 else
@@ -132,6 +141,29 @@ namespace MopsBot
             {
                 await message.AddReactionAsync(emote);
             }
+        }
+
+        public async Task AddHandlers(IUserMessage message, params Tuple<IEmote, Func<ReactionHandlerContext, Task>, bool>[] handlers)
+        {
+            foreach (var handler in handlers)
+            {
+                if (handler.Item3)
+                {
+                    if (emojiRemovedFunctions.Any(x => x.Key.Id.Equals(message.Id)))
+                        emojiRemovedFunctions.First(x => x.Key.Id.Equals(message.Id)).Value[handler.Item1] = handler.Item2;
+                    else
+                        emojiRemovedFunctions.Add(message, new Dictionary<IEmote, Func<ReactionHandlerContext, Task>> { { handler.Item1, handler.Item2 } });
+                }
+                else
+                {
+                    if (emojiAddedFunctions.Any(x => x.Key.Id.Equals(message.Id)))
+                        emojiAddedFunctions.First(x => x.Key.Id.Equals(message.Id)).Value[handler.Item1] = handler.Item2;
+                    else
+                        emojiAddedFunctions.Add(message, new Dictionary<IEmote, Func<ReactionHandlerContext, Task>> { { handler.Item1, handler.Item2 } });
+                }
+            }
+            
+            await message.AddReactionsAsync(handlers.Select(x => x.Item1).ToArray());
         }
 
         /// <summary>
@@ -150,7 +182,7 @@ namespace MopsBot
 
                 if (emojiAddedFunctions.Any(x => x.Key.Id.Equals(message.Id)))
                     emojiAddedFunctions.Remove(emojiAddedFunctions.First(x => x.Key.Id.Equals(message.Id)).Key);
-                
+
                 await message.RemoveAllReactionsAsync();
             }
             catch (Exception e)
@@ -172,7 +204,8 @@ namespace MopsBot
                 emojiRemovedFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.Remove(emote);
                 emojiAddedFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.Remove(emote);
 
-                if (!emojiAddedFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.Any()){
+                if (!emojiAddedFunctions.First(x => x.Key.Id.Equals(message.Id)).Value.Any())
+                {
                     emojiRemovedFunctions.Remove(message);
                     emojiAddedFunctions.Remove(message);
                 }

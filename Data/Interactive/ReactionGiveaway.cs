@@ -12,12 +12,13 @@ using Newtonsoft.Json;
 using MongoDB.Bson.Serialization.Options;
 using MongoDB.Bson.Serialization.Attributes;
 using MopsBot.Data.Entities;
+using MopsBot.Api;
 using MongoDB.Driver;
 using Accord.Statistics.Distributions.Univariate;
 
 namespace MopsBot.Data.Interactive
 {
-    public class ReactionGiveaway
+    public class ReactionGiveaway : IAPIHandler
     {
 
         //Key: Channel ID, Value: (Key: Message ID, Value: User IDs)
@@ -47,15 +48,18 @@ namespace MopsBot.Data.Interactive
                     try
                     {
                         var textmessage = (IUserMessage)((ITextChannel)Program.Client.GetChannel(channel.Key)).GetMessageAsync(message.Key).Result;
-                        Program.ReactionHandler.AddHandler(textmessage, new Emoji("✅"), JoinGiveaway).Wait();
-                        Program.ReactionHandler.AddHandler(textmessage, new Emoji("✅"), LeaveGiveaway, true).Wait();
-                        Program.ReactionHandler.AddHandler(textmessage, new Emoji("🎁"), DrawGiveaway).Wait();
 
-                        foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("✅"), textmessage.Reactions[new Emoji("✅")].ReactionCount).First().Result.Where(x => !x.IsBot))
+                        var join = new Tuple<IEmote, Func<ReactionHandlerContext, Task>, bool>(new Emoji("✅"), JoinGiveaway, false);
+                        var leave = new Tuple<IEmote, Func<ReactionHandlerContext, Task>, bool>(new Emoji("✅"), LeaveGiveaway, true);
+                        var draw = new Tuple<IEmote, Func<ReactionHandlerContext, Task>, bool>(new Emoji("🎁"), DrawGiveaway, false);
+                        
+                        Program.ReactionHandler.AddHandlers(textmessage, join, leave, draw).Wait();
+
+                        foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("✅"), textmessage.Reactions[new Emoji("✅")].ReactionCount).FlattenAsync().Result.Where(x => !x.IsBot))
                         {
                             JoinGiveaway(user.Id, textmessage);
                         }
-                        foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("🎁"), textmessage.Reactions[new Emoji("🎁")].ReactionCount).First().Result.Where(x => !x.IsBot))
+                        foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("🎁"), textmessage.Reactions[new Emoji("🎁")].ReactionCount).FlattenAsync().Result.Where(x => !x.IsBot))
                         {
                             DrawGiveaway(user.Id, textmessage);
                         }
@@ -128,9 +132,11 @@ namespace MopsBot.Data.Interactive
                 await InsertIntoDBAsync(channel.Id);
             }
             
-            await Program.ReactionHandler.AddHandler(message, new Emoji("✅"), JoinGiveaway);
-            await Program.ReactionHandler.AddHandler(message, new Emoji("✅"), LeaveGiveaway, true);
-            await Program.ReactionHandler.AddHandler(message, new Emoji("🎁"), DrawGiveaway);
+            var join = new Tuple<IEmote, Func<ReactionHandlerContext, Task>, bool>(new Emoji("✅"), JoinGiveaway, false);
+            var leave = new Tuple<IEmote, Func<ReactionHandlerContext, Task>, bool>(new Emoji("✅"), LeaveGiveaway, true);
+            var draw = new Tuple<IEmote, Func<ReactionHandlerContext, Task>, bool>(new Emoji("🎁"), DrawGiveaway, false);
+                        
+            await Program.ReactionHandler.AddHandlers(message, join, leave, draw);
         }
 
         private async Task JoinGiveaway(ReactionHandlerContext context)
@@ -243,6 +249,58 @@ namespace MopsBot.Data.Interactive
             {
                 x.Embed = e.Build();
             });
+        }
+
+        public async Task AddContent(Dictionary<string, string> args){
+            
+        }
+
+        public async Task RemoveContent(Dictionary<string, string> args){
+            
+        }
+
+        public async Task UpdateContent(Dictionary<string, Dictionary<string, string>> args){
+            
+        }
+
+        public Dictionary<string, object> GetContent(ulong userId, ulong guildId){
+            var channelList = Program.Client.GetGuild(guildId).TextChannels.Select(x => x.Id).ToList();
+            var guildGiveaways = Giveaways.Where(x => channelList.Contains(x.Key)).ToDictionary(x => x.Key, y => y.Value);
+            List<ContentScope> userGiveaways = new List<ContentScope>();
+
+            foreach(var channel in guildGiveaways){
+                foreach(var message in guildGiveaways[channel.Key]){
+                    if(message.Value.First().Equals(userId)){
+                        var curChannel = ((SocketTextChannel)Program.Client.GetChannel(channel.Key));
+                        var curMessage = curChannel.GetMessageAsync(message.Key).Result.Embeds.First().Title;
+                        int.TryParse(curMessage.Split("x")[0], out int winnerCount);
+                        userGiveaways.Add(new ContentScope(){
+                            _Id = message.Key,
+                            _Name = curMessage,
+                            _Channel = "#" + curChannel.Name + ":" + channel.Key,
+                            WinnerAmount = winnerCount == 0 ? 1 : winnerCount
+                        });
+                    }
+                }
+            }
+
+            return new Dictionary<string, object>(){
+            {"Parameters", new Dictionary<string, object>(){
+                {"Message", "Some Game"},
+                {"Channel", channelList.Select(x => "#" + ((SocketTextChannel)Program.Client.GetChannel(x)).Name)},
+                {"WinnerAmount", Enumerable.Range(1, 25)},
+                {"DrawWinner", new List<bool> {false, true}}
+            }}, 
+            {"Content", userGiveaways}, 
+            {"Permissions", 0}};
+        }
+
+        public struct ContentScope{
+            public ulong _Id;
+            public string _Name;
+            public string _Channel;
+            public int WinnerAmount;
+            public bool DrawWinner;
         }
     }
 }

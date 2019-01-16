@@ -48,11 +48,13 @@ namespace MopsBot.Data.Interactive
                     try
                     {
                         var textmessage = (IUserMessage)((ITextChannel)Program.Client.GetChannel(channel.Key)).GetMessageAsync(message).Result;
-                        Program.ReactionHandler.AddHandler(textmessage, new Emoji("✅"), JoinRole).Wait();
-                        Program.ReactionHandler.AddHandler(textmessage, new Emoji("✅"), LeaveRole, true).Wait();
-                        Program.ReactionHandler.AddHandler(textmessage, new Emoji("🗑"), DeleteInvite).Wait();
+                        var join = new Tuple<IEmote, Func<ReactionHandlerContext, Task>, bool>(new Emoji("✅"), JoinRole, false);
+                        var leave = new Tuple<IEmote, Func<ReactionHandlerContext, Task>, bool>(new Emoji("✅"), LeaveRole, true);
+                        var delete = new Tuple<IEmote, Func<ReactionHandlerContext, Task>, bool>(new Emoji("🗑"), DeleteInvite, false);
 
-                        foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("✅"), textmessage.Reactions[new Emoji("✅")].ReactionCount).First().Result.Where(x => !x.IsBot).Reverse())
+                        Program.ReactionHandler.AddHandlers(textmessage, join, leave, delete).Wait();
+
+                        foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("✅"), textmessage.Reactions[new Emoji("✅")].ReactionCount).FlattenAsync().Result.Where(x => !x.IsBot).Reverse())
                         {
                             JoinRole(user.Id, textmessage);
                         }
@@ -60,7 +62,7 @@ namespace MopsBot.Data.Interactive
                         {
                             LeaveRole(user.Id, textmessage);
                         }*/
-                        foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("🗑"), textmessage.Reactions[new Emoji("🗑")].ReactionCount).First().Result.Where(x => !x.IsBot).Reverse())
+                        foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("🗑"), textmessage.Reactions[new Emoji("🗑")].ReactionCount).FlattenAsync().Result.Where(x => !x.IsBot).Reverse())
                         {
                             DeleteInvite(user.Id, textmessage);
                         }
@@ -106,10 +108,13 @@ namespace MopsBot.Data.Interactive
             var author = new EmbedAuthorBuilder();
             e.AddField("Mitgliederanzahl der Rolle", role.Members.Count(), true);
 
-            var message = await channel.SendMessageAsync("", embed: e.Build());
-            await Program.ReactionHandler.AddHandler(message, new Emoji("✅"), JoinRole);
-            await Program.ReactionHandler.AddHandler(message, new Emoji("✅"), LeaveRole, true);
-            await Program.ReactionHandler.AddHandler(message, new Emoji("🗑"), DeleteInvite);
+            var message = await channel.SendMessageAsync(embed: e.Build());
+
+            var join = new Tuple<IEmote, Func<ReactionHandlerContext, Task>, bool>(new Emoji("✅"), JoinRole, false);
+            var leave = new Tuple<IEmote, Func<ReactionHandlerContext, Task>, bool>(new Emoji("✅"), LeaveRole, true);
+            var delete = new Tuple<IEmote, Func<ReactionHandlerContext, Task>, bool>(new Emoji("🗑"), DeleteInvite, false);
+
+            await Program.ReactionHandler.AddHandlers(message, join, leave, delete);
 
             if (RoleInvites.ContainsKey(channel.Id)){
                 RoleInvites[channel.Id].Add(message.Id);
