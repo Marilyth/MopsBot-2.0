@@ -29,14 +29,17 @@ namespace MopsBot.Api.Controllers
 
             Dictionary<string, object> result = new Dictionary<string, object>();
 
+            var token = Request.Headers["Token"].ToString();
+            var id = GetUserViaTokenAsync(token).Result;
+
             if (parameters["type"].First().Contains("Tracker"))
             {
                 result = StaticBase.Trackers.First(x => parameters["type"].Any(y => y.Split("Tracker")[0].Equals(x.Key.ToString())))
-                             .Value.GetContent(0, ulong.Parse(parameters["guild"].First()));
+                             .Value.GetContent(id, ulong.Parse(parameters["guild"].First()));
             }
             else if (parameters["type"].First().Contains("Giveaway"))
             {
-
+                result = StaticBase.ReactGiveaways.GetContent(id, ulong.Parse(parameters["guild"].First()));
             }
             else if (parameters["type"].First().Contains("Poll"))
             {
@@ -68,7 +71,7 @@ namespace MopsBot.Api.Controllers
                 }
                 else if (Request.Headers["Type"].Contains("Giveaway"))
                 {
-
+                    await StaticBase.ReactGiveaways.AddContent(add);
                 }
                 else if (Request.Headers["Type"].Contains("Poll"))
                 {
@@ -106,7 +109,7 @@ namespace MopsBot.Api.Controllers
                 }
                 else if (Request.Headers["Type"].Contains("Giveaway"))
                 {
-
+                    await StaticBase.ReactGiveaways.UpdateContent(update);
                 }
                 else if (Request.Headers["Type"].Contains("Poll"))
                 {
@@ -143,7 +146,7 @@ namespace MopsBot.Api.Controllers
                 }
                 else if (Request.Headers["Type"].Contains("Giveaway"))
                 {
-
+                    await StaticBase.ReactGiveaways.RemoveContent(remove);
                 }
                 else if (Request.Headers["Type"].Contains("Poll"))
                 {

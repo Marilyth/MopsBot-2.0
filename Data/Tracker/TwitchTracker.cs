@@ -183,7 +183,7 @@ namespace MopsBot.Data.Tracker
 
         private async Task<TwitchResult> streamerInformation()
         {
-            TwitchResult tmpResult = await FetchDataAsync<TwitchResult>($"https://api.twitch.tv/kraken/streams/{TwitchId}?client_id={Program.Config["Twitch"]}", acceptHeader);
+            TwitchResult tmpResult = await FetchJSONDataAsync<TwitchResult>($"https://api.twitch.tv/kraken/streams/{TwitchId}?client_id={Program.Config["Twitch"]}", acceptHeader);
 
             if (tmpResult.stream == null) tmpResult.stream = new APIResults.Twitch.Stream();
             if (tmpResult.stream.game == "" || tmpResult.stream.game == null) tmpResult.stream.game = "Nothing";
@@ -193,14 +193,14 @@ namespace MopsBot.Data.Tracker
 
         public static async Task<ulong> GetIdFromUsername(string name)
         {
-            var tmpResult = await FetchDataAsync<dynamic>($"https://api.twitch.tv/kraken/users?login={name}&client_id={Program.Config["Twitch"]}", acceptHeader);
+            var tmpResult = await FetchJSONDataAsync<dynamic>($"https://api.twitch.tv/kraken/users?login={name}&client_id={Program.Config["Twitch"]}", acceptHeader);
 
             return tmpResult["users"][0]["_id"];
         }
 
         public async Task<string> GetVodAsync()
         {
-            var tmpResult = await FetchDataAsync<dynamic>($"https://api.twitch.tv/kraken/channels/{TwitchId}/videos?client_id={Program.Config["Twitch"]}", acceptHeader);
+            var tmpResult = await FetchJSONDataAsync<dynamic>($"https://api.twitch.tv/kraken/channels/{TwitchId}/videos?client_id={Program.Config["Twitch"]}", acceptHeader);
             
             try
             {

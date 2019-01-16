@@ -64,7 +64,7 @@ namespace MopsBot.Data.Tracker
             {
                 try
                 {
-                    var checkExists = FetchDataAsync<OStatsResult>($"https://owapi.net/api/v3/u/{Name}/blob").Result;
+                    var checkExists = FetchJSONDataAsync<OStatsResult>($"https://owapi.net/api/v3/u/{Name}/blob").Result;
                     Task.Delay(2500).Wait();
                     var test = checkExists.eu;
                 }
@@ -94,7 +94,7 @@ namespace MopsBot.Data.Tracker
 
                 lock (APILock)
                 {
-                    newInformation = FetchDataAsync<OStatsResult>($"https://owapi.net/api/v3/u/{Name}/blob").Result;
+                    newInformation = FetchJSONDataAsync<OStatsResult>($"https://owapi.net/api/v3/u/{Name}/blob").Result;
                     Task.Delay(2500).Wait();
                 }
 
@@ -152,7 +152,7 @@ namespace MopsBot.Data.Tracker
 
             lock (APILock)
             {
-                info = FetchDataAsync<OStatsResult>($"https://owapi.net/api/v3/u/{owName}/blob").Result;
+                info = FetchJSONDataAsync<OStatsResult>($"https://owapi.net/api/v3/u/{owName}/blob").Result;
                 Task.Delay(2500).Wait();
             }
 

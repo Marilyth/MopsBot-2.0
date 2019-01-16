@@ -37,7 +37,7 @@ namespace MopsBot
                 LogLevel = LogSeverity.Info,
                 AlwaysDownloadUsers = true
             });
-
+            
             using (StreamReader sr = new StreamReader(new FileStream("mopsdata//Config.json", FileMode.Open)))
                 Config = JsonConvert.DeserializeObject<Dictionary<string, string>>(sr.ReadToEnd());
 

@@ -13,6 +13,7 @@ using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 using MongoDB.Bson.Serialization.Options;
 using MongoDB.Bson.Serialization.Attributes;
+using System.ServiceModel.Syndication;
 
 namespace MopsBot.Data.Tracker
 {
@@ -21,7 +22,7 @@ namespace MopsBot.Data.Tracker
     {
         //Avoid ratelimit by placing a gap between all trackers.
         public static int ExistingTrackers = 0;
-        public enum TrackerType { Twitch, TwitchClip, Twitter, Osu, Overwatch, Youtube, YoutubeLive, Reddit, News, OSRS, HTML, WoW};
+        public enum TrackerType { Twitch, TwitchClip, Twitter, Osu, Overwatch, Youtube, YoutubeLive, Reddit, News, OSRS, HTML };
         private bool disposed = false;
         private SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
         protected System.Threading.Timer checkForChange;
@@ -47,15 +48,24 @@ namespace MopsBot.Data.Tracker
         {
         }
 
-        protected static async Task<T> FetchDataAsync<T>(string url, params KeyValuePair<string, string>[] headers){
+        public static async Task<T> FetchJSONDataAsync<T>(string url, params KeyValuePair<string, string>[] headers)
+        {
             string query = await MopsBot.Module.Information.ReadURLAsync(url, headers);
-            
+
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {
                 NullValueHandling = NullValueHandling.Ignore
             };
 
             return JsonConvert.DeserializeObject<T>(query, _jsonWriter);
+        }
+
+        public static SyndicationFeed FetchRSSData(string url, params KeyValuePair<string, string>[] headers)
+        {
+            using(var reader = System.Xml.XmlReader.Create(url)){
+                SyndicationFeed feed = SyndicationFeed.Load(reader);
+                return feed;
+            }
         }
 
         protected abstract void CheckForChange_Elapsed(object stateinfo);
@@ -102,15 +112,17 @@ namespace MopsBot.Data.Tracker
 
             return new Dictionary<string, object>(){
                 {"Parameters", new Dictionary<string, object>(){
-                                {"_Name", ""}, 
-                                {"Notification", "New content!"}, 
+                                {"_Name", ""},
+                                {"Notification", "New content!"},
                                 {"Channel", channels}}},
                 {"Permissions", GuildPermission.ManageChannels}
             };
         }
 
-        public override object GetAsScope(ulong channelId){
-            return new ContentScope(){
+        public override object GetAsScope(ulong channelId)
+        {
+            return new ContentScope()
+            {
                 Id = this.Name,
                 _Name = this.Name,
                 Notification = this.ChannelMessages[channelId],
@@ -118,21 +130,26 @@ namespace MopsBot.Data.Tracker
             };
         }
 
-        public override void Update(Dictionary<string, Dictionary<string, string>> args){
-            if(args["NewValue"].ContainsKey("Notification")) SetBaseValues(args["NewValue"]);
+        public override void Update(Dictionary<string, Dictionary<string, string>> args)
+        {
+            if (args["NewValue"].ContainsKey("Notification")) SetBaseValues(args["NewValue"]);
 
             var newChannelId = ulong.Parse(args["NewValue"]["Channel"].Split(":")[1]);
             var oldChannelId = ulong.Parse(args["OldValue"]["Channel"].Split(":")[1]);
-            if(newChannelId != oldChannelId)
+            if (newChannelId != oldChannelId)
                 ChannelMessages.Remove(oldChannelId);
         }
 
-        public void SetBaseValues(Dictionary<string, string> args, bool setName = false){
-            try{
-                if(setName) Name = args["_Name"];
+        public void SetBaseValues(Dictionary<string, string> args, bool setName = false)
+        {
+            try
+            {
+                if (setName) Name = args["_Name"];
                 var newChannelId = ulong.Parse(args["Channel"].Split(":")[1]);
                 ChannelMessages[newChannelId] = args["Notification"];
-            } catch (Exception e){
+            }
+            catch (Exception e)
+            {
                 Dispose();
                 throw e;
             }

@@ -104,7 +104,7 @@ namespace MopsBot.Data.Tracker
 
         private async Task<RedditResult> fetchPosts()
         {
-            return await FetchDataAsync<RedditResult>($"https://www.reddit.com/r/{Name.Split(" ")[0]}/" +
+            return await FetchJSONDataAsync<RedditResult>($"https://www.reddit.com/r/{Name.Split(" ")[0]}/" +
                                                                         $"{(Name.Split(" ").Length > 1 ? $"search.json?sort=new&restrict_sr=on&q={Name.Split(" ")[1]}" : "new.json?restrict_sr=on")}");
         }
 

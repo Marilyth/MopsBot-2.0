@@ -72,7 +72,7 @@ namespace MopsBot.Data.Tracker
         {
             var lastDateTime = DateTime.Parse(LastTime).ToUniversalTime();
             var lastStringDateTime = XmlConvert.ToString(lastDateTime.AddSeconds(1), XmlDateTimeSerializationMode.Utc);
-            var tmpResult = await FetchDataAsync<Playlist>($"https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId={uploadPlaylistId}&key={Program.Config["Youtube"]}");
+            var tmpResult = await FetchJSONDataAsync<Playlist>($"https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId={uploadPlaylistId}&key={Program.Config["Youtube"]}");
 
             var tmp = Program.Config["Youtube"];
             Program.Config["Youtube"] = Program.Config["Youtube2"];
@@ -83,7 +83,7 @@ namespace MopsBot.Data.Tracker
 
         private async Task<ChannelItem> fetchChannel()
         {
-            var tmpResult = await FetchDataAsync<Channel>($"https://www.googleapis.com/youtube/v3/channels?part=contentDetails,snippet&id={Name}&key={Program.Config["Youtube"]}");
+            var tmpResult = await FetchJSONDataAsync<Channel>($"https://www.googleapis.com/youtube/v3/channels?part=contentDetails,snippet&id={Name}&key={Program.Config["Youtube"]}");
             
             var tmp = Program.Config["Youtube"];
             Program.Config["Youtube"] = Program.Config["Youtube2"];
