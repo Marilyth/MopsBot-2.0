@@ -63,7 +63,7 @@ namespace MopsBot.Data.Tracker
             {
                 var checkExists = getFeed();
 
-                LastFeed = checkExists.Items.FirstOrDefault()?.PublishDate.UtcDateTime ?? DateTime.UtcNow;
+                LastFeed = checkExists.Items.OrderByDescending(x => x.PublishDate.DateTime).FirstOrDefault()?.PublishDate.UtcDateTime ?? DateTime.UtcNow;
             }
             catch (Exception)
             {
