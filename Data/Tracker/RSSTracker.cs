@@ -68,7 +68,7 @@ namespace MopsBot.Data.Tracker
             catch (Exception)
             {
                 Dispose();
-                throw new Exception($"");
+                throw new Exception($"The url did not provide any valid data!\nIs it an RSS feed?");
             }
         }
 
