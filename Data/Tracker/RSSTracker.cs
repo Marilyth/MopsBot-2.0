@@ -28,7 +28,7 @@ namespace MopsBot.Data.Tracker
 
         public RSSTracker(Dictionary<string, string> args) : base(600000, 60000)
         {
-            base.SetBaseValues(args);
+            base.SetBaseValues(args, true);
 
             //Check if Name ist valid
             try
