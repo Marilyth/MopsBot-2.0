@@ -979,15 +979,67 @@ namespace MopsBot.Module
                 await ReplyAsync($"Changed StatTrack for `{Region} {Realm} {Name}` to `{tracker.trackAchievements}`");
             }
         }*/
-        /*[Command("trackClips")]
-        [Summary("Keeps track of clips from streams of the specified Streamer, in the Channel you are calling this command in.")]
-        [RequireUserPermission(ChannelPermission.ManageChannels)]
-        public async Task trackClips(string streamerName)
+        
+        [Group("RSS")]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
+        public class RSS : ModuleBase
         {
-            ClipTracker.AddTracker(streamerName, Context.Channel.Id);
+            [Command("Track", RunMode = RunMode.Async)]
+            [Summary("Keeps track of the specified RSS feed url")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
+            public async Task TrackRSS(string url, string notification = "")
+            {
+                using (Context.Channel.EnterTypingState())
+                {
+                    try
+                    {
+                        await Trackers[BaseTracker.TrackerType.RSS].AddTrackerAsync(url, Context.Channel.Id, notification);
 
-            await ReplyAsync("Keeping track of clips of " + streamerName + "'s streams, from now on!");
-        }*/
+                        await ReplyAsync("Keeping track of " + url + $"'s feed, from now on!");
+
+                    }
+                    catch (Exception e)
+                    {
+                        await ReplyAsync("**Error**: " + e.InnerException.Message);
+                    }
+                }
+            }
+
+            [Command("UnTrack")]
+            [Summary("Stops tracking the specified RSS feed.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task UnTrackFeed(string url)
+            {
+                if (await Trackers[BaseTracker.TrackerType.RSS].TryRemoveTrackerAsync(url, Context.Channel.Id))
+                    await ReplyAsync("Stopped keeping track of " + url + "'s feed!");
+                else
+                    await ReplyAsync($"Could not find tracker for `{url}`\n" +
+                                     $"Currently tracked feeds are:", embed: StaticBase.Trackers[BaseTracker.TrackerType.RSS].GetTrackersEmbed(Context.Channel.Id));
+            }
+
+            [Command("GetTrackers")]
+            [Summary("Returns the feeds that are tracked in the current channel.")]
+            public async Task GetTrackers()
+            {
+                await ReplyAsync("Following feeds are currently being tracked:", embed: StaticBase.Trackers[BaseTracker.TrackerType.RSS].GetTrackersEmbed(Context.Channel.Id));
+            }
+
+            [Command("SetNotification")]
+            [Summary("Sets the notification text that is used each time a new post was found.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task SetNotification(string url, string notification = "")
+            {
+                if (await StaticBase.Trackers[BaseTracker.TrackerType.RSS].TrySetNotificationAsync(url, Context.Channel.Id, notification))
+                {
+                    await ReplyAsync($"Changed notification for `{url}` to `{notification}`");
+                }
+                else
+                    await ReplyAsync($"Could not find tracker for `{url}`\n" +
+                                     $"Currently tracked feeds are:", embed: StaticBase.Trackers[BaseTracker.TrackerType.RSS].GetTrackersEmbed(Context.Channel.Id));
+            }
+        }
+
 
         [Command("PruneTrackers", RunMode = RunMode.Async)]
         [RequireBotManage()]
