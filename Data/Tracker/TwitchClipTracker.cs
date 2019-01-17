@@ -32,6 +32,8 @@ namespace MopsBot.Data.Tracker
             //Check if Name ist valid
             try{
                 new TwitchClipTracker(Name).Dispose();
+                TrackedClips = new Dictionary<DateTime, KeyValuePair<int, double>>();
+                ChannelMessages = new Dictionary<ulong, string>();
             } catch (Exception e){
                 this.Dispose();
                 throw e;

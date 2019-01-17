@@ -30,7 +30,9 @@ namespace MopsBot.Data.Tracker
 
             //Check if Name ist valid
             try{
-                new OSRSTracker(Name).Dispose();
+                var test = new OSRSTracker(Name);
+                test.Dispose();
+                stats = test.stats;
             } catch (Exception e){
                 this.Dispose();
                 throw e;

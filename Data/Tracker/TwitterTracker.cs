@@ -29,7 +29,9 @@ namespace MopsBot.Data.Tracker
 
             //Check if Name ist valid
             try{
-                new TwitterTracker(Name).Dispose();
+                var test = new TwitterTracker(Name);
+                test.Dispose();
+                lastMessage = test.lastMessage;
             } catch (Exception e){
                 this.Dispose();
                 throw e;

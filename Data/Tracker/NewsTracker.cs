@@ -31,7 +31,9 @@ namespace MopsBot.Data.Tracker
 
             //Check if Name ist valid
             try{
-                new NewsTracker(Name).Dispose();
+                var test = new NewsTracker(Name);
+                test.Dispose();
+                LastNews = test.LastNews;
             } catch (Exception e){
                 this.Dispose();
                 throw e;

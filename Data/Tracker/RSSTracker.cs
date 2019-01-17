@@ -33,7 +33,9 @@ namespace MopsBot.Data.Tracker
             //Check if Name ist valid
             try
             {
-                new RSSTracker(Name).Dispose();
+                var test = new RSSTracker(Name);
+                test.Dispose();
+                LastFeed = test.LastFeed;
             }
             catch (Exception e)
             {

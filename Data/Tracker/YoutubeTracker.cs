@@ -30,7 +30,11 @@ namespace MopsBot.Data.Tracker
 
             //Check if Name ist valid
             try{
-                new YoutubeTracker(Name).Dispose();
+                var test = new YoutubeTracker(Name);
+                test.Dispose();
+                channelThumbnailUrl = test.channelThumbnailUrl;
+                uploadPlaylistId = test.uploadPlaylistId;
+                LastTime = test.LastTime;
             } catch (Exception e){
                 this.Dispose();
                 throw e;

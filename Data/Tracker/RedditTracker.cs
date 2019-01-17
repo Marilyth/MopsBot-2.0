@@ -34,7 +34,9 @@ namespace MopsBot.Data.Tracker
 
             //Check if Name ist valid
             try{
-                new RedditTracker(Name).Dispose();
+                var test = new RedditTracker(Name);
+                test.Dispose();
+                lastCheck = test.lastCheck;
             } catch (Exception e){
                 this.Dispose();
                 throw e;
