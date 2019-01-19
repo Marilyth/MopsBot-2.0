@@ -91,7 +91,7 @@ namespace MopsBot.Data.Tracker
                 {
                     foreach (ulong channel in ChannelMessages.Keys.ToList())
                     {
-                        await OnMajorChangeTracked(channel, createEmbed(newFeed), ChannelMessages[channel]);
+                        await OnMajorChangeTracked(channel, createEmbed(newFeed, feed), ChannelMessages[channel]);
                     }
                 }
 
@@ -107,11 +107,11 @@ namespace MopsBot.Data.Tracker
             return FetchRSSData(Name);
         }
 
-        private Embed createEmbed(SyndicationItem feedItem)
+        private Embed createEmbed(SyndicationItem feedItem, SyndicationFeed parent)
         {
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(255, 255, 255);
-            e.Title = feedItem.Title.Text;
+            e.Title = feedItem.Title?.Text;
             e.Url = feedItem.Links?.FirstOrDefault()?.Uri?.AbsoluteUri ?? feedItem.BaseUri.AbsoluteUri;
             e.Timestamp = feedItem.PublishDate.UtcDateTime;
 
@@ -121,15 +121,36 @@ namespace MopsBot.Data.Tracker
             e.Footer = footer;
 
             EmbedAuthorBuilder author = new EmbedAuthorBuilder();
-            author.Name = feedItem.Authors?.FirstOrDefault()?.Name;
+            author.Name = (feedItem.Authors?.FirstOrDefault()?.Name ?? feedItem.Authors?.FirstOrDefault()?.Email) ?? parent.Title?.Text;
             author.Url = feedItem.Authors?.FirstOrDefault()?.Uri;
             e.Author = author;
 
-            var image = feedItem.Links?.FirstOrDefault(x => x.RelationshipType.Contains("enclosure"))?.Uri?.AbsoluteUri;
+            e.ThumbnailUrl = parent.ImageUrl?.AbsoluteUri;
+
+            var image = feedItem.Links?.FirstOrDefault(x => isImageUrl(x.Uri.AbsoluteUri))?.Uri?.AbsoluteUri;
             e.ImageUrl = image;
-            e.Description = new string(feedItem.Summary?.Text?.Take(Math.Min(2000, feedItem.Summary.Text.Length)).ToArray() ?? new char[]{' '});
+            e.Description = (new string(HtmlToPlainText(feedItem.Summary?.Text ?? "").Take(Math.Min(2000, feedItem.Summary.Text.Length)).ToArray()));
+            if (e.Description.Length >= 2000) e.Description += " [...]";
 
             return e.Build();
+        }
+        
+        private static bool isImageUrl(string URL)
+        {
+            try
+            {
+                var req = System.Net.HttpWebRequest.Create(URL);
+                req.Method = "HEAD";
+                using (var resp = req.GetResponse())
+                {
+                    return resp.ContentType.ToLower(System.Globalization.CultureInfo.InvariantCulture)
+                               .StartsWith("image/");
+                }
+            }
+            catch (Exception e)
+            {
+                return false;
+            }
         }
 
         private static string HtmlToPlainText(string html)
