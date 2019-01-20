@@ -20,7 +20,8 @@ namespace MopsBot.Data.Tracker
     [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
     public class RSSTracker : BaseTracker
     {
-        public DateTime LastFeed;
+        public DateTime? LastFeed;
+        public string LastTitle;
 
         public RSSTracker() : base(600000, ExistingTrackers * 2000)
         {
@@ -36,6 +37,7 @@ namespace MopsBot.Data.Tracker
                 var test = new RSSTracker(Name);
                 test.Dispose();
                 LastFeed = test.LastFeed;
+                LastTitle = test.LastTitle;
             }
             catch (Exception e)
             {
@@ -65,7 +67,12 @@ namespace MopsBot.Data.Tracker
             {
                 var checkExists = getFeed();
 
-                LastFeed = checkExists.Items.OrderByDescending(x => x.PublishDate.DateTime).FirstOrDefault()?.PublishDate.UtcDateTime ?? DateTime.UtcNow;
+                try{
+                    LastFeed = checkExists.Items.OrderByDescending(x => x.PublishDate.DateTime).FirstOrDefault()?.PublishDate.UtcDateTime ?? DateTime.UtcNow;
+                } catch (Exception e){
+                    LastFeed = null;
+                    LastTitle = checkExists.Items.FirstOrDefault()?.Title?.Text ?? "";
+                }
             }
             catch (Exception)
             {
@@ -79,11 +86,17 @@ namespace MopsBot.Data.Tracker
             try
             {
                 var feed = getFeed();
-                var feedItems = feed.Items.Where(x => x.PublishDate.UtcDateTime > LastFeed.AddSeconds(1)).OrderBy(x => x.PublishDate).ToArray();
+                List<SyndicationItem> feedItems;
+                if(LastFeed != null){
+                    feedItems = feed.Items.Where(x => x.PublishDate.UtcDateTime > LastFeed?.AddSeconds(1)).OrderBy(x => x.PublishDate).ToList();
+                } else {
+                    feedItems = feed.Items.TakeWhile(x => !x.Title.Text.Equals(LastTitle))?.Reverse().ToList();
+                }
 
-                if (feedItems.Length > 0)
+                if (feedItems.Count() > 0)
                 {
-                    LastFeed = feedItems.Last().PublishDate.UtcDateTime;
+                    if(LastFeed != null) LastFeed = feedItems.Last().PublishDate.UtcDateTime;
+                    else LastTitle = feedItems.Last().Title?.Text;
                     await StaticBase.Trackers[TrackerType.RSS].UpdateDBAsync(this);
                 }
 
@@ -113,7 +126,12 @@ namespace MopsBot.Data.Tracker
             e.Color = new Color(255, 255, 255);
             e.Title = feedItem.Title?.Text;
             e.Url = feedItem.Links?.FirstOrDefault()?.Uri?.AbsoluteUri ?? feedItem.BaseUri.AbsoluteUri;
-            e.Timestamp = feedItem.PublishDate.UtcDateTime;
+            
+            try{
+                e.Timestamp = feedItem.PublishDate.UtcDateTime;
+            } catch (Exception ex){
+                e.Timestamp = DateTime.UtcNow;
+            }
 
             EmbedFooterBuilder footer = new EmbedFooterBuilder();
             footer.IconUrl = "https://cdn5.vectorstock.com/i/1000x1000/82/39/the-news-icon-newspaper-symbol-flat-vector-5518239.jpg";
@@ -128,8 +146,8 @@ namespace MopsBot.Data.Tracker
             e.ThumbnailUrl = parent.ImageUrl?.AbsoluteUri;
 
             var image = feedItem.Links?.FirstOrDefault(x => isImageUrl(x.Uri?.AbsoluteUri ?? ""))?.Uri?.AbsoluteUri;
-            e.ImageUrl = image;
-            e.Description = (new string(HtmlToPlainText(feedItem.Summary?.Text ?? "").Take(Math.Min(2000, feedItem.Summary.Text.Length)).ToArray()));
+            e.Description = (new string(HtmlToPlainText(feedItem.Summary?.Text ?? "", out string htmlImage).Take(Math.Min(2000, feedItem.Summary.Text.Length)).ToArray()));
+            e.ImageUrl = htmlImage != null ? htmlImage : image;
             if (e.Description.Length >= 2000) e.Description += " [...]";
 
             return e.Build();
@@ -153,16 +171,19 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        private static string HtmlToPlainText(string html)
+        private static string HtmlToPlainText(string html, out string image)
         {
+            const string images = "img src=[\"'](.*?)[\"']";//matches images
             const string tagWhiteSpace = @"(>|$)(\W|\n|\r)+<";//matches one or more (white space or line breaks) between '>' and '<'
             const string stripFormatting = @"<[^>]*(>|$)";//match any character between '<' and '>', even when end tag is missing
-            const string lineBreak = @"<(br|BR)\s{0,1}\/{0,1}>";//matches: <br>,<br/>,<br />,<BR>,<BR/>,<BR />
+            const string lineBreak = @"<(br|BR|p|P)\s{0,1}\/{0,1}>";//matches: <br>,<br/>,<br />,<BR>,<BR/>,<BR />
+            var imagesRegex = new Regex(images, RegexOptions.Multiline);
             var lineBreakRegex = new Regex(lineBreak, RegexOptions.Multiline);
             var stripFormattingRegex = new Regex(stripFormatting, RegexOptions.Multiline);
             var tagWhiteSpaceRegex = new Regex(tagWhiteSpace, RegexOptions.Multiline);
 
             var text = html;
+            image = imagesRegex.Match(text).Groups.Last().Value;
             //Decode html specific characters
             text = System.Net.WebUtility.HtmlDecode(text);
             //Remove tag whitespace/line breaks
