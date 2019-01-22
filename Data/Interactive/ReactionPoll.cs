@@ -83,7 +83,7 @@ namespace MopsBot.Data.Interactive
             EmbedBuilder e = new EmbedBuilder();
             e.Title = poll.Question;
             e.Description = $"To vote for an option, press the corresponding digit reactions.\n" +
-                            "If you can manage channels, you may delete this poll by pressing the 🗑 Icon.";
+                            "If you can manage messages, you may delete this poll by pressing the 🗑 Icon.";
             e.Color = Color.Blue;
             e.WithCurrentTimestamp();
             e.WithFooter(x => x.WithIconUrl("http://thebullelephant.com/wp-content/uploads/2016/10/poll-box-1.png").WithText("Poll"));
@@ -138,7 +138,7 @@ namespace MopsBot.Data.Interactive
         private async Task DeletePoll(ReactionHandlerContext context)
         {
             var user = await ((ITextChannel)context.Channel).Guild.GetUserAsync(context.Reaction.UserId);
-            if (user.GuildPermissions.ManageChannels)
+            if (user.GuildPermissions.ManageMessages)
             {
                 await Program.ReactionHandler.ClearHandler(context.Message);
 

@@ -56,7 +56,7 @@ namespace MopsBot.Module
         public class Poll : ModuleBase
         {
             [Command("Create", RunMode = RunMode.Async), Summary("Creates a poll\nExample: !poll \"What should I play\" \"Dark Souls\" \"Osu!\" \"WoW\"")]
-            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [RequireUserPermission(ChannelPermission.ManageMessages)]
             [Ratelimit(1, 60, Measure.Seconds, RatelimitFlags.ApplyPerChannel)]
             public async Task Create(string title, params string[] options)
             {
