@@ -50,7 +50,7 @@ namespace MopsBot.Data.Tracker
 
         public static async Task<T> FetchJSONDataAsync<T>(string url, params KeyValuePair<string, string>[] headers)
         {
-            string query = await MopsBot.Module.Information.ReadURLAsync(url, headers);
+            string query = await MopsBot.Module.Information.GetURLAsync(url, headers);
 
             JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
             {

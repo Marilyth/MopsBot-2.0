@@ -128,7 +128,7 @@ namespace MopsBot.Data.Tracker
 
         public async Task<OsuResult> fetchUser(string mode = "m=0")
         {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://osu.ppy.sh/api/get_user?u={Name}&{mode}&event_days=31&k={Program.Config["Osu"]}");
+            string query = await MopsBot.Module.Information.GetURLAsync($"https://osu.ppy.sh/api/get_user?u={Name}&{mode}&event_days=31&k={Program.Config["Osu"]}");
 
             return JsonConvert.DeserializeObject<OsuResult>(query.Substring(1, query.Length - 2));
         }
@@ -147,7 +147,7 @@ namespace MopsBot.Data.Tracker
 
         public async Task<Beatmap> fetchBeatmap(string beatmapID, string mode = "m=0")
         {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://osu.ppy.sh/api/get_beatmaps?b={beatmapID}&{mode}&a=1&k={Program.Config["Osu"]}");
+            string query = await MopsBot.Module.Information.GetURLAsync($"https://osu.ppy.sh/api/get_beatmaps?b={beatmapID}&{mode}&a=1&k={Program.Config["Osu"]}");
 
             return JsonConvert.DeserializeObject<Beatmap>(query.Substring(1, query.Length - 2));
         }

@@ -26,6 +26,7 @@ namespace MopsBot
     {
         public static MongoClient DatabaseClient = new MongoClient($"{Program.Config["DatabaseURL"]}");
         public static IMongoDatabase Database = DatabaseClient.GetDatabase("Mops");
+        public static readonly System.Net.Http.HttpClient HttpClient = new System.Net.Http.HttpClient();
         public static AuthDiscordBotListApi DiscordBotList = new AuthDiscordBotListApi(305398845389406209, Program.Config["DiscordBotListKey"]);
         public static Random ran = new Random();
         public static Gfycat.GfycatClient gfy;
@@ -49,6 +50,7 @@ namespace MopsBot
         {
             if (!init)
             {
+                HttpClient.DefaultRequestHeaders.ConnectionClose = true;
                 MopsBot.Data.Entities.UserEvent.UserVoted += UserVoted;
                 Task.Run(() => new MopsBot.Data.Entities.UserEvent().CheckUsersVotedLoop());
 

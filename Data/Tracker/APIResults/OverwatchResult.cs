@@ -289,7 +289,7 @@ namespace MopsBot.Data.Tracker.APIResults.Overwatch
         public int endorsement_level { get; set; }
 
         public async static Task<int> GetLevelAsync(string name){
-            var query = await MopsBot.Module.Information.ReadURLAsync($"https://playoverwatch.com/en-us/search/account-by-name/{name.Split("-")[0]}?rand={StaticBase.ran.Next(999999999)}");
+            var query = await MopsBot.Module.Information.GetURLAsync($"https://playoverwatch.com/en-us/search/account-by-name/{name.Split("-")[0]}?rand={StaticBase.ran.Next(999999999)}");
 
             var tmpResult = JsonConvert.DeserializeObject<dynamic>(query);
             foreach(var cur in tmpResult){

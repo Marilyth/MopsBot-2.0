@@ -168,7 +168,7 @@ namespace MopsBot.Api.Controllers
         private async Task<ulong> GetUserViaTokenAsync(string token){
             var contentHeader = new KeyValuePair<string, string>("Content-Type", "application/json");
             var tokenHeader = new KeyValuePair<string, string>("Authorization", "Bearer " + token);
-            var response = await MopsBot.Module.Information.ReadURLAsync("https://discordapp.com/api/v6/users/@me", tokenHeader, contentHeader);
+            var response = await MopsBot.Module.Information.GetURLAsync("https://discordapp.com/api/v6/users/@me", tokenHeader, contentHeader);
 
             return JsonConvert.DeserializeObject<dynamic>(response)["id"];
         }

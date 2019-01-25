@@ -102,7 +102,7 @@ namespace MopsBot.Data.Tracker
 
         private static async Task<List<long[]>> fetchStats(string name)
         {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://secure.runescape.com/m=hiscore_oldschool/index_lite.ws?player={name}");
+            string query = await MopsBot.Module.Information.GetURLAsync($"https://secure.runescape.com/m=hiscore_oldschool/index_lite.ws?player={name}");
 
             var allStats = query.Split("\n").ToList();
             List<long[]> statList = new List<long[]>();
@@ -204,7 +204,7 @@ namespace MopsBot.Data.Tracker
 
         public static async Task<Embed> GetItemEmbed(string name)
         {
-            var stats = await MopsBot.Module.Information.ReadURLAsync($"http://oldschoolrunescape.wikia.com/wiki/{name.ToLower().Replace(" ", "_")}?action=raw");
+            var stats = await MopsBot.Module.Information.GetURLAsync($"http://oldschoolrunescape.wikia.com/wiki/{name.ToLower().Replace(" ", "_")}?action=raw");
             var information = stats.Split(new string[] { "{{", "}}", "==" }, 1000, StringSplitOptions.RemoveEmptyEntries);
 
             

@@ -51,7 +51,7 @@ namespace MopsBot.Module
             {
                 try
                 {
-                    string query = Task.Run(() => ReadURLAsync($"http://api.wordnik.com:80/v4/word.json/{text}/definitions?limit=1&includeRelated=false&sourceDictionaries=all&useCanonical=true&includeTags=false&api_key={Program.Config["Wordnik"]}")).Result;
+                    string query = Task.Run(() => GetURLAsync($"http://api.wordnik.com:80/v4/word.json/{text}/definitions?limit=1&includeRelated=false&sourceDictionaries=all&useCanonical=true&includeTags=false&api_key={Program.Config["Wordnik"]}")).Result;
 
                     dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
 
@@ -76,7 +76,7 @@ namespace MopsBot.Module
             {
                 try
                 {
-                    string query = Task.Run(() => ReadURLAsync($"https://translate.googleapis.com/translate_a/single?client=gtx&sl={srcLanguage}&tl={tgtLanguage}&dt=t&q={text}")).Result;
+                    string query = Task.Run(() => GetURLAsync($"https://translate.googleapis.com/translate_a/single?client=gtx&sl={srcLanguage}&tl={tgtLanguage}&dt=t&q={text}")).Result;
                     dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
                     await ReplyAsync(tempDict[0][0][0].ToString());
                 }
@@ -95,7 +95,7 @@ namespace MopsBot.Module
         {
             using (Context.Channel.EnterTypingState())
             {
-                var result = await ReadURLAsync($"https://api.wolframalpha.com/v2/query?input={System.Web.HttpUtility.UrlEncode(query)}&format=image,plaintext&podstate=Step-by-step%20solution&output=JSON&appid={Program.Config["WolframAlpha"]}");
+                var result = await GetURLAsync($"https://api.wolframalpha.com/v2/query?input={System.Web.HttpUtility.UrlEncode(query)}&format=image,plaintext&podstate=Step-by-step%20solution&output=JSON&appid={Program.Config["WolframAlpha"]}");
                 var jsonResult = JsonConvert.DeserializeObject<Data.Tracker.APIResults.Wolfram.WolframResult>(result);
                 for (int i = 0; i < 2 && i < jsonResult.queryresult.pods.Count; i++)
                 {
@@ -110,7 +110,7 @@ namespace MopsBot.Module
         {
             try
             {
-                string query = await ReadURLAsync($"http://api.wordnik.com:80/v4/words.json/randomWord?hasDictionaryDef=true&excludePartOfSpeech=given-name&minCorpusCount=10000&maxCorpusCount=-1&minDictionaryCount=4&maxDictionaryCount=-1&minLength=3&maxLength=13&api_key={Program.Config["Wordnik"]}");
+                string query = await GetURLAsync($"http://api.wordnik.com:80/v4/words.json/randomWord?hasDictionaryDef=true&excludePartOfSpeech=given-name&minCorpusCount=10000&maxCorpusCount=-1&minDictionaryCount=4&maxDictionaryCount=-1&minLength=3&maxLength=13&api_key={Program.Config["Wordnik"]}");
                 dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
                 return tempDict["word"];
             }
@@ -121,28 +121,33 @@ namespace MopsBot.Module
             return null;
         }
 
-        public static async Task<string> ReadURLAsync(string URL, params KeyValuePair<string, string>[] headers)
+        public static async Task<string> PostURLAsync(string URL, params KeyValuePair<string, string>[] headers)
         {
-            var request = (System.Net.HttpWebRequest)System.Net.WebRequest.Create(URL);
-            request.CachePolicy = new System.Net.Cache.HttpRequestCachePolicy(System.Net.Cache.HttpRequestCacheLevel.NoCacheNoStore);
-            foreach (var header in headers)
-                request.Headers.Add(header.Key, header.Value);
-
-            request.KeepAlive = false;
-            request.UserAgent = "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)";
-            using (var response = await request.GetResponseAsync())
+            using (var response = await StaticBase.HttpClient.PostAsync(URL, new FormUrlEncodedContent(headers)))
             {
                 try
                 {
-                    using (var content = response.GetResponseStream())
-                    using (var reader = new System.IO.StreamReader(content))
-                    {
-                        return await reader.ReadToEndAsync();
-                    }
+                    return await response.Content.ReadAsStringAsync();
                 }
                 catch (System.Net.WebException e)
                 {
-                    response.Close();
+                    return e.Message;
+                }
+            }
+        }
+
+        public static async Task<string> GetURLAsync(string URL, params KeyValuePair<string, string>[] headers)
+        {
+            using (var request = new HttpRequestMessage(HttpMethod.Get, URL))
+            {
+                try
+                {
+                    foreach(var kvp in headers)
+                        request.Headers.Add(kvp.Key, kvp.Value);
+                    return await (await StaticBase.HttpClient.SendAsync(request)).Content.ReadAsStringAsync();
+                }
+                catch (System.Net.WebException e)
+                {
                     return e.Message;
                 }
             }
