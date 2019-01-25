@@ -53,6 +53,7 @@ namespace MopsBot
         {
             if (!init)
             {
+                HttpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)");
                 ServicePointManager.ServerCertificateValidationCallback = (object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) => {return true;};
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls|SecurityProtocolType.Tls11|SecurityProtocolType.Tls12;
                 HttpClient.DefaultRequestHeaders.ConnectionClose = true;
