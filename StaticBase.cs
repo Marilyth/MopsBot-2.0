@@ -20,6 +20,8 @@ using MongoDB.Bson.Serialization.Attributes;
 using DiscordBotsList.Api;
 using DiscordBotsList.Api.Objects;
 using System.Net;
+using System.Security.Cryptography.X509Certificates;
+using System.Net.Security;
 
 namespace MopsBot
 {
@@ -51,8 +53,8 @@ namespace MopsBot
         {
             if (!init)
             {
-                ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
-                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls|SecurityProtocolType.Tls11|SecurityProtocolType.Tls12|SecurityProtocolType.Ssl3;
+                ServicePointManager.ServerCertificateValidationCallback = (object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) => {return true;};
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls|SecurityProtocolType.Tls11|SecurityProtocolType.Tls12;
                 HttpClient.DefaultRequestHeaders.ConnectionClose = true;
                 MopsBot.Data.Entities.UserEvent.UserVoted += UserVoted;
                 Task.Run(() => new MopsBot.Data.Entities.UserEvent().CheckUsersVotedLoop());
