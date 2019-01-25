@@ -361,7 +361,15 @@ namespace MopsBot.Data.Tracker.APIResults.Overwatch
         public Location kr { get; set; }
 
         public Location getNotNull(){
-            return eu ?? us ?? kr;
+            if(eu?.stats?.quickplay?.overall_stats != null){
+                return eu;
+            }
+            else if(us?.stats.quickplay?.overall_stats != null){
+                return us;
+            }
+            else{
+                return kr;
+            }
         }
     }
 }
