@@ -273,8 +273,22 @@ namespace MopsBot.Data.Tracker
         {
             Dictionary<string, string> changedStats = new Dictionary<string, string>();
 
-            OverallStats quickNew = newStats.getNotNull().stats.quickplay.overall_stats;
-            OverallStats quickOld = oldStats.getNotNull().stats.quickplay.overall_stats;
+            Location newLocation, oldLocation;
+            if(newStats.eu?.stats?.quickplay?.overall_stats != null){
+                newLocation = newStats.eu;
+                oldLocation = oldStats.eu;
+            }
+            else if(newStats.us?.stats.quickplay?.overall_stats != null){
+                newLocation = newStats.us;
+                oldLocation = oldStats.us;
+            }
+            else{
+                newLocation = newStats.kr;
+                oldLocation = oldStats.kr;
+            }
+
+            OverallStats quickNew = newLocation.stats?.quickplay?.overall_stats;
+            OverallStats quickOld = oldLocation.stats?.quickplay?.overall_stats;
 
             var curLevel = await OverallStats.GetLevelAsync(Name);
             if (StatGraph.PlotDataPoints.Last().Value.Value < curLevel)
@@ -289,10 +303,10 @@ namespace MopsBot.Data.Tracker
                                 $" (+{quickNew.wins - quickOld.wins})");
             }
 
-            if (oldStats.getNotNull().stats.competitive != null)
+            if (oldLocation.stats.competitive != null)
             {
-                OverallStats compNew = newStats.getNotNull().stats.competitive.overall_stats;
-                OverallStats compOld = oldStats.getNotNull().stats.competitive.overall_stats;
+                OverallStats compNew = newLocation.stats?.competitive?.overall_stats;
+                OverallStats compOld = oldLocation.stats?.competitive?.overall_stats;
 
                 if (compNew.comprank != compOld.comprank)
                 {
