@@ -19,6 +19,7 @@ using MongoDB.Bson.Serialization.Options;
 using MongoDB.Bson.Serialization.Attributes;
 using DiscordBotsList.Api;
 using DiscordBotsList.Api.Objects;
+using System.Net;
 
 namespace MopsBot
 {
@@ -50,6 +51,7 @@ namespace MopsBot
         {
             if (!init)
             {
+                System.Net.ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls|SecurityProtocolType.Tls11|SecurityProtocolType.Tls12;
                 HttpClient.DefaultRequestHeaders.ConnectionClose = true;
                 MopsBot.Data.Entities.UserEvent.UserVoted += UserVoted;
                 Task.Run(() => new MopsBot.Data.Entities.UserEvent().CheckUsersVotedLoop());

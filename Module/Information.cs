@@ -129,9 +129,10 @@ namespace MopsBot.Module
                 {
                     return await response.Content.ReadAsStringAsync();
                 }
-                catch (System.Net.WebException e)
+                catch (Exception e)
                 {
-                    return e.Message;
+                    Console.WriteLine($"\n[Error] for sending request to {URL}:\n{e.GetBaseException().Message}");
+                    throw e;
                 }
             }
         }
@@ -146,9 +147,10 @@ namespace MopsBot.Module
                         request.Headers.Add(kvp.Key, kvp.Value);
                     return await (await StaticBase.HttpClient.SendAsync(request)).Content.ReadAsStringAsync();
                 }
-                catch (System.Net.WebException e)
+                catch (Exception e)
                 {
-                    return e.Message;
+                    Console.WriteLine($"\n[Error] for sending request to {URL}:\n{e.GetBaseException().Message}");
+                    throw e;
                 }
             }
         }
