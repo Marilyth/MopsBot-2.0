@@ -144,7 +144,7 @@ namespace MopsBot.Module
                 try
                 {
                     foreach(var kvp in headers)
-                        request.Headers.Add(kvp.Key, kvp.Value);
+                        request.Headers.TryAddWithoutValidation(kvp.Key, kvp.Value);
                     return await (await StaticBase.HttpClient.SendAsync(request)).Content.ReadAsStringAsync();
                 }
                 catch (Exception e)
