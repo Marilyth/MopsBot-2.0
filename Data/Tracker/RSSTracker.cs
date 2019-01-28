@@ -20,6 +20,7 @@ namespace MopsBot.Data.Tracker
     [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
     public class RSSTracker : BaseTracker
     {
+        public static DateTime baseDate = new DateTime(1, 1, 1, 1, 0, 0);
         public DateTime? LastFeed;
         public string LastTitle;
 
@@ -69,6 +70,7 @@ namespace MopsBot.Data.Tracker
 
                 try{
                     LastFeed = checkExists.Items.OrderByDescending(x => x.PublishDate.DateTime).FirstOrDefault()?.PublishDate.UtcDateTime ?? DateTime.UtcNow;
+                    if(LastFeed.Value.Year == 1){ LastFeed = null; throw new Exception("No date set");}
                 } catch (Exception e){
                     LastFeed = null;
                     LastTitle = checkExists.Items.FirstOrDefault()?.Title?.Text ?? "";
@@ -128,7 +130,7 @@ namespace MopsBot.Data.Tracker
             e.Url = feedItem.Links?.FirstOrDefault()?.Uri?.AbsoluteUri ?? feedItem.BaseUri.AbsoluteUri;
             
             try{
-                e.Timestamp = feedItem.PublishDate.UtcDateTime;
+                e.Timestamp = feedItem.PublishDate.UtcDateTime.Year > 1 ? feedItem.PublishDate.UtcDateTime : feedItem.LastUpdatedTime.UtcDateTime;
             } catch (Exception ex){
                 e.Timestamp = DateTime.UtcNow;
             }
