@@ -33,7 +33,7 @@ namespace MopsBot.Data.Interactive
             }
             catch (Exception e)
             {
-                Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"", e)).Wait();
+                Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"Could not read poll database", e)).Wait();
             }
             //}
 
@@ -57,7 +57,7 @@ namespace MopsBot.Data.Interactive
                     }
                     catch (Exception e)
                     {
-                        Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"", e)).Wait();
+                        Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"[{channel.Key}][{poll.MessageID}] could not be loaded", e)).Wait();
                     }
                 }
             }
