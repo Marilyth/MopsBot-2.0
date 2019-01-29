@@ -18,7 +18,7 @@ namespace MopsBot.Data.Tracker
     public class TwitterTracker : BaseTracker
     {
         public long lastMessage;
-        private int failCount = 0;
+        public int failCount = 0;
 
         public TwitterTracker() : base(600000, ExistingTrackers * 2000)
         {
@@ -101,8 +101,10 @@ namespace MopsBot.Data.Tracker
             {
                 if(!e.Message.Contains("Value cannot be null"))
                     await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"error by {Name}", e));
-                else
+                else{
                     await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Found no tweets by {Name}; happened {++failCount} times in a row."));
+                    await StaticBase.Trackers[TrackerType.Twitter].UpdateDBAsync(this);
+                }
             }
         }
 
