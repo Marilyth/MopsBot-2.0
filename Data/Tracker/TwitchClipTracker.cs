@@ -94,7 +94,7 @@ namespace MopsBot.Data.Tracker
             }
             catch (Exception e)
             {
-                await Program.Client_Log(new LogMessage(LogSeverity.Error, this.GetType().Name + "." + System.Reflection.MethodBase.GetCurrentMethod().Name, $" error by {Name}", e));
+                await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $" error by {Name}", e));
             }
         }
 
@@ -149,7 +149,7 @@ namespace MopsBot.Data.Tracker
             }
             catch (Exception e)
             {
-                await Program.Client_Log(new LogMessage(LogSeverity.Error, this.GetType().Name + "." + System.Reflection.MethodBase.GetCurrentMethod().Name, $" error by {Name}", e));
+                await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $" error by {Name}", e));
                 return new TwitchClipResult();
             }
         }

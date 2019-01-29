@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -44,12 +45,12 @@ namespace MopsBot
             await Client.LoginAsync(TokenType.Bot, Config["Discord"]);
             await Client.StartAsync();
 
-            Client.Log += Client_Log;
+            Client.Log += ClientLog;
             Client.Ready += onClientReady;
 
             var map = new ServiceCollection().AddSingleton(Client)
                 // .AddSingleton(new AudioService())
-                .AddSingleton(new ReliabilityService(Client, Client_Log))
+                .AddSingleton(new ReliabilityService(Client, ClientLog))
                 .AddSingleton(new InteractiveService(Client));
 
             var provider = map.BuildServiceProvider();
@@ -63,9 +64,18 @@ namespace MopsBot
             await Task.Delay(-1);
         }
 
-        public static Task Client_Log(LogMessage msg)
+        public static Task ClientLog(LogMessage msg)
         {
             Console.WriteLine($"\n[{msg.Severity}] at {DateTime.Now}\nsource: {msg.Source}\nmessage: {msg.Message}");
+            if(msg.Exception != null)
+                Console.WriteLine($"{msg.Exception?.Message ?? ""}\n{msg.Exception?.StackTrace ?? ""}");
+
+            return Task.CompletedTask;
+        }
+
+        public static Task MopsLog(LogMessage msg, [CallerMemberName] string callerName = "", [CallerFilePath] string callerPath = "")
+        {
+            Console.WriteLine($"\n[{msg.Severity}] at {DateTime.Now}\nsource: {Path.GetFileNameWithoutExtension(callerPath)}.{callerName}\nmessage: {msg.Message}");
             if(msg.Exception != null)
                 Console.WriteLine($"{msg.Exception?.Message ?? ""}\n{msg.Exception?.StackTrace ?? ""}");
 

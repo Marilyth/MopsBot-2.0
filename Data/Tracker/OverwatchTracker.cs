@@ -130,13 +130,13 @@ namespace MopsBot.Data.Tracker
             }
             catch (Exception e)
             {
-                await Program.Client_Log(new LogMessage(LogSeverity.Error, this.GetType().Name + "." + System.Reflection.MethodBase.GetCurrentMethod().Name, $" error by {Name}", e));
+                await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $" error by {Name}", e));
 
                 if (e.Message.Contains("TOO MANY REQUESTS"))
                 {
                     var nextElapse = StaticBase.ran.Next(10000, 300000);
                     checkForChange.Change(nextElapse, 300000);
-                    await Program.Client_Log(new LogMessage(LogSeverity.Info, this.GetType().Name + "." + System.Reflection.MethodBase.GetCurrentMethod().Name, $"Trying again in {nextElapse}ms", e));
+                    await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Trying again in {nextElapse}ms", e));
                 }
             }
         }

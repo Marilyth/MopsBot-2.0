@@ -61,7 +61,7 @@ namespace MopsBot.Module
                 }
                 catch (Exception e)
                 {
-                    await Program.Client_Log(new LogMessage(LogSeverity.Error, System.Reflection.MethodBase.GetCurrentMethod().Name, $"", e));
+                    await Program.MopsLog(new LogMessage(LogSeverity.Error,"", $"", e));
                 }
             }
         }
@@ -82,7 +82,7 @@ namespace MopsBot.Module
                 }
                 catch (Exception e)
                 {
-                    await Program.Client_Log(new LogMessage(LogSeverity.Error, System.Reflection.MethodBase.GetCurrentMethod().Name, $"", e));
+                    await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"", e));
                     await ReplyAsync("Error happened");
                 }
             }
@@ -116,7 +116,7 @@ namespace MopsBot.Module
             }
             catch (Exception e)
             {
-                await Program.Client_Log(new LogMessage(LogSeverity.Error, System.Reflection.MethodBase.GetCurrentMethod().Name, $"Getting random word failed", e));
+                await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"Getting random word failed", e));
             }
             return null;
         }
@@ -131,7 +131,7 @@ namespace MopsBot.Module
                 }
                 catch (Exception e)
                 {
-                    await Program.Client_Log(new LogMessage(LogSeverity.Error, System.Reflection.MethodBase.GetCurrentMethod().Name, $"error for sending post request to {URL}", e.GetBaseException()));
+                    await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"error for sending post request to {URL}", e.GetBaseException()));
                     throw e;
                 }
             }
@@ -149,7 +149,7 @@ namespace MopsBot.Module
                 }
                 catch (Exception e)
                 {
-                    await Program.Client_Log(new LogMessage(LogSeverity.Error, System.Reflection.MethodBase.GetCurrentMethod().Name, $"error for sending request to {URL}", e.GetBaseException()));
+                    await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"error for sending request to {URL}", e.GetBaseException()));
                     throw e;
                 }
             }

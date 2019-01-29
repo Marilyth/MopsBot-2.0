@@ -137,18 +137,18 @@ namespace MopsBot
             }
             catch (Exception e)
             {
-                await Program.Client_Log(new LogMessage(LogSeverity.Error, System.Reflection.MethodBase.GetCurrentMethod().Name, "discord bot list api failed", e));
+                await Program.MopsLog(new LogMessage(LogSeverity.Error, "", "discord bot list api failed", e));
             }
         }
 
         public static async Task UserVoted(IDblEntity user){
-            await Program.Client_Log(new LogMessage(LogSeverity.Info, System.Reflection.MethodBase.GetCurrentMethod().Name, $"User {user.ToString()}({user.Id}) voted. Adding 10 VP to balance!"));
+            await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"User {user.ToString()}({user.Id}) voted. Adding 10 VP to balance!"));
             await MopsBot.Data.Entities.User.ModifyUserAsync(user.Id, x => x.Money += 10);
             try{
                 if(Program.Client.CurrentUser.Id == 305398845389406209)
                     await (await Program.Client.GetUser(user.Id).GetOrCreateDMChannelAsync()).SendMessageAsync("Thanks for voting for me!\nI have added 10 Votepoints to your balance!");
             } catch(Exception e){
-                await Program.Client_Log(new LogMessage(LogSeverity.Error, System.Reflection.MethodBase.GetCurrentMethod().Name, "messaging voter failed", e));
+                await Program.MopsLog(new LogMessage(LogSeverity.Error, "", "messaging voter failed", e));
             }
         }
 

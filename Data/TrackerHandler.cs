@@ -149,7 +149,7 @@ namespace MopsBot.Data
                     }
 
                     await UpdateDBAsync(trackers[name]);
-                    await Program.Client_Log(new LogMessage(LogSeverity.Info, this.GetType().Name + "." + System.Reflection.MethodBase.GetCurrentMethod().Name, $"Removed a {typeof(T).FullName} for {name}\nChannel: {channelId}"));
+                    await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Removed a {typeof(T).FullName} for {name}\nChannel: {channelId}"));
                 }
 
                 else
@@ -158,7 +158,7 @@ namespace MopsBot.Data
                     trackers[name].Dispose();
                     trackers.Remove(name);
                     //SaveJson();
-                    await Program.Client_Log(new LogMessage(LogSeverity.Info, this.GetType().Name + "." + System.Reflection.MethodBase.GetCurrentMethod().Name, $"Removed a {typeof(T).FullName} for {name}\nChannel: {channelId}; Last channel left."));
+                    await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Removed a {typeof(T).FullName} for {name}\nChannel: {channelId}; Last channel left."));
                 }
 
                 return true;
@@ -185,7 +185,7 @@ namespace MopsBot.Data
                 await InsertToDBAsync(trackers[name]);
             }
 
-            await Program.Client_Log(new LogMessage(LogSeverity.Info, this.GetType().Name + "." + System.Reflection.MethodBase.GetCurrentMethod().Name, $"Started a new {typeof(T).Name} for {name}\nChannels: {string.Join(",", trackers[name].ChannelMessages.Keys)}\nMessage: {notification}"));
+            await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Started a new {typeof(T).Name} for {name}\nChannels: {string.Join(",", trackers[name].ChannelMessages.Keys)}\nMessage: {notification}"));
         }
 
         public override async Task<bool> TrySetNotificationAsync(string name, ulong channelID, string notificationMessage)
@@ -295,7 +295,7 @@ namespace MopsBot.Data
                 if (Program.Client.GetChannel(channelID) == null || (await ((IGuildChannel)Program.Client.GetChannel(channelID)).Guild.GetCurrentUserAsync()) == null)
                 {
                     await TryRemoveTrackerAsync(sender.Name, channelID);
-                    await Program.Client_Log(new LogMessage(LogSeverity.Warning, this.GetType().Name + "." + System.Reflection.MethodBase.GetCurrentMethod().Name, $"Removed Tracker: {sender.Name} Channel {channelID} is missing"));
+                    await Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"Removed Tracker: {sender.Name} Channel {channelID} is missing"));
                 }
                 else
                 {
@@ -303,7 +303,7 @@ namespace MopsBot.Data
                     if (!permission.SendMessages || !permission.ViewChannel || !permission.ReadMessageHistory)
                     {
                         await TryRemoveTrackerAsync(sender.Name, channelID);
-                        await Program.Client_Log(new LogMessage(LogSeverity.Warning, this.GetType().Name + "." + System.Reflection.MethodBase.GetCurrentMethod().Name, $"Removed Tracker: {sender.Name} Channel {channelID} due to missing permissions"));
+                        await Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"Removed Tracker: {sender.Name} Channel {channelID} due to missing permissions"));
                         if (permission.SendMessages)
                         {
                             await ((ITextChannel)Program.Client.GetChannel(channelID)).SendMessageAsync($"Removed tracker for `{sender.Name}` due to missing Permissions");
@@ -362,7 +362,7 @@ namespace MopsBot.Data
                 if (Program.Client.GetChannel(channelID) == null || (await ((IGuildChannel)Program.Client.GetChannel(channelID)).Guild.GetCurrentUserAsync()) == null)
                 {
                     //await TryRemoveTrackerAsync(sender.Name, channelID);
-                    await Program.Client_Log(new LogMessage(LogSeverity.Warning, this.GetType().Name + "." + System.Reflection.MethodBase.GetCurrentMethod().Name, $"Removed {typeof(T).Name}: {sender.Name} Channel {channelID} is missing"));
+                    await Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"Removed {typeof(T).Name}: {sender.Name} Channel {channelID} is missing"));
                 }
                 //Check if permissions were modified, to an extend of making the tracker unusable
                 else
@@ -371,7 +371,7 @@ namespace MopsBot.Data
                     if (!permission.SendMessages || !permission.ViewChannel || !permission.ReadMessageHistory || (sender is Tracker.TwitchTracker && (!permission.AddReactions || !permission.ManageMessages)))
                     {
                         await TryRemoveTrackerAsync(sender.Name, channelID);
-                        await Program.Client_Log(new LogMessage(LogSeverity.Warning, this.GetType().Name + "." + System.Reflection.MethodBase.GetCurrentMethod().Name, $"Removed a {typeof(T).Name} for {sender.Name} from Channel {channelID} due to missing Permissions"));
+                        await Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"Removed a {typeof(T).Name} for {sender.Name} from Channel {channelID} due to missing Permissions"));
                         if (permission.SendMessages)
                         {
                             await ((ITextChannel)Program.Client.GetChannel(channelID)).SendMessageAsync($"Removed tracker for `{sender.Name}` due to missing Permissions");

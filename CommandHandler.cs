@@ -113,7 +113,7 @@ namespace MopsBot
                 //Execute if command exists
                 if (commands.Search(context, argPos).IsSuccess)
                 {
-                    await Program.Client_Log(new LogMessage(LogSeverity.Info, this.GetType().Name + "." + System.Reflection.MethodBase.GetCurrentMethod().Name, $"executed command: {parameterMessage.Content.Substring(argPos)}"));
+                    await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"executed command: {parameterMessage.Content.Substring(argPos)}"));
                     var result = await commands.ExecuteAsync(context, argPos, _provider);
 
                     // If the command failed, notify the user
@@ -131,7 +131,7 @@ namespace MopsBot
                 //Else execute custom commands
                 else if (CustomCommands.ContainsKey(context.Guild.Id) && CustomCommands[context.Guild.Id].Commands.ContainsKey(context.Message.Content.Substring(argPos)))
                 {
-                    await Program.Client_Log(new LogMessage(LogSeverity.Info, this.GetType().Name + "." + System.Reflection.MethodBase.GetCurrentMethod().Name, $"executed command: {parameterMessage.Content.Substring(argPos)}"));
+                    await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"executed command: {parameterMessage.Content.Substring(argPos)}"));
                     await commands.Commands.First(x => x.Name.Equals("UseCustomCommand")).ExecuteAsync(context, new List<object> { $"{context.Message.Content.Substring(argPos)}" }, new List<object> { }, _provider);
                 }
             });
@@ -277,7 +277,7 @@ namespace MopsBot
             }
             catch (Exception e)
             {
-                await Program.Client_Log(new LogMessage(LogSeverity.Critical, this.GetType().Name + "." + System.Reflection.MethodBase.GetCurrentMethod().Name, $"loading failed", e));
+                await Program.MopsLog(new LogMessage(LogSeverity.Critical, "", $"loading failed", e));
             }
         }
     }

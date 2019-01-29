@@ -36,7 +36,7 @@ namespace MopsBot.Data.Interactive
             }
             catch (Exception e)
             {
-                Program.Client_Log(new LogMessage(LogSeverity.Error, this.GetType().Name + "." + System.Reflection.MethodBase.GetCurrentMethod().Name, $"", e)).Wait();
+                Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"", e)).Wait();
             }
             //}
             Giveaways = Giveaways ?? new Dictionary<ulong, Dictionary<ulong, List<ulong>>>();
@@ -66,12 +66,12 @@ namespace MopsBot.Data.Interactive
                     }
                     catch (Exception e)
                     {
-                        Program.Client_Log(new LogMessage(LogSeverity.Error, this.GetType().Name + "." + System.Reflection.MethodBase.GetCurrentMethod().Name, $" error by [{channel.Key}][{message.Key}]", e)).Wait();
+                        Program.MopsLog(new LogMessage(LogSeverity.Error, "", $" error by [{channel.Key}][{message.Key}]", e)).Wait();
 
                         if ((e.Message.Contains("Object reference not set to an instance of an object.") || e.Message.Contains("Value cannot be null."))
                             && Program.Client.ConnectionState.Equals(ConnectionState.Connected))
                         {
-                            Program.Client_Log(new LogMessage(LogSeverity.Warning, this.GetType().Name + "." + System.Reflection.MethodBase.GetCurrentMethod().Name, $"Removing [{channel.Key}][{message.Key}] due to missing message.", e)).Wait();
+                            Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"Removing [{channel.Key}][{message.Key}] due to missing message.", e)).Wait();
 
                             if (channel.Value.Count > 1)
                                 channel.Value.Remove(message.Key);
