@@ -121,6 +121,34 @@ namespace MopsBot.Module
                                      $"Currently tracked Twitter Users are:", embed: StaticBase.Trackers[BaseTracker.TrackerType.Twitter].GetTrackersEmbed(Context.Channel.Id));
                 }
             }
+
+            [Command("Prune")]
+            [Hide]
+            [RequireBotManage]
+            public async Task PruneTrackers(int failThreshold, bool testing = true)
+            {
+                using (Context.Channel.EnterTypingState())
+                {
+                    var allTrackers = StaticBase.Trackers[BaseTracker.TrackerType.Twitter].GetTrackers();
+                    Dictionary<string, int> pruneCount = new Dictionary<string, int>();
+                    int totalCount = 0;
+
+                    foreach (var tracker in allTrackers.Where(x => (x.Value as TwitterTracker).FailCount >= failThreshold))
+                    {
+                        totalCount++;
+                        pruneCount[tracker.Key] = (tracker.Value as TwitterTracker).FailCount;
+                        if(!testing){
+                            foreach(var channel in tracker.Value.ChannelMessages.Keys)
+                                await StaticBase.Trackers[BaseTracker.TrackerType.Twitter].TryRemoveTrackerAsync(tracker.Key, channel);
+                        }
+                    }
+                    var result = $"{"Twitter User",-20}{"Fail count"}\n{string.Join("\n", pruneCount.Select(x => $"{x.Key,-20}{x.Value,-3}"))}";
+                    if(result.Length < 2040)
+                        await ReplyAsync($"```{result}```");
+                    else
+                        await ReplyAsync($"```Pruned {totalCount} trackers```");
+                }
+            }
         }
 
         [Group("Osu")]
@@ -979,7 +1007,7 @@ namespace MopsBot.Module
                 await ReplyAsync($"Changed StatTrack for `{Region} {Realm} {Name}` to `{tracker.trackAchievements}`");
             }
         }*/
-        
+
         [Group("RSS")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public class RSS : ModuleBase
