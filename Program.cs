@@ -73,9 +73,9 @@ namespace MopsBot
             return Task.CompletedTask;
         }
 
-        public static Task MopsLog(LogMessage msg, [CallerMemberName] string callerName = "", [CallerFilePath] string callerPath = "")
+        public static Task MopsLog(LogMessage msg, [CallerMemberName] string callerName = "", [CallerFilePath] string callerPath = "", [CallerLineNumber] int callerLine = 0)
         {
-            Console.WriteLine($"\n[{msg.Severity}] at {DateTime.Now}\nsource: {Path.GetFileNameWithoutExtension(callerPath)}.{callerName}\nmessage: {msg.Message}");
+            Console.WriteLine($"\n[{msg.Severity}] at {DateTime.Now}\nsource: {Path.GetFileNameWithoutExtension(callerPath)}.{callerName}, line: {callerLine}\nmessage: {msg.Message}");
             if(msg.Exception != null)
                 Console.WriteLine($"{msg.Exception?.Message ?? ""}\n{msg.Exception?.StackTrace ?? ""}");
 
