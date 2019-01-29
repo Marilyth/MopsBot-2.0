@@ -124,7 +124,6 @@ namespace MopsBot.Data.Tracker
                         {
                             TimeoutCount = 0;
                             IsOnline = false;
-                            Console.WriteLine("\n" + $"{DateTime.Now} {Name} went Offline");
                             VodUrl = null;
                             ViewerGraph.Dispose();
                             ViewerGraph = null;
@@ -177,7 +176,7 @@ namespace MopsBot.Data.Tracker
             }
             catch (Exception e)
             {
-                Console.WriteLine("\n" + $"[Error] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+                await Program.Client_Log(new LogMessage(LogSeverity.Error, this.GetType().Name + "." + System.Reflection.MethodBase.GetCurrentMethod().Name, $" error by {Name}", e));
             }
         }
 

@@ -53,7 +53,6 @@ namespace MopsBot.Data.Tracker
 
         public TwitchClipTracker(string streamerName) : base(600000)
         {
-            Console.WriteLine("\n" + $"{DateTime.Now} Started TwitchClipTracker for {streamerName}");
             Name = streamerName;
             TrackedClips = new Dictionary<DateTime, KeyValuePair<int, double>>();
             ChannelMessages = new Dictionary<ulong, string>();
@@ -95,7 +94,7 @@ namespace MopsBot.Data.Tracker
             }
             catch (Exception e)
             {
-                Console.WriteLine("\n" +  $"[Error] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+                await Program.Client_Log(new LogMessage(LogSeverity.Error, this.GetType().Name + "." + System.Reflection.MethodBase.GetCurrentMethod().Name, $" error by {Name}", e));
             }
         }
 
@@ -150,7 +149,7 @@ namespace MopsBot.Data.Tracker
             }
             catch (Exception e)
             {
-                Console.WriteLine("\n" +  $"[ERROR] by TwitchClipTracker for {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+                await Program.Client_Log(new LogMessage(LogSeverity.Error, this.GetType().Name + "." + System.Reflection.MethodBase.GetCurrentMethod().Name, $" error by {Name}", e));
                 return new TwitchClipResult();
             }
         }

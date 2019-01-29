@@ -33,7 +33,7 @@ namespace MopsBot.Data.Interactive
             }
             catch (Exception e)
             {
-                Console.WriteLine("\n" + e.Message + e.StackTrace);
+                Program.Client_Log(new LogMessage(LogSeverity.Error, this.GetType().Name + "." + System.Reflection.MethodBase.GetCurrentMethod().Name, $"", e)).Wait();
             }
             //}
 
@@ -57,7 +57,7 @@ namespace MopsBot.Data.Interactive
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine("\n" + e.Message + e.StackTrace);
+                        Program.Client_Log(new LogMessage(LogSeverity.Error, this.GetType().Name + "." + System.Reflection.MethodBase.GetCurrentMethod().Name, $"", e)).Wait();
                     }
                 }
             }

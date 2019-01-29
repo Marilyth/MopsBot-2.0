@@ -95,7 +95,7 @@ namespace MopsBot
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine($"\n[Error] reactionhandler for message {messageCache.Id} emote {reaction.Emote.Name}\n{e.Message}");
+                    Program.Client_Log(new LogMessage(LogSeverity.Error, this.GetType().Name + "." + System.Reflection.MethodBase.GetCurrentMethod().Name, $"message {messageCache.Id} emote {reaction.Emote.Name} threw an error", e)).Wait();
                 }
             });
         }
@@ -187,7 +187,7 @@ namespace MopsBot
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Tried to delete message {message.Id} but it did not exist.");
+                await Program.Client_Log(new LogMessage(LogSeverity.Error, this.GetType().Name + "." + System.Reflection.MethodBase.GetCurrentMethod().Name, $"Tried to delete message {message.Id} but it did not exist.", e));
             }
         }
 

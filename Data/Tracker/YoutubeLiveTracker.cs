@@ -162,7 +162,6 @@ namespace MopsBot.Data.Tracker
                 {
                     VideoId = null;
                     checkForChange.Change(300000, 300000);
-                    Console.WriteLine("\n" + $"{DateTime.Now} {liveStatus.snippet.channelTitle} went Offline (Youtube)");
                     ViewerGraph.Dispose();
                     ViewerGraph = null;
 
@@ -186,7 +185,7 @@ namespace MopsBot.Data.Tracker
             }
             catch (Exception e)
             {
-                Console.WriteLine("\n" + $"[ERROR] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+                await Program.Client_Log(new LogMessage(LogSeverity.Error, this.GetType().Name + "." + System.Reflection.MethodBase.GetCurrentMethod().Name, $" error by {Name}", e));
             }
         }
 

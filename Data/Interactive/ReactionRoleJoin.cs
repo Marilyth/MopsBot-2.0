@@ -33,7 +33,7 @@ namespace MopsBot.Data.Interactive
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("\n" +  e.Message + e.StackTrace);
+                    Program.Client_Log(new LogMessage(LogSeverity.Error, this.GetType().Name + "." + System.Reflection.MethodBase.GetCurrentMethod().Name, $"", e)).Wait();
                 }
             //}
 
@@ -69,11 +69,11 @@ namespace MopsBot.Data.Interactive
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine("\n" +  $"[ERROR] by ReactionRoleJoin for [{channel.Key}][{message}] at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+                        Program.Client_Log(new LogMessage(LogSeverity.Error, this.GetType().Name + "." + System.Reflection.MethodBase.GetCurrentMethod().Name, $"error for [{channel.Key}][{message}]", e)).Wait();
                         if ((e.Message.Contains("Object reference not set to an instance of an object.") || e.Message.Contains("Value cannot be null."))
                             && Program.Client.ConnectionState.Equals(ConnectionState.Connected))
                         {
-                            Console.WriteLine("\n" +  $"Removing Giveaway due to missing message: [{channel.Key}][{message}]");
+                            Program.Client_Log(new LogMessage(LogSeverity.Warning, this.GetType().Name + "." + System.Reflection.MethodBase.GetCurrentMethod().Name, $"Removing Giveaway due to missing message: [{channel.Key}][{message}]", e)).Wait();
 
                             if (channel.Value.Count > 1)
                                 channel.Value.Remove(message);

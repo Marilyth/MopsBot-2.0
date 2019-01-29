@@ -63,9 +63,12 @@ namespace MopsBot
             await Task.Delay(-1);
         }
 
-        private Task Client_Log(LogMessage msg)
+        public static Task Client_Log(LogMessage msg)
         {
-            Console.WriteLine("\n" + msg.ToString());
+            Console.WriteLine($"\n[{msg.Severity}] at [{DateTime.Now}]\nsource: {msg.Source}\nmessage: {msg.Message}");
+            if(msg.Exception != null)
+                Console.WriteLine($"{msg.Exception?.Message ?? ""}\n{msg.Exception?.StackTrace ?? ""}");
+
             return Task.CompletedTask;
         }
 
