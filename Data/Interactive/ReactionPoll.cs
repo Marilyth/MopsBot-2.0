@@ -41,7 +41,7 @@ namespace MopsBot.Data.Interactive
 
             foreach (var channel in Polls)
             {
-                foreach (var poll in channel.Value)
+                foreach (var poll in channel.Value.ToList())
                 {
                     try
                     {
