@@ -126,7 +126,10 @@ namespace MopsBot.Data.Tracker
             }
             catch (Exception e)
             {
-                await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $" error by {Name}", e));
+                if(!e.Message.Contains("Sequence contains no elements"))
+                    await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $" error by {Name}", e));
+                else
+                    await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Found no videos by {Name}"));
             }
         }
 

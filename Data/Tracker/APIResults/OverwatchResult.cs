@@ -367,8 +367,11 @@ namespace MopsBot.Data.Tracker.APIResults.Overwatch
             else if(us?.stats.quickplay?.overall_stats != null){
                 return us;
             }
-            else{
+            else if(us?.stats.quickplay?.overall_stats != null){
                 return kr;
+            }
+            else {
+                return null;
             }
         }
     }

@@ -98,6 +98,10 @@ namespace MopsBot.Data.Tracker
                     Task.Delay(2500).Wait();
                 }
 
+                //OWAPI or PlayOverwatch messed up
+                if(newInformation.getNotNull() == null)
+                    return;
+
                 if (StatGraph == null)
                 {
                     StatGraph = new DatePlot(Name, "Date", "Level", "dd-MMM", false);
@@ -155,6 +159,10 @@ namespace MopsBot.Data.Tracker
                 info = FetchJSONDataAsync<OStatsResult>($"https://owapi.net/api/v3/u/{owName}/blob").Result;
                 Task.Delay(2500).Wait();
             }
+
+            //OWAPI messed up
+            if(info.getNotNull() == null)
+                return new EmbedBuilder().WithDescription("The API yielded no results.\nIf the player exists and is not private, this may be due to a temporary outage.").Build();
 
             Quickplay stats = info.getNotNull().stats.quickplay;
             var mostPlayed = getMostPlayed(info.getNotNull().heroes.playtime);

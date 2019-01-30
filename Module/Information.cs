@@ -149,7 +149,10 @@ namespace MopsBot.Module
                 }
                 catch (Exception e)
                 {
-                    await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"error for sending request to {URL}", e.GetBaseException()));
+                    if(!e.GetBaseException().Message.Contains("the remote party has closed the transport stream"))
+                        await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"error for sending request to {URL}", e.GetBaseException()));
+                    else
+                        await Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"Remote party closed the transport stream: {URL}."));
                     throw e;
                 }
             }

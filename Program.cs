@@ -64,22 +64,19 @@ namespace MopsBot
             await Task.Delay(-1);
         }
 
-        public static Task ClientLog(LogMessage msg)
+        public static async Task ClientLog(LogMessage msg)
         {
-            Console.WriteLine($"\n[{msg.Severity}] at {DateTime.Now}\nsource: {msg.Source}\nmessage: {msg.Message}");
-            if(msg.Exception != null)
-                Console.WriteLine($"{msg.Exception?.Message ?? ""}\n{msg.Exception?.StackTrace ?? ""}");
-
-            return Task.CompletedTask;
+            await MopsLog(msg, "", msg.Source, -1);
         }
 
-        public static Task MopsLog(LogMessage msg, [CallerMemberName] string callerName = "", [CallerFilePath] string callerPath = "", [CallerLineNumber] int callerLine = 0)
+        public static async Task MopsLog(LogMessage msg, [CallerMemberName] string callerName = "", [CallerFilePath] string callerPath = "", [CallerLineNumber] int callerLine = 0)
         {
-            Console.WriteLine($"\n[{msg.Severity}] at {DateTime.Now}\nsource: {Path.GetFileNameWithoutExtension(callerPath)}.{callerName}, line: {callerLine}\nmessage: {msg.Message}");
-            if(msg.Exception != null)
-                Console.WriteLine($"{msg.Exception?.Message ?? ""}\n{msg.Exception?.StackTrace ?? ""}");
+            string message = $"\n[{msg.Severity}] at {DateTime.Now}\nsource: {Path.GetFileNameWithoutExtension(callerPath)}.{callerName}, line: {callerLine}\nmessage: {msg.Message}";
+            if(msg.Exception != null && !msg.Exception.Message.Contains("The SSL connection could not be established")){
+                message += $"\nException: {msg.Exception?.Message ?? ""}\nStacktrace: {msg.Exception?.StackTrace ?? ""}";
+            }
 
-            return Task.CompletedTask;
+            Console.WriteLine(message);
         }
 
         private Task onClientReady()
