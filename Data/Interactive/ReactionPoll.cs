@@ -39,7 +39,7 @@ namespace MopsBot.Data.Interactive
 
             Polls = Polls ?? new Dictionary<ulong, List<Poll>>();
 
-            foreach (var channel in Polls)
+            foreach (var channel in Polls.ToList())
             {
                 foreach (var poll in channel.Value.ToList())
                 {
