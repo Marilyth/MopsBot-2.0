@@ -73,7 +73,7 @@ namespace MopsBot.Data.Interactive
                         if ((e.Message.Contains("Object reference not set to an instance of an object.") || e.Message.Contains("Value cannot be null."))
                             && Program.Client.ConnectionState.Equals(ConnectionState.Connected))
                         {
-                            Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"Removing [{channel.Key}][{message}] due to missing message.", e)).Wait();
+                            Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"Removing [{channel.Key}][{message}] due to missing message.")).Wait();
 
                             if (channel.Value.Count > 1){
                                 channel.Value.Remove(message);
