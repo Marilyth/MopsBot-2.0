@@ -101,8 +101,8 @@ namespace MopsBot.Data.Tracker
             {
                 if(!e.Message.Contains("Value cannot be null"))
                     await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"error by {Name}", e));
-                else{
-                    await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Found no tweets by {Name}; happened {++FailCount} times in a row."));
+                else if(++FailCount >= 10){
+                    await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Found no tweets by {Name}; happened {FailCount} times in a row."));
                     await StaticBase.Trackers[TrackerType.Twitter].UpdateDBAsync(this);
                 }
             }
