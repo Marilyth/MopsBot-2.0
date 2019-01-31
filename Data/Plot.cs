@@ -296,7 +296,7 @@ namespace MopsBot.Data
             {
                 foreach (var point in series.Points)
                 {
-                    if (point.Y > maxPoint.Y) maxPoint = point;
+                    if (point.Y >= maxPoint.Y) maxPoint = point;
                 }
             }
 
