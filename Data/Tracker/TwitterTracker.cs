@@ -94,8 +94,10 @@ namespace MopsBot.Data.Tracker
                     await StaticBase.Trackers[TrackerType.Twitter].UpdateDBAsync(this);
                 }
 
-                FailCount = 0;
-
+                if(FailCount > 0){
+                    FailCount = 0;
+                    await StaticBase.Trackers[TrackerType.Twitter].UpdateDBAsync(this);
+                }
             }
             catch (Exception e)
             {
