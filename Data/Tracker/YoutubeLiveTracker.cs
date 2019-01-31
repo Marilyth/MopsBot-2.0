@@ -195,6 +195,7 @@ namespace MopsBot.Data.Tracker
             e.Color = new Color(0xFF0000);
             e.Title = liveStatus.snippet.title;
             e.Url = $"https://www.youtube.com/watch?v={VideoId}";
+            e.WithCurrentTimestamp();
             e.Description = "**For people with manage channel permission**:\n🖌: Change chart colour\n🔄: Switch thumbnail and chart position";
 
             EmbedAuthorBuilder author = new EmbedAuthorBuilder();

@@ -219,6 +219,7 @@ namespace MopsBot.Data.Tracker
             e.Color = new Color(0x6441A4);
             e.Title = streamer.status;
             e.Url = streamer.url;
+            e.WithCurrentTimestamp();
             e.Description = "**For people with manage channel permission**:\n🖌: Change chart colour\n🔄: Switch thumbnail and chart position\n";
 
             if (VodUrl != null)
