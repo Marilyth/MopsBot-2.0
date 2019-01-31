@@ -70,9 +70,11 @@ namespace MopsBot.Data
             viewerChart.Series.Add(columnSeries);
         }
 
-        public static string DrawPlot(string name, Dictionary<string, double> dict){
+        public static string DrawPlot(string name, Dictionary<string, double> dict)
+        {
             var tmpBarPlot = new BarPlot(name, dict.Keys.ToArray());
-            foreach(var key in dict.Keys){
+            foreach (var key in dict.Keys)
+            {
                 tmpBarPlot.AddValue(key, dict[key]);
             }
 
@@ -148,7 +150,7 @@ namespace MopsBot.Data
         //public List<KeyValuePair<string, double>> PlotPoints;
         public List<KeyValuePair<string, KeyValuePair<double, double>>> PlotDataPoints;
         private DateTime? StartTime;
-        
+
         [BsonId]
         public string ID;
 
@@ -162,7 +164,7 @@ namespace MopsBot.Data
 
         public void InitPlot(string xAxis = "Time", string yAxis = "Viewers", string format = "HH:mm", bool relative = true)
         {
-            if(PlotDataPoints == null) PlotDataPoints = new List<KeyValuePair<string, KeyValuePair<double, double>>>();
+            if (PlotDataPoints == null) PlotDataPoints = new List<KeyValuePair<string, KeyValuePair<double, double>>>();
 
             viewerChart = new PlotModel();
             viewerChart.TextColor = OxyColor.FromRgb(175, 175, 175);
@@ -176,7 +178,7 @@ namespace MopsBot.Data
                 AxislineStyle = LineStyle.Solid,
                 AxislineColor = OxyColor.FromRgb(125, 125, 155)
             };
-            if(relative) valueAxisY.Minimum = 0;
+            if (relative) valueAxisY.Minimum = 0;
 
             var valueAxisX = new OxyPlot.Axes.DateTimeAxis
             {
@@ -199,9 +201,10 @@ namespace MopsBot.Data
             {
                 AddValue(plotPoint.Key, plotPoint.Value, false);
             }*/
-            
+
             PlotDataPoints = PlotDataPoints.Skip(Math.Max(0, PlotDataPoints.Count - 2000)).ToList();
-            foreach(var dataPoint in PlotDataPoints){
+            foreach (var dataPoint in PlotDataPoints)
+            {
                 AddValue(dataPoint.Key, dataPoint.Value.Value, DateTimeAxis.ToDateTime(dataPoint.Value.Key), false, relative);
             }
         }
@@ -238,8 +241,8 @@ namespace MopsBot.Data
 
         public void AddValue(string name, double viewerCount, DateTime? xValue = null, bool savePlot = true, bool relative = true)
         {
-            if(xValue == null) xValue = DateTime.UtcNow;
-            if(StartTime == null) StartTime = xValue;
+            if (xValue == null) xValue = DateTime.UtcNow;
+            if (StartTime == null) StartTime = xValue;
             var relativeXValue = relative ? new DateTime(1970, 01, 01).Add((xValue - StartTime).Value) : xValue;
 
             if (lineSeries.LastOrDefault()?.Title?.Equals(name) ?? false)
@@ -272,6 +275,36 @@ namespace MopsBot.Data
             {
                 PlotDataPoints.Add(new KeyValuePair<string, KeyValuePair<double, double>>(name, new KeyValuePair<double, double>(DateTimeAxis.ToDouble(xValue), viewerCount)));
             }
+        }
+
+        public DataPoint SetMaximumLine()
+        {
+            OxyPlot.Series.LineSeries max = viewerChart.Series.FirstOrDefault(x => x.Title.Contains("Max Value")) as OxyPlot.Series.LineSeries;
+
+            if (max == null)
+            {
+                max = new OxyPlot.Series.LineSeries();
+                max.Color = OxyColor.FromRgb(200, 0, 0);
+                max.StrokeThickness = 1;
+                viewerChart.Series.Add(max);
+            }
+            else
+                max.Points.Clear();
+
+            DataPoint maxPoint = new DataPoint(0, 0);
+            foreach (var series in lineSeries)
+            {
+                foreach (var point in series.Points)
+                {
+                    if (point.Y > maxPoint.Y) maxPoint = point;
+                }
+            }
+
+            max.Points.Add(maxPoint);
+            max.Points.Add(new DataPoint(DateTimeAxis.ToDouble(DateTimeAxis.ToDateTime(maxPoint.X).AddSeconds(-1)), 0));
+            max.Title = "Max Value: " + maxPoint.Y;
+
+            return maxPoint;
         }
 
         /// <summary>

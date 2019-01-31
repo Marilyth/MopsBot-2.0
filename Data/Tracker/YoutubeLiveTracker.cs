@@ -191,6 +191,7 @@ namespace MopsBot.Data.Tracker
 
         public Embed createEmbed()
         {
+            ViewerGraph.SetMaximumLine();
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0xFF0000);
             e.Title = liveStatus.snippet.title;
