@@ -133,12 +133,12 @@ namespace MopsBot.Module
                     Dictionary<string, int> pruneCount = new Dictionary<string, int>();
                     int totalCount = 0;
 
-                    foreach (var tracker in allTrackers.Where(x => (x.Value as TwitterTracker).FailCount >= failThreshold))
+                    foreach (var tracker in allTrackers.Where(x => (x.Value as TwitterTracker).FailCount >= failThreshold).ToList())
                     {
                         totalCount++;
                         pruneCount[tracker.Key] = (tracker.Value as TwitterTracker).FailCount;
                         if(!testing){
-                            foreach(var channel in tracker.Value.ChannelMessages.Keys)
+                            foreach(var channel in tracker.Value.ChannelMessages.Keys.ToList())
                                 await StaticBase.Trackers[BaseTracker.TrackerType.Twitter].TryRemoveTrackerAsync(tracker.Key, channel);
                         }
                     }
