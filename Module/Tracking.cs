@@ -133,7 +133,7 @@ namespace MopsBot.Module
                     Dictionary<string, int> pruneCount = new Dictionary<string, int>();
                     int totalCount = 0;
 
-                    foreach (var tracker in allTrackers.Where(x => (x.Value as TwitterTracker).FailCount >= failThreshold).ToList())
+                    foreach (var tracker in allTrackers.Where(x => (x.Value as TwitterTracker).FailCount >= failThreshold))
                     {
                         totalCount++;
                         pruneCount[tracker.Key] = (tracker.Value as TwitterTracker).FailCount;
