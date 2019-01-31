@@ -149,10 +149,12 @@ namespace MopsBot.Module
                 }
                 catch (Exception e)
                 {
-                    if(!e.GetBaseException().Message.Contains("the remote party has closed the transport stream"))
+                    if(!e.GetBaseException().Message.Contains("the remote party has closed the transport stream") && !e.GetBaseException().Message.Contains("The server returned an invalid or unrecognized response"))
                         await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"error for sending request to {URL}", e.GetBaseException()));
-                    else
+                    else if(e.GetBaseException().Message.Contains("the remote party has closed the transport stream"))
                         await Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"Remote party closed the transport stream: {URL}."));
+                    else
+                        await Program.MopsLog(new LogMessage(LogSeverity.Debug, "", $"Osu API messed up again: {URL}"));
                     throw e;
                 }
             }

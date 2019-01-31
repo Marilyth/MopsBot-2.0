@@ -121,7 +121,7 @@ namespace MopsBot.Data.Tracker
             }
             catch (Exception e)
             {
-                if (!e.StackTrace.StartsWith("The read operation failed"))
+                if (!e.StackTrace.StartsWith("The read operation failed") && !e.Message.Contains("error occurred while sending the request"))
                     await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $" error by {Name}", e));
             }
         }
