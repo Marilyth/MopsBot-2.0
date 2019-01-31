@@ -214,7 +214,7 @@ namespace MopsBot.Data.Tracker
         public Embed createEmbed()
         {
             Channel streamer = StreamerStatus.stream.channel;
-            var max = ViewerGraph.SetMaximumLine();
+            ViewerGraph.SetMaximumLine();
 
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0x6441A4);

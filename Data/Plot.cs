@@ -277,34 +277,41 @@ namespace MopsBot.Data
             }
         }
 
-        public DataPoint SetMaximumLine()
+        public DataPoint? SetMaximumLine()
         {
-            OxyPlot.Series.LineSeries max = viewerChart.Series.FirstOrDefault(x => x.Title.Contains("Max Value")) as OxyPlot.Series.LineSeries;
-
-            if (max == null)
+            try
             {
-                max = new OxyPlot.Series.LineSeries();
-                max.Color = OxyColor.FromRgb(200, 0, 0);
-                max.StrokeThickness = 1;
-                viewerChart.Series.Add(max);
-            }
-            else
-                max.Points.Clear();
+                OxyPlot.Series.LineSeries max = viewerChart.Series.FirstOrDefault(x => x.Title.Contains("Max Value")) as OxyPlot.Series.LineSeries;
 
-            DataPoint maxPoint = new DataPoint(0, 0);
-            foreach (var series in lineSeries)
-            {
-                foreach (var point in series.Points)
+                if (max == null)
                 {
-                    if (point.Y >= maxPoint.Y) maxPoint = point;
+                    max = new OxyPlot.Series.LineSeries();
+                    max.Color = OxyColor.FromRgb(200, 0, 0);
+                    max.StrokeThickness = 1;
+                    viewerChart.Series.Add(max);
                 }
+                else
+                    max.Points.Clear();
+
+                DataPoint maxPoint = new DataPoint(0, 0);
+                foreach (var series in lineSeries)
+                {
+                    foreach (var point in series.Points)
+                    {
+                        if (point.Y >= maxPoint.Y) maxPoint = point;
+                    }
+                }
+
+                max.Points.Add(maxPoint);
+                max.Points.Add(new DataPoint(DateTimeAxis.ToDouble(DateTimeAxis.ToDateTime(maxPoint.X).AddSeconds(-1)), 0));
+                max.Title = "Max Value: " + maxPoint.Y;
+
+                return maxPoint;
             }
-
-            max.Points.Add(maxPoint);
-            max.Points.Add(new DataPoint(DateTimeAxis.ToDouble(DateTimeAxis.ToDateTime(maxPoint.X).AddSeconds(-1)), 0));
-            max.Title = "Max Value: " + maxPoint.Y;
-
-            return maxPoint;
+            catch (Exception e)
+            {
+                return null;
+            }
         }
 
         /// <summary>
