@@ -303,7 +303,7 @@ namespace MopsBot.Data
                 }
 
                 max.Points.Add(maxPoint);
-                max.Points.Add(new DataPoint(DateTimeAxis.ToDouble(DateTimeAxis.ToDateTime(maxPoint.X).AddSeconds(-1)), 0));
+                max.Points.Add(new DataPoint(DateTimeAxis.ToDouble(DateTimeAxis.ToDateTime(maxPoint.X).AddMilliseconds(-1)), 0));
                 max.Title = "Max Value: " + maxPoint.Y;
 
                 return maxPoint;
