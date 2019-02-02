@@ -202,10 +202,13 @@ namespace MopsBot.Data
                 AddValue(plotPoint.Key, plotPoint.Value, false);
             }*/
 
-            PlotDataPoints = PlotDataPoints.Skip(Math.Max(0, PlotDataPoints.Count - 2000)).ToList();
-            foreach (var dataPoint in PlotDataPoints)
-            {
-                AddValue(dataPoint.Key, dataPoint.Value.Value, DateTimeAxis.ToDateTime(dataPoint.Value.Key), false, relative);
+            if(PlotDataPoints.Count > 0){
+                PlotDataPoints = PlotDataPoints.Skip(Math.Max(0, PlotDataPoints.Count - 2000)).ToList();
+                StartTime = DateTimeAxis.ToDateTime(PlotDataPoints.First().Value.Key);
+                foreach (var dataPoint in PlotDataPoints)
+                {
+                    AddValue(dataPoint.Key, dataPoint.Value.Value, DateTimeAxis.ToDateTime(dataPoint.Value.Key), false, relative);
+                }
             }
         }
 
