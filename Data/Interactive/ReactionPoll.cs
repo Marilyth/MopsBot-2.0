@@ -63,14 +63,14 @@ namespace MopsBot.Data.Interactive
                         {
                             Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"Removing [{channel.Key}][{poll.MessageID}] due to missing message.")).Wait();
 
-                            if (channel.Value.Count > 1){
+                            /*if (channel.Value.Count > 1){
                                 channel.Value.Remove(poll);
                                 UpdateDBAsync(channel.Key).Wait();
                             }
                             else{
                                 Polls.Remove(channel.Key);
                                 RemoveFromDBAsync(channel.Key).Wait();
-                            }
+                            }*/
                         }
                     }
                 }
