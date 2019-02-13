@@ -147,9 +147,8 @@ namespace MopsBot.Data.Tracker
 
             e.ThumbnailUrl = parent.ImageUrl?.AbsoluteUri;
 
-            var image = feedItem.Links?.FirstOrDefault(x => isImageUrl(x.Uri?.AbsoluteUri ?? ""))?.Uri?.AbsoluteUri;
             e.Description = (new string(HtmlToPlainText(feedItem.Summary?.Text ?? "", out string htmlImage).Take(Math.Min(2000, feedItem.Summary.Text.Length)).ToArray()));
-            e.ImageUrl = !string.IsNullOrEmpty(htmlImage) ? htmlImage : image;
+            e.ImageUrl = !string.IsNullOrEmpty(htmlImage) ? htmlImage : feedItem.Links?.FirstOrDefault(x => isImageUrl(x.Uri?.AbsoluteUri ?? ""))?.Uri?.AbsoluteUri;
             if (e.Description.Length >= 2000) e.Description += " [...]";
 
             return e.Build();
