@@ -52,7 +52,7 @@ namespace MopsBot.Module
         }
 
         [Command("Punch", RunMode = RunMode.Async)]
-        [Summary("Fucks the specified person up")]
+        [Summary("Punches the specified person")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         [Ratelimit(5, 1, Measure.Hours)]
         public async Task punch(SocketGuildUser person)
@@ -62,11 +62,11 @@ namespace MopsBot.Module
                 if (!person.Id.Equals(Context.User.Id))
                 {
                     await User.ModifyUserAsync(person.Id, x => x.Punched++);
-                    await ReplyAsync($"DAAMN! **{person.Username}** just got fucked up by **{Context.User.Username}**.\n" +
-                                     $"That's {(await User.GetUserAsync(person.Id)).Punched} times, they have been fucked up now.");
+                    await ReplyAsync($"DAAMN! **{person.Username}** just got punched by **{Context.User.Username}**.\n" +
+                                     $"They have been punched {(await User.GetUserAsync(person.Id)).Punched} times.");
                 }
                 else
-                    await ReplyAsync("Please don't fuck yourself up. That's unhealthy.");
+                    await ReplyAsync("Please don't punch yourself. That's unhealthy.");
             }
         }
 
