@@ -563,23 +563,22 @@ namespace MopsBot.Module
             }
         }
 
-        [Group("News")]
+        [Group("JSON")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public class News : ModuleBase
         {
             [Command("Track", RunMode = RunMode.Async)]
-            [Summary("Keeps track of articles from the specified source.\n" +
-                     "Here is a list of possible sources: https://newsapi.org/sources")]
+            [Summary("Keeps track of the Json, using the specified locations.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
-            public async Task trackNews(string source, [Remainder]string query = "")
+            public async Task trackJson(string source, params string[] query)
             {
                 using (Context.Channel.EnterTypingState())
                 {
                     try
                     {
-                        await Trackers[BaseTracker.TrackerType.News].AddTrackerAsync(String.Join("|", new string[] { source, query }), Context.Channel.Id);
-                        await ReplyAsync($"Keeping track of `{source}`'s articles {(query.Equals("") ? "" : $"including `{query}` from now on!")}");
+                        await Trackers[BaseTracker.TrackerType.JSON].AddTrackerAsync(String.Join("|||", new string[] { source, String.Join(",", query) }), Context.Channel.Id);
+                        await ReplyAsync($"Keeping track of `{source}`'s attributes from now on!");
                     }
                     catch (Exception e)
                     {
@@ -589,36 +588,36 @@ namespace MopsBot.Module
             }
 
             [Command("UnTrack")]
-            [Summary("Stops tracking articles with the specified query.")]
+            [Summary("Stops tracking jsons.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task unTrackNews([Remainder]string articleQuery)
+            public async Task unTrackNews([Remainder]string JsonSource)
             {
-                if (await Trackers[BaseTracker.TrackerType.News].TryRemoveTrackerAsync(articleQuery, Context.Channel.Id))
-                    await ReplyAsync("Stopped keeping track of articles including " + articleQuery + "!");
+                if (await Trackers[BaseTracker.TrackerType.JSON].TryRemoveTrackerAsync(JsonSource, Context.Channel.Id))
+                    await ReplyAsync($"Stopped keeping track of {JsonSource}");
                 else
-                    await ReplyAsync($"Could not find tracker for `{articleQuery}`\n" +
-                                     $"Currently tracked article queries are:", embed: StaticBase.Trackers[BaseTracker.TrackerType.News].GetTrackersEmbed(Context.Channel.Id));
+                    await ReplyAsync($"Could not find tracker for `{JsonSource}`\n" +
+                                     $"Currently tracked article queries are:", embed: StaticBase.Trackers[BaseTracker.TrackerType.JSON].GetTrackersEmbed(Context.Channel.Id));
             }
 
             [Command("GetTrackers")]
-            [Summary("Returns the article queries that are tracked in the current channel.")]
+            [Summary("Returns the jsons that are tracked in the current channel.")]
             public async Task getTrackers()
             {
-                await ReplyAsync("Following article queries are currently being tracked:", embed: StaticBase.Trackers[BaseTracker.TrackerType.News].GetTrackersEmbed(Context.Channel.Id));
+                await ReplyAsync("Following jsons are currently being tracked:", embed: StaticBase.Trackers[BaseTracker.TrackerType.JSON].GetTrackersEmbed(Context.Channel.Id));
             }
 
             [Command("SetNotification")]
-            [Summary("Sets the notification text that is used each time a article was found.")]
+            [Summary("Sets the notification text that is used each time a change in the json was found.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(string articleQuery, [Remainder]string notification = "")
+            public async Task SetNotification(string jsonSource, [Remainder]string notification = "")
             {
-                if (await StaticBase.Trackers[BaseTracker.TrackerType.News].TrySetNotificationAsync(articleQuery, Context.Channel.Id, notification))
+                if (await StaticBase.Trackers[BaseTracker.TrackerType.JSON].TrySetNotificationAsync(jsonSource, Context.Channel.Id, notification))
                 {
-                    await ReplyAsync($"Changed notification for `{articleQuery}` to `{notification}`");
+                    await ReplyAsync($"Changed notification for `{jsonSource}` to `{notification}`");
                 }
                 else
-                    await ReplyAsync($"Could not find tracker for `{articleQuery}`\n" +
-                                     $"Currently tracked article queries are:", embed: StaticBase.Trackers[BaseTracker.TrackerType.News].GetTrackersEmbed(Context.Channel.Id));
+                    await ReplyAsync($"Could not find tracker for `{jsonSource}`\n" +
+                                     $"Currently tracked jsons are:", embed: StaticBase.Trackers[BaseTracker.TrackerType.JSON].GetTrackersEmbed(Context.Channel.Id));
             }
         }
 
@@ -699,6 +698,71 @@ namespace MopsBot.Module
                 else
                     await ReplyAsync($"Could not find tracker for `{name}`\n" +
                                      $"Currently tracked players are:", embed: StaticBase.Trackers[BaseTracker.TrackerType.OSRS].GetTrackersEmbed(Context.Channel.Id));
+            }
+        }
+
+        /*[Group("Tibia")]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
+        public class Tibia : ModuleBase
+        {
+            [Command("Track", RunMode = RunMode.Async)]
+            [Summary("Keeps track of the level of the Tibia player.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
+            public async Task Track(string name, [Remainder]string notification = "")
+            {
+                using (Context.Channel.EnterTypingState())
+                {
+                    try
+                    {
+                        await Trackers[BaseTracker.TrackerType.Tibia].AddTrackerAsync(name, Context.Channel.Id);
+                        await ReplyAsync($"Keeping track of `{name}` stats, from now on!");
+                    }
+                    catch (Exception e)
+                    {
+                        await ReplyAsync("**Error**: " + e.InnerException.Message);
+                    }
+                }
+            }
+
+            [Command("UnTrack")]
+            [Summary("Stops tracking the player with the specified name.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task UnTrack([Remainder]string name)
+            {
+                if (await Trackers[BaseTracker.TrackerType.Tibia].TryRemoveTrackerAsync(name, Context.Channel.Id))
+                    await ReplyAsync($"Stopped keeping track of {name}!");
+                else
+                    await ReplyAsync($"Could not find tracker for `{name}`\n" +
+                                     $"Currently tracked players are:", embed: StaticBase.Trackers[BaseTracker.TrackerType.Tibia].GetTrackersEmbed(Context.Channel.Id));
+            }
+
+            [Command("GetStats")]
+            [Summary("Returns a basic player embed.")]
+            public async Task GetStats([Remainder]string name)
+            {
+                await ReplyAsync("", embed: TibiaTracker.CreateCharacterEmbed((await TibiaTracker.GetPlayer(name)).characters));
+            }
+
+            [Command("GetTrackers")]
+            [Summary("Returns the players that are tracked in the current channel.")]
+            public async Task getTrackers()
+            {
+                await ReplyAsync("Following players are currently being tracked:", embed: StaticBase.Trackers[BaseTracker.TrackerType.Tibia].GetTrackersEmbed(Context.Channel.Id));
+            }
+
+            [Command("SetNotification")]
+            [Summary("Sets the notification text that is used each time a level up takes place.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task SetNotification(string name, [Remainder]string notification = "")
+            {
+                if (await StaticBase.Trackers[BaseTracker.TrackerType.Tibia].TrySetNotificationAsync(name, Context.Channel.Id, notification))
+                {
+                    await ReplyAsync($"Changed notification for `{name}` to `{notification}`");
+                }
+                else
+                    await ReplyAsync($"Could not find tracker for `{name}`\n" +
+                                     $"Currently tracked players are:", embed: StaticBase.Trackers[BaseTracker.TrackerType.Tibia].GetTrackersEmbed(Context.Channel.Id));
             }
         }
 

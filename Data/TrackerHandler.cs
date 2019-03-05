@@ -178,7 +178,9 @@ namespace MopsBot.Data
             }
             else
             {
-                trackers.Add(name, (T)Activator.CreateInstance(typeof(T), new object[] { name }));
+                var tracker = (T)Activator.CreateInstance(typeof(T), new object[] { name });
+                name = tracker.Name;
+                trackers.Add(name, tracker);
                 trackers[name].ChannelMessages.Add(channelID, notification);
                 trackers[name].OnMajorEventFired += OnMajorEvent;
                 trackers[name].OnMinorEventFired += OnMinorEvent;

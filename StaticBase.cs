@@ -90,12 +90,13 @@ namespace MopsBot
                 Trackers[BaseTracker.TrackerType.Youtube] = new TrackerHandler<YoutubeTracker>();
                 Trackers[BaseTracker.TrackerType.YoutubeLive] = new TrackerHandler<YoutubeLiveTracker>();
                 Trackers[BaseTracker.TrackerType.Reddit] = new TrackerHandler<RedditTracker>();
-                Trackers[BaseTracker.TrackerType.News] = new TrackerHandler<NewsTracker>();
+                Trackers[BaseTracker.TrackerType.JSON] = new TrackerHandler<JSONTracker>();
                 //Trackers[BaseTracker.TrackerType.WoW] = new TrackerHandler<WoWTracker>();
                 //Trackers[ITracker.TrackerType.WoWGuild] = new TrackerHandler<WoWGuildTracker>();
                 Trackers[BaseTracker.TrackerType.OSRS] = new TrackerHandler<OSRSTracker>();
                 Trackers[BaseTracker.TrackerType.HTML] = new TrackerHandler<HTMLTracker>();
                 Trackers[BaseTracker.TrackerType.RSS] = new TrackerHandler<RSSTracker>();
+                //Trackers[BaseTracker.TrackerType.Tibia] = new TrackerHandler<JSONTracker>();
 
                 foreach (var tracker in Trackers)
                 {

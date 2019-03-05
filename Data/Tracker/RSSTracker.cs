@@ -46,14 +46,14 @@ namespace MopsBot.Data.Tracker
                 throw e;
             }
 
-            if (StaticBase.Trackers[TrackerType.News].GetTrackers().ContainsKey(Name))
+            if (StaticBase.Trackers[TrackerType.RSS].GetTrackers().ContainsKey(Name))
             {
                 this.Dispose();
 
                 args["Id"] = Name;
-                var curTracker = StaticBase.Trackers[TrackerType.News].GetTrackers()[Name];
+                var curTracker = StaticBase.Trackers[TrackerType.RSS].GetTrackers()[Name];
                 curTracker.ChannelMessages[ulong.Parse(args["Channel"].Split(":")[1])] = args["Notification"];
-                StaticBase.Trackers[TrackerType.News].UpdateContent(new Dictionary<string, Dictionary<string, string>> { { "NewValue", args }, { "OldValue", args } }).Wait();
+                StaticBase.Trackers[TrackerType.RSS].UpdateContent(new Dictionary<string, Dictionary<string, string>> { { "NewValue", args }, { "OldValue", args } }).Wait();
 
                 throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
             }
