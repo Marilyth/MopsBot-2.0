@@ -111,7 +111,7 @@ namespace MopsBot.Data.Tracker
                     }
 
                     foreach (var channel in ChannelMessages.Keys.ToList()){
-                        await OnMajorChangeTracked(channel, embed, ChannelMessages[channel]);
+                        await OnMajorChangeTracked(channel, DataGraph == null ? embed : createEmbed(newInformation, PastInformation, out changed), ChannelMessages[channel]);
                     }
 
                     PastInformation = newInformation;
