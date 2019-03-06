@@ -60,9 +60,9 @@ namespace MopsBot.Data.Tracker
 
         public JSONTracker(string name) : base(300000)
         {
-            name = name.Replace(" ", string.Empty);
-            Name = name.Split("|||")[0];
-            ToTrack = name.Split("|||")[1].Split(",").ToList();
+            //name = name.Replace(" ", string.Empty);
+            Name = name;
+            ToTrack = name.Split("|||")[1].Replace(" ", string.Empty).Split(",").ToList();
 
             //Check if name yields proper results.
             try
@@ -126,7 +126,7 @@ namespace MopsBot.Data.Tracker
 
         private async Task<Dictionary<string, string>> getResults()
         {
-            var json = await FetchJSONDataAsync<dynamic>(Name);
+            var json = await FetchJSONDataAsync<dynamic>(TrackerUrl());
             var result = new Dictionary<string, string>();
 
             foreach(string cur in ToTrack){
@@ -152,7 +152,7 @@ namespace MopsBot.Data.Tracker
         {
             var embed = new EmbedBuilder();
             embed.WithColor(255, 227, 21);
-            embed.WithTitle("Change tracked").WithUrl(Name).WithCurrentTimestamp();
+            embed.WithTitle("Change tracked").WithUrl(TrackerUrl()).WithCurrentTimestamp();
             embed.WithFooter(x => {
                                    x.Text = "JsonTracker"; 
                                    x.IconUrl="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/JSON_vector_logo.svg/160px-JSON_vector_logo.svg.png";
@@ -179,7 +179,7 @@ namespace MopsBot.Data.Tracker
 
         public override string TrackerUrl()
         {
-            return Name;
+            return Name.Split("|||")[0];
         }
     }
 }

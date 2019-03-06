@@ -214,7 +214,7 @@ namespace MopsBot.Data
             EmbedBuilder e = new EmbedBuilder();
             e.WithTitle(typeof(T).Name).WithCurrentTimestamp().WithColor(Discord.Color.Blue);
 
-            e.WithDescription(string.Join("\n", trackers.Where(x => x.Value.ChannelMessages.ContainsKey(channelID)).Select(x => x.Value.TrackerUrl() != null ? $"[{x.Key}]({x.Value.TrackerUrl()})" : x.Key)));
+            e.WithDescription(string.Join("\n", trackers.Where(x => x.Value.ChannelMessages.ContainsKey(channelID)).Select(x => x.Value.TrackerUrl() != null ? $"[``{x.Key}``]({x.Value.TrackerUrl()})\n" : $"``x.Key``\n")));
 
             return e.Build();
         }
