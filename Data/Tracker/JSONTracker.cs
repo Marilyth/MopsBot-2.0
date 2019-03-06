@@ -68,16 +68,18 @@ namespace MopsBot.Data.Tracker
             try
             {
                 PastInformation = getResults().Result;
-                var graphTest = PastInformation.FirstOrDefault(x => x.Key.StartsWith("graph:"));
-                if(!graphTest.Equals(default(KeyValuePair<string,string>))){
-                    bool succeeded = double.TryParse(graphTest.Value, out double test);
+                var graphMembers = PastInformation.Where(x => x.Key.StartsWith("graph:"));
+                foreach(var graphTest in graphMembers){
+                    if(!graphTest.Equals(default(KeyValuePair<string,string>))){
+                        bool succeeded = double.TryParse(graphTest.Value, out double test);
 
-                    if(succeeded){
-                        DataGraph = new DatePlot("JSON" + Name.GetHashCode(), "Date", "Value", format: "dd-MMM", relativeTime: false);
-                        DataGraph.AddValue("Value", test, relative:false);
+                        if(succeeded){
+                            if(DataGraph == null) DataGraph = new DatePlot("JSON" + Name.GetHashCode(), "Date", "Value", format: "dd-MMM", relativeTime: false, multipleLines: true);
+                            DataGraph.AddValueSeperate(graphTest.Key, test, relative:false);
+                        }
+
+                        else throw new Exception("Graph value is not a number!");
                     }
-
-                    else throw new Exception("Graph value is not a number!");
                 }
             }
             catch (Exception)
@@ -103,11 +105,13 @@ namespace MopsBot.Data.Tracker
 
                 var embed = createEmbed(newInformation, PastInformation, out bool changed);
                 if(changed){
-                    var graphValue = newInformation.FirstOrDefault(x => x.Key.StartsWith("graph:"));
+                    var graphMembers = newInformation.Where(x => x.Key.Contains("graph:"));
 
-                    if(!graphValue.Equals(default(KeyValuePair<string,string>))){
-                        DataGraph.AddValue("Value", double.Parse(PastInformation[graphValue.Key]), relative: false);
-                        DataGraph.AddValue("Value", double.Parse(graphValue.Value), relative: false);
+                    foreach(var graphValue in graphMembers){
+                        if(!graphValue.Equals(default(KeyValuePair<string,string>))){
+                            DataGraph.AddValueSeperate(graphValue.Key, double.Parse(PastInformation[graphValue.Key]), relative: false);
+                            DataGraph.AddValueSeperate(graphValue.Key, double.Parse(graphValue.Value), relative: false);
+                        }
                     }
 
                     foreach (var channel in ChannelMessages.Keys.ToList()){
@@ -131,8 +135,8 @@ namespace MopsBot.Data.Tracker
 
             foreach(string cur in ToTrack){
                 string curMod = cur;
-                if(cur.StartsWith("graph:")) curMod = cur.Remove(0, 6);
-                else if(cur.StartsWith("always:")) curMod = cur.Remove(0, 7);
+                if(curMod.Contains("graph:")) curMod = curMod.Replace("graph:", string.Empty);
+                if(curMod.Contains("always:")) curMod = curMod.Replace("always:", string.Empty);
                 string[] keywords = curMod.Split("->");
                 var tmpJson = json;
 
@@ -167,7 +171,7 @@ namespace MopsBot.Data.Tracker
                     changed = true;
                     embed.AddField(kvp.Key.Split("->").Last(), $"{oldS} -> {newS}", true);
                 }
-                else if(kvp.Key.StartsWith("always:")){
+                else if(kvp.Key.Contains("always:")){
                     embed.AddField(kvp.Key.Split("->").Last(), newS, true);
                 }
             }

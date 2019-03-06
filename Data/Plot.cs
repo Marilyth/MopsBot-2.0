@@ -153,10 +153,12 @@ namespace MopsBot.Data
 
         [BsonId]
         public string ID;
+        public bool MultipleLines;
 
-        public DatePlot(string name, string xName = "x", string yName = "y", string format = "HH:mm", bool relativeTime = true)
+        public DatePlot(string name, string xName = "x", string yName = "y", string format = "HH:mm", bool relativeTime = true, bool multipleLines = false)
         {
             ID = name;
+            MultipleLines = multipleLines;
             //PlotPoints = new List<KeyValuePair<string, double>>();
             PlotDataPoints = new List<KeyValuePair<string, KeyValuePair<double, double>>>();
             InitPlot(xName, yName, format, relative: relativeTime);
@@ -207,7 +209,8 @@ namespace MopsBot.Data
                 StartTime = DateTimeAxis.ToDateTime(PlotDataPoints.First().Value.Key);
                 foreach (var dataPoint in PlotDataPoints)
                 {
-                    AddValue(dataPoint.Key, dataPoint.Value.Value, DateTimeAxis.ToDateTime(dataPoint.Value.Key), false, relative);
+                    if(!MultipleLines) AddValue(dataPoint.Key, dataPoint.Value.Value, DateTimeAxis.ToDateTime(dataPoint.Value.Key), false, relative);
+                    else AddValueSeperate(dataPoint.Key, dataPoint.Value.Value, DateTimeAxis.ToDateTime(dataPoint.Value.Key), false, relative);
                 }
             }
         }
@@ -269,6 +272,42 @@ namespace MopsBot.Data
 
                 series.StrokeThickness = 3;
                 lineSeries.LastOrDefault()?.Points?.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), viewerCount));
+                series.Points.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), viewerCount));
+                viewerChart.Series.Add(series);
+                lineSeries.Add(series);
+            }
+
+            if (savePlot)
+            {
+                PlotDataPoints.Add(new KeyValuePair<string, KeyValuePair<double, double>>(name, new KeyValuePair<double, double>(DateTimeAxis.ToDouble(xValue), viewerCount)));
+            }
+        }
+
+        public void AddValueSeperate(string name, double viewerCount, DateTime? xValue = null, bool savePlot = true, bool relative = true){
+            if (xValue == null) xValue = DateTime.UtcNow;
+            if (StartTime == null) StartTime = xValue;
+            var relativeXValue = relative ? new DateTime(1970, 01, 01).Add((xValue - StartTime).Value) : xValue;
+
+            if (lineSeries.FirstOrDefault(x => x.Title.Equals(name)) != null)
+                lineSeries.FirstOrDefault(x => x.Title.Equals(name)).Points.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), viewerCount));
+
+            else
+            {
+                var series = new OxyPlot.Series.LineSeries();
+
+                long colour = 1;
+                foreach (char c in name)
+                {
+                    colour = (((int)c * colour) % 12829635) + 1973790;
+                }
+
+                var oxycolour = OxyColor.FromUInt32((uint)colour + 4278190080);
+                series.Color = oxycolour;
+
+                if (!lineSeries.Any(x => x.Title?.Equals(name) ?? false))
+                    series.Title = name;
+
+                series.StrokeThickness = 3;
                 series.Points.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), viewerCount));
                 viewerChart.Series.Add(series);
                 lineSeries.Add(series);

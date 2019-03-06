@@ -568,7 +568,9 @@ namespace MopsBot.Module
         public class News : ModuleBase
         {
             [Command("Track", RunMode = RunMode.Async)]
-            [Summary("Keeps track of the Json, using the specified locations.")]
+            [Summary("Keeps track of the Json, using the specified locations.\n"+
+                     "graph:<location> adds the numeric value to a time/value graph\n"+
+                     "always:<location> adds the value to the embed, regardless of whether it changed or not.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
             public async Task trackJson(string source, params string[] query)
@@ -764,7 +766,7 @@ namespace MopsBot.Module
                     await ReplyAsync($"Could not find tracker for `{name}`\n" +
                                      $"Currently tracked players are:", embed: StaticBase.Trackers[BaseTracker.TrackerType.Tibia].GetTrackersEmbed(Context.Channel.Id));
             }
-        }
+        }*/
 
         [Group("HTML")]
         [RequireUserPermission(ChannelPermission.ManageChannels)]
