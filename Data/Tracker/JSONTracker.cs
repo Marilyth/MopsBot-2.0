@@ -142,7 +142,7 @@ namespace MopsBot.Data.Tracker
 
                 foreach(string keyword in keywords){
                     int.TryParse(keyword, out int index);
-                    if(index > 0) tmpJson = tmpJson[0];
+                    if(index > 0) tmpJson = tmpJson[index - 1];
                     else tmpJson = tmpJson[keyword];
                 }
 
