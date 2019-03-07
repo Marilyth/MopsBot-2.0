@@ -34,6 +34,7 @@ namespace MopsBot.Data.Tracker
                 new TwitchClipTracker(Name).Dispose();
                 TrackedClips = new Dictionary<DateTime, KeyValuePair<int, double>>();
                 ChannelMessages = new Dictionary<ulong, string>();
+                SetTimer();
             } catch (Exception e){
                 this.Dispose();
                 throw e;
@@ -62,6 +63,7 @@ namespace MopsBot.Data.Tracker
             {
                 var checkExists = FetchJSONDataAsync<APIResults.Twitch.Channel>($"https://api.twitch.tv/kraken/channels/{Name}?client_id={Program.Config["Twitch"]}").Result;
                 var test = checkExists.broadcaster_language;
+                SetTimer();
             }
             catch (Exception)
             {

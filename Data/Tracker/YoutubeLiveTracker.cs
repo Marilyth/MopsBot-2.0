@@ -37,6 +37,7 @@ namespace MopsBot.Data.Tracker
             //Check if Name ist valid
             try{
                 new YoutubeLiveTracker(Name).Dispose();
+                SetTimer();
             } catch (Exception e){
                 this.Dispose();
                 throw e;
@@ -63,6 +64,7 @@ namespace MopsBot.Data.Tracker
             {
                 var checkExists = fetchChannel().Result;
                 Name = checkExists.id;
+                SetTimer();
             }
             catch (Exception)
             {
@@ -77,7 +79,7 @@ namespace MopsBot.Data.Tracker
                 ViewerGraph.InitPlot();
 
             if(VideoId != null)
-                checkForChange.Change(60000, 60000);
+                SetTimer(60000, 60000);
 
             foreach (var channelMessage in ToUpdate ?? new Dictionary<ulong, ulong>())
             {
@@ -148,7 +150,7 @@ namespace MopsBot.Data.Tracker
                         foreach (ulong channel in ChannelMessages.Keys.ToList())
                             await OnMinorChangeTracked(channel, ChannelMessages[channel]);
                         
-                        checkForChange.Change(60000, 60000);
+                        SetTimer(60000, 60000);
 
                         IconUrl = (await fetchChannel()).snippet.thumbnails.medium.url;
                     }
@@ -161,7 +163,7 @@ namespace MopsBot.Data.Tracker
                 if (!isStreaming)
                 {
                     VideoId = null;
-                    checkForChange.Change(300000, 300000);
+                    SetTimer();
                     ViewerGraph.Dispose();
                     ViewerGraph = null;
 

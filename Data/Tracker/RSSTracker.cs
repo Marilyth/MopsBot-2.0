@@ -39,6 +39,7 @@ namespace MopsBot.Data.Tracker
                 test.Dispose();
                 LastFeed = test.LastFeed;
                 LastTitle = test.LastTitle;
+                SetTimer();
             }
             catch (Exception e)
             {
@@ -71,6 +72,7 @@ namespace MopsBot.Data.Tracker
                 try{
                     LastFeed = checkExists.Items.OrderByDescending(x => x.PublishDate.DateTime).FirstOrDefault()?.PublishDate.UtcDateTime ?? DateTime.UtcNow;
                     if(LastFeed.Value.Year == 1){ LastFeed = null; throw new Exception("No date set");}
+                    SetTimer();
                 } catch (Exception e){
                     LastFeed = null;
                     LastTitle = checkExists.Items.FirstOrDefault()?.Title?.Text ?? "";

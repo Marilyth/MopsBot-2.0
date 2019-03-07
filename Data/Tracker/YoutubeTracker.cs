@@ -35,6 +35,7 @@ namespace MopsBot.Data.Tracker
                 channelThumbnailUrl = test.channelThumbnailUrl;
                 uploadPlaylistId = test.uploadPlaylistId;
                 LastTime = test.LastTime;
+                SetTimer();
             } catch (Exception e){
                 this.Dispose();
                 throw e;
@@ -64,6 +65,7 @@ namespace MopsBot.Data.Tracker
                 Name = checkExists.id;
                 uploadPlaylistId = checkExists.contentDetails.relatedPlaylists.uploads;
                 channelThumbnailUrl = checkExists.snippet.thumbnails.medium.url;
+                SetTimer();
             }
             catch (Exception)
             {

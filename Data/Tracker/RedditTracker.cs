@@ -37,6 +37,7 @@ namespace MopsBot.Data.Tracker
                 var test = new RedditTracker(Name);
                 test.Dispose();
                 lastCheck = test.lastCheck;
+                SetTimer();
             } catch (Exception e){
                 this.Dispose();
                 throw e;
@@ -64,6 +65,7 @@ namespace MopsBot.Data.Tracker
                 var test = fetchPosts().Result;
                 if (test.data.children.Count == 0)
                     throw new Exception("");
+                SetTimer();
             }
             catch (Exception)
             {

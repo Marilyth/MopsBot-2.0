@@ -35,6 +35,7 @@ namespace MopsBot.Data.Tracker
             //Check if Name ist valid
             try{
                 new HTMLTracker(Name).Dispose();
+                SetTimer();
             } catch (Exception e){
                 this.Dispose();
                 throw e;
@@ -63,6 +64,8 @@ namespace MopsBot.Data.Tracker
                 var value = fetchData().Result;
                 if (string.IsNullOrEmpty(value))
                     throw new ArgumentException();
+
+                SetTimer();
             }
             catch (Exception)
             {

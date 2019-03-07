@@ -38,6 +38,7 @@ namespace MopsBot.Data.Tracker
                 var test = new JSONTracker(Name);
                 PastInformation = test.PastInformation;
                 test.Dispose();
+                SetTimer();
             }
             catch (Exception e)
             {
@@ -81,6 +82,7 @@ namespace MopsBot.Data.Tracker
                         else throw new Exception("Graph value is not a number!");
                     }
                 }
+                SetTimer();
             }
             catch (Exception)
             {

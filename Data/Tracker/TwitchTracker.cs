@@ -38,6 +38,7 @@ namespace MopsBot.Data.Tracker
             //Check if Name ist valid
             try{
                 new TwitchTracker(Name).Dispose();
+                SetTimer();
             } catch (Exception e){
                 this.Dispose();
                 throw e;
@@ -52,6 +53,24 @@ namespace MopsBot.Data.Tracker
                 StaticBase.Trackers[TrackerType.Twitch].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", args}}).Wait();
 
                 throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
+            }
+        }
+
+        public TwitchTracker(string streamerName) : base()
+        {
+            Name = streamerName;
+            IsOnline = false;
+
+            //Check if person exists by forcing Exceptions if not.
+            try
+            {
+                ulong Id = GetIdFromUsername(streamerName).Result;
+                SetTimer();
+            }
+            catch (Exception)
+            {
+                Dispose();
+                throw new Exception($"Streamer {TrackerUrl()} could not be found on Twitch!");
             }
         }
 
@@ -85,23 +104,6 @@ namespace MopsBot.Data.Tracker
             //await message.RemoveAllReactionsAsync();
             await Program.ReactionHandler.AddHandler(message, new Emoji("🖌"), recolour);
             await Program.ReactionHandler.AddHandler(message, new Emoji("🔄"), switchThumbnail);
-        }
-
-        public TwitchTracker(string streamerName) : base()
-        {
-            Name = streamerName;
-            IsOnline = false;
-
-            //Check if person exists by forcing Exceptions if not.
-            try
-            {
-                ulong Id = GetIdFromUsername(streamerName).Result;
-            }
-            catch (Exception)
-            {
-                Dispose();
-                throw new Exception($"Streamer {TrackerUrl()} could not be found on Twitch!");
-            }
         }
 
         protected async override void CheckForChange_Elapsed(object stateinfo)

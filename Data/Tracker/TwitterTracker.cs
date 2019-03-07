@@ -33,6 +33,7 @@ namespace MopsBot.Data.Tracker
                 var test = new TwitterTracker(Name);
                 test.Dispose();
                 lastMessage = test.lastMessage;
+                SetTimer();
             } catch (Exception e){
                 this.Dispose();
                 throw e;
@@ -59,6 +60,7 @@ namespace MopsBot.Data.Tracker
             {
                 if (twitterName.Contains(" ")) throw new Exception();
                 lastMessage = getNewTweets().Last().Id;
+                SetTimer();
             }
             catch (Exception)
             {

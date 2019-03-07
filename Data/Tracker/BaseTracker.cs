@@ -47,8 +47,8 @@ namespace MopsBot.Data.Tracker
         {
         }
 
-        public void SetTimer(int interval, int delay){
-            checkForChange.Change(delay, interval);
+        public void SetTimer(int interval = 600000, int delay = -1){
+            checkForChange.Change(delay == -1 ? StaticBase.ran.Next(5000, interval) : delay, interval);
         }
 
         public static async Task<T> FetchJSONDataAsync<T>(string url, params KeyValuePair<string, string>[] headers)

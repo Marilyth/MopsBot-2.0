@@ -46,6 +46,7 @@ namespace MopsBot.Data.Tracker
             AllPP.Add("m=2", 0);
             AllPP.Add("m=3", 0);
             PPThreshold = double.Parse(args["PPThreshold"]);
+            SetTimer();
 
             if(StaticBase.Trackers[TrackerType.Osu].GetTrackers().ContainsKey(Name)){
                 this.Dispose();
@@ -74,6 +75,7 @@ namespace MopsBot.Data.Tracker
             {
                 var checkExists = fetchUser().Result;
                 var test = checkExists.username;
+                SetTimer();
             }
             catch (Exception)
             {

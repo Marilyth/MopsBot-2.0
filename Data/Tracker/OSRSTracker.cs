@@ -33,6 +33,7 @@ namespace MopsBot.Data.Tracker
                 var test = new OSRSTracker(Name);
                 test.Dispose();
                 stats = test.stats;
+                SetTimer();
             } catch (Exception e){
                 this.Dispose();
                 throw e;
@@ -59,6 +60,7 @@ namespace MopsBot.Data.Tracker
             {
                 var checkExists = fetchStats(Name).Result;
                 stats = checkExists;
+                SetTimer();
             }
             catch (Exception)
             {
