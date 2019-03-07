@@ -41,7 +41,7 @@ namespace MopsBot.Data.Tracker
             ExistingTrackers++;
             ChannelMessages = new Dictionary<ulong, string>();
             checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false),
-                                                                                (gap % interval) + 5000, interval);
+                                                                                (gap % 600000) + 17000, 600000);
         }
 
         public virtual void PostInitialisation()
