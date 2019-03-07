@@ -48,6 +48,10 @@ namespace MopsBot.Data.Tracker
         {
         }
 
+        public void SetTimer(int interval, int delay){
+            checkForChange.Change(delay, interval);
+        }
+
         public static async Task<T> FetchJSONDataAsync<T>(string url, params KeyValuePair<string, string>[] headers)
         {
             string query = await MopsBot.Module.Information.GetURLAsync(url, headers);

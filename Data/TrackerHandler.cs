@@ -80,10 +80,12 @@ namespace MopsBot.Data
 
             trackers = (trackers == null ? new Dictionary<string, T>() : trackers);
 
+            int gap = 600000 / collection.Count;
             for (int i = trackers.Count - 1; i >= 0; i--)
             {
                 var cur = trackers[trackers.Keys.ElementAt(i)];
                 cur.PostInitialisation();
+                cur.SetTimer(600000, gap * i);
                 cur.OnMinorEventFired += OnMinorEvent;
                 cur.OnMajorEventFired += OnMajorEvent;
             }

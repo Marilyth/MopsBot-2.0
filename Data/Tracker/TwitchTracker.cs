@@ -120,7 +120,7 @@ namespace MopsBot.Data.Tracker
                 {
                     if (IsOnline)
                     {
-                        if (++TimeoutCount >= 10)
+                        if (++TimeoutCount >= 2)
                         {
                             TimeoutCount = 0;
                             IsOnline = false;
