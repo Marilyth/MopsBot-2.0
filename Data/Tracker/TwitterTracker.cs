@@ -70,7 +70,7 @@ namespace MopsBot.Data.Tracker
         }
 
         public override void PostInitialisation(){
-            SetTimer(1200000, StaticBase.ran.Next(5000, 1200000));
+            SetTimer(1800000);
         }
 
         protected async override void CheckForChange_Elapsed(object stateinfo)
