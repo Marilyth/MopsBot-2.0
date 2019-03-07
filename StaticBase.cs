@@ -86,7 +86,7 @@ namespace MopsBot
                 Trackers[BaseTracker.TrackerType.Overwatch] = new TrackerHandler<OverwatchTracker>();
                 Trackers[BaseTracker.TrackerType.Twitch] = new TrackerHandler<TwitchTracker>();
                 Trackers[BaseTracker.TrackerType.TwitchClip] = new TrackerHandler<TwitchClipTracker>();
-                //Trackers[BaseTracker.TrackerType.Twitter] = new TrackerHandler<TwitterTracker>();
+                Trackers[BaseTracker.TrackerType.Twitter] = new TrackerHandler<TwitterTracker>();
                 Trackers[BaseTracker.TrackerType.Youtube] = new TrackerHandler<YoutubeTracker>();
                 Trackers[BaseTracker.TrackerType.YoutubeLive] = new TrackerHandler<YoutubeLiveTracker>();
                 Trackers[BaseTracker.TrackerType.Reddit] = new TrackerHandler<RedditTracker>();

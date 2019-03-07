@@ -57,6 +57,8 @@ namespace MopsBot.Data.Tracker
 
         public async override void PostInitialisation()
         {
+            if(IsOnline) SetTimer(60000, StaticBase.ran.Next(5000, 60000));
+
             if (ViewerGraph != null)
                 ViewerGraph.InitPlot();
 
@@ -120,7 +122,7 @@ namespace MopsBot.Data.Tracker
                 {
                     if (IsOnline)
                     {
-                        if (++TimeoutCount >= 2)
+                        if (++TimeoutCount >= 10)
                         {
                             TimeoutCount = 0;
                             IsOnline = false;
@@ -135,6 +137,8 @@ namespace MopsBot.Data.Tracker
 
                             foreach (ulong channel in ChannelMessages.Keys.ToList())
                                 await OnMinorChangeTracked(channel, $"{Name} went Offline!");
+
+                            SetTimer(600000, 600000);
                         }
                     }
                     else
@@ -146,6 +150,8 @@ namespace MopsBot.Data.Tracker
 
                         foreach (ulong channel in ChannelMessages.Keys.ToList())
                             await OnMinorChangeTracked(channel, ChannelMessages[channel]);
+
+                        SetTimer(60000, 60000);
                     }
                     await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
                 }
