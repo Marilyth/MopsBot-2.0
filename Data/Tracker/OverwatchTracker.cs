@@ -28,11 +28,11 @@ namespace MopsBot.Data.Tracker
         /// Initialises the tracker by setting attributes and setting up a Timer with a 10 minutes interval
         /// </summary>
         /// <param Name="OWName"> The Name-Battletag combination of the player to track </param>
-        public OverwatchTracker() : base(300000, ExistingTrackers * 20000)
+        public OverwatchTracker() : base()
         {
         }
 
-        public OverwatchTracker(Dictionary<string, string> args) : base(300000, 60000){
+        public OverwatchTracker(Dictionary<string, string> args) : base(){
             base.SetBaseValues(args, true);
 
             //Check if Name ist valid
@@ -55,7 +55,7 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public OverwatchTracker(string OWName) : base(300000)
+        public OverwatchTracker(string OWName) : base()
         {
             Name = OWName;
 

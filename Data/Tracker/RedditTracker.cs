@@ -25,11 +25,11 @@ namespace MopsBot.Data.Tracker
         /// Initialises the tracker by setting attributes and setting up a Timer with a 10 minutes interval
         /// </summary>
         /// <param Name="OWName"> The Name-Battletag combination of the player to track </param>
-        public RedditTracker() : base(600000, ExistingTrackers * 2000)
+        public RedditTracker() : base()
         {
         }
 
-        public RedditTracker(Dictionary<string, string> args) : base(600000, 60000){
+        public RedditTracker(Dictionary<string, string> args) : base(){
             base.SetBaseValues(args, true);
 
             //Check if Name ist valid
@@ -54,7 +54,7 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public RedditTracker(string name) : base(600000)
+        public RedditTracker(string name) : base()
         {
             lastCheck = (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
             Name = name;

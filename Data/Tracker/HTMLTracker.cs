@@ -23,11 +23,11 @@ namespace MopsBot.Data.Tracker
         public string oldMatch;
         public DatePlot DataGraph;
 
-        public HTMLTracker() : base(120000, ExistingTrackers * 5000)
+        public HTMLTracker() : base()
         {
         }
 
-        public HTMLTracker(Dictionary<string, string> args) : base(120000, 60000){
+        public HTMLTracker(Dictionary<string, string> args) : base(){
             base.SetBaseValues(args);
             Name = args["_Name"] + "|||" + args["Regex"];
             Regex = args["Regex"];
@@ -52,7 +52,7 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public HTMLTracker(string name) : base(120000)
+        public HTMLTracker(string name) : base()
         {
             Name = name;
             Regex = name.Split("|||")[1];

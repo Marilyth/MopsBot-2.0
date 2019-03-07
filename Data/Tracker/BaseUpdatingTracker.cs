@@ -21,7 +21,7 @@ namespace MopsBot.Data.Tracker
         [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
         public Dictionary<ulong, ulong> ToUpdate;
 
-        public BaseUpdatingTracker(int interval, int gap = 5000) : base(interval, gap){
+        public BaseUpdatingTracker() : base(){
             ToUpdate = new Dictionary<ulong, ulong>();
         }
 

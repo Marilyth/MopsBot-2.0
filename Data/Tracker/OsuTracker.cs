@@ -20,7 +20,7 @@ namespace MopsBot.Data.Tracker
         public Dictionary<string, double> AllPP;
         public double PPThreshold;
 
-        public OsuTracker() : base(60000, ExistingTrackers * 2000)
+        public OsuTracker() : base()
         {
             AllPP = new Dictionary<string, double>();
             AllPP.Add("m=0", 0);
@@ -29,7 +29,7 @@ namespace MopsBot.Data.Tracker
             AllPP.Add("m=3", 0);
         }
 
-        public OsuTracker(Dictionary<string, string> args) : base(60000, 60000){
+        public OsuTracker(Dictionary<string, string> args) : base(){
             base.SetBaseValues(args, true);
             
             //Check if Name ist valid
@@ -59,7 +59,7 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public OsuTracker(string name) : base(60000)
+        public OsuTracker(string name) : base()
         {
             Name = name;
             AllPP = new Dictionary<string, double>();

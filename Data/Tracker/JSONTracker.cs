@@ -24,11 +24,11 @@ namespace MopsBot.Data.Tracker
         public List<string> ToTrack;
         public DatePlot DataGraph;
 
-        public JSONTracker() : base(300000, ExistingTrackers * 2000)
+        public JSONTracker() : base()
         {
         }
 
-        public JSONTracker(Dictionary<string, string> args) : base(300000, 60000)
+        public JSONTracker(Dictionary<string, string> args) : base()
         {
             base.SetBaseValues(args, true);
 
@@ -58,7 +58,7 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public JSONTracker(string name) : base(300000)
+        public JSONTracker(string name) : base()
         {
             //name = name.Replace(" ", string.Empty);
             Name = name;

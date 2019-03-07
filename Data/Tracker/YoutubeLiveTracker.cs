@@ -26,11 +26,11 @@ namespace MopsBot.Data.Tracker
         public bool IsThumbnailLarge;
         private LiveVideoItem liveStatus;
 
-        public YoutubeLiveTracker() : base(300000, ExistingTrackers * 2000)
+        public YoutubeLiveTracker() : base()
         {
         }
 
-        public YoutubeLiveTracker(Dictionary<string, string> args) : base(300000, 60000){
+        public YoutubeLiveTracker(Dictionary<string, string> args) : base(){
             IsThumbnailLarge = bool.Parse(args["IsThumbnailLarge"]);
             base.SetBaseValues(args, true);
 
@@ -54,7 +54,7 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public YoutubeLiveTracker(string channelId) : base(300000)
+        public YoutubeLiveTracker(string channelId) : base()
         {
             Name = channelId;
 

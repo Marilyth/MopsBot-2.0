@@ -27,11 +27,11 @@ namespace MopsBot.Data.Tracker
         public int TimeoutCount;
         public ulong TwitchId;
 
-        public TwitchTracker() : base(60000, ExistingTrackers * 2000)
+        public TwitchTracker() : base()
         {
         }
 
-        public TwitchTracker(Dictionary<string, string> args) : base(60000, 60000){
+        public TwitchTracker(Dictionary<string, string> args) : base(){
             isThumbnailLarge = bool.Parse(args["IsThumbnailLarge"]);
             base.SetBaseValues(args, true);
 
@@ -87,7 +87,7 @@ namespace MopsBot.Data.Tracker
             await Program.ReactionHandler.AddHandler(message, new Emoji("🔄"), switchThumbnail);
         }
 
-        public TwitchTracker(string streamerName) : base(60000)
+        public TwitchTracker(string streamerName) : base()
         {
             Name = streamerName;
             IsOnline = false;

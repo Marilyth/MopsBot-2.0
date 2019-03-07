@@ -21,11 +21,11 @@ namespace MopsBot.Data.Tracker
         
         [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
         public Dictionary<DateTime, KeyValuePair<int, double>> TrackedClips;
-        public TwitchClipTracker() : base(600000, ExistingTrackers * 2000)
+        public TwitchClipTracker() : base()
         {
         }
 
-        public TwitchClipTracker(Dictionary<string, string> args) : base(600000, 60000){
+        public TwitchClipTracker(Dictionary<string, string> args) : base(){
             ViewThreshold = uint.Parse(args["ViewThreshold"]);
             base.SetBaseValues(args, true);
 
@@ -51,7 +51,7 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public TwitchClipTracker(string streamerName) : base(600000)
+        public TwitchClipTracker(string streamerName) : base()
         {
             Name = streamerName;
             TrackedClips = new Dictionary<DateTime, KeyValuePair<int, double>>();

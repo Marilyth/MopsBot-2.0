@@ -20,11 +20,11 @@ namespace MopsBot.Data.Tracker
         public long lastMessage;
         public int FailCount = 0;
 
-        public TwitterTracker() : base(600000, ExistingTrackers * 2000)
+        public TwitterTracker() : base()
         {
         }
 
-        public TwitterTracker(Dictionary<string, string> args) : base(600000, 60000){
+        public TwitterTracker(Dictionary<string, string> args) : base(){
             Update(new Dictionary<string, Dictionary<string, string>>(){{"NewValue", args}, {"OldValue", args}});
             base.SetBaseValues(args, true);
 
@@ -50,7 +50,7 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public TwitterTracker(string twitterName) : base(600000)
+        public TwitterTracker(string twitterName) : base()
         {
             Name = twitterName;
 

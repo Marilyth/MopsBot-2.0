@@ -24,11 +24,11 @@ namespace MopsBot.Data.Tracker
         public DateTime? LastFeed;
         public string LastTitle;
 
-        public RSSTracker() : base(600000, ExistingTrackers * 2000)
+        public RSSTracker() : base()
         {
         }
 
-        public RSSTracker(Dictionary<string, string> args) : base(600000, 60000)
+        public RSSTracker(Dictionary<string, string> args) : base()
         {
             base.SetBaseValues(args, true);
 
@@ -59,7 +59,7 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public RSSTracker(string url) : base(600000)
+        public RSSTracker(string url) : base()
         {
             Name = url;
 

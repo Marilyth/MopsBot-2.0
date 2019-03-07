@@ -21,11 +21,11 @@ namespace MopsBot.Data.Tracker
         private string channelThumbnailUrl, uploadPlaylistId;
         private List<long[]> stats;
 
-        public OSRSTracker() : base(60000, ExistingTrackers * 2000)
+        public OSRSTracker() : base()
         {
         }
 
-        public OSRSTracker(Dictionary<string, string> args) : base(60000, 60000){
+        public OSRSTracker(Dictionary<string, string> args) : base(){
             base.SetBaseValues(args, true);
 
             //Check if Name ist valid
@@ -50,7 +50,7 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public OSRSTracker(string name) : base(60000)
+        public OSRSTracker(string name) : base()
         {
             Name = name;
 

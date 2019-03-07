@@ -36,12 +36,11 @@ namespace MopsBot.Data.Tracker
         [BsonId]
         public string Name;
 
-        public BaseTracker(int interval, int gap = 5000)
+        public BaseTracker()
         {
             ExistingTrackers++;
             ChannelMessages = new Dictionary<ulong, string>();
-            checkForChange = new System.Threading.Timer(CheckForChange_Elapsed, new System.Threading.AutoResetEvent(false),
-                                                                                (gap % 600000) + 17000, 600000);
+            checkForChange = new System.Threading.Timer(CheckForChange_Elapsed);
         }
 
         public virtual void PostInitialisation()
