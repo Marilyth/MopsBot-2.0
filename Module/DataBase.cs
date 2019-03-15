@@ -17,7 +17,7 @@ namespace MopsBot.Module
         [Summary("Hugs the specified person")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         [Ratelimit(5, 1, Measure.Hours)]
-        public async Task hug(SocketGuildUser person)
+        public async Task hug([Remainder]SocketGuildUser person)
         {
             using (Context.Channel.EnterTypingState())
             {
@@ -36,7 +36,7 @@ namespace MopsBot.Module
         [Summary("Smooches the specified person")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         [Ratelimit(5, 1, Measure.Hours)]
-        public async Task kiss(SocketGuildUser person)
+        public async Task kiss([Remainder]SocketGuildUser person)
         {
             using (Context.Channel.EnterTypingState())
             {
@@ -55,7 +55,7 @@ namespace MopsBot.Module
         [Summary("Punches the specified person")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         [Ratelimit(5, 1, Measure.Hours)]
-        public async Task punch(SocketGuildUser person)
+        public async Task punch([Remainder]SocketGuildUser person)
         {
             using (Context.Channel.EnterTypingState())
             {
@@ -74,7 +74,7 @@ namespace MopsBot.Module
         [Command("GetStats", RunMode = RunMode.Async)]
         [Summary("Returns your or another persons experience and all that stuff")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public async Task GetStats(SocketGuildUser user = null)
+        public async Task GetStats([Remainder]SocketGuildUser user = null)
         {
             using (Context.Channel.EnterTypingState())
             {
