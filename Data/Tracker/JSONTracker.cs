@@ -30,7 +30,9 @@ namespace MopsBot.Data.Tracker
 
         public JSONTracker(Dictionary<string, string> args) : base()
         {
-            base.SetBaseValues(args, true);
+            base.SetBaseValues(args);
+            ToTrack = args["Locations"].Split(null).ToList();
+            Name = args["_Name"] + "|||" + String.Join(",", ToTrack);
 
             //Check if Name ist valid
             try
@@ -186,6 +188,37 @@ namespace MopsBot.Data.Tracker
         public override string TrackerUrl()
         {
             return Name.Split("|||")[0];
+        }
+
+        public override Dictionary<string, object> GetParameters(ulong guildId){
+            var parameters = base.GetParameters(guildId);
+            (parameters["Parameters"] as Dictionary<string, object>)["Locations"] = "";
+            return parameters;
+        }
+
+        public override void Update(Dictionary<string, Dictionary<string, string>> args){
+            base.Update(args);
+            ToTrack = args["NewValue"]["Locations"].Split(null).ToList();
+            Name = args["NewValue"]["_Name"] + String.Join(",", ToTrack);
+        }
+
+        public override object GetAsScope(ulong channelId){
+            return new ContentScope(){
+                Id = this.Name,
+                _Name = this.Name.Split("|||")[0],
+                Locations = String.Join("\n", this.ToTrack),
+                Notification = this.ChannelMessages[channelId],
+                Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId
+            };
+        }
+
+        public new struct ContentScope
+        {
+            public string Id;
+            public string _Name;
+            public string Locations;
+            public string Notification;
+            public string Channel;
         }
     }
 }
