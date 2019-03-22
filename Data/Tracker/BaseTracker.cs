@@ -63,9 +63,11 @@ namespace MopsBot.Data.Tracker
             return JsonConvert.DeserializeObject<T>(query, _jsonWriter);
         }
 
-        public static SyndicationFeed FetchRSSData(string url, params KeyValuePair<string, string>[] headers)
+        public async static Task<SyndicationFeed> FetchRSSData(string url, params KeyValuePair<string, string>[] headers)
         {
-            using(var reader = System.Xml.XmlReader.Create(url)){
+            var content = await MopsBot.Module.Information.GetURLAsync(url, headers);
+            var stream = new MemoryStream(Encoding.UTF8.GetBytes(content ?? ""));
+            using(var reader = System.Xml.XmlReader.Create(stream)){
                 SyndicationFeed feed = SyndicationFeed.Load(reader);
                 return feed;
             }

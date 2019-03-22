@@ -67,7 +67,7 @@ namespace MopsBot.Data.Tracker
             //Check if query and source yield proper results, by forcing exceptions if not.
             try
             {
-                var checkExists = getFeed();
+                var checkExists = getFeed().Result;
 
                 try{
                     LastFeed = checkExists.Items.OrderByDescending(x => x.PublishDate.DateTime).FirstOrDefault()?.PublishDate.UtcDateTime ?? DateTime.UtcNow;
@@ -78,7 +78,7 @@ namespace MopsBot.Data.Tracker
                     LastTitle = checkExists.Items.FirstOrDefault()?.Title?.Text ?? "";
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 Dispose();
                 throw new Exception($"The url did not provide any valid data!\nIs it an RSS feed?");
@@ -89,7 +89,7 @@ namespace MopsBot.Data.Tracker
         {
             try
             {
-                var feed = getFeed();
+                var feed = await getFeed();
                 List<SyndicationItem> feedItems;
                 if(LastFeed != null){
                     feedItems = feed.Items.Where(x => x.PublishDate.UtcDateTime > LastFeed?.AddSeconds(1)).OrderBy(x => x.PublishDate).ToList();
@@ -119,9 +119,9 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        private SyndicationFeed getFeed()
+        private async Task<SyndicationFeed> getFeed()
         {
-            return FetchRSSData(Name);
+            return await FetchRSSData(Name);
         }
 
         private Embed createEmbed(SyndicationItem feedItem, SyndicationFeed parent)
