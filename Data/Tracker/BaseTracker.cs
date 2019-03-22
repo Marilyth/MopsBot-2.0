@@ -22,7 +22,7 @@ namespace MopsBot.Data.Tracker
     {
         //Avoid ratelimit by placing a gap between all trackers.
         public static int ExistingTrackers = 0;
-        public enum TrackerType { Twitch, TwitchClip, Twitter, Osu, Overwatch, /*Tibia,*/ Youtube, YoutubeLive, Reddit, JSON, OSRS, HTML, RSS};
+        public enum TrackerType { Twitch, TwitchClip, Twitter, Osu, Overwatch, /*Tibia,*/ Youtube, YoutubeLive, Reddit, JSON, OSRS, HTML, RSS };
         private bool disposed = false;
         private SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
         protected System.Threading.Timer checkForChange;
@@ -47,7 +47,8 @@ namespace MopsBot.Data.Tracker
         {
         }
 
-        public void SetTimer(int interval = 600000, int delay = -1){
+        public void SetTimer(int interval = 600000, int delay = -1)
+        {
             checkForChange.Change(delay == -1 ? StaticBase.ran.Next(5000, interval) : delay, interval);
         }
 
@@ -65,9 +66,26 @@ namespace MopsBot.Data.Tracker
 
         public async static Task<SyndicationFeed> FetchRSSData(string url, params KeyValuePair<string, string>[] headers)
         {
+            try
+            {
+                using (var reader = System.Xml.XmlReader.Create(url))
+                {
+                    SyndicationFeed feed = SyndicationFeed.Load(reader);
+                    return feed;
+                }
+            }
+            catch (Exception e)
+            {
+                return await FetchRSSDataUTF8(url, headers);
+            }
+        }
+
+        private async static Task<SyndicationFeed> FetchRSSDataUTF8(string url, params KeyValuePair<string, string>[] headers)
+        {
             var content = await MopsBot.Module.Information.GetURLAsync(url, headers);
             var stream = new MemoryStream(Encoding.UTF8.GetBytes(content ?? ""));
-            using(var reader = System.Xml.XmlReader.Create(stream)){
+            using (var reader = System.Xml.XmlReader.Create(stream))
+            {
                 SyndicationFeed feed = SyndicationFeed.Load(reader);
                 return feed;
             }
