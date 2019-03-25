@@ -71,7 +71,7 @@ namespace MopsBot.Data.Tracker
             try
             {
                 PastInformation = getResults().Result;
-                var graphMembers = PastInformation.Where(x => x.Key.StartsWith("graph:"));
+                var graphMembers = PastInformation.Where(x => x.Key.Contains("graph:"));
                 foreach(var graphTest in graphMembers){
                     if(!graphTest.Equals(default(KeyValuePair<string,string>))){
                         bool succeeded = double.TryParse(graphTest.Value, out double test);
