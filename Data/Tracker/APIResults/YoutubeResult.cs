@@ -35,6 +35,23 @@ namespace MopsBot.Data.Tracker.APIResults.Youtube
         public ChannelSnippet snippet { get; set; }
     }
 
+    public class LiveItem
+    {
+        public string kind { get; set; }
+        public string etag { get; set; }
+        public ResourceId id { get; set; }
+        public LiveSnippet snippet { get; set; }
+    }
+
+    public class Live
+    {
+        public string kind { get; set; }
+        public string etag { get; set; }
+        public string regionCode { get; set; }
+        public PageInfo pageInfo { get; set; }
+        public List<LiveItem> items { get; set; }
+    }
+
     public class Channel
     {
         public string kind { get; set; }
@@ -75,6 +92,17 @@ namespace MopsBot.Data.Tracker.APIResults.Youtube
         public Localized localized { get; set; }
     }
 
+    public class LiveSnippet
+    {
+        public DateTime publishedAt { get; set; }
+        public string channelId { get; set; }
+        public string title { get; set; }
+        public string description { get; set; }
+        public Thumbnails thumbnails { get; set; }
+        public string channelTitle { get; set; }
+        public string liveBroadcastContent { get; set; }
+    }
+
     public class Localized
     {
         public string title { get; set; }
@@ -110,4 +138,45 @@ namespace MopsBot.Data.Tracker.APIResults.Youtube
         public PageInfo pageInfo { get; set; }
         public List<Video> items { get; set; }
     }
+
+    public class LiveStreamingDetails
+    {
+        public DateTime actualStartTime { get; set; }
+        public DateTime scheduledStartTime { get; set; }
+        public string concurrentViewers { get; set; }
+        public string activeLiveChatId { get; set; }
+    }
+
+    public class LiveVideoSnippet
+    {
+        public DateTime publishedAt { get; set; }
+        public string channelId { get; set; }
+        public string title { get; set; }
+        public string description { get; set; }
+        public Thumbnails thumbnails { get; set; }
+        public string channelTitle { get; set; }
+        public List<string> tags { get; set; }
+        public string categoryId { get; set; }
+        public string liveBroadcastContent { get; set; }
+        public Localized localized { get; set; }
+        public string defaultAudioLanguage { get; set; }
+    }
+
+    public class LiveVideoItem
+    {
+        public string kind { get; set; }
+        public string etag { get; set; }
+        public string id { get; set; }
+        public LiveVideoSnippet snippet { get; set; }
+        public LiveStreamingDetails liveStreamingDetails { get; set; }
+    }
+
+    public class LiveVideo
+    {
+        public string kind { get; set; }
+        public string etag { get; set; }
+        public PageInfo pageInfo { get; set; }
+        public List<LiveVideoItem> items { get; set; }
+    }
+
 }

@@ -1,4 +1,4 @@
-using System;
+/*using System;
 using System.Collections.Generic;
 using System.Linq;
 using Discord;
@@ -16,12 +16,39 @@ using Microsoft.Win32.SafeHandles;
 namespace MopsBot.Data.Tracker
 {
     [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
-    public class NewsTracker : ITracker
+    public class NewsTracker : BaseTracker
     {
         public string LastNews, Query, Source;
 
         public NewsTracker() : base(600000, ExistingTrackers * 2000)
         {
+        }
+
+        public NewsTracker(Dictionary<string, string> args) : base(600000, 60000){
+            base.SetBaseValues(args);
+            Name = args["_Name"] + "|" + args["Query"];
+            Query = args["Query"];
+
+            //Check if Name ist valid
+            try{
+                var test = new NewsTracker(Name);
+                test.Dispose();
+                LastNews = test.LastNews;
+            } catch (Exception e){
+                this.Dispose();
+                throw e;
+            }
+
+            if(StaticBase.Trackers[TrackerType.News].GetTrackers().ContainsKey(Name)){
+                this.Dispose();
+
+                args["Id"] = Name;
+                var curTracker = StaticBase.Trackers[TrackerType.News].GetTrackers()[Name];
+                curTracker.ChannelMessages[ulong.Parse(args["Channel"].Split(":")[1])] = args["Notification"];
+                StaticBase.Trackers[TrackerType.News].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", args}}).Wait();
+
+                throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
+            }
         }
 
         public NewsTracker(string NewsQuery) : base(600000)
@@ -73,7 +100,7 @@ namespace MopsBot.Data.Tracker
             }
             catch (Exception e)
             {
-                Console.WriteLine("\n" +  $"[ERROR] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+                await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $" error by {Name}", e));
             }
         }
 
@@ -114,5 +141,38 @@ namespace MopsBot.Data.Tracker
 
             return e.Build();
         }
+
+        public override Dictionary<string, object> GetParameters(ulong guildId)
+        {
+            var parameters = base.GetParameters(guildId);
+            (parameters["Parameters"] as Dictionary<string, object>)["_Name"] = "";
+            (parameters["Parameters"] as Dictionary<string, object>)["Query"] = "";
+
+            return parameters;
+        }
+
+        public override void Update(Dictionary<string, Dictionary<string, string>> args){
+            base.Update(args);
+            Query = args["NewValue"]["Query"];
+        }
+
+        public override object GetAsScope(ulong channelId){
+            return new ContentScope(){
+                Id = this.Name,
+                _Name = this.Source,
+                Query = this.Query,
+                Notification = this.ChannelMessages[channelId],
+                Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId
+            };
+        }
+
+        public new struct ContentScope
+        {
+            public string Id;
+            public string _Name;
+            public string Query;
+            public string Notification;
+            public string Channel;
+        }
     }
-}
+}*/

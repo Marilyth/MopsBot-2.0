@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -22,7 +23,7 @@ namespace MopsBot
     {
         public static void Main(string[] args)
         {
-            //Task.Run(() => BuildWebHost(args).Run());
+            Task.Run(() => BuildWebHost(args).Run());
             new Program().Start().GetAwaiter().GetResult();
         }
         public static DiscordSocketClient Client;
@@ -37,19 +38,19 @@ namespace MopsBot
                 LogLevel = LogSeverity.Info,
                 AlwaysDownloadUsers = true
             });
-
+            
             using (StreamReader sr = new StreamReader(new FileStream("mopsdata//Config.json", FileMode.Open)))
                 Config = JsonConvert.DeserializeObject<Dictionary<string, string>>(sr.ReadToEnd());
 
             await Client.LoginAsync(TokenType.Bot, Config["Discord"]);
             await Client.StartAsync();
 
-            Client.Log += Client_Log;
+            Client.Log += ClientLog;
             Client.Ready += onClientReady;
 
             var map = new ServiceCollection().AddSingleton(Client)
                 // .AddSingleton(new AudioService())
-                .AddSingleton(new ReliabilityService(Client, Client_Log))
+                .AddSingleton(new ReliabilityService(Client, ClientLog))
                 .AddSingleton(new InteractiveService(Client));
 
             var provider = map.BuildServiceProvider();
@@ -63,15 +64,23 @@ namespace MopsBot
             await Task.Delay(-1);
         }
 
-        private Task Client_Log(LogMessage msg)
+        public static async Task ClientLog(LogMessage msg)
         {
-            Console.WriteLine("\n" + msg.ToString());
-            return Task.CompletedTask;
+            await MopsLog(msg, "", msg.Source, -1);
+        }
+
+        public static async Task MopsLog(LogMessage msg, [CallerMemberName] string callerName = "", [CallerFilePath] string callerPath = "", [CallerLineNumber] int callerLine = 0)
+        {
+            string message = $"\n[{msg.Severity}] at {DateTime.Now}\nsource: {Path.GetFileNameWithoutExtension(callerPath)}.{callerName}, line: {callerLine}\nmessage: {msg.Message}";
+            if(msg.Exception != null && !msg.Exception.Message.Contains("The SSL connection could not be established")){
+                message += $"\nException: {msg.Exception?.Message ?? ""}\nStacktrace: {msg.Exception?.StackTrace ?? ""}";
+            }
+
+            Console.WriteLine(message);
         }
 
         private Task onClientReady()
         {
-            var test = Client;
             Task.Run(() => {
                 StaticBase.initTracking();
                 StaticBase.UpdateStatusAsync();
@@ -82,11 +91,13 @@ namespace MopsBot
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
                 .UseUrls("http://0.0.0.0:5000/")
-                .ConfigureServices(x => x.AddCors(options => options.AddPolicy("AllowAllHeaders",
+                .ConfigureServices(x => x.AddCors(options => options.AddPolicy("AllowAll",
                     builder =>
                     {
-                        builder.WithOrigins("*")
-                               .AllowAnyHeader();
+                        builder.AllowAnyOrigin()
+                               .AllowAnyHeader()
+                               .AllowAnyMethod()
+                               .AllowCredentials();
                     })))
                 .UseKestrel()
                 .UseContentRoot(Directory.GetCurrentDirectory())

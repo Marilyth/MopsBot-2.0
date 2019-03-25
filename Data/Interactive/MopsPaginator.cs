@@ -39,7 +39,7 @@ namespace MopsBot.Data.Interactive
             var pages = new List<Embed>();
             foreach (string s in pPages)
             {
-                pages.Add(new EmbedBuilder().WithDescription(s).Build());
+                pages.Add(new EmbedBuilder().WithDescription(new string(s.Take(Math.Min(2040, s.Length)).ToArray())).Build());
             }
 
             await CreatePagedMessage(channel, pages);

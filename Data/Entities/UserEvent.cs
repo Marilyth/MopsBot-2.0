@@ -14,7 +14,7 @@ namespace MopsBot.Data.Entities
 {
     [BsonIgnoreExtraElements]
     public class UserEvent
-    {
+    { 
         public List<ulong> pastList;
         public static event UserHasVoted UserVoted;
         public delegate Task UserHasVoted(IDblEntity voter);

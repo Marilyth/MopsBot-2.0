@@ -33,15 +33,15 @@ namespace MopsBot.Data.Interactive
             }
             catch (Exception e)
             {
-                Console.WriteLine("\n" + e.Message + e.StackTrace);
+                Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"Could not read poll database", e)).Wait();
             }
             //}
 
             Polls = Polls ?? new Dictionary<ulong, List<Poll>>();
 
-            foreach (var channel in Polls)
+            foreach (var channel in Polls.ToList())
             {
-                foreach (var poll in channel.Value)
+                foreach (var poll in channel.Value.ToList())
                 {
                     try
                     {
@@ -57,7 +57,21 @@ namespace MopsBot.Data.Interactive
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine("\n" + e.Message + e.StackTrace);
+                        Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"[{channel.Key}][{poll.MessageID}] could not be loaded", e)).Wait();
+                        if ((e.Message.Contains("Object reference not set to an instance of an object.") || e.Message.Contains("Value cannot be null."))
+                            && Program.Client.ConnectionState.Equals(ConnectionState.Connected))
+                        {
+                            Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"Removing [{channel.Key}][{poll.MessageID}] due to missing message.")).Wait();
+
+                            /*if (channel.Value.Count > 1){
+                                channel.Value.Remove(poll);
+                                UpdateDBAsync(channel.Key).Wait();
+                            }
+                            else{
+                                Polls.Remove(channel.Key);
+                                RemoveFromDBAsync(channel.Key).Wait();
+                            }*/
+                        }
                     }
                 }
             }
@@ -83,7 +97,7 @@ namespace MopsBot.Data.Interactive
             EmbedBuilder e = new EmbedBuilder();
             e.Title = poll.Question;
             e.Description = $"To vote for an option, press the corresponding digit reactions.\n" +
-                            "If you can manage channels, you may delete this poll by pressing the 🗑 Icon.";
+                            "If you can manage messages, you may delete this poll by pressing the 🗑 Icon.";
             e.Color = Color.Blue;
             e.WithCurrentTimestamp();
             e.WithFooter(x => x.WithIconUrl("http://thebullelephant.com/wp-content/uploads/2016/10/poll-box-1.png").WithText("Poll"));
@@ -138,7 +152,7 @@ namespace MopsBot.Data.Interactive
         private async Task DeletePoll(ReactionHandlerContext context)
         {
             var user = await ((ITextChannel)context.Channel).Guild.GetUserAsync(context.Reaction.UserId);
-            if (user.GuildPermissions.ManageChannels)
+            if (user.GuildPermissions.ManageMessages)
             {
                 await Program.ReactionHandler.ClearHandler(context.Message);
 

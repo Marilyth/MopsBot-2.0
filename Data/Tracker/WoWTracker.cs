@@ -1,4 +1,4 @@
-using System;
+/*using System;
 using System.Collections.Generic;
 using System.Linq;
 using Discord;
@@ -9,25 +9,42 @@ using System.Reflection;
 using Newtonsoft.Json;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
-using WowDotNetAPI;
-using WowDotNetAPI.Models;
+using SharprWowApi;
+using SharprWowApi.Models;
+using SharprWowApi.Models.Character;
 
 namespace MopsBot.Data.Tracker
 {
     [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
-    public class WoWTracker : ITracker
+    public class WoWTracker : BaseTracker
     {
-        public static WowExplorer WoWClient;
+        public static WowClient WoWClient;
         public Region WoWRegion;
         public string Realm;
         public string WoWName;
         public bool trackEquipment;
         public bool trackStats;
         public bool trackFeed;
-        private Character oldStats;
+        private SharprWowApi.Models.Character.CharacterRoot oldStats;
 
         public WoWTracker() : base(300000, ExistingTrackers * 2000)
         {
+        }
+
+        public WoWTracker(Dictionary<string, string> args) : base(300000, 60000){
+            base.SetBaseValues(args);
+            Name = args["Region"] +"|"+ args["Realm"] +"|"+ args["_Name"];
+
+            if(StaticBase.Trackers[TrackerType.HTML].GetTrackers().ContainsKey(Name)){
+                this.Dispose();
+
+                args["Id"] = Name;
+                var curTracker = StaticBase.Trackers[TrackerType.WoW].GetTrackers()[Name];
+                curTracker.ChannelMessages[ulong.Parse(args["Channel"].Split(":")[1])] = args["Notification"];
+                StaticBase.Trackers[TrackerType.WoW].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", args}}).Wait();
+
+                throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
+            }
         }
 
         public WoWTracker(string WoWInformation) : base(300000)
@@ -39,13 +56,14 @@ namespace MopsBot.Data.Tracker
             trackFeed = true;
 
 
-            if (!Enum.TryParse<Region>(information[0], true, out WoWRegion))
-                throw new Exception($"No Realm called {information[0]} could be found.");
+            //if (!Enum.TryParse<Region>(information[0], true, out WoWRegion))
+            //    throw new Exception($"No Realm called {information[0]} could be found.");
 
             //Check if person exists by forcing Exceptions if not.
             try
             {
-                oldStats = WoWClient.GetCharacter(WoWRegion, Realm, WoWName, CharacterOptions.GetEverything);
+                var test = WoWClient.GetAchievementAsync(2144).Result;
+                oldStats = WoWClient.GetCharacterAsync(WoWName, CharacterOptions.AllOptions, Realm).Result;
             }
             catch (Exception)
             {
@@ -56,16 +74,16 @@ namespace MopsBot.Data.Tracker
 
         public override void PostInitialisation()
         {
-            oldStats = WoWClient.GetCharacter(WoWRegion, Realm, WoWName, CharacterOptions.GetEverything);
+            oldStats = WoWClient.GetCharacterAsync(WoWName, CharacterOptions.AllOptions).Result;
         }
 
         protected async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
             {
-                Character newStats = WoWClient.GetCharacter(WoWRegion, Realm, WoWName, CharacterOptions.GetEverything);
+                var newStats = await WoWClient.GetCharacterAsync(WoWName, CharacterOptions.AllOptions);
 
-                var changes = getChangedStats(newStats);
+                var changes = await getChangedStats(newStats);
                 if (changes.Count > 0)
                 {
                     foreach (ulong channel in ChannelMessages.Keys.ToList())
@@ -81,7 +99,7 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        private Embed createEmbed(Character WoWChar, Dictionary<string, string> changedStats)
+        private Embed createEmbed(CharacterRoot WoWChar, Dictionary<string, string> changedStats)
         {
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0x6441A4);
@@ -126,7 +144,7 @@ namespace MopsBot.Data.Tracker
 
         public static Embed createStatEmbed(string Region, string Realm, string Name)
         {
-            Character WoWChar = WoWClient.GetCharacter(Enum.Parse<Region>(Region, true), Realm, Name, CharacterOptions.GetEverything);
+            CharacterRoot WoWChar = WoWClient.GetCharacterAsync(Name, CharacterOptions.AllOptions).Result;
 
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(255, 226, 84);
@@ -169,7 +187,7 @@ namespace MopsBot.Data.Tracker
             return e.Build();
         }
 
-        private static Dictionary<string, string> getStats(Character WoWChar)
+        private static Dictionary<string, string> getStats(CharacterRoot WoWChar)
         {
             Dictionary<string, string> stats = new Dictionary<string, string>();
 
@@ -200,7 +218,7 @@ namespace MopsBot.Data.Tracker
             return stats;
         }
 
-        private Dictionary<string, string> getChangedStats(Character WoWChar)
+        private async Task<Dictionary<string, string>> getChangedStats(CharacterRoot WoWChar)
         {
             Dictionary<string, string> changes = new Dictionary<string, string>();
 
@@ -275,7 +293,7 @@ namespace MopsBot.Data.Tracker
                 {
                     if (!oldLootDict.ContainsKey(item.Key))
                     {
-                        var equipment = WoWClient.GetItem(item.Value.ItemId);
+                        var equipment = await WoWClient.GetItemAsync(item.Value.ItemId.ToString());
                         changes["Loot"] += $"[{equipment.Name}](http://www.wowhead.com/item={equipment.Id}) **{((rarity)equipment.Quality).ToString()}**\n";
                     }
                 }
@@ -299,6 +317,51 @@ namespace MopsBot.Data.Tracker
             return changes;
         }
 
+        public override Dictionary<string, object> GetParameters(ulong guildId)
+        {
+            var parentParameters = base.GetParameters(guildId);
+            (parentParameters["Parameters"] as Dictionary<string, object>)["TrackEquipment"] = new bool[]{true, false};
+            (parentParameters["Parameters"] as Dictionary<string, object>)["TrackEquipment"] = new bool[]{true, false};
+            (parentParameters["Parameters"] as Dictionary<string, object>)["TrackEquipment"] = new bool[]{true, false};
+            (parentParameters["Parameters"] as Dictionary<string, object>)["Region"] = Enum.GetNames(typeof(Region));
+            (parentParameters["Parameters"] as Dictionary<string, object>)["Realm"] = "";
+            return parentParameters;
+        }
+
+        public override void Update(Dictionary<string, Dictionary<string, string>> args){
+            base.Update(args);
+            trackEquipment = bool.Parse(args["NewValue"]["TrackEquipment"]);
+            trackStats = bool.Parse(args["NewValue"]["TrackStats"]);
+            trackFeed = bool.Parse(args["NewValue"]["TrackFeed"]);
+        }
+
+        public override object GetAsScope(ulong channelId){
+            return new ContentScope(){
+                Id = this.Name,
+                _Name = this.WoWName,
+                _Region = this.WoWRegion.ToString(),
+                _Realm = this.Realm,
+                Notification = this.ChannelMessages[channelId],
+                Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId,
+                TrackEquipment = this.trackEquipment,
+                TrackFeed = this.trackFeed,
+                TrackStats = this.trackStats
+            };
+        }
+
+        public new struct ContentScope
+        {
+            public string Id;
+            public string _Name;
+            public string _Region;
+            public string _Realm;
+            public string Notification;
+            public string Channel;
+            public bool TrackEquipment;
+            public bool TrackStats;
+            public bool TrackFeed;
+        }
+
         public override string TrackerUrl()
         {
             return $"https://www.wowhead.com/list/{WoWRegion.ToString()}-{Realm}-{WoWName}";
@@ -319,4 +382,4 @@ namespace MopsBot.Data.Tracker
         Artifact = 6,
         Heirloom = 7
     }
-}
+}*/

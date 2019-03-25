@@ -29,7 +29,7 @@ namespace MopsBot.Module
             [RequireBotPermission(ChannelPermission.AddReactions)]
             [RequireBotPermission(ChannelPermission.ManageMessages)]
             [RequireBotPermission(ChannelPermission.ReadMessageHistory)]
-            [RequireUserPermission(GuildPermission.ManageRoles)]
+            [RequireUserPermission(ChannelPermission.ManageRoles)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.ApplyPerChannel)]
             public async Task createInvite(SocketRole role, bool isGerman = false)
             {
@@ -56,7 +56,7 @@ namespace MopsBot.Module
         public class Poll : ModuleBase
         {
             [Command("Create", RunMode = RunMode.Async), Summary("Creates a poll\nExample: !poll \"What should I play\" \"Dark Souls\" \"Osu!\" \"WoW\"")]
-            [RequireUserPermission(GuildPermission.ManageChannels)]
+            [RequireUserPermission(ChannelPermission.ManageMessages)]
             [Ratelimit(1, 60, Measure.Seconds, RatelimitFlags.ApplyPerChannel)]
             public async Task Create(string title, params string[] options)
             {

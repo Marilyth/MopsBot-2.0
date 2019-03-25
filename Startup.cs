@@ -34,6 +34,7 @@ namespace MopsBot
                 app.UseDeveloperExceptionPage();
             }
 
+            app.UseCors("AllowAll");
             app.UseMvc();
         }
     }

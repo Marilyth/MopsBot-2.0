@@ -1,6 +1,7 @@
 using System;
 using Discord;
 using Discord.Net;
+using Discord.WebSocket;
 using Newtonsoft.Json;
 using System.Globalization;
 using System.Collections.Generic;
@@ -9,16 +10,17 @@ using System.Text;
 using System.IO;
 using System.Threading.Tasks;
 using MopsBot.Data.Tracker.APIResults.Osu;
+using MopsBot.Api;
 
 namespace MopsBot.Data.Tracker
 {
     [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
-    public class OsuTracker : ITracker
+    public class OsuTracker : BaseTracker
     {
         public Dictionary<string, double> AllPP;
         public double PPThreshold;
 
-        public OsuTracker() : base(60000, ExistingTrackers * 2000)
+        public OsuTracker() : base()
         {
             AllPP = new Dictionary<string, double>();
             AllPP.Add("m=0", 0);
@@ -27,7 +29,38 @@ namespace MopsBot.Data.Tracker
             AllPP.Add("m=3", 0);
         }
 
-        public OsuTracker(string name) : base(60000)
+        public OsuTracker(Dictionary<string, string> args) : base(){
+            base.SetBaseValues(args, true);
+            
+            //Check if Name ist valid
+            try{
+                new OsuTracker(Name).Dispose();
+            } catch (Exception e){
+                this.Dispose();
+                throw e;
+            }
+
+            AllPP = new Dictionary<string, double>();
+            AllPP.Add("m=0", 0);
+            AllPP.Add("m=1", 0);
+            AllPP.Add("m=2", 0);
+            AllPP.Add("m=3", 0);
+            PPThreshold = double.Parse(args["PPThreshold"]);
+            SetTimer();
+
+            if(StaticBase.Trackers[TrackerType.Osu].GetTrackers().ContainsKey(Name)){
+                this.Dispose();
+
+                args["Id"] = Name;
+                var curTracker = StaticBase.Trackers[TrackerType.Osu].GetTrackers()[Name];
+                curTracker.ChannelMessages[ulong.Parse(args["Channel"].Split(":")[1])] = args["Notification"];
+                StaticBase.Trackers[TrackerType.Osu].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", args}}).Wait();
+
+                throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
+            }
+        }
+
+        public OsuTracker(string name) : base()
         {
             Name = name;
             AllPP = new Dictionary<string, double>();
@@ -42,6 +75,7 @@ namespace MopsBot.Data.Tracker
             {
                 var checkExists = fetchUser().Result;
                 var test = checkExists.username;
+                SetTimer();
             }
             catch (Exception)
             {
@@ -89,35 +123,33 @@ namespace MopsBot.Data.Tracker
             }
             catch (Exception e)
             {
-                if (!e.StackTrace.StartsWith("The read operation failed"))
-                    Console.WriteLine("\n" + $"[ERROR] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+                if (!e.StackTrace.StartsWith("The read operation failed") && !e.Message.Contains("error occurred while sending the request"))
+                    await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $" error by {Name}", e));
             }
         }
 
         public async Task<OsuResult> fetchUser(string mode = "m=0")
         {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://osu.ppy.sh/api/get_user?u={Name}&{mode}&event_days=31&k={Program.Config["Osu"]}");
+            string query = await MopsBot.Module.Information.GetURLAsync($"https://osu.ppy.sh/api/get_user?u={Name}&{mode}&event_days=31&k={Program.Config["Osu"]}");
 
             return JsonConvert.DeserializeObject<OsuResult>(query.Substring(1, query.Length - 2));
         }
 
         public async Task<List<RecentScore>> fetchRecent(string mode = "m=0")
         {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://osu.ppy.sh/api/get_user_recent?u={Name}&limit=50&{mode}&k={Program.Config["Osu"]}");
-
-            return JsonConvert.DeserializeObject<List<RecentScore>>(query);
+            return await FetchJSONDataAsync<List<RecentScore>>($"https://osu.ppy.sh/api/get_user_recent?u={Name}&limit=50&{mode}&k={Program.Config["Osu"]}");
         }
 
         public async Task<Score> fetchScore(string beatmapID, string mode = "m=0")
         {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://osu.ppy.sh/api/get_scores?b={beatmapID}&{mode}&u={Name}&limit=1&k={Program.Config["Osu"]}");
+            var tmpResult = await FetchJSONDataAsync<List<Score>>($"https://osu.ppy.sh/api/get_scores?b={beatmapID}&{mode}&u={Name}&limit=1&k={Program.Config["Osu"]}");
 
-            return JsonConvert.DeserializeObject<List<Score>>(query).OrderByDescending(x => DateTime.Parse(x.date)).FirstOrDefault();
+            return tmpResult.OrderByDescending(x => DateTime.Parse(x.date)).FirstOrDefault();
         }
 
         public async Task<Beatmap> fetchBeatmap(string beatmapID, string mode = "m=0")
         {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://osu.ppy.sh/api/get_beatmaps?b={beatmapID}&{mode}&a=1&k={Program.Config["Osu"]}");
+            string query = await MopsBot.Module.Information.GetURLAsync($"https://osu.ppy.sh/api/get_beatmaps?b={beatmapID}&{mode}&a=1&k={Program.Config["Osu"]}");
 
             return JsonConvert.DeserializeObject<Beatmap>(query.Substring(1, query.Length - 2));
         }
@@ -247,6 +279,37 @@ namespace MopsBot.Data.Tracker
         public override string TrackerUrl()
         {
             return "https://osu.ppy.sh/u/" + Name;
+        }
+
+        public override Dictionary<string, object> GetParameters(ulong guildId)
+        {
+            var parentParameters = base.GetParameters(guildId);
+            (parentParameters["Parameters"] as Dictionary<string, object>)["PPThreshold"] = "0,1";
+            return parentParameters;
+        }
+
+        public override object GetAsScope(ulong channelId){
+            return new ContentScope(){
+                Id = this.Name,
+                _Name = this.Name,
+                Notification = this.ChannelMessages[channelId],
+                Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId,
+                PPThreshold = this.PPThreshold
+            };
+        }
+
+        public override void Update(Dictionary<string, Dictionary<string, string>> args){
+            base.Update(args);
+            PPThreshold = double.Parse(args["NewValue"]["PPThreshold"]);
+        }
+
+        public new struct ContentScope
+        {
+            public string Id;
+            public string _Name;
+            public string Notification;
+            public string Channel;
+            public double PPThreshold;
         }
     }
 }

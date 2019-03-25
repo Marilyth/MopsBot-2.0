@@ -17,7 +17,7 @@ namespace MopsBot.Data.Tracker
     /// A tracker which keeps track of a Subreddit
     /// </summary>
     [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
-    public class RedditTracker : ITracker
+    public class RedditTracker : BaseTracker
     {
         public double lastCheck;
 
@@ -25,11 +25,37 @@ namespace MopsBot.Data.Tracker
         /// Initialises the tracker by setting attributes and setting up a Timer with a 10 minutes interval
         /// </summary>
         /// <param Name="OWName"> The Name-Battletag combination of the player to track </param>
-        public RedditTracker() : base(600000, ExistingTrackers * 2000)
+        public RedditTracker() : base()
         {
         }
 
-        public RedditTracker(string name) : base(600000)
+        public RedditTracker(Dictionary<string, string> args) : base(){
+            base.SetBaseValues(args, true);
+
+            //Check if Name ist valid
+            try{
+                var test = new RedditTracker(Name);
+                test.Dispose();
+                lastCheck = test.lastCheck;
+                SetTimer();
+            } catch (Exception e){
+                this.Dispose();
+                throw e;
+            }
+
+            if(StaticBase.Trackers[TrackerType.Reddit].GetTrackers().ContainsKey(Name)){
+                this.Dispose();
+
+                args["Id"] = Name;
+                var curTracker = StaticBase.Trackers[TrackerType.Reddit].GetTrackers()[Name];
+                curTracker.ChannelMessages[ulong.Parse(args["Channel"].Split(":")[1])] = args["Notification"];
+                StaticBase.Trackers[TrackerType.Reddit].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", args}}).Wait();
+
+                throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
+            }
+        }
+
+        public RedditTracker(string name) : base()
         {
             lastCheck = (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
             Name = name;
@@ -39,11 +65,11 @@ namespace MopsBot.Data.Tracker
                 var test = fetchPosts().Result;
                 if (test.data.children.Count == 0)
                     throw new Exception("");
+                SetTimer();
             }
             catch (Exception)
             {
                 Dispose();
-                Console.WriteLine("\n" +  "");
                 throw new Exception($"No results were found for Subreddit {TrackerUrl()}" +
                                     $"{(Name.Split(" ").Length > 1 ? $" with restriction(s) `{Name.Split(" ")[1]}`." : ".")}");
             }
@@ -75,21 +101,14 @@ namespace MopsBot.Data.Tracker
             }
             catch (Exception e)
             {
-                Console.WriteLine("\n" +  $"[ERROR] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+                await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $" error by {Name}", e));
             }
         }
 
         private async Task<RedditResult> fetchPosts()
         {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://www.reddit.com/r/{Name.Split(" ")[0]}/" +
+            return await FetchJSONDataAsync<RedditResult>($"https://www.reddit.com/r/{Name.Split(" ")[0]}/" +
                                                                         $"{(Name.Split(" ").Length > 1 ? $"search.json?sort=new&restrict_sr=on&q={Name.Split(" ")[1]}" : "new.json?restrict_sr=on")}");
-
-            JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
-            {
-                NullValueHandling = NullValueHandling.Ignore
-            };
-
-            return JsonConvert.DeserializeObject<RedditResult>(query, _jsonWriter);
         }
 
         ///<summary>Builds an embed out of the changed stats, and sends it as a Discord message </summary>

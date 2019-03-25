@@ -16,16 +16,44 @@ using System.Xml;
 namespace MopsBot.Data.Tracker
 {
     [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
-    public class YoutubeTracker : ITracker
+    public class YoutubeTracker : BaseTracker
     {
         public string LastTime;
         private string channelThumbnailUrl, uploadPlaylistId;
 
-        public YoutubeTracker() : base(180000, ExistingTrackers * 2000)
+        public YoutubeTracker() : base()
         {
         }
 
-        public YoutubeTracker(string channelId) : base(180000)
+        public YoutubeTracker(Dictionary<string, string> args) : base(){
+            base.SetBaseValues(args, true);
+
+            //Check if Name ist valid
+            try{
+                var test = new YoutubeTracker(Name);
+                test.Dispose();
+                channelThumbnailUrl = test.channelThumbnailUrl;
+                uploadPlaylistId = test.uploadPlaylistId;
+                LastTime = test.LastTime;
+                SetTimer();
+            } catch (Exception e){
+                this.Dispose();
+                throw e;
+            }
+
+            if(StaticBase.Trackers[TrackerType.Youtube].GetTrackers().ContainsKey(Name)){
+                this.Dispose();
+
+                args["Id"] = Name;
+                var curTracker = StaticBase.Trackers[TrackerType.Youtube].GetTrackers()[Name];
+                curTracker.ChannelMessages[ulong.Parse(args["Channel"].Split(":")[1])] = args["Notification"];
+                StaticBase.Trackers[TrackerType.Youtube].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", args}}).Wait();
+
+                throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
+            }
+        }
+
+        public YoutubeTracker(string channelId) : base()
         {
             Name = channelId;
             LastTime = XmlConvert.ToString(DateTime.Now, XmlDateTimeSerializationMode.Utc);
@@ -37,6 +65,7 @@ namespace MopsBot.Data.Tracker
                 Name = checkExists.id;
                 uploadPlaylistId = checkExists.contentDetails.relatedPlaylists.uploads;
                 channelThumbnailUrl = checkExists.snippet.thumbnails.medium.url;
+                SetTimer();
             }
             catch (Exception)
             {
@@ -49,35 +78,22 @@ namespace MopsBot.Data.Tracker
         {
             var lastDateTime = DateTime.Parse(LastTime).ToUniversalTime();
             var lastStringDateTime = XmlConvert.ToString(lastDateTime.AddSeconds(1), XmlDateTimeSerializationMode.Utc);
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId={uploadPlaylistId}&key={Program.Config["Youtube"]}");
+            var tmpResult = await FetchJSONDataAsync<Playlist>($"https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId={uploadPlaylistId}&key={Program.Config["Youtube"]}");
 
             var tmp = Program.Config["Youtube"];
             Program.Config["Youtube"] = Program.Config["Youtube2"];
             Program.Config["Youtube2"] = tmp;
-
-            JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
-            {
-                NullValueHandling = NullValueHandling.Ignore
-            };
-
-            Playlist tmpResult = JsonConvert.DeserializeObject<Playlist>(query, _jsonWriter);
 
             return tmpResult.items.Where(x => x.snippet.publishedAt > lastDateTime).OrderByDescending(x => x.snippet.publishedAt).ToArray();
         }
 
         private async Task<ChannelItem> fetchChannel()
         {
-            string query = await MopsBot.Module.Information.ReadURLAsync($"https://www.googleapis.com/youtube/v3/channels?part=contentDetails,snippet&id={Name}&key={Program.Config["Youtube"]}");
+            var tmpResult = await FetchJSONDataAsync<Channel>($"https://www.googleapis.com/youtube/v3/channels?part=contentDetails,snippet&id={Name}&key={Program.Config["Youtube"]}");
+            
             var tmp = Program.Config["Youtube"];
             Program.Config["Youtube"] = Program.Config["Youtube2"];
             Program.Config["Youtube2"] = tmp;
-
-            JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
-            {
-                NullValueHandling = NullValueHandling.Ignore
-            };
-
-            Channel tmpResult = JsonConvert.DeserializeObject<Channel>(query, _jsonWriter);
 
             return tmpResult.items.First();
         }
@@ -112,7 +128,10 @@ namespace MopsBot.Data.Tracker
             }
             catch (Exception e)
             {
-                Console.WriteLine("\n" + $"[ERROR] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+                if(!e.Message.Contains("Sequence contains no elements"))
+                    await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $" error by {Name}", e));
+                else
+                    await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Found no videos by {Name}"));
             }
         }
 

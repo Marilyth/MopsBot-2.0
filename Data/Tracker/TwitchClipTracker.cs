@@ -15,19 +15,45 @@ using MongoDB.Bson.Serialization.Attributes;
 namespace MopsBot.Data.Tracker
 {
     [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
-    public class TwitchClipTracker : ITracker
+    public class TwitchClipTracker : BaseTracker
     {
         public uint ViewThreshold;
         
         [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
         public Dictionary<DateTime, KeyValuePair<int, double>> TrackedClips;
-        public TwitchClipTracker() : base(600000, ExistingTrackers * 2000)
+        public TwitchClipTracker() : base()
         {
         }
 
-        public TwitchClipTracker(string streamerName) : base(600000)
+        public TwitchClipTracker(Dictionary<string, string> args) : base(){
+            ViewThreshold = uint.Parse(args["ViewThreshold"]);
+            base.SetBaseValues(args, true);
+
+            //Check if Name ist valid
+            try{
+                new TwitchClipTracker(Name).Dispose();
+                TrackedClips = new Dictionary<DateTime, KeyValuePair<int, double>>();
+                ChannelMessages = new Dictionary<ulong, string>();
+                SetTimer();
+            } catch (Exception e){
+                this.Dispose();
+                throw e;
+            }
+
+            if(StaticBase.Trackers[TrackerType.TwitchClip].GetTrackers().ContainsKey(Name)){
+                this.Dispose();
+
+                args["Id"] = Name;
+                var curTracker = StaticBase.Trackers[TrackerType.TwitchClip].GetTrackers()[Name];
+                curTracker.ChannelMessages[ulong.Parse(args["Channel"].Split(":")[1])] = args["Notification"];
+                StaticBase.Trackers[TrackerType.TwitchClip].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", args}}).Wait();
+
+                throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
+            }
+        }
+
+        public TwitchClipTracker(string streamerName) : base()
         {
-            Console.WriteLine("\n" + $"{DateTime.Now} Started TwitchClipTracker for {streamerName}");
             Name = streamerName;
             TrackedClips = new Dictionary<DateTime, KeyValuePair<int, double>>();
             ChannelMessages = new Dictionary<ulong, string>();
@@ -35,9 +61,9 @@ namespace MopsBot.Data.Tracker
 
             try
             {
-                string query = MopsBot.Module.Information.ReadURLAsync($"https://api.twitch.tv/kraken/channels/{Name}?client_id={Program.Config["Twitch"]}").Result;
-                APIResults.Twitch.Channel checkExists = JsonConvert.DeserializeObject<APIResults.Twitch.Channel>(query);
+                var checkExists = FetchJSONDataAsync<APIResults.Twitch.Channel>($"https://api.twitch.tv/kraken/channels/{Name}?client_id={Program.Config["Twitch"]}").Result;
                 var test = checkExists.broadcaster_language;
+                SetTimer();
             }
             catch (Exception)
             {
@@ -70,7 +96,7 @@ namespace MopsBot.Data.Tracker
             }
             catch (Exception e)
             {
-                Console.WriteLine("\n" +  $"[Error] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+                await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $" error by {Name}", e));
             }
         }
 
@@ -89,14 +115,8 @@ namespace MopsBot.Data.Tracker
             try
             {
                 var acceptHeader = new KeyValuePair<string, string>("Accept", "application/vnd.twitchtv.v5+json");
-                string query = await MopsBot.Module.Information.ReadURLAsync($"https://api.twitch.tv/kraken/clips/top?client_id={Program.Config["Twitch"]}&channel={name}&period=day{(!cursor.Equals("") ? $"&cursor={cursor}" : "")}", acceptHeader);
+                var tmpResult = await FetchJSONDataAsync<TwitchClipResult>($"https://api.twitch.tv/kraken/clips/top?client_id={Program.Config["Twitch"]}&channel={name}&period=day{(!cursor.Equals("") ? $"&cursor={cursor}" : "")}", acceptHeader);
 
-                JsonSerializerSettings _jsonWriter = new JsonSerializerSettings
-                {
-                    NullValueHandling = NullValueHandling.Ignore
-                };
-
-                var tmpResult = JsonConvert.DeserializeObject<TwitchClipResult>(query, _jsonWriter);
                 if (tmpResult.clips != null)
                 {
                     foreach (var clip in tmpResult.clips.Where(p => !TrackedClips.ContainsKey(p.created_at) && p.created_at > DateTime.UtcNow.AddMinutes(-30) && p.views >= ViewThreshold))
@@ -131,7 +151,7 @@ namespace MopsBot.Data.Tracker
             }
             catch (Exception e)
             {
-                Console.WriteLine("\n" +  $"[ERROR] by TwitchClipTracker for {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+                await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $" error by {Name}", e));
                 return new TwitchClipResult();
             }
         }
@@ -167,6 +187,37 @@ namespace MopsBot.Data.Tracker
 
         public override string TrackerUrl(){
             return $"https://www.twitch.tv/{Name}/clips";
+        }
+
+        public override Dictionary<string, object> GetParameters(ulong guildId)
+        {
+            var parentParameters = base.GetParameters(guildId);
+            (parentParameters["Parameters"] as Dictionary<string, object>)["ViewThreshold"] = 1;
+            return parentParameters;
+        }
+
+        public override object GetAsScope(ulong channelId){
+            return new ContentScope(){
+                Id = this.Name,
+                _Name = this.Name,
+                Notification = this.ChannelMessages[channelId],
+                Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId,
+                ViewThreshold = this.ViewThreshold
+            };
+        }
+
+        public override void Update(Dictionary<string, Dictionary<string, string>> args){
+            base.Update(args);
+            ViewThreshold = uint.Parse(args["NewValue"]["ViewThreshold"]);
+        }
+
+        public new struct ContentScope
+        {
+            public string Id;
+            public string _Name;
+            public string Notification;
+            public string Channel;
+            public uint ViewThreshold;
         }
     }
 }

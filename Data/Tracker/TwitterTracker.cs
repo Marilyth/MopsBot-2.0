@@ -15,29 +15,62 @@ using Microsoft.Win32.SafeHandles;
 namespace MopsBot.Data.Tracker
 {
     [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
-    public class TwitterTracker : ITracker
+    public class TwitterTracker : BaseTracker
     {
         public long lastMessage;
+        public int FailCount = 0;
 
-        public TwitterTracker() : base(600000, ExistingTrackers * 2000)
+        public TwitterTracker() : base()
         {
         }
 
-        public TwitterTracker(string twitterName) : base(600000)
+        public TwitterTracker(Dictionary<string, string> args) : base(){
+            Update(new Dictionary<string, Dictionary<string, string>>(){{"NewValue", args}, {"OldValue", args}});
+            base.SetBaseValues(args, true);
+
+            //Check if Name ist valid
+            try{
+                var test = new TwitterTracker(Name);
+                test.Dispose();
+                lastMessage = test.lastMessage;
+                SetTimer();
+            } catch (Exception e){
+                this.Dispose();
+                throw e;
+            }
+
+            if(StaticBase.Trackers[TrackerType.Twitter].GetTrackers().ContainsKey(Name)){
+                this.Dispose();
+
+                args["Id"] = Name;
+                var curTracker = StaticBase.Trackers[TrackerType.Twitter].GetTrackers()[Name];
+                curTracker.ChannelMessages[ulong.Parse(args["Channel"].Split(":")[1])] = args["Notification"];
+                StaticBase.Trackers[TrackerType.Twitter].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", args}}).Wait();
+
+                throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
+            }
+        }
+
+        public TwitterTracker(string twitterName) : base()
         {
             Name = twitterName;
 
             //Check if person exists by forcing Exceptions if not.
             try
             {
-                if(twitterName.Contains(" ")) throw new Exception();
+                if (twitterName.Contains(" ")) throw new Exception();
                 lastMessage = getNewTweets().Last().Id;
+                SetTimer();
             }
             catch (Exception)
             {
                 Dispose();
                 throw new Exception($"No tweets from {TrackerUrl()} could be found on Twitter!\nI only track people who tweeted at least once.");
             }
+        }
+
+        public override void PostInitialisation(){
+            SetTimer(1800000);
         }
 
         protected async override void CheckForChange_Elapsed(object stateinfo)
@@ -55,8 +88,9 @@ namespace MopsBot.Data.Tracker
                             if (!ChannelMessages[channel].Split("|")[0].Equals("NONE"))
                                 await OnMajorChangeTracked(channel, createEmbed(newTweet), ChannelMessages[channel].Split("|")[0]);
                         }
-                        else if (!ChannelMessages[channel].Split("|")[1].Equals("NONE"))
+                        else if (!ChannelMessages[channel].Split("|")[1].Equals("NONE")){
                             await OnMajorChangeTracked(channel, createEmbed(newTweet), ChannelMessages[channel].Split("|")[1]);
+                        }
                     }
                 }
 
@@ -66,10 +100,19 @@ namespace MopsBot.Data.Tracker
                     await StaticBase.Trackers[TrackerType.Twitter].UpdateDBAsync(this);
                 }
 
+                if(FailCount > 0){
+                    FailCount = 0;
+                    await StaticBase.Trackers[TrackerType.Twitter].UpdateDBAsync(this);
+                }
             }
             catch (Exception e)
             {
-                Console.WriteLine("\n" + $"[ERROR] by {Name} at {DateTime.Now}:\n{e.Message}\n{e.StackTrace}");
+                if(!e.Message.Contains("Value cannot be null"))
+                    await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"error by {Name}", e));
+                else if(++FailCount >= 10){
+                    await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Found no tweets by {Name}; happened {FailCount} times in a row."));
+                    await StaticBase.Trackers[TrackerType.Twitter].UpdateDBAsync(this);
+                }
             }
         }
 
@@ -147,8 +190,59 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public override string TrackerUrl(){
+        public override string TrackerUrl()
+        {
             return "https://twitter.com/" + Name;
+        }
+
+        public override Dictionary<string, object> GetParameters(ulong guildId)
+        {
+            var parentParameters = base.GetParameters(guildId);
+            (parentParameters["Parameters"] as Dictionary<string, object>)["MainNotification"] = "New main tweet!";
+            (parentParameters["Parameters"] as Dictionary<string, object>)["NonMainNotification"] = "New reply or retweet!";
+            (parentParameters["Parameters"] as Dictionary<string, object>)["TrackMainTweets"] = new bool[]{true, false};
+            (parentParameters["Parameters"] as Dictionary<string, object>)["TrackNonMainTweets"] = new bool[]{true, false};
+            (parentParameters["Parameters"] as Dictionary<string, object>).Remove("Notification");
+            return parentParameters;
+        }
+
+        public override object GetAsScope(ulong channelId)
+        {
+            return new ContentScope()
+            {
+                Id = this.Name,
+                _Name = this.Name,
+                MainNotification = this.ChannelMessages[channelId].Split("|")[0],
+                NonMainNotification = this.ChannelMessages[channelId].Split("|")[1],
+                Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId,
+                TrackMainTweets = !this.ChannelMessages[channelId].Split("|")[0].Equals("NONE"),
+                TrackNonMainTweets = !this.ChannelMessages[channelId].Split("|")[1].Equals("NONE")
+            };
+        }
+
+        public override void Update(Dictionary<string, Dictionary<string, string>> args)
+        {
+            base.Update(args);
+            var channelId = ulong.Parse(args["NewValue"]["Channel"].Split(":")[1]);
+            var newChannelId = ulong.Parse(args["NewValue"]["Channel"].Split(":")[1]);
+            ChannelMessages[newChannelId] = args["NewValue"]["MainNotification"] + "|" + args["NewValue"]["NonMainNotification"];
+
+            if (!bool.Parse(args["NewValue"]["TrackMainTweets"]))
+                ChannelMessages[channelId] = "NONE|" + ChannelMessages[channelId].Split("|")[1];
+
+            if (!bool.Parse(args["NewValue"]["TrackNonMainTweets"]))
+                ChannelMessages[channelId] = ChannelMessages[channelId].Split("|")[0] + "|NONE";
+        }
+
+        public new struct ContentScope
+        {
+            public string Id;
+            public string _Name;
+            public string MainNotification;
+            public string NonMainNotification;
+            public string Channel;
+            public bool TrackMainTweets;
+            public bool TrackNonMainTweets;
         }
     }
 }

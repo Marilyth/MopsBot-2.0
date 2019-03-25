@@ -13,12 +13,15 @@ using MopsBot.Data.Tracker;
 using MopsBot.Data.Interactive;
 using Tweetinvi;
 using NewsAPI;
-using WowDotNetAPI;
+using SharprWowApi;
 using MongoDB.Driver;
 using MongoDB.Bson.Serialization.Options;
 using MongoDB.Bson.Serialization.Attributes;
 using DiscordBotsList.Api;
 using DiscordBotsList.Api.Objects;
+using System.Net;
+using System.Security.Cryptography.X509Certificates;
+using System.Net.Security;
 
 namespace MopsBot
 {
@@ -26,6 +29,7 @@ namespace MopsBot
     {
         public static MongoClient DatabaseClient = new MongoClient($"{Program.Config["DatabaseURL"]}");
         public static IMongoDatabase Database = DatabaseClient.GetDatabase("Mops");
+        public static readonly System.Net.Http.HttpClient HttpClient = new System.Net.Http.HttpClient();
         public static AuthDiscordBotListApi DiscordBotList = new AuthDiscordBotListApi(305398845389406209, Program.Config["DiscordBotListKey"]);
         public static Random ran = new Random();
         public static Gfycat.GfycatClient gfy;
@@ -37,7 +41,7 @@ namespace MopsBot
         public static ReactionRoleJoin ReactRoleJoin;
         public static ReactionPoll Poll;
         //public static Crosswords Crosswords;
-        public static Dictionary<ITracker.TrackerType, TrackerWrapper> Trackers;
+        public static Dictionary<BaseTracker.TrackerType, TrackerWrapper> Trackers;
         public static NewsApiClient NewsClient;
 
         public static bool init = false;
@@ -49,6 +53,10 @@ namespace MopsBot
         {
             if (!init)
             {
+                HttpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)");
+                ServicePointManager.ServerCertificateValidationCallback = (object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) => {return true;};
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls|SecurityProtocolType.Tls11|SecurityProtocolType.Tls12;
+                HttpClient.DefaultRequestHeaders.ConnectionClose = true;
                 MopsBot.Data.Entities.UserEvent.UserVoted += UserVoted;
                 Task.Run(() => new MopsBot.Data.Entities.UserEvent().CheckUsersVotedLoop());
 
@@ -71,22 +79,24 @@ namespace MopsBot
                 gfy = new Gfycat.GfycatClient(Program.Config["GfyID"], Program.Config["GfySecret"]);
 
                 NewsClient = new NewsApiClient(Program.Config["NewsAPI"]);
+                //WoWTracker.WoWClient = new SharprWowApi.WowClient(Region.EU, Locale.en_GB, Program.Config["WoWKey"]);
 
-                WoWTracker.WoWClient = new WowExplorer(Region.EU, Locale.en_GB, Program.Config["WoWKey"]);
-
-                Trackers = new Dictionary<ITracker.TrackerType, Data.TrackerWrapper>();
-                Trackers[ITracker.TrackerType.Osu] = new TrackerHandler<OsuTracker>();
-                Trackers[ITracker.TrackerType.Overwatch] = new TrackerHandler<OverwatchTracker>();
-                Trackers[ITracker.TrackerType.Twitch] = new TrackerHandler<TwitchTracker>();
-                Trackers[ITracker.TrackerType.TwitchClip] = new TrackerHandler<TwitchClipTracker>();
-                Trackers[ITracker.TrackerType.Twitter] = new TrackerHandler<TwitterTracker>();
-                Trackers[ITracker.TrackerType.Youtube] = new TrackerHandler<YoutubeTracker>();
-                Trackers[ITracker.TrackerType.Reddit] = new TrackerHandler<RedditTracker>();
-                Trackers[ITracker.TrackerType.News] = new TrackerHandler<NewsTracker>();
-                Trackers[ITracker.TrackerType.WoW] = new TrackerHandler<WoWTracker>();
+                Trackers = new Dictionary<BaseTracker.TrackerType, Data.TrackerWrapper>();
+                Trackers[BaseTracker.TrackerType.Osu] = new TrackerHandler<OsuTracker>();
+                Trackers[BaseTracker.TrackerType.Overwatch] = new TrackerHandler<OverwatchTracker>();
+                Trackers[BaseTracker.TrackerType.Twitch] = new TrackerHandler<TwitchTracker>();
+                Trackers[BaseTracker.TrackerType.TwitchClip] = new TrackerHandler<TwitchClipTracker>();
+                Trackers[BaseTracker.TrackerType.Twitter] = new TrackerHandler<TwitterTracker>();
+                Trackers[BaseTracker.TrackerType.Youtube] = new TrackerHandler<YoutubeTracker>();
+                Trackers[BaseTracker.TrackerType.YoutubeLive] = new TrackerHandler<YoutubeLiveTracker>();
+                Trackers[BaseTracker.TrackerType.Reddit] = new TrackerHandler<RedditTracker>();
+                Trackers[BaseTracker.TrackerType.JSON] = new TrackerHandler<JSONTracker>();
+                //Trackers[BaseTracker.TrackerType.WoW] = new TrackerHandler<WoWTracker>();
                 //Trackers[ITracker.TrackerType.WoWGuild] = new TrackerHandler<WoWGuildTracker>();
-                Trackers[ITracker.TrackerType.OSRS] = new TrackerHandler<OSRSTracker>();
-                Trackers[ITracker.TrackerType.HTML] = new TrackerHandler<HTMLTracker>();
+                Trackers[BaseTracker.TrackerType.OSRS] = new TrackerHandler<OSRSTracker>();
+                Trackers[BaseTracker.TrackerType.HTML] = new TrackerHandler<HTMLTracker>();
+                Trackers[BaseTracker.TrackerType.RSS] = new TrackerHandler<RSSTracker>();
+                //Trackers[BaseTracker.TrackerType.Tibia] = new TrackerHandler<JSONTracker>();
 
                 foreach (var tracker in Trackers)
                 {
@@ -128,14 +138,19 @@ namespace MopsBot
             }
             catch (Exception e)
             {
-                Console.WriteLine("[Error] by discord bot list api: " + e.Message);
+                await Program.MopsLog(new LogMessage(LogSeverity.Error, "", "discord bot list api failed", e));
             }
         }
 
         public static async Task UserVoted(IDblEntity user){
-            Console.WriteLine($"\n[{DateTime.Now}]: User {user.ToString()}({user.Id}) voted. Adding 10 VP to balance!");
+            await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"User {user.ToString()}({user.Id}) voted. Adding 10 VP to balance!"));
             await MopsBot.Data.Entities.User.ModifyUserAsync(user.Id, x => x.Money += 10);
-            //await (await Program.Client.GetUser(user.Id).GetOrCreateDMChannelAsync()).SendMessageAsync("Thanks for voting for me!\nI have added 10 Votepoints to your balance!");
+            try{
+                if(Program.Client.CurrentUser.Id == 305398845389406209)
+                    await (await Program.Client.GetUser(user.Id).GetOrCreateDMChannelAsync()).SendMessageAsync("Thanks for voting for me!\nI have added 10 Votepoints to your balance!");
+            } catch(Exception e){
+                await Program.MopsLog(new LogMessage(LogSeverity.Error, "", "messaging voter failed", e));
+            }
         }
 
         /// <summary>
@@ -147,12 +162,12 @@ namespace MopsBot
             await Program.Client.SetActivityAsync(new Game("Currently Restarting!", ActivityType.Playing));
             await Task.Delay(60000);
 
-            int status = Enum.GetNames(typeof(ITracker.TrackerType)).Length;
+            int status = Enum.GetNames(typeof(BaseTracker.TrackerType)).Length;
             while (true)
             {
                 try
                 {
-                    ITracker.TrackerType type = (ITracker.TrackerType)status++;
+                    BaseTracker.TrackerType type = (BaseTracker.TrackerType)status++;
                     var trackerCount = Trackers[type].GetTrackers().Count;
                     await Program.Client.SetActivityAsync(new Game($"{trackerCount} {type.ToString()} Trackers", ActivityType.Watching));
                 }

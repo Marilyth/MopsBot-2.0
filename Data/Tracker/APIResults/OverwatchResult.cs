@@ -89,6 +89,7 @@ namespace MopsBot.Data.Tracker.APIResults.Overwatch
         public Hero moira { get; set; }
         public Hero brigitte { get; set; }
         public Hero wrecking_ball { get; set; }
+        public Hero ashe {get; set;}
 
 
         public Dictionary<string, Hero> heroesToDict(){
@@ -121,7 +122,8 @@ namespace MopsBot.Data.Tracker.APIResults.Overwatch
                 {"Symmetra", symmetra},
                 {"Zenyatta", zenyatta},
                 {"Brigitte", brigitte},
-                {"Wrecking-Ball", wrecking_ball}
+                {"Wrecking-Ball", wrecking_ball},
+                {"Ashe", ashe}
             };
         }
     }
@@ -162,6 +164,7 @@ namespace MopsBot.Data.Tracker.APIResults.Overwatch
         public double mccree { get; set; }
         public double brigitte {get; set; }
         public double wrecking_ball {get; set; }
+        public double ashe {get; set;}
 
         public Dictionary<string, double> heroesToDict(){
             return new Dictionary<string, double>
@@ -193,7 +196,8 @@ namespace MopsBot.Data.Tracker.APIResults.Overwatch
                 {"Symmetra", symmetra},
                 {"Zenyatta", zenyatta},
                 {"Brigitte", brigitte},
-                {"Wrecking-Ball", wrecking_ball}
+                {"Wrecking-Ball", wrecking_ball},
+                {"Ashe", ashe}
             };
         }
     }
@@ -279,10 +283,24 @@ namespace MopsBot.Data.Tracker.APIResults.Overwatch
         public int ties { get; set; }
         public double win_rate { get; set; }
         public int level { get; set; }
-        public int endorsement_shotcaller { get; set; }
-        public int endorsement_sportsmanship { get; set; }
-        public int endorsement_teammate { get; set; }
+        public string endorsement_shotcaller { get; set; }
+        public string endorsement_sportsmanship { get; set; }
+        public string endorsement_teammate { get; set; }
         public int endorsement_level { get; set; }
+
+        public async static Task<int> GetLevelAsync(string name){
+            var query = await MopsBot.Module.Information.GetURLAsync($"https://playoverwatch.com/en-us/search/account-by-name/{name.Split("-")[0]}?rand={StaticBase.ran.Next(999999999)}");
+
+            var tmpResult = JsonConvert.DeserializeObject<dynamic>(query);
+            foreach(var cur in tmpResult){
+                string playerName = cur["urlName"].ToString();
+                if(playerName == name){
+                    return cur["level"];
+                };
+            }
+
+            return 0;
+        }
 
     }
 
@@ -343,7 +361,18 @@ namespace MopsBot.Data.Tracker.APIResults.Overwatch
         public Location kr { get; set; }
 
         public Location getNotNull(){
-            return eu ?? us ?? kr;
+            if(eu?.stats?.quickplay?.overall_stats != null){
+                return eu;
+            }
+            else if(us?.stats.quickplay?.overall_stats != null){
+                return us;
+            }
+            else if(us?.stats.quickplay?.overall_stats != null){
+                return kr;
+            }
+            else {
+                return null;
+            }
         }
     }
 }
