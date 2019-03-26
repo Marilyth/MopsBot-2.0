@@ -17,7 +17,7 @@ namespace MopsBot.Data.Tracker
     [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
     public class TwitterTracker : BaseTracker
     {
-        public long lastMessage;
+        public long lastMessage, UserId;
         public int FailCount = 0;
 
         public TwitterTracker() : base()
@@ -70,6 +70,7 @@ namespace MopsBot.Data.Tracker
         }
 
         public override void PostInitialisation(){
+            if(UserId == 0) UserId = User.GetUserFromScreenName(Name).Id;
             SetTimer(1800000);
         }
 
