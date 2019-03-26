@@ -69,7 +69,7 @@ namespace MopsBot.Data
                 LabelPlacement = OxyPlot.Series.LabelPlacement.Outside,
                 LabelMargin = 0.1,
                 FontSize = 16,
-                LabelFormatString = "{0:0.##}",
+                LabelFormatString = Categories.Count > 10 ? null : "{0:0.##}",
                 FillColor = OxyColor.FromRgb(190, 192, 187)
             };
             viewerChart.Series.Add(columnSeries);
