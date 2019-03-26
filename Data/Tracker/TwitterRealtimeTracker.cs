@@ -190,7 +190,7 @@ namespace MopsBot.Data.Tracker
             base.Dispose(disposing);
             STREAM.StopStream();
             STREAM.RemoveFollow(UserId);
-            STREAM.StartStreamMatchingAllConditionsAsync();
+            if(STREAM.FollowingUserIds.Keys.Count > 0) STREAM.StartStreamMatchingAllConditionsAsync();
         }
 
         public override Dictionary<string, object> GetParameters(ulong guildId)
