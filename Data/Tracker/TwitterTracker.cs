@@ -70,7 +70,6 @@ namespace MopsBot.Data.Tracker
         }
 
         public override void PostInitialisation(){
-            if(UserId == 0) UserId = User.GetUserFromScreenName(Name).Id;
             SetTimer(1800000);
         }
 
@@ -78,6 +77,11 @@ namespace MopsBot.Data.Tracker
         {
             try
             {
+                if(UserId == 0){ 
+                    UserId = User.GetUserFromScreenName(Name).Id;
+                    await StaticBase.Trackers[TrackerType.Twitter].UpdateDBAsync(this);
+                }
+                
                 ITweet[] newTweets = getNewTweets();
 
                 foreach (ITweet newTweet in newTweets)
