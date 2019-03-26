@@ -63,8 +63,8 @@ namespace MopsBot.Data.Tracker
                 var user = Tweetinvi.User.GetUserFromScreenName(Name);
                 UserId = user.UserIdentifier.Id;
 
-                if(DBCOUNT > 0) STREAM.StopStream();
-                STREAM.AddFollow(UserId, TweetRecieved);
+                if(STREAM.FollowingUserIds.Keys.Count > 0) STREAM.StopStream();
+                STREAM.AddFollow(UserId, TweetReceived);
                 STREAM.StartStreamMatchingAllConditionsAsync();
             }
             catch (Exception)
@@ -75,7 +75,7 @@ namespace MopsBot.Data.Tracker
         }
 
         public override void PostInitialisation(){
-            STREAM.AddFollow(UserId, TweetRecieved);
+            STREAM.AddFollow(UserId, TweetReceived);
             if(STREAM.FollowingUserIds.Keys.Count >= DBCOUNT && STREAM.StreamState == StreamState.Stop)
                 STREAM.StartStreamMatchingAllConditionsAsync();
 
@@ -84,10 +84,11 @@ namespace MopsBot.Data.Tracker
 
         protected async override void CheckForChange_Elapsed(object stateinfo){}
 
-        private async void TweetRecieved(ITweet tweet)
+        private async void TweetReceived(ITweet tweet)
         {
             try
             {
+                if(!tweet.CreatedBy.Id.Equals(UserId)) return;
                 foreach (ulong channel in ChannelMessages.Keys.ToList())
                 {
                     if (tweet.InReplyToScreenName == null && !tweet.IsRetweet)
