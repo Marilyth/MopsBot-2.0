@@ -97,6 +97,7 @@ namespace MopsBot
                 Trackers[BaseTracker.TrackerType.HTML] = new TrackerHandler<HTMLTracker>();
                 Trackers[BaseTracker.TrackerType.RSS] = new TrackerHandler<RSSTracker>();
                 //Trackers[BaseTracker.TrackerType.Tibia] = new TrackerHandler<JSONTracker>();
+                Trackers[BaseTracker.TrackerType.TwitterRealtime] = new TrackerHandler<TwitterRealtimeTracker>();
 
                 foreach (var tracker in Trackers)
                 {
