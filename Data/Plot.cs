@@ -25,8 +25,12 @@ namespace MopsBot.Data
         {
             ID = name;
             Categories = new Dictionary<string, double>();
-            foreach (var category in categories)
-                Categories.Add(category, 0);
+
+            int duplicates = 0;
+            foreach (var category in categories){
+                if(!Categories.ContainsKey(category)) Categories.Add(category, 0);
+                else Categories.Add(category + (++duplicates), 0);
+            }
 
             initPlot();
         }
@@ -160,8 +164,12 @@ namespace MopsBot.Data
         {
             ID = name;
             Categories = new Dictionary<string, double>();
-            foreach (var category in categories)
-                Categories.Add(category, 0);
+            
+            int duplicates = 0;
+            foreach (var category in categories){
+                if(!Categories.ContainsKey(category)) Categories.Add(category, 0);
+                else Categories.Add(category + (++duplicates), 0);
+            }
 
             initPlot();
         }
