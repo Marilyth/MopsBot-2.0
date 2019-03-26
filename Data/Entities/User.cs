@@ -37,6 +37,11 @@ namespace MopsBot.Data.Entities
             return (int)Math.Sqrt(Experience / 200.0);
         }
 
+        public double CalcCurLevelDouble()
+        {
+            return Math.Sqrt(Experience / 200.0);
+        }
+
         public static async Task<User> GetUserAsync(ulong id)
         {
             User user = (await StaticBase.Database.GetCollection<User>("Users").FindAsync(x => x.Id == id)).FirstOrDefault();
@@ -53,6 +58,36 @@ namespace MopsBot.Data.Entities
         public static async Task ModifyUserAsync(ulong id, Action<User> modification)
         {
             await (await GetUserAsync(id)).ModifyAsync(modification);
+        }
+
+        public static async Task<long> GetDBUserCount(ulong? guildId = null){
+            var usersInGuild = guildId != null ? Program.Client.GetGuild(guildId.Value).Users.Select(x => x.Id).ToHashSet() : null;
+
+            var users = guildId == null ? await StaticBase.Database.GetCollection<User>("Users").CountDocumentsAsync(x => true)
+                                        : await StaticBase.Database.GetCollection<User>("Users").CountDocumentsAsync(x => usersInGuild.Contains(x.Id));
+
+            return users;
+        }
+
+        public static async Task<Embed> GetLeaderboardAsync(ulong? guildId = null, Func<User, double> stat = null, int begin = 1, int end = 10){
+            var usersInGuild = guildId != null ? Program.Client.GetGuild(guildId.Value).Users.Select(x => x.Id).ToHashSet() : null;
+
+            var users = guildId != null ? await (await StaticBase.Database.GetCollection<User>("Users").FindAsync(x => usersInGuild.Contains(x.Id))).ToListAsync()
+                                        : await (await StaticBase.Database.GetCollection<User>("Users").FindAsync(x => true)).ToListAsync();
+
+            if(stat == null)
+                stat = x => x.CalcCurLevelDouble();
+
+            users = users.OrderByDescending(x => stat(x)).Skip(begin - 1).Take(end - (begin - 1)).ToList();
+
+            List<KeyValuePair<string, double>> stats = new List<KeyValuePair<string, double>>();
+
+            for(int i = 0; i < end - (begin - 1); i++){
+                stats.Add(KeyValuePair.Create(Program.Client.GetUser(users[i].Id)?.Username ?? "Unknown"+i, stat(users[i])));
+            }
+
+            var embed = new EmbedBuilder();
+            return embed.WithCurrentTimestamp().WithImageUrl(ColumnPlot.DrawPlotSorted(guildId + "Leaderboard", stats)).Build();
         }
 
         private async Task ModifyAsync(Action<User> modification)
@@ -90,5 +125,7 @@ namespace MopsBot.Data.Entities
 
             return e.Build();
         }
+
+        public enum Stats {Punch, Hug, Kiss, Experience, Level, Votepoints}
     }
 }
