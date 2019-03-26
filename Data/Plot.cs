@@ -66,9 +66,10 @@ namespace MopsBot.Data
             columnSeries = new OxyPlot.Series.ColumnSeries()
             {
                 ItemsSource = new List<OxyPlot.Series.ColumnItem>(Categories.Values.Select(x => new OxyPlot.Series.ColumnItem(x))),
-                //LabelPlacement = OxyPlot.Series.LabelPlacement.Outside, 
-                FontSize = 24,
-                //LabelFormatString = "{0}",
+                LabelPlacement = OxyPlot.Series.LabelPlacement.Outside,
+                LabelMargin = 0.1,
+                FontSize = 16,
+                LabelFormatString = "{0:0.##}",
                 FillColor = OxyColor.FromRgb(190, 192, 187)
             };
             viewerChart.Series.Add(columnSeries);
@@ -164,7 +165,7 @@ namespace MopsBot.Data
         {
             ID = name;
             Categories = new Dictionary<string, double>();
-            
+
             int duplicates = 0;
             foreach (var category in categories){
                 if(!Categories.ContainsKey(category)) Categories.Add(category, 0);
