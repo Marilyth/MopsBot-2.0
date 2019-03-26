@@ -186,6 +186,13 @@ namespace MopsBot.Data.Tracker
             return "https://twitter.com/" + Name;
         }
 
+        protected new void Dispose(bool disposing){
+            base.Dispose(disposing);
+            STREAM.StopStream();
+            STREAM.RemoveFollow(UserId);
+            STREAM.StartStreamMatchingAllConditionsAsync();
+        }
+
         public override Dictionary<string, object> GetParameters(ulong guildId)
         {
             var parentParameters = base.GetParameters(guildId);
