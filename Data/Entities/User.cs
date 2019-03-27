@@ -82,12 +82,15 @@ namespace MopsBot.Data.Entities
 
             List<KeyValuePair<string, double>> stats = new List<KeyValuePair<string, double>>();
 
+            StringBuilder sb = new StringBuilder();
             for(int i = 0; i < end - (begin - 1); i++){
-                stats.Add(KeyValuePair.Create(Program.Client.GetUser(users[i].Id)?.Username ?? "Unknown"+i, stat(users[i])));
+                if(end-begin < 10) sb.Append($"#{begin+i}: {Program.Client.GetUser(users[i].Id)?.Mention ?? $"<@{users[i].Id}>"}\n");
+                stats.Add(KeyValuePair.Create(""+(begin+i), stat(users[i])));
             }
 
             var embed = new EmbedBuilder();
-            return embed.WithCurrentTimestamp().WithImageUrl(ColumnPlot.DrawPlotSorted(guildId + "Leaderboard", stats)).Build();
+            return embed.WithCurrentTimestamp().WithImageUrl(ColumnPlot.DrawPlotSorted(guildId + "Leaderboard", stats))
+                        .WithDescription(sb.ToString()).Build();
         }
 
         private async Task ModifyAsync(Action<User> modification)
