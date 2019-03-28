@@ -82,7 +82,7 @@ namespace MopsBot.Data.Tracker
                 UserId = Tweetinvi.User.GetUserFromScreenName(Name).Id;
                 StaticBase.Trackers[TrackerType.Twitter].UpdateDBAsync(this);
             }
-            
+
             if(STREAM.ContainsFollow(UserId)) STREAM.FollowingUserIds[UserId] += x => TweetReceived(x);
             else STREAM.AddFollow(UserId, x => TweetReceived(x));
 
@@ -103,8 +103,14 @@ namespace MopsBot.Data.Tracker
             {
                 var missedTweets = getNewTweets(lastMessage);
                 hasChecked = true;
-                foreach (var curTweet in missedTweets)
-                   await TweetReceived(curTweet, false);
+                int i = 0;
+                foreach (var curTweet in missedTweets){
+                    i++;
+                    if(i != missedTweets.Length)
+                        await TweetReceived(curTweet, false);
+                    else
+                        await TweetReceived(curTweet);
+                }
             }
 
             checkForChange.Dispose();
@@ -187,6 +193,7 @@ namespace MopsBot.Data.Tracker
             catch (Exception e)
             {
                 FailCount++;
+                StaticBase.Trackers[TrackerType.Twitter].UpdateDBAsync(this);
                 return new ITweet[0];
             }
         }
