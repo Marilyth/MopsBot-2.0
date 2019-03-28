@@ -11,20 +11,24 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
+using MongoDB.Driver;
 
 namespace MopsBot.Data.Tracker
 {
     [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
     public class TwitterTracker : BaseTracker
     {
-        public long lastMessage, UserId;
+        public static Tweetinvi.Streaming.IFilteredStream STREAM = Tweetinvi.Stream.CreateFilteredStream();
+        private static long DBCOUNT = StaticBase.Database.GetCollection<TwitterTracker>("TwitterTracker").CountDocuments(x => true);
+        public long UserId, lastMessage;
         public int FailCount = 0;
+        private bool hasChecked = false;
 
         public TwitterTracker() : base()
         {
         }
 
-        public TwitterTracker(Dictionary<string, string> args) : base(){
+        /*public TwitterRealtimeTracker(Dictionary<string, string> args) : base(){
             Update(new Dictionary<string, Dictionary<string, string>>(){{"NewValue", args}, {"OldValue", args}});
             base.SetBaseValues(args, true);
 
@@ -49,7 +53,7 @@ namespace MopsBot.Data.Tracker
 
                 throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
             }
-        }
+        }*/
 
         public TwitterTracker(string twitterName) : base()
         {
@@ -58,94 +62,126 @@ namespace MopsBot.Data.Tracker
             //Check if person exists by forcing Exceptions if not.
             try
             {
-                if (twitterName.Contains(" ")) throw new Exception();
-                lastMessage = getNewTweets().Last().Id;
-                SetTimer();
+                var user = Tweetinvi.User.GetUserFromScreenName(Name);
+                UserId = user.UserIdentifier.Id;
+
+                if (STREAM.FollowingUserIds.Keys.Count > 0) STREAM.StopStream();
+                STREAM.AddFollow(UserId, x => TweetReceived(x));
+                STREAM.StartStreamMatchingAllConditionsAsync();
             }
             catch (Exception)
             {
                 Dispose();
-                throw new Exception($"No tweets from {TrackerUrl()} could be found on Twitter!\nI only track people who tweeted at least once.");
+                throw new Exception($"{TrackerUrl()} could not be found on Twitter!");
             }
         }
 
-        public override void PostInitialisation(){
+        public override void PostInitialisation()
+        {
+            STREAM.AddFollow(UserId, x => TweetReceived(x));
+            if (STREAM.FollowingUserIds.Keys.Count >= DBCOUNT && STREAM.StreamState == StreamState.Stop)
+            {
+                STREAM.StreamStopped += (sender, args) => Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"TwitterSTREAM stopped. {args.DisconnectMessage?.Reason ?? ""}", args.Exception));
+                STREAM.StreamStarted += (sender, args) => Program.MopsLog(new LogMessage(LogSeverity.Info, "", "TwitterSTREAM started."));
+                STREAM.StartStreamMatchingAllConditionsAsync();
+            }
+
             SetTimer(1800000);
         }
 
         protected async override void CheckForChange_Elapsed(object stateinfo)
         {
-            try
+            try{
+            if (!hasChecked)
             {
-                if(UserId == 0){ 
-                    UserId = User.GetUserFromScreenName(Name).Id;
-                    await StaticBase.Trackers[TrackerType.Twitter].UpdateDBAsync(this);
-                }
-                
-                ITweet[] newTweets = getNewTweets();
-
-                foreach (ITweet newTweet in newTweets)
-                {
-                    foreach (ulong channel in ChannelMessages.Keys.ToList())
-                    {
-                        if (newTweet.InReplyToScreenName == null && !newTweet.IsRetweet)
-                        {
-                            if (!ChannelMessages[channel].Split("|")[0].Equals("NONE"))
-                                await OnMajorChangeTracked(channel, createEmbed(newTweet), ChannelMessages[channel].Split("|")[0]);
-                        }
-                        else if (!ChannelMessages[channel].Split("|")[1].Equals("NONE")){
-                            await OnMajorChangeTracked(channel, createEmbed(newTweet), ChannelMessages[channel].Split("|")[1]);
-                        }
-                    }
-                }
-
-                if (newTweets.Length != 0)
-                {
-                    lastMessage = newTweets[newTweets.Length - 1].Id;
-                    await StaticBase.Trackers[TrackerType.Twitter].UpdateDBAsync(this);
-                }
-
-                if(FailCount > 0){
-                    FailCount = 0;
-                    await StaticBase.Trackers[TrackerType.Twitter].UpdateDBAsync(this);
-                }
+                var missedTweets = getNewTweets(lastMessage);
+                hasChecked = true;
+                foreach (var curTweet in missedTweets)
+                   await TweetReceived(curTweet, false);
             }
-            catch (Exception e)
-            {
-                if(!e.Message.Contains("Value cannot be null"))
-                    await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"error by {Name}", e));
-                else if(++FailCount >= 10){
-                    await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Found no tweets by {Name}; happened {FailCount} times in a row."));
-                    await StaticBase.Trackers[TrackerType.Twitter].UpdateDBAsync(this);
-                }
+
+            checkForChange.Dispose();
+            } catch (Exception e){
+                //Make Trackerhandle not crash
             }
         }
 
-        private ITweet[] getNewTweets()
+        private async Task TweetReceived(ITweet tweet, bool updateDB = true)
         {
-            var twitterKey = Program.Config["TwitterKey"];
-            var twitterSecret = Program.Config["TwitterSecret"];
-            var twitterToken = Program.Config["TwitterToken"];
-            var twitterAccessSecret = Program.Config["TwitterAccessSecret"];
+            try
+            {
+                var tweets = new List<ITweet>() { tweet };
 
-            Program.Config["TwitterKey"] = Program.Config["TwitterKey2"];
-            Program.Config["TwitterSecret"] = Program.Config["TwitterSecret2"];
-            Program.Config["TwitterToken"] = Program.Config["TwitterToken2"];
-            Program.Config["TwitterAccessSecret"] = Program.Config["TwitterAccessSecret2"];
+                if (!hasChecked)
+                {
+                    var missedTweets = getNewTweets(lastMessage, tweet.Id - 1);
+                    hasChecked = true;
+                    foreach (var curTweet in missedTweets)
+                    {
+                        await TweetReceived(curTweet, false);
+                    }
+                }
 
-            Program.Config["TwitterKey2"] = twitterKey;
-            Program.Config["TwitterSecret2"] = twitterSecret;
-            Program.Config["TwitterToken2"] = twitterToken;
-            Program.Config["TwitterAccessSecret2"] = twitterAccessSecret;
+                lastMessage = tweet.Id;
 
-            Auth.SetUserCredentials(Program.Config["TwitterKey"], Program.Config["TwitterSecret"],
-                                        Program.Config["TwitterToken"], Program.Config["TwitterAccessSecret"]);
-            Tweetinvi.Parameters.IUserTimelineParameters parameters = Timeline.CreateUserTimelineParameter();
-            if (lastMessage != 0) parameters.SinceId = lastMessage;
-            parameters.MaximumNumberOfTweetsToRetrieve = 10;
+                if (!tweet.CreatedBy.Id.Equals(UserId)) return;
+                foreach (ulong channel in ChannelMessages.Keys.ToList())
+                {
+                    if (tweet.InReplyToScreenName == null && !tweet.IsRetweet)
+                    {
+                        if (!ChannelMessages[channel].Split("|")[0].Equals("NONE"))
+                            await OnMajorChangeTracked(channel, createEmbed(tweet), ChannelMessages[channel].Split("|")[0]);
+                    }
+                    else if (!ChannelMessages[channel].Split("|")[1].Equals("NONE"))
+                    {
+                        await OnMajorChangeTracked(channel, createEmbed(tweet), ChannelMessages[channel].Split("|")[1]);
+                    }
+                }
 
-            var tweets = Timeline.GetUserTimeline(Name, parameters);
-            return tweets.Reverse().ToArray();
+                if(updateDB) await StaticBase.Trackers[TrackerType.Twitter].UpdateDBAsync(this);
+            }
+            catch (Exception e)
+            {
+                await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"error by {Name}", e));
+            }
+        }
+
+        private ITweet[] getNewTweets(long since, long before = long.MaxValue)
+        {
+            try
+            {
+                var twitterKey = Program.Config["TwitterKey"];
+                var twitterSecret = Program.Config["TwitterSecret"];
+                var twitterToken = Program.Config["TwitterToken"];
+                var twitterAccessSecret = Program.Config["TwitterAccessSecret"];
+
+                Program.Config["TwitterKey"] = Program.Config["TwitterKey2"];
+                Program.Config["TwitterSecret"] = Program.Config["TwitterSecret2"];
+                Program.Config["TwitterToken"] = Program.Config["TwitterToken2"];
+                Program.Config["TwitterAccessSecret"] = Program.Config["TwitterAccessSecret2"];
+
+                Program.Config["TwitterKey2"] = twitterKey;
+                Program.Config["TwitterSecret2"] = twitterSecret;
+                Program.Config["TwitterToken2"] = twitterToken;
+                Program.Config["TwitterAccessSecret2"] = twitterAccessSecret;
+
+                Auth.SetUserCredentials(Program.Config["TwitterKey"], Program.Config["TwitterSecret"],
+                                            Program.Config["TwitterToken"], Program.Config["TwitterAccessSecret"]);
+                Tweetinvi.Parameters.IUserTimelineParameters parameters = Timeline.CreateUserTimelineParameter();
+                parameters.SinceId = since;
+                if(before < long.MaxValue) parameters.MaxId = before;
+                parameters.MaximumNumberOfTweetsToRetrieve = 10;
+
+                var tweets = Timeline.GetUserTimeline(Name, parameters);
+
+                FailCount = 0;
+                return tweets.Reverse().ToArray();
+            }
+            catch (Exception e)
+            {
+                FailCount++;
+                return new ITweet[0];
+            }
         }
 
         private Embed createEmbed(ITweet tweet)
@@ -200,13 +236,21 @@ namespace MopsBot.Data.Tracker
             return "https://twitter.com/" + Name;
         }
 
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(true);
+            STREAM.StopStream();
+            STREAM.RemoveFollow(UserId);
+            if (STREAM.FollowingUserIds.Keys.Count > 0) STREAM.StartStreamMatchingAllConditionsAsync();
+        }
+
         public override Dictionary<string, object> GetParameters(ulong guildId)
         {
             var parentParameters = base.GetParameters(guildId);
             (parentParameters["Parameters"] as Dictionary<string, object>)["MainNotification"] = "New main tweet!";
             (parentParameters["Parameters"] as Dictionary<string, object>)["NonMainNotification"] = "New reply or retweet!";
-            (parentParameters["Parameters"] as Dictionary<string, object>)["TrackMainTweets"] = new bool[]{true, false};
-            (parentParameters["Parameters"] as Dictionary<string, object>)["TrackNonMainTweets"] = new bool[]{true, false};
+            (parentParameters["Parameters"] as Dictionary<string, object>)["TrackMainTweets"] = new bool[] { true, false };
+            (parentParameters["Parameters"] as Dictionary<string, object>)["TrackNonMainTweets"] = new bool[] { true, false };
             (parentParameters["Parameters"] as Dictionary<string, object>).Remove("Notification");
             return parentParameters;
         }

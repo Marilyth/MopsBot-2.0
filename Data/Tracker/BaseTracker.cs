@@ -22,7 +22,7 @@ namespace MopsBot.Data.Tracker
     {
         //Avoid ratelimit by placing a gap between all trackers.
         public static int ExistingTrackers = 0;
-        public enum TrackerType { Twitch, TwitchClip, Twitter, TwitterRealtime, Osu, Overwatch, /*Tibia,*/ Youtube, YoutubeLive, Reddit, JSON, OSRS, HTML, RSS };
+        public enum TrackerType { Twitch, TwitchClip, Twitter, Osu, Overwatch, /*Tibia,*/ Youtube, YoutubeLive, Reddit, JSON, OSRS, HTML, RSS };
         private bool disposed = false;
         private SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
         protected System.Threading.Timer checkForChange;
@@ -109,13 +109,13 @@ namespace MopsBot.Data.Tracker
                 await OnMinorEventFired(channelID, this, notificationText);
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
         }
 
-        protected void Dispose(bool disposing)
+        protected virtual void Dispose(bool disposing)
         {
             if (disposed)
                 return;

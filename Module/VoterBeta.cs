@@ -81,7 +81,7 @@ namespace MopsBot.Module
             }
         }
 
-        [Group("TwitterRealtime")]
+        /*[Group("TwitterRealtime")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public class Twitter : ModuleBase
         {
@@ -213,6 +213,6 @@ namespace MopsBot.Module
                         await ReplyAsync($"```Pruned {totalCount} trackers```");
                 }
             }
-        }
+        }*/
     }
 }
