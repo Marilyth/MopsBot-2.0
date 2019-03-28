@@ -78,6 +78,7 @@ namespace MopsBot.Data.Tracker
 
         public override void PostInitialisation()
         {
+            if(UserId == 0) UserId = Tweetinvi.User.GetUserFromScreenName(Name).Id;
             STREAM.AddFollow(UserId, x => TweetReceived(x));
             if (STREAM.FollowingUserIds.Keys.Count >= DBCOUNT && STREAM.StreamState == StreamState.Stop)
             {
