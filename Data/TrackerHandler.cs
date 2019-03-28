@@ -88,7 +88,7 @@ namespace MopsBot.Data
                     try{
                         var cur = trackers[trackers.Keys.ElementAt(i)];
                         cur.SetTimer(600000, gap * (i + 1));
-                        cur.PostInitialisation();
+                        cur.PostInitialisation(trackers.Count - i);
                         cur.OnMinorEventFired += OnMinorEvent;
                         cur.OnMajorEventFired += OnMajorEvent;
                     } catch(Exception e){

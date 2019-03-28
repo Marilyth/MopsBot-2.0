@@ -76,15 +76,17 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public override void PostInitialisation()
+        public override void PostInitialisation(object info = null)
         {
             if(UserId == 0){
                 UserId = Tweetinvi.User.GetUserFromScreenName(Name).Id;
                 StaticBase.Trackers[TrackerType.Twitter].UpdateDBAsync(this);
             }
+            
+            if(STREAM.ContainsFollow(UserId)) STREAM.FollowingUserIds[UserId] += x => TweetReceived(x);
+            else STREAM.AddFollow(UserId, x => TweetReceived(x));
 
-            STREAM.AddFollow(UserId, x => TweetReceived(x));
-            if (STREAM.FollowingUserIds.Keys.Count >= DBCOUNT && STREAM.StreamState == StreamState.Stop)
+            if ((int)info >= DBCOUNT && STREAM.StreamState == StreamState.Stop)
             {
                 STREAM.StreamStopped += (sender, args) => Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"TwitterSTREAM stopped. {args.DisconnectMessage?.Reason ?? ""}", args.Exception));
                 STREAM.StreamStarted += (sender, args) => Program.MopsLog(new LogMessage(LogSeverity.Info, "", "TwitterSTREAM started."));

@@ -74,7 +74,7 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public async override void PostInitialisation()
+        public async override void PostInitialisation(object info = null)
         {
             if(IsOnline) SetTimer(60000, StaticBase.ran.Next(5000, 60000));
 

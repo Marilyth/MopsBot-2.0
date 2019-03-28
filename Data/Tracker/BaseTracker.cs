@@ -43,7 +43,7 @@ namespace MopsBot.Data.Tracker
             checkForChange = new System.Threading.Timer(CheckForChange_Elapsed);
         }
 
-        public virtual void PostInitialisation()
+        public virtual void PostInitialisation(object info = null)
         {
         }
 

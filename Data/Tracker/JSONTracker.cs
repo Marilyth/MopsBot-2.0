@@ -93,7 +93,7 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public async override void PostInitialisation()
+        public async override void PostInitialisation(object info = null)
         {
             if (DataGraph != null)
                 DataGraph.InitPlot("Date", "Value", format: "dd-MMM", relative: false);

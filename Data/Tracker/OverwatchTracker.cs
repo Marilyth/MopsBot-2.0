@@ -78,7 +78,7 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public async override void PostInitialisation()
+        public async override void PostInitialisation(object info = null)
         {
             if (StatGraph != null)
                 StatGraph.InitPlot("Date", "Level", format: "dd-MMM", relative: false);
