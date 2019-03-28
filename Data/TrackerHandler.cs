@@ -85,11 +85,15 @@ namespace MopsBot.Data
 
                 for (int i = trackers.Count - 1; i >= 0; i--)
                 {
-                    var cur = trackers[trackers.Keys.ElementAt(i)];
-                    cur.SetTimer(600000, gap * (i + 1));
-                    cur.PostInitialisation();
-                    cur.OnMinorEventFired += OnMinorEvent;
-                    cur.OnMajorEventFired += OnMajorEvent;
+                    try{
+                        var cur = trackers[trackers.Keys.ElementAt(i)];
+                        cur.SetTimer(600000, gap * (i + 1));
+                        cur.PostInitialisation();
+                        cur.OnMinorEventFired += OnMinorEvent;
+                        cur.OnMajorEventFired += OnMajorEvent;
+                    } catch(Exception e){
+                        Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"Error on PostInitialisation", e));
+                    }
                 }
             }
             // foreach(KeyValuePair<string, T> cur in trackers){
