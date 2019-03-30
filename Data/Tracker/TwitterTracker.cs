@@ -88,7 +88,7 @@ namespace MopsBot.Data.Tracker
 
             if ((int)info >= DBCOUNT && STREAM.StreamState == StreamState.Stop)
             {
-                STREAM.StreamStopped += (sender, args) => Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"TwitterSTREAM stopped. {args.DisconnectMessage?.Reason ?? ""}", args.Exception));
+                STREAM.StreamStopped += (sender, args) => {Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"TwitterSTREAM stopped. {args.DisconnectMessage?.Reason ?? ""}", args.Exception)); RestartStream();};
                 STREAM.StreamStarted += (sender, args) => Program.MopsLog(new LogMessage(LogSeverity.Info, "", "TwitterSTREAM started."));
                 STREAM.StartStreamMatchingAllConditionsAsync();
             }
@@ -245,6 +245,13 @@ namespace MopsBot.Data.Tracker
             e.Description = tweet.FullText;
 
             return e.Build();
+        }
+
+        public static async Task RestartStream(){
+            await Task.Delay(6000);
+            if(STREAM.StreamState == StreamState.Stop){
+                STREAM.StartStreamMatchingAnyConditionAsync();
+            }
         }
 
         public static void QueryBeforeExecute(object sender, Tweetinvi.Events.QueryBeforeExecuteEventArgs args)
