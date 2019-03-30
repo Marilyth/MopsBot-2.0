@@ -248,7 +248,7 @@ namespace MopsBot.Data.Tracker
         }
 
         public static async Task RestartStream(){
-            await Task.Delay(6000);
+            await Task.Delay(30000);
             if(STREAM.StreamState == StreamState.Stop){
                 STREAM.StartStreamMatchingAnyConditionAsync();
             }
