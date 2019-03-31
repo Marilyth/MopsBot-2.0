@@ -148,7 +148,7 @@ namespace MopsBot.Data.Tracker
                         ViewerGraph = new DatePlot(Name, "Time since start", "Viewers");
                         IsOnline = true;
                         CurGame = StreamerStatus.stream.game;
-                        ViewerGraph.AddValue(CurGame, 0, DateTime.Parse(StreamerStatus.stream.created_at).AddHours(-1));
+                        ViewerGraph.AddValue(CurGame, 0, DateTime.Parse(StreamerStatus.stream.created_at).AddHours(-2));
 
                         foreach (ulong channel in ChannelMessages.Keys.ToList())
                             await OnMinorChangeTracked(channel, ChannelMessages[channel]);
