@@ -43,6 +43,8 @@ namespace MopsBot
         //public static Crosswords Crosswords;
         public static Dictionary<BaseTracker.TrackerType, TrackerWrapper> Trackers;
         public static NewsApiClient NewsClient;
+        public static Dictionary<ulong, MopsBot.Data.Entities.TwitchUser> TwitchUsers;
+        public static Dictionary<ulong, MopsBot.Data.Entities.TwitchGuild> TwitchGuilds;
 
         public static bool init = false;
 
@@ -66,6 +68,8 @@ namespace MopsBot
                     ReactGiveaways = new ReactionGiveaway();
                     ReactRoleJoin = new ReactionRoleJoin();
                     Poll = new ReactionPoll();
+                    TwitchUsers = Database.GetCollection<Data.Entities.TwitchUser>("TwitchUsers").FindSync(x => true).ToEnumerable().ToDictionary(x => x.DiscordId);
+                    TwitchGuilds = Database.GetCollection<Data.Entities.TwitchGuild>("TwitchGuilds").FindSync(x => true).ToEnumerable().ToDictionary(x => x.DiscordId);
                 });
 
                 Auth.SetUserCredentials(Program.Config["TwitterKey"], Program.Config["TwitterSecret"],

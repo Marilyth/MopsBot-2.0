@@ -137,13 +137,14 @@ namespace MopsBot.Module
                     {
                         totalCount++;
                         pruneCount[tracker.Key] = (tracker.Value as TwitterTracker).FailCount;
-                        if(!testing){
-                            foreach(var channel in tracker.Value.ChannelMessages.Keys.ToList())
+                        if (!testing)
+                        {
+                            foreach (var channel in tracker.Value.ChannelMessages.Keys.ToList())
                                 await StaticBase.Trackers[BaseTracker.TrackerType.Twitter].TryRemoveTrackerAsync(tracker.Key, channel);
                         }
                     }
                     var result = $"{"Twitter User",-20}{"Fail count"}\n{string.Join("\n", pruneCount.Select(x => $"{x.Key,-20}{x.Value,-3}"))}";
-                    if(result.Length < 2040)
+                    if (result.Length < 2040)
                         await ReplyAsync($"```{result}```");
                     else
                         await ReplyAsync($"```Pruned {totalCount} trackers```");
@@ -353,6 +354,81 @@ namespace MopsBot.Module
                     await ReplyAsync($"Could not find tracker for `{streamer}`\n" +
                                      $"Currently tracked streamers are:", embed: StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTrackersEmbed(Context.Channel.Id));
             }
+
+            [Command("RegisterHost")]
+            [Summary("Sets you or the `owner` as the owner of the Twitch Channel.\nIf hosting, Mops will notify the host in the `notifyChannel`.")]
+            [Hide]
+            public async Task RegisterHost(string streamer, IUser owner = null)
+            {
+                if(owner == null) owner = Context.User;
+                var tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTrackers().FirstOrDefault(x => x.Key.ToLower().Equals(streamer.ToLower())).Value as TwitchTracker;
+                //if (notifyChannel == null) notifyChannel = Context.Channel as SocketTextChannel;
+
+                if (tracker == null)
+                {
+                    await ReplyAsync($"**Error:** {streamer} is not tracked by Mops.\nTo register, you must first use the `Twitch Track` subcommand on your channel!");
+                }
+                else if (tracker.DiscordId != 0 && tracker.DiscordId != owner.Id)
+                {
+                    await ReplyAsync($"**Error:** {streamer} is already registered to {tracker.DiscordId}.");
+                }
+                else
+                {
+                    tracker.DiscordId = owner.Id;
+                    await StaticBase.Trackers[BaseTracker.TrackerType.Twitch].UpdateDBAsync(tracker);
+
+                    bool exists = StaticBase.TwitchUsers.ContainsKey(owner.Id);
+                    var tUser = exists ? StaticBase.TwitchUsers[owner.Id] : new MopsBot.Data.Entities.TwitchUser(owner.Id, streamer);
+
+                    if(!tUser.TwitchName.Equals(streamer)){
+                        await ReplyAsync("**Error:** You are already registered as " + tUser.TwitchName);
+                        return;
+                    }
+
+                    tUser.Guilds.Add(Context.Guild.Id);
+                    await tUser.UpdateUserAsync();
+
+                    if (!exists)
+                        StaticBase.TwitchUsers.Add(owner.Id, new MopsBot.Data.Entities.TwitchUser(owner.Id, streamer));
+
+                    await ReplyAsync($"Successfully linked {owner.Mention} to {streamer}.\nHost notifications will be sent to <#{StaticBase.TwitchGuilds[Context.Guild.Id].notifyChannel}>");
+                }
+            }
+
+            [Command("UnregisterHost")]
+            [Summary("Removes you or `owner` as the owner of the channel and disables host notifications.")]
+            [Hide]
+            public async Task UnregisterHost(string streamer, IUser owner = null)
+            {
+                if(owner == null) owner = Context.User;
+                var tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTrackers().FirstOrDefault(x => x.Key.ToLower().Equals(streamer.ToLower())).Value as TwitchTracker;
+
+                if (tracker == null)
+                {
+                    await ReplyAsync($"**Error:** {streamer} is not tracked by Mops.\nTo register, you must first use the `Twitch Track` subcommand on your channel!");
+                }
+                else if (tracker.DiscordId != 0 && tracker.DiscordId != owner.Id)
+                {
+                    await ReplyAsync($"**Error:** {streamer} is registered to {tracker.DiscordId}.");
+                }
+                else if (StaticBase.TwitchUsers.ContainsKey(owner.Id))
+                {
+                    tracker.DiscordId = 0;
+                    await StaticBase.Trackers[BaseTracker.TrackerType.Twitch].UpdateDBAsync(tracker);
+                    var tUser = StaticBase.TwitchUsers[owner.Id];
+                    await tUser.DeleteAsync();
+                    StaticBase.TwitchUsers.Remove(owner.Id);
+
+                    await ReplyAsync($"Successfully unlinked {owner.Mention} and {streamer}.\nHost notifications will no longer be sent.");
+                }
+            }
+
+            [Command("GetStats")]
+            [Summary("Shows your current Twitch stats.")]
+            [Hide]
+            public async Task GetStats(){
+                await ReplyAsync(embed:StaticBase.TwitchUsers[Context.User.Id].StatEmbed());
+            }
         }
 
         [Group("TwitchClips")]
@@ -431,6 +507,7 @@ namespace MopsBot.Module
                                      $"Currently tracked streamers are:", embed: StaticBase.Trackers[BaseTracker.TrackerType.TwitchClip].GetTrackersEmbed(Context.Channel.Id));
             }
         }
+
 
         [Group("Reddit")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
@@ -568,8 +645,8 @@ namespace MopsBot.Module
         public class News : ModuleBase
         {
             [Command("Track", RunMode = RunMode.Async)]
-            [Summary("Keeps track of the Json, using the specified locations.\n"+
-                     "graph:<location> adds the numeric value to a time/value graph\n"+
+            [Summary("Keeps track of the Json, using the specified locations.\n" +
+                     "graph:<location> adds the numeric value to a time/value graph\n" +
                      "always:<location> adds the value to the embed, regardless of whether it changed or not.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]

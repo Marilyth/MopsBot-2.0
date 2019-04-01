@@ -23,9 +23,9 @@ namespace MopsBot.Data.Tracker
         private TwitchResult StreamerStatus;
         public Boolean IsOnline;
         public string CurGame, VodUrl;
-        public bool isThumbnailLarge;
+        public bool isThumbnailLarge, IsHosting;
         public int TimeoutCount;
-        public ulong TwitchId;
+        public ulong TwitchId, DiscordId;
 
         public TwitchTracker() : base()
         {
@@ -141,12 +141,20 @@ namespace MopsBot.Data.Tracker
                                 await OnMinorChangeTracked(channel, $"{Name} went Offline!");
 
                             SetTimer(600000, 600000);
+
+                        } else if(DiscordId != 0 && !IsHosting) {
+                            var host = (await hostInformation()).hosts.First();
+                            if(host.IsHosting()){
+                                await StaticBase.TwitchUsers[DiscordId].Hosting(host.host_display_name, host.target_display_name, /*(int)ViewerGraph.PlotDataPoints.Last().Value.Value*/123);
+                                IsHosting = true;
+                            }
                         }
                     }
                     else
                     {
                         ViewerGraph = new DatePlot(Name, "Time since start", "Viewers");
                         IsOnline = true;
+                        IsHosting = false;
                         CurGame = StreamerStatus.stream.game;
                         ViewerGraph.AddValue(CurGame, 0, DateTime.Parse(StreamerStatus.stream.created_at).AddHours(-2));
 
@@ -154,6 +162,8 @@ namespace MopsBot.Data.Tracker
                             await OnMinorChangeTracked(channel, ChannelMessages[channel]);
 
                         SetTimer(60000, 60000);
+
+                        if(DiscordId != 0) await StaticBase.TwitchUsers[DiscordId].WentLive();
                     }
                     await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
                 }
@@ -196,6 +206,10 @@ namespace MopsBot.Data.Tracker
             if (tmpResult.stream.game == "" || tmpResult.stream.game == null) tmpResult.stream.game = "Nothing";
 
             return tmpResult;
+        }
+
+        private async Task<HostObject> hostInformation(){
+            return await FetchJSONDataAsync<HostObject>($"https://tmi.twitch.tv/hosts?include_logins=1&host={TwitchId}");
         }
 
         public static async Task<ulong> GetIdFromUsername(string name)
@@ -305,6 +319,10 @@ namespace MopsBot.Data.Tracker
             GC.SuppressFinalize(this);
             ViewerGraph?.Dispose();
             ViewerGraph = null;
+            if(DiscordId != 0){
+                StaticBase.TwitchUsers[DiscordId].DeleteAsync();
+                StaticBase.TwitchUsers.Remove(DiscordId);
+            }
         }
 
         public override string TrackerUrl()
