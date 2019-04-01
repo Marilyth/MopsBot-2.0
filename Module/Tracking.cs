@@ -355,11 +355,75 @@ namespace MopsBot.Module
                                      $"Currently tracked streamers are:", embed: StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTrackersEmbed(Context.Channel.Id));
             }
 
-            [Command("RegisterHost")]
+            [Command("SetHostNotification")]
+            [Summary("Sets your channel up for the host system.")]
+            [RequireUserPermission(GuildPermission.ManageRoles)]
+            [Hide]
+            public async Task Setup(SocketTextChannel notifyChannel = null, [Remainder]string notification = ""){
+                if(notifyChannel == null) notifyChannel = Context.Channel as SocketTextChannel;
+                if(StaticBase.TwitchGuilds.ContainsKey(Context.Guild.Id)){
+                    StaticBase.TwitchGuilds[Context.Guild.Id].notifyChannel = notifyChannel.Id;
+                    await ReplyAsync($"Set the notification channel to {notifyChannel.Mention}");
+                } else {
+                    var tGuild = new MopsBot.Data.Entities.TwitchGuild(Context.Guild.Id);
+                    tGuild.notifyChannel = notifyChannel.Id;
+                    StaticBase.TwitchGuilds[Context.Guild.Id] = tGuild;
+                    await ReplyAsync($"Set up this server for host tracking.\nHosts will be notified in {notifyChannel.Mention}");
+                }
+            }
+
+            [Command("AddRankRole")]
+            [Summary("Adds a role to your rank system.")]
+            [RequireUserPermission(GuildPermission.ManageRoles)]
+            [Hide]
+            public async Task AddRank(SocketRole role, int pointsNeeded){
+                var rankRoles = StaticBase.TwitchGuilds[Context.Guild.Id].RankRoles;
+                
+                if(rankRoles.Exists(x => x.Item2 == role.Id))
+                    rankRoles.RemoveAll(x => x.Item2 == role.Id);
+                
+                StaticBase.TwitchGuilds[Context.Guild.Id].RankRoles.Add(Tuple.Create(pointsNeeded, role.Id));
+                await StaticBase.TwitchGuilds[Context.Guild.Id].UpdateGuildAsync();
+
+                await ReplyAsync($"Added {role.Name} as rank role for people above {pointsNeeded} points.");
+            }
+
+            [Command("RemoveRankRole")]
+            [Summary("Removes a role of your rank system.")]
+            [RequireUserPermission(GuildPermission.ManageRoles)]
+            [Hide]
+            public async Task RemoveRank(SocketRole role){
+                var rankRoles = StaticBase.TwitchGuilds[Context.Guild.Id].RankRoles;
+                
+                if(rankRoles.Exists(x => x.Item2 == role.Id))
+                    rankRoles.RemoveAll(x => x.Item2 == role.Id);
+                
+                await StaticBase.TwitchGuilds[Context.Guild.Id].UpdateGuildAsync();
+
+                await ReplyAsync($"Removed {role.Name} as rank role.");
+            }
+
+            [Command("AddLiveRole")]
+            [Summary("Assigns a role assigned when somebody goes live.")]
+            [RequireUserPermission(GuildPermission.ManageRoles)]
+            [Hide]
+            public async Task AddLiveRole(SocketRole role){
+                StaticBase.TwitchGuilds[Context.Guild.Id].LiveRole = role.Id;
+                await StaticBase.TwitchGuilds[Context.Guild.Id].UpdateGuildAsync();
+
+                await ReplyAsync($"Added {role.Name} as live role.");
+            }
+
+            [Command("Register")]
             [Summary("Sets you or the `owner` as the owner of the Twitch Channel.\nIf hosting, Mops will notify the host in the `notifyChannel`.")]
             [Hide]
             public async Task RegisterHost(string streamer, IUser owner = null)
             {
+                if(!StaticBase.TwitchGuilds.ContainsKey(Context.Guild.Id)){
+                    await ReplyAsync("A person of authority must first use the `Twitch SetHostNotification` command.");
+                    return;
+                }
+
                 if(owner == null) owner = Context.User;
                 var tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTrackers().FirstOrDefault(x => x.Key.ToLower().Equals(streamer.ToLower())).Value as TwitchTracker;
                 //if (notifyChannel == null) notifyChannel = Context.Channel as SocketTextChannel;
@@ -395,11 +459,16 @@ namespace MopsBot.Module
                 }
             }
 
-            [Command("UnregisterHost")]
+            [Command("Unregister")]
             [Summary("Removes you or `owner` as the owner of the channel and disables host notifications.")]
             [Hide]
             public async Task UnregisterHost(string streamer, IUser owner = null)
             {
+                if(!StaticBase.TwitchGuilds.ContainsKey(Context.Guild.Id)){
+                    await ReplyAsync("A person of authority must first use the `Twitch SetHostNotification` command.");
+                    return;
+                }
+
                 if(owner == null) owner = Context.User;
                 var tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTrackers().FirstOrDefault(x => x.Key.ToLower().Equals(streamer.ToLower())).Value as TwitchTracker;
 
@@ -427,7 +496,12 @@ namespace MopsBot.Module
             [Summary("Shows your current Twitch stats.")]
             [Hide]
             public async Task GetStats(){
-                await ReplyAsync(embed:StaticBase.TwitchUsers[Context.User.Id].StatEmbed());
+                if(!StaticBase.TwitchGuilds.ContainsKey(Context.Guild.Id)){
+                    await ReplyAsync("A person of authority must first use the `Twitch SetHostNotification` command.");
+                    return;
+                }
+
+                await ReplyAsync(embed:StaticBase.TwitchUsers[Context.User.Id].StatEmbed(Context.Guild.Id));
             }
         }
 

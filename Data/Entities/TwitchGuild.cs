@@ -29,5 +29,17 @@ namespace MopsBot.Data.Entities
             //TwitchUsers = new List<TwitchUser>();
             RankRoles = new List<Tuple<int, ulong>>();
         }
+
+        public async Task UpdateGuildAsync()
+        {
+            TwitchGuild user = (await StaticBase.Database.GetCollection<TwitchGuild>("TwitchGuilds").FindAsync(x => x.DiscordId == DiscordId)).FirstOrDefault();
+
+            if (user == null)
+            {
+                await StaticBase.Database.GetCollection<TwitchGuild>("TwitchGuilds").InsertOneAsync(this);
+            } else {
+                await StaticBase.Database.GetCollection<TwitchGuild>("TwitchGuilds").ReplaceOneAsync(x => x.DiscordId == DiscordId, this);
+            }
+        }
     }
 }

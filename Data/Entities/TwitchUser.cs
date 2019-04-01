@@ -50,6 +50,17 @@ namespace MopsBot.Data.Entities
             return viewers/(other.CalcCurRank() + 1);
         }
 
+        private async Task SetRole(){
+            foreach(var guild in Guilds){
+                var curGuild = Program.Client.GetGuild(guild);
+                var rankRoleId = StaticBase.TwitchGuilds[guild].RankRoles.LastOrDefault(x => x.Item1 <= Points)?.Item2 ?? 0;
+                if(rankRoleId == 0) return;
+
+                var curRole = curGuild.GetRole(rankRoleId);
+                await curGuild.GetUser(DiscordId).AddRoleAsync(curRole);
+            }
+        }
+
         public async Task UpdateUserAsync()
         {
             TwitchUser user = (await StaticBase.Database.GetCollection<TwitchUser>("TwitchUsers").FindAsync(x => x.DiscordId == DiscordId)).FirstOrDefault();
@@ -87,6 +98,7 @@ namespace MopsBot.Data.Entities
 
         public async Task WentLive(){
             LiveCount++;
+            Points += 20;
             await UpdateUserAsync();
 
             //Set live role on each server
@@ -110,6 +122,7 @@ namespace MopsBot.Data.Entities
         {
             modification(this);
             await StaticBase.Database.GetCollection<TwitchUser>("TwitchUsers").ReplaceOneAsync(x => x.DiscordId == DiscordId, this);
+            await SetRole();
         }
 
         public async Task DeleteAsync(){
@@ -127,12 +140,12 @@ namespace MopsBot.Data.Entities
                                                                                                            x.Text = "Twitch Hosting";});
             var hosterDiscordName = Program.Client.GetUser(DiscordId).Username;
             string targetDiscordName = null;
-            var reward = 0;
+            var reward = 20;
             var targetTracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTrackers().FirstOrDefault(x => x.Key.ToLower().Equals(targetName.ToLower())).Value as TwitchTracker;
 
             if(targetTracker != null && targetTracker.DiscordId != 0){
                 targetDiscordName = Program.Client.GetUser(targetTracker.DiscordId).Username;
-                reward = calculatePoints(StaticBase.TwitchUsers[targetTracker.DiscordId], viewers);
+                //reward = calculatePoints(StaticBase.TwitchUsers[targetTracker.DiscordId], viewers);
             }
 
             embed.WithDescription($"[{hosterDiscordName}](https://www.twitch.tv/{hosterName}) is now hosting [{targetDiscordName ?? targetName}](https://www.twitch.tv/{targetName})");
@@ -146,16 +159,20 @@ namespace MopsBot.Data.Entities
             }
         }
 
-        public Embed StatEmbed()
+        public Embed StatEmbed(ulong guildId)
         {
             EmbedBuilder e = new EmbedBuilder();
             e.WithAuthor(Program.Client.GetUser(DiscordId).Username, Program.Client.GetUser(DiscordId).GetAvatarUrl());
             e.WithCurrentTimestamp().WithColor(Discord.Color.Blue);
 
-            e.AddField("Rank", $"{CalcCurRank()}", false);
+            var rankRoleId = StaticBase.TwitchGuilds[guildId].RankRoles.LastOrDefault(x => x.Item1 <= Points)?.Item2 ?? 0;
+
+            e.AddField("Rank", $"{(rankRoleId != 0 ? Program.Client.GetGuild(guildId).GetRole(rankRoleId).Name : "Nothing")}", false);
             e.AddField("Information", $"Hosted {Hosts.Count} times\nStreamed {LiveCount} times", true);
-            e.AddField("Host-Points", Points, true);
-            e.AddField("Recent hosts", string.Join("\n", Hosts.TakeLast(Math.Min(Hosts.Count, 10)).Select(x => $"`{x.Item1}`: hosted [{x.Item2}](https://www.twitch.tv/{x.Item2}) for {x.Item3} viewers.")));
+            e.AddField("Points", Points, true);
+
+            var hosts = string.Join("\n", Hosts.TakeLast(Math.Min(Hosts.Count, 10)).Select(x => $"`{x.Item1}`: hosted [{x.Item2}](https://www.twitch.tv/{x.Item2}) for {x.Item3} viewers."));
+            e.AddField("Recent hosts", string.IsNullOrEmpty(hosts) ? "None" : hosts);
 
             return e.Build();
         }

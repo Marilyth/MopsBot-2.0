@@ -142,10 +142,10 @@ namespace MopsBot.Data.Tracker
 
                             SetTimer(600000, 600000);
 
-                        } else if(DiscordId != 0 && !IsHosting) {
+                        } else if(DiscordId != 0 && !IsHosting && StaticBase.TwitchUsers.ContainsKey(DiscordId)) {
                             var host = (await hostInformation()).hosts.First();
                             if(host.IsHosting()){
-                                await StaticBase.TwitchUsers[DiscordId].Hosting(host.host_display_name, host.target_display_name, /*(int)ViewerGraph.PlotDataPoints.Last().Value.Value*/123);
+                                await StaticBase.TwitchUsers[DiscordId].Hosting(host.host_display_name, host.target_display_name, (int)ViewerGraph.PlotDataPoints.Last().Value.Value);
                                 IsHosting = true;
                             }
                         }
@@ -163,7 +163,7 @@ namespace MopsBot.Data.Tracker
 
                         SetTimer(60000, 60000);
 
-                        if(DiscordId != 0) await StaticBase.TwitchUsers[DiscordId].WentLive();
+                        if(DiscordId != 0 && StaticBase.TwitchUsers.ContainsKey(DiscordId)) await StaticBase.TwitchUsers[DiscordId].WentLive();
                     }
                     await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
                 }
