@@ -123,7 +123,7 @@ namespace MopsBot.Data.Tracker
                 if (!hasChecked && lastMessage != 0)
                 {
                     hasChecked = true;
-                    await checkMissedTweets();
+                    await checkMissedTweets(tweet.Id - 1);
                 }
 
                 if(updateDB) lastMessage = tweet.Id;
@@ -197,14 +197,14 @@ namespace MopsBot.Data.Tracker
             if (STREAM.ContainsFollow(UserId)) STREAM.FollowingUserIds[UserId] += x => TweetReceived(x);
             else STREAM.AddFollow(UserId, x => TweetReceived(x));
 
-            if(restart) STREAM.StartStreamMatchingAllConditionsAsync();
+            if(restart && STREAM.FollowingUserIds.Count == 1) STREAM.StartStreamMatchingAllConditionsAsync();
         }
 
-        private async Task checkMissedTweets()
+        private async Task checkMissedTweets(long beforeId = 0)
         {
             //if (!hasChecked)
             //{
-                var missedTweets = getNewTweets(lastMessage);
+                var missedTweets = getNewTweets(lastMessage, beforeId);
                 hasChecked = true;
                 int i = 0;
                 foreach (var curTweet in missedTweets)
@@ -250,7 +250,7 @@ namespace MopsBot.Data.Tracker
         public static async Task RestartStream(){
             await Task.Delay(5000);
             if(STREAM.StreamState == StreamState.Stop){
-                STREAM.StartStreamMatchingAnyConditionAsync();
+                STREAM.StartStreamMatchingAllConditionsAsync();
             }
         }
 
