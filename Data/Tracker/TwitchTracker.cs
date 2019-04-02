@@ -152,7 +152,7 @@ namespace MopsBot.Data.Tracker
                         } else if(!IsHosting && StaticBase.TwitchUsers.ContainsKey(DiscordId)) {
                             var host = (await hostInformation()).hosts.First();
                             if(host.IsHosting()){
-                                await StaticBase.TwitchUsers[DiscordId].Hosting(host.host_display_name, host.target_display_name, /*(int)ViewerGraph.PlotDataPoints.LastOrDefault().Value.Value*/ 180);
+                                await StaticBase.TwitchUsers[DiscordId].Hosting(host.host_display_name, host.target_display_name, (int)ViewerGraph.PlotDataPoints.LastOrDefault().Value.Value);
                                 IsHosting = true;
                             }
                         }
