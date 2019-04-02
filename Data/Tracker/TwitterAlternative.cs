@@ -1,4 +1,5 @@
-/*using System;
+/*
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Discord;
@@ -16,19 +17,19 @@ using MongoDB.Driver;
 namespace MopsBot.Data.Tracker
 {
     [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
-    public class TwitterRealtimeTracker : BaseTracker
+    public class TwitterTracker : BaseTracker
     {
         public static Tweetinvi.Streaming.IFilteredStream STREAM = Tweetinvi.Stream.CreateFilteredStream();
-        private static long DBCOUNT = StaticBase.Database.GetCollection<TwitterRealtimeTracker>("TwitterRealtimeTracker").CountDocuments(x => true);
+        private static long DBCOUNT = StaticBase.Database.GetCollection<TwitterTracker>("TwitterTracker").CountDocuments(x => true);
         public long UserId, lastMessage;
         public int FailCount = 0;
         private bool hasChecked = false;
 
-        public TwitterRealtimeTracker() : base()
+        public TwitterTracker() : base()
         {
         }
 
-        /*public TwitterRealtimeTracker(Dictionary<string, string> args) : base(){
+        public TwitterRealtimeTracker(Dictionary<string, string> args) : base(){
             Update(new Dictionary<string, Dictionary<string, string>>(){{"NewValue", args}, {"OldValue", args}});
             base.SetBaseValues(args, true);
 
@@ -55,7 +56,7 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public TwitterRealtimeTracker(string twitterName) : base()
+        public TwitterTracker(string twitterName) : base()
         {
             Name = twitterName;
 
@@ -64,10 +65,10 @@ namespace MopsBot.Data.Tracker
             {
                 var user = Tweetinvi.User.GetUserFromScreenName(Name);
                 UserId = user.UserIdentifier.Id;
+                var tweets = getNewTweets();
+                lastMessage = tweets.LastOrDefault()?.Id ?? 0;
 
-                if (STREAM.FollowingUserIds.Keys.Count > 0) STREAM.StopStream();
-                STREAM.AddFollow(UserId, x => TweetReceived(x));
-                STREAM.StartStreamMatchingAllConditionsAsync();
+                addUser();
             }
             catch (Exception)
             {
@@ -76,13 +77,22 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public override void PostInitialisation()
+        public override void PostInitialisation(object info = null)
         {
-            STREAM.AddFollow(UserId, x => TweetReceived(x));
-            if (STREAM.FollowingUserIds.Keys.Count >= DBCOUNT && STREAM.StreamState == StreamState.Stop)
+            if (UserId == 0)
             {
-                STREAM.StreamStopped += (sender, args) => Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"TwitterSTREAM stopped. {args.DisconnectMessage?.Reason ?? ""}", args.Exception));
+                UserId = Tweetinvi.User.GetUserFromScreenName(Name).Id;
+                StaticBase.Trackers[TrackerType.Twitter].UpdateDBAsync(this);
+            }
+
+            addUser();
+
+            if ((int)info >= DBCOUNT && STREAM.StreamState == StreamState.Stop)
+            {
+                STREAM.StreamStopped += (sender, args) => {Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"TwitterSTREAM stopped. {args.DisconnectMessage?.Reason ?? ""}", args.Exception)); RestartStream();};
                 STREAM.StreamStarted += (sender, args) => Program.MopsLog(new LogMessage(LogSeverity.Info, "", "TwitterSTREAM started."));
+                STREAM.WarningFallingBehindDetected += (sender, args) => Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"TwitterSTREAM falling behind, {args.WarningMessage.Message} ({args.WarningMessage.PercentFull}%)"));
+                STREAM.FilterLevel = Tweetinvi.Streaming.Parameters.StreamFilterLevel.Low;
                 STREAM.StartStreamMatchingAllConditionsAsync();
             }
 
@@ -91,15 +101,20 @@ namespace MopsBot.Data.Tracker
 
         protected async override void CheckForChange_Elapsed(object stateinfo)
         {
-            if (!hasChecked)
+            try
             {
-                var missedTweets = getNewTweets(lastMessage);
-                hasChecked = true;
-                foreach (var curTweet in missedTweets)
-                   await TweetReceived(curTweet, false);
-            }
+                if (!hasChecked && lastMessage != 0)
+                {
+                    hasChecked = true;
+                    await checkMissedTweets();
+                }
 
-            checkForChange.Dispose();
+                checkForChange.Dispose();
+            }
+            catch (Exception e)
+            {
+                //Make Trackerhandle not crash
+            }
         }
 
         private async Task TweetReceived(ITweet tweet, bool updateDB = true)
@@ -108,17 +123,13 @@ namespace MopsBot.Data.Tracker
             {
                 var tweets = new List<ITweet>() { tweet };
 
-                if (!hasChecked)
+                if (!hasChecked && lastMessage != 0)
                 {
-                    var missedTweets = getNewTweets(lastMessage, tweet.Id - 1);
                     hasChecked = true;
-                    foreach (var curTweet in missedTweets)
-                    {
-                        await TweetReceived(curTweet);
-                    }
+                    await checkMissedTweets(tweet.Id - 1);
                 }
 
-                lastMessage = tweet.Id;
+                if(updateDB) lastMessage = tweet.Id;
 
                 if (!tweet.CreatedBy.Id.Equals(UserId)) return;
                 foreach (ulong channel in ChannelMessages.Keys.ToList())
@@ -134,7 +145,7 @@ namespace MopsBot.Data.Tracker
                     }
                 }
 
-                if(updateDB) await StaticBase.Trackers[TrackerType.TwitterRealtime].UpdateDBAsync(this);
+                if (updateDB) await StaticBase.Trackers[TrackerType.Twitter].UpdateDBAsync(this);
             }
             catch (Exception e)
             {
@@ -142,7 +153,7 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        private ITweet[] getNewTweets(long since, long before = long.MaxValue)
+        private ITweet[] getNewTweets(long since = 0, long before = 0)
         {
             try
             {
@@ -164,8 +175,8 @@ namespace MopsBot.Data.Tracker
                 Auth.SetUserCredentials(Program.Config["TwitterKey"], Program.Config["TwitterSecret"],
                                             Program.Config["TwitterToken"], Program.Config["TwitterAccessSecret"]);
                 Tweetinvi.Parameters.IUserTimelineParameters parameters = Timeline.CreateUserTimelineParameter();
-                parameters.SinceId = since;
-                if(before < long.MaxValue) parameters.MaxId = before;
+                if (since != 0) parameters.SinceId = since;
+                if (before != 0) parameters.MaxId = before;
                 parameters.MaximumNumberOfTweetsToRetrieve = 10;
 
                 var tweets = Timeline.GetUserTimeline(Name, parameters);
@@ -176,8 +187,38 @@ namespace MopsBot.Data.Tracker
             catch (Exception e)
             {
                 FailCount++;
+                StaticBase.Trackers[TrackerType.Twitter].UpdateDBAsync(this);
                 return new ITweet[0];
             }
+        }
+
+        private void addUser()
+        {
+            bool restart = STREAM.StreamState == StreamState.Running;
+            if(restart) STREAM.StopStream();
+
+            if (STREAM.ContainsFollow(UserId)) STREAM.FollowingUserIds[UserId] += x => TweetReceived(x);
+            else STREAM.AddFollow(UserId, x => TweetReceived(x));
+
+            if(restart && STREAM.FollowingUserIds.Count == 1) STREAM.StartStreamMatchingAllConditionsAsync();
+        }
+
+        private async Task checkMissedTweets(long beforeId = 0)
+        {
+            //if (!hasChecked)
+            //{
+                var missedTweets = getNewTweets(lastMessage, beforeId);
+                hasChecked = true;
+                int i = 0;
+                foreach (var curTweet in missedTweets)
+                {
+                    i++;
+                    if (i != missedTweets.Length)
+                        await TweetReceived(curTweet, false);
+                    else
+                        await TweetReceived(curTweet);
+                }
+            //}
         }
 
         private Embed createEmbed(ITweet tweet)
@@ -207,6 +248,13 @@ namespace MopsBot.Data.Tracker
             e.Description = tweet.FullText;
 
             return e.Build();
+        }
+
+        public static async Task RestartStream(){
+            await Task.Delay(5000);
+            if(STREAM.StreamState == StreamState.Stop){
+                STREAM.StartStreamMatchingAllConditionsAsync();
+            }
         }
 
         public static void QueryBeforeExecute(object sender, Tweetinvi.Events.QueryBeforeExecuteEventArgs args)
@@ -290,4 +338,6 @@ namespace MopsBot.Data.Tracker
             public bool TrackNonMainTweets;
         }
     }
-}*/
+}
+
+*/
