@@ -82,8 +82,8 @@ namespace MopsBot
         private Task onClientReady()
         {
             Task.Run(() => {
-                StaticBase.initTracking();
                 StaticBase.UpdateStatusAsync();
+                StaticBase.initTracking();
             });
             return Task.CompletedTask;
         }
