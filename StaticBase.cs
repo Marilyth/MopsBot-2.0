@@ -56,8 +56,8 @@ namespace MopsBot
             if (!init)
             {
                 HttpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)");
-                ServicePointManager.ServerCertificateValidationCallback = (object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) => {return true;};
-                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls|SecurityProtocolType.Tls11|SecurityProtocolType.Tls12;
+                ServicePointManager.ServerCertificateValidationCallback = (object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) => { return true; };
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
                 HttpClient.DefaultRequestHeaders.ConnectionClose = true;
                 MopsBot.Data.Entities.UserEvent.UserVoted += UserVoted;
                 Task.Run(() => new MopsBot.Data.Entities.UserEvent().CheckUsersVotedLoop());
@@ -138,7 +138,7 @@ namespace MopsBot
             await Program.Client.SetActivityAsync(new Game($"{Program.Client.Guilds.Count} servers", ActivityType.Watching));
             try
             {
-                if(Program.Client.CurrentUser.Id == 305398845389406209)
+                if (Program.Client.CurrentUser.Id == 305398845389406209)
                     await DiscordBotList.UpdateStats(Program.Client.Guilds.Count);
             }
             catch (Exception e)
@@ -147,13 +147,17 @@ namespace MopsBot
             }
         }
 
-        public static async Task UserVoted(IDblEntity user){
+        public static async Task UserVoted(IDblEntity user)
+        {
             await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"User {user.ToString()}({user.Id}) voted. Adding 10 VP to balance!"));
             await MopsBot.Data.Entities.User.ModifyUserAsync(user.Id, x => x.Money += 10);
-            try{
-                if(Program.Client.CurrentUser.Id == 305398845389406209)
+            try
+            {
+                if (Program.Client.CurrentUser.Id == 305398845389406209)
                     await (await Program.Client.GetUser(user.Id).GetOrCreateDMChannelAsync()).SendMessageAsync("Thanks for voting for me!\nI have added 10 Votepoints to your balance!");
-            } catch(Exception e){
+            }
+            catch (Exception e)
+            {
                 await Program.MopsLog(new LogMessage(LogSeverity.Error, "", "messaging voter failed", e));
             }
         }
@@ -164,27 +168,30 @@ namespace MopsBot
         /// <returns>A Task that sets the activity</returns>
         public static async Task UpdateStatusAsync()
         {
-            await Program.Client.SetActivityAsync(new Game("Currently Restarting!", ActivityType.Playing));
-            await Task.Delay(60000);
-
-            int status = Enum.GetNames(typeof(BaseTracker.TrackerType)).Length;
-            while (true)
+            if (!init)
             {
-                try
-                {
-                    BaseTracker.TrackerType type = (BaseTracker.TrackerType)status++;
-                    var trackerCount = Trackers[type].GetTrackers().Count;
-                    await Program.Client.SetActivityAsync(new Game($"{trackerCount} {type.ToString()} Trackers", ActivityType.Watching));
-                }
-                catch
-                {
-                    //Trackers were not initialised yet, or status exceeded trackertypes
-                    //Show servers instead
-                    status = 0;
-                    await UpdateServerCount();
-                }
+                await Program.Client.SetActivityAsync(new Game("Currently Restarting!", ActivityType.Playing));
+                await Task.Delay(60000);
 
-                await Task.Delay(30000);
+                int status = Enum.GetNames(typeof(BaseTracker.TrackerType)).Length;
+                while (true)
+                {
+                    try
+                    {
+                        BaseTracker.TrackerType type = (BaseTracker.TrackerType)status++;
+                        var trackerCount = Trackers[type].GetTrackers().Count;
+                        await Program.Client.SetActivityAsync(new Game($"{trackerCount} {type.ToString()} Trackers", ActivityType.Watching));
+                    }
+                    catch
+                    {
+                        //Trackers were not initialised yet, or status exceeded trackertypes
+                        //Show servers instead
+                        status = 0;
+                        await UpdateServerCount();
+                    }
+
+                    await Task.Delay(30000);
+                }
             }
         }
     }

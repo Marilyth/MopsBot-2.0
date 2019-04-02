@@ -12,6 +12,8 @@ using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 using MongoDB.Bson.Serialization.Options;
 using MongoDB.Bson.Serialization.Attributes;
+using TwitchLib;
+using TwitchLib.Api;
 
 namespace MopsBot.Data.Tracker
 {
@@ -126,10 +128,15 @@ namespace MopsBot.Data.Tracker
                     {
                         if (++TimeoutCount >= 10)
                         {
+                            if(!IsHosting && StaticBase.TwitchUsers.ContainsKey(DiscordId)){
+                                await StaticBase.TwitchUsers[DiscordId].ModifyAsync(x => x.Points -= 40);
+                                await StaticBase.TwitchUsers[DiscordId].WentOffline();   
+                            }
+
                             TimeoutCount = 0;
                             IsOnline = false;
                             VodUrl = null;
-                            ViewerGraph.Dispose();
+                            ViewerGraph?.Dispose();
                             ViewerGraph = null;
 
                             foreach (var channelMessage in ToUpdate)
@@ -142,10 +149,10 @@ namespace MopsBot.Data.Tracker
 
                             SetTimer(600000, 600000);
 
-                        } else if(DiscordId != 0 && !IsHosting && StaticBase.TwitchUsers.ContainsKey(DiscordId)) {
+                        } else if(!IsHosting && StaticBase.TwitchUsers.ContainsKey(DiscordId)) {
                             var host = (await hostInformation()).hosts.First();
                             if(host.IsHosting()){
-                                await StaticBase.TwitchUsers[DiscordId].Hosting(host.host_display_name, host.target_display_name, (int)ViewerGraph.PlotDataPoints.Last().Value.Value);
+                                await StaticBase.TwitchUsers[DiscordId].Hosting(host.host_display_name, host.target_display_name, /*(int)ViewerGraph.PlotDataPoints.LastOrDefault().Value.Value*/ 180);
                                 IsHosting = true;
                             }
                         }
@@ -163,7 +170,7 @@ namespace MopsBot.Data.Tracker
 
                         SetTimer(60000, 60000);
 
-                        if(DiscordId != 0 && StaticBase.TwitchUsers.ContainsKey(DiscordId)) await StaticBase.TwitchUsers[DiscordId].WentLive();
+                        if(StaticBase.TwitchUsers.ContainsKey(DiscordId)) await StaticBase.TwitchUsers[DiscordId].WentLive();
                     }
                     await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
                 }

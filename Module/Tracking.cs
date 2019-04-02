@@ -376,7 +376,7 @@ namespace MopsBot.Module
             [Summary("Adds a role to your rank system.")]
             [RequireUserPermission(GuildPermission.ManageRoles)]
             [Hide]
-            public async Task AddRank(SocketRole role, int pointsNeeded){
+            public async Task AddRank(int pointsNeeded, [Remainder]SocketRole role){
                 var rankRoles = StaticBase.TwitchGuilds[Context.Guild.Id].RankRoles;
                 
                 if(rankRoles.Exists(x => x.Item2 == role.Id))
@@ -385,14 +385,14 @@ namespace MopsBot.Module
                 StaticBase.TwitchGuilds[Context.Guild.Id].RankRoles.Add(Tuple.Create(pointsNeeded, role.Id));
                 await StaticBase.TwitchGuilds[Context.Guild.Id].UpdateGuildAsync();
 
-                await ReplyAsync($"Added {role.Name} as rank role for people above {pointsNeeded} points.");
+                await ReplyAsync($"Added {role.Name} as rank role for people above {pointsNeeded} points.", embed:StaticBase.TwitchGuilds[Context.Guild.Id].GetRankRoles());
             }
 
             [Command("RemoveRankRole")]
             [Summary("Removes a role of your rank system.")]
             [RequireUserPermission(GuildPermission.ManageRoles)]
             [Hide]
-            public async Task RemoveRank(SocketRole role){
+            public async Task RemoveRank([Remainder]SocketRole role){
                 var rankRoles = StaticBase.TwitchGuilds[Context.Guild.Id].RankRoles;
                 
                 if(rankRoles.Exists(x => x.Item2 == role.Id))
@@ -400,14 +400,14 @@ namespace MopsBot.Module
                 
                 await StaticBase.TwitchGuilds[Context.Guild.Id].UpdateGuildAsync();
 
-                await ReplyAsync($"Removed {role.Name} as rank role.");
+                await ReplyAsync($"Removed {role.Name} as rank role.", embed:StaticBase.TwitchGuilds[Context.Guild.Id].GetRankRoles());
             }
 
             [Command("AddLiveRole")]
             [Summary("Assigns a role assigned when somebody goes live.")]
             [RequireUserPermission(GuildPermission.ManageRoles)]
             [Hide]
-            public async Task AddLiveRole(SocketRole role){
+            public async Task AddLiveRole([Remainder]SocketRole role){
                 StaticBase.TwitchGuilds[Context.Guild.Id].LiveRole = role.Id;
                 await StaticBase.TwitchGuilds[Context.Guild.Id].UpdateGuildAsync();
 
@@ -449,11 +449,10 @@ namespace MopsBot.Module
                         return;
                     }
 
-                    tUser.Guilds.Add(Context.Guild.Id);
-                    await tUser.UpdateUserAsync();
+                    await tUser.ModifyAsync(x => x.Guilds.Add(Context.Guild.Id));
 
                     if (!exists)
-                        StaticBase.TwitchUsers.Add(owner.Id, new MopsBot.Data.Entities.TwitchUser(owner.Id, streamer));
+                        StaticBase.TwitchUsers.Add(owner.Id, tUser);
 
                     await ReplyAsync($"Successfully linked {owner.Mention} to {streamer}.\nHost notifications will be sent to <#{StaticBase.TwitchGuilds[Context.Guild.Id].notifyChannel}>");
                 }
@@ -503,6 +502,30 @@ namespace MopsBot.Module
 
                 await ReplyAsync(embed:StaticBase.TwitchUsers[Context.User.Id].StatEmbed(Context.Guild.Id));
             }
+
+            [Command("GetLeaderboard")]
+            [Summary("Shows current point leaderboard")]
+            [Hide]
+            public async Task GetLeaderboard(uint begin = 1, uint end = 10, bool isGlobal = false){
+            using(Context.Channel.EnterTypingState()){
+                try{
+                    if(begin >= end) throw new Exception("Begin was bigger than, or equal to end.");
+                    if(begin == 0 || end == 0) throw new Exception("Begin or end was 0.");
+                    if(end - begin >= 5000) throw new Exception("Range must be smaller than 5000! (performance)");
+
+                    long userCount = StaticBase.TwitchUsers.LongCount(x => isGlobal ? true : x.Value.Guilds.Contains(Context.Guild.Id));
+
+                    if(end > userCount) 
+                        end = (uint)userCount;
+
+                    await ReplyAsync("", embed: await MopsBot.Data.Entities.TwitchUser.GetLeaderboardAsync(isGlobal ? null : (ulong?)Context.Guild.Id, begin: (int)begin, end: (int)end));
+
+                } catch ( Exception e){
+                    await ReplyAsync("[Error]: " + e.Message);
+                }
+            }
+        }
+
         }
 
         [Group("TwitchClips")]

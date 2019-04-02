@@ -41,5 +41,16 @@ namespace MopsBot.Data.Entities
                 await StaticBase.Database.GetCollection<TwitchGuild>("TwitchGuilds").ReplaceOneAsync(x => x.DiscordId == DiscordId, this);
             }
         }
+
+        public Embed GetRankRoles(){
+            var embed = new EmbedBuilder();
+            embed.WithCurrentTimestamp().WithDescription(string.Join("\n", RankRoles.Select(x => $"{getRoleName(x.Item2)} starting at {x.Item1} points")));
+
+            return embed.Build();
+        }
+
+        private string getRoleName(ulong id){
+            return Program.Client.GetGuild(DiscordId).GetRole(id).Name;
+        }
     }
 }

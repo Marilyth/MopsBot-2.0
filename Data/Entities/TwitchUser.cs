@@ -57,7 +57,14 @@ namespace MopsBot.Data.Entities
                 if(rankRoleId == 0) return;
 
                 var curRole = curGuild.GetRole(rankRoleId);
+                if(curGuild.GetUser(DiscordId).Roles.Any(x => x.Id == curRole.Id)) return;
+
+                var rolesToRemove = curGuild.Roles.Where(x => StaticBase.TwitchGuilds[guild].RankRoles.Any(y => y.Item2 == x.Id) && x.Id != rankRoleId);
+
                 await curGuild.GetUser(DiscordId).AddRoleAsync(curRole);
+                await curGuild.GetUser(DiscordId).RemoveRolesAsync(rolesToRemove);
+
+                await curGuild.GetTextChannel(StaticBase.TwitchGuilds[guild].notifyChannel).SendMessageAsync($"{Program.Client.GetUser(DiscordId).Mention} is now rank {curRole.Name}");
             }
         }
 
@@ -74,12 +81,10 @@ namespace MopsBot.Data.Entities
         }
 
         public static async Task<Embed> GetLeaderboardAsync(ulong? guildId = null, Func<TwitchUser, double> stat = null, int begin = 1, int end = 10){
-            var usersInGuild = guildId != null ? Program.Client.GetGuild(guildId.Value).Users.Select(x => x.Id).ToHashSet() : null;
-
-            var users = StaticBase.TwitchUsers.Values.Where(x => usersInGuild?.Contains(x.DiscordId) ?? true).ToList();
+            var users = StaticBase.TwitchUsers.Values.Where(x => guildId.HasValue ? x.Guilds.Contains(guildId.Value) : true).ToList();
 
             if(stat == null)
-                stat = x => x.CalcCurRankDouble();
+                stat = x => x.Points;
 
             users = users.OrderByDescending(x => stat(x)).Skip(begin - 1).Take(end - (begin - 1)).ToList();
 
@@ -98,30 +103,34 @@ namespace MopsBot.Data.Entities
 
         public async Task WentLive(){
             LiveCount++;
-            Points += 20;
-            await UpdateUserAsync();
+            await ModifyAsync(x => x.Points += 20);
 
             //Set live role on each server
             foreach(var guild in Guilds){
-                var curGuild = Program.Client.GetGuild(guild) as IGuild;
-                var tGuild = StaticBase.TwitchGuilds[guild];
-                await (await curGuild.GetUserAsync(DiscordId)).AddRoleAsync(curGuild.GetRole(tGuild.LiveRole));
+                try{
+                    var curGuild = Program.Client.GetGuild(guild) as IGuild;
+                    var tGuild = StaticBase.TwitchGuilds[guild];
+                    await (await curGuild.GetUserAsync(DiscordId)).AddRoleAsync(curGuild.GetRole(tGuild.LiveRole));
+                } catch {}
             }
         }
 
         public async Task WentOffline(){
             //Remove live role on each server
             foreach(var guild in Guilds){
-                var curGuild = Program.Client.GetGuild(guild) as IGuild;
-                var tGuild = StaticBase.TwitchGuilds[guild];
-                await (await curGuild.GetUserAsync(DiscordId)).RemoveRoleAsync(curGuild.GetRole(tGuild.LiveRole));
+                try{
+                    var curGuild = Program.Client.GetGuild(guild) as IGuild;
+                    var tGuild = StaticBase.TwitchGuilds[guild];
+                    await (await curGuild.GetUserAsync(DiscordId)).RemoveRoleAsync(curGuild.GetRole(tGuild.LiveRole));
+                } catch {}
             }
         }
 
         public async Task ModifyAsync(Action<TwitchUser> modification)
         {
             modification(this);
-            await StaticBase.Database.GetCollection<TwitchUser>("TwitchUsers").ReplaceOneAsync(x => x.DiscordId == DiscordId, this);
+            if(Points < 0) Points = 0;
+            await UpdateUserAsync();
             await SetRole();
         }
 
@@ -140,13 +149,15 @@ namespace MopsBot.Data.Entities
                                                                                                            x.Text = "Twitch Hosting";});
             var hosterDiscordName = Program.Client.GetUser(DiscordId).Username;
             string targetDiscordName = null;
-            var reward = 20;
+            int reward = -40;
             var targetTracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTrackers().FirstOrDefault(x => x.Key.ToLower().Equals(targetName.ToLower())).Value as TwitchTracker;
 
             if(targetTracker != null && targetTracker.DiscordId != 0){
                 targetDiscordName = Program.Client.GetUser(targetTracker.DiscordId).Username;
-                //reward = calculatePoints(StaticBase.TwitchUsers[targetTracker.DiscordId], viewers);
+                reward = 20;
             }
+
+            await ModifyAsync(x => x.Points += reward);
 
             embed.WithDescription($"[{hosterDiscordName}](https://www.twitch.tv/{hosterName}) is now hosting [{targetDiscordName ?? targetName}](https://www.twitch.tv/{targetName})");
             embed.AddField("Viewers", viewers, true);
