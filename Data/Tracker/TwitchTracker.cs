@@ -21,13 +21,15 @@ namespace MopsBot.Data.Tracker
     public class TwitchTracker : BaseUpdatingTracker
     {
         private static KeyValuePair<string, string> acceptHeader = new KeyValuePair<string, string>("Accept", "application/vnd.twitchtv.v5+json");
+        public event HostingEventHandler OnHosting;
+        public delegate Task HostingEventHandler(string hostName, string targetName, int viewers);
         public DatePlot ViewerGraph;
         private TwitchResult StreamerStatus;
         public Boolean IsOnline;
         public string CurGame, VodUrl;
         public bool isThumbnailLarge, IsHosting;
         public int TimeoutCount;
-        public ulong TwitchId, DiscordId;
+        public ulong TwitchId;
 
         public TwitchTracker() : base()
         {
@@ -128,11 +130,6 @@ namespace MopsBot.Data.Tracker
                     {
                         if (++TimeoutCount >= 10)
                         {
-                            if(!IsHosting && StaticBase.TwitchUsers.ContainsKey(DiscordId)){
-                                await StaticBase.TwitchUsers[DiscordId].ModifyAsync(x => x.Points -= 40);
-                                await StaticBase.TwitchUsers[DiscordId].WentOffline();   
-                            }
-
                             TimeoutCount = 0;
                             IsOnline = false;
                             VodUrl = null;
@@ -149,10 +146,10 @@ namespace MopsBot.Data.Tracker
 
                             SetTimer(600000, 600000);
 
-                        } else if(!IsHosting && StaticBase.TwitchUsers.ContainsKey(DiscordId)) {
+                        } else if(!IsHosting) {
                             var host = (await hostInformation()).hosts.First();
                             if(host.IsHosting()){
-                                await StaticBase.TwitchUsers[DiscordId].Hosting(host.host_display_name, host.target_display_name, (int)ViewerGraph.PlotDataPoints.LastOrDefault().Value.Value);
+                                await OnHosting.Invoke(host.host_display_name, host.target_display_name, (int)ViewerGraph.PlotDataPoints.LastOrDefault().Value.Value);
                                 IsHosting = true;
                             }
                         }
@@ -169,8 +166,6 @@ namespace MopsBot.Data.Tracker
                             await OnMinorChangeTracked(channel, ChannelMessages[channel]);
 
                         SetTimer(60000, 60000);
-
-                        if(StaticBase.TwitchUsers.ContainsKey(DiscordId)) await StaticBase.TwitchUsers[DiscordId].WentLive();
                     }
                     await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
                 }
@@ -326,10 +321,6 @@ namespace MopsBot.Data.Tracker
             GC.SuppressFinalize(this);
             ViewerGraph?.Dispose();
             ViewerGraph = null;
-            if(DiscordId != 0){
-                StaticBase.TwitchUsers[DiscordId].DeleteAsync();
-                StaticBase.TwitchUsers.Remove(DiscordId);
-            }
         }
 
         public override string TrackerUrl()

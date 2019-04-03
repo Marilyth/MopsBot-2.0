@@ -68,8 +68,6 @@ namespace MopsBot
                     ReactGiveaways = new ReactionGiveaway();
                     ReactRoleJoin = new ReactionRoleJoin();
                     Poll = new ReactionPoll();
-                    TwitchUsers = Database.GetCollection<Data.Entities.TwitchUser>("TwitchUsers").FindSync(x => true).ToEnumerable().ToDictionary(x => x.DiscordId);
-                    TwitchGuilds = Database.GetCollection<Data.Entities.TwitchGuild>("TwitchGuilds").FindSync(x => true).ToEnumerable().ToDictionary(x => x.DiscordId);
                 });
 
                 Auth.SetUserCredentials(Program.Config["TwitterKey"], Program.Config["TwitterSecret"],
@@ -107,6 +105,10 @@ namespace MopsBot
                 {
                     Task.Run(() => tracker.Value.PostInitialisation());
                 }
+                TwitchUsers = Database.GetCollection<Data.Entities.TwitchUser>("TwitchUsers").FindSync(x => true).ToEnumerable().ToDictionary(x => x.DiscordId);
+                foreach(var user in TwitchUsers) user.Value.PostInitialisation();
+                TwitchGuilds = Database.GetCollection<Data.Entities.TwitchGuild>("TwitchGuilds").FindSync(x => true).ToEnumerable().ToDictionary(x => x.DiscordId);
+                foreach(var guild in TwitchGuilds) guild.Value.LoadUsers();
 
                 init = true;
 

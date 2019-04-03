@@ -425,22 +425,8 @@ namespace MopsBot.Module
                 }
 
                 if(owner == null) owner = Context.User;
-                var tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTrackers().FirstOrDefault(x => x.Key.ToLower().Equals(streamer.ToLower())).Value as TwitchTracker;
-                //if (notifyChannel == null) notifyChannel = Context.Channel as SocketTextChannel;
-
-                if (tracker == null)
-                {
-                    await ReplyAsync($"**Error:** {streamer} is not tracked by Mops.\nTo register, you must first use the `Twitch Track` subcommand on your channel!");
-                }
-                else if (tracker.DiscordId != 0 && tracker.DiscordId != owner.Id)
-                {
-                    await ReplyAsync($"**Error:** {streamer} is already registered to {tracker.DiscordId}.");
-                }
                 else
                 {
-                    tracker.DiscordId = owner.Id;
-                    await StaticBase.Trackers[BaseTracker.TrackerType.Twitch].UpdateDBAsync(tracker);
-
                     bool exists = StaticBase.TwitchUsers.ContainsKey(owner.Id);
                     var tUser = exists ? StaticBase.TwitchUsers[owner.Id] : new MopsBot.Data.Entities.TwitchUser(owner.Id, streamer);
 
@@ -449,7 +435,10 @@ namespace MopsBot.Module
                         return;
                     }
 
-                    await tUser.ModifyAsync(x => x.Guilds.Add(Context.Guild.Id));
+                    if(!tUser.Guilds.Contains(Context.Guild.Id)){
+                        await tUser.ModifyAsync(x => x.Guilds.Add(Context.Guild.Id));
+                        StaticBase.TwitchGuilds[Context.Guild.Id].AddUser(tUser);
+                    }
 
                     if (!exists)
                         StaticBase.TwitchUsers.Add(owner.Id, tUser);
@@ -467,25 +456,19 @@ namespace MopsBot.Module
                     await ReplyAsync("A person of authority must first use the `Twitch SetHostNotification` command.");
                     return;
                 }
-
                 if(owner == null) owner = Context.User;
-                var tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTrackers().FirstOrDefault(x => x.Key.ToLower().Equals(streamer.ToLower())).Value as TwitchTracker;
 
-                if (tracker == null)
-                {
-                    await ReplyAsync($"**Error:** {streamer} is not tracked by Mops.\nTo register, you must first use the `Twitch Track` subcommand on your channel!");
-                }
-                else if (tracker.DiscordId != 0 && tracker.DiscordId != owner.Id)
-                {
-                    await ReplyAsync($"**Error:** {streamer} is registered to {tracker.DiscordId}.");
-                }
                 else if (StaticBase.TwitchUsers.ContainsKey(owner.Id))
                 {
-                    tracker.DiscordId = 0;
-                    await StaticBase.Trackers[BaseTracker.TrackerType.Twitch].UpdateDBAsync(tracker);
                     var tUser = StaticBase.TwitchUsers[owner.Id];
-                    await tUser.DeleteAsync();
-                    StaticBase.TwitchUsers.Remove(owner.Id);
+
+                    if(tUser.Guilds.Count == 1){
+                        await tUser.DeleteAsync();
+                        StaticBase.TwitchUsers.Remove(owner.Id);
+                    } else {
+                        await tUser.ModifyAsync(x => x.Guilds.Remove(Context.Guild.Id));
+                        StaticBase.TwitchGuilds[Context.Guild.Id].RemoveUser(tUser);
+                    }
 
                     await ReplyAsync($"Successfully unlinked {owner.Mention} and {streamer}.\nHost notifications will no longer be sent.");
                 }

@@ -22,12 +22,30 @@ namespace MopsBot.Data.Entities
         public ulong LiveRole;
         public ulong notifyChannel;
         public List<Tuple<int, ulong>> RankRoles;
+        private List<TwitchUser> users;
 
         public TwitchGuild(ulong dId)
         {
             DiscordId = dId;
             //TwitchUsers = new List<TwitchUser>();
             RankRoles = new List<Tuple<int, ulong>>();
+        }
+
+        public void LoadUsers(){
+            users = StaticBase.TwitchUsers.Where(x => x.Value.Guilds.Contains(DiscordId)).Select(x => x.Value).ToList();
+        }
+
+        public void AddUser(TwitchUser user){
+            users.Add(user);
+        }
+
+        public void RemoveUser(TwitchUser user){
+            users.Remove(user);
+        }
+
+        public bool ExistsUser(string twitchName, out TwitchUser user){
+            user = users.FirstOrDefault(x => x.TwitchName.ToLower().Equals(twitchName.ToLower()));
+            return user != null;
         }
 
         public async Task UpdateGuildAsync()
