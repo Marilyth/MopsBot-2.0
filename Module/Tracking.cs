@@ -441,8 +441,7 @@ namespace MopsBot.Module
             [Hide]
             public async Task GroupTrackers(){
                 await StaticBase.Trackers[BaseTracker.TrackerType.TwitchGroup].AddTrackerAsync(Context.Guild.Id.ToString(), Context.Channel.Id);
-
-                await ReplyAsync("Added group tracking for thi");
+                await ReplyAsync("Added group tracking for this guild");
             }
 
             [Command("UnGroupTrackers")]
@@ -450,6 +449,7 @@ namespace MopsBot.Module
             [Hide]
             public async Task UnGroupTrackers(){
                 await StaticBase.Trackers[BaseTracker.TrackerType.TwitchGroup].TryRemoveTrackerAsync(Context.Guild.Id.ToString(), Context.Channel.Id);
+                await ReplyAsync("Removed group tracking in this channel");
             }
 
             [Command("AddRankRole")]
