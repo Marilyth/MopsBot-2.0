@@ -36,6 +36,7 @@ namespace MopsBot.Data.Tracker
         public async override void PostInitialisation(object info = null)
         {
             FetchTrackers();
+            SetTimer(60000);
         }
 
         public void FetchTrackers(){
