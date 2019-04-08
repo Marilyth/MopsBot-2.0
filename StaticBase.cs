@@ -87,6 +87,7 @@ namespace MopsBot
                 Trackers[BaseTracker.TrackerType.Osu] = new TrackerHandler<OsuTracker>();
                 Trackers[BaseTracker.TrackerType.Overwatch] = new TrackerHandler<OverwatchTracker>();
                 Trackers[BaseTracker.TrackerType.Twitch] = new TrackerHandler<TwitchTracker>();
+                Trackers[BaseTracker.TrackerType.TwitchGroup] = new TrackerHandler<TwitchGroupTracker>();
                 Trackers[BaseTracker.TrackerType.TwitchClip] = new TrackerHandler<TwitchClipTracker>();
                 Trackers[BaseTracker.TrackerType.Twitter] = new TrackerHandler<TwitterTracker>();
                 Trackers[BaseTracker.TrackerType.Youtube] = new TrackerHandler<YoutubeTracker>();
@@ -103,7 +104,12 @@ namespace MopsBot
 
                 foreach (var tracker in Trackers)
                 {
-                    Task.Run(() => tracker.Value.PostInitialisation());
+                    if(tracker.Key == BaseTracker.TrackerType.Twitch){
+                        Task.Run(() => tracker.Value.PostInitialisation()).Wait();
+                        Task.Run(() => Trackers[BaseTracker.TrackerType.TwitchGroup].PostInitialisation());
+                    }
+                    else if(tracker.Key != BaseTracker.TrackerType.TwitchGroup)
+                        Task.Run(() => tracker.Value.PostInitialisation());
                 }
                 TwitchUsers = Database.GetCollection<Data.Entities.TwitchUser>("TwitchUsers").FindSync(x => true).ToEnumerable().ToDictionary(x => x.DiscordId);
                 foreach(var user in TwitchUsers) user.Value.PostInitialisation();

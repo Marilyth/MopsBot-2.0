@@ -44,26 +44,6 @@ namespace MopsBot.Data.Entities
             };
         }
 
-        public int CalcExperience(int level)
-        {
-            return 200 * level * level;
-        }
-
-        public int CalcCurRank()
-        {
-            return (int)Math.Sqrt(Points / 200.0);
-        }
-
-        public double CalcCurRankDouble()
-        {
-            return Math.Sqrt(Points / 200.0);
-        }
-
-        private int calculatePoints(TwitchUser other, int viewers)
-        {
-            return viewers / (other.CalcCurRank() + 1);
-        }
-
         private async Task SetRole()
         {
             foreach (var guild in Guilds)
