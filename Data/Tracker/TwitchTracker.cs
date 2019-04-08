@@ -27,7 +27,7 @@ namespace MopsBot.Data.Tracker
         private TwitchResult StreamerStatus;
         public Boolean IsOnline;
         public string CurGame, VodUrl;
-        public bool isThumbnailLarge, IsHosting;
+        public bool IsHosting;
         [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
         public Dictionary<ulong, NotifyConfig> Specifications;
         public int TimeoutCount;
@@ -38,7 +38,6 @@ namespace MopsBot.Data.Tracker
         }
 
         public TwitchTracker(Dictionary<string, string> args) : base(){
-            isThumbnailLarge = bool.Parse(args["IsThumbnailLarge"]);
             base.SetBaseValues(args, true);
 
             //Check if Name ist valid
@@ -93,7 +92,7 @@ namespace MopsBot.Data.Tracker
                 foreach(var channel in ChannelMessages){
                     Specifications.Add(channel.Key, new NotifyConfig(){
                         ShowEmbed = true,
-                        LargeThumbnail = isThumbnailLarge,
+                        LargeThumbnail = false,
                         NotifyOnGameChange = true,
                         NotifyOnHost = false,
                         NotifyOnOffline = true,
@@ -328,7 +327,7 @@ namespace MopsBot.Data.Tracker
         {
             if (((IGuildUser)await context.Reaction.Channel.GetUserAsync(context.Reaction.UserId)).GetPermissions((IGuildChannel)context.Channel).ManageChannel)
             {
-                await ModifyAsync(x => x.isThumbnailLarge = !x.isThumbnailLarge);
+                await ModifyAsync(x => x.Specifications[(context.Channel as SocketGuildChannel).Guild.Id].LargeThumbnail = !x.Specifications[(context.Channel as SocketGuildChannel).Guild.Id].LargeThumbnail);
 
                 foreach (ulong channel in ChannelMessages.Keys.ToList())
                     await OnMajorChangeTracked(channel, createEmbed());
@@ -368,14 +367,14 @@ namespace MopsBot.Data.Tracker
                 _Name = this.Name,
                 Notification = this.ChannelMessages[channelId],
                 Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId,
-                IsThumbnailLarge = this.isThumbnailLarge
+                IsThumbnailLarge = this.Specifications[((SocketGuildChannel)Program.Client.GetChannel(channelId)).Guild.Id].LargeThumbnail
             };
         }
 
         public override void Update(Dictionary<string, Dictionary<string, string>> args)
         {
             base.Update(args);
-            isThumbnailLarge = bool.Parse(args["NewValue"]["IsThumbnailLarge"]);
+            //isThumbnailLarge = bool.Parse(args["NewValue"]["IsThumbnailLarge"]);
         }
 
         public new struct ContentScope
