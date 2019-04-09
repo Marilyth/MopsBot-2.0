@@ -195,7 +195,7 @@ namespace MopsBot.Data.Tracker
 
                             ToUpdate = new Dictionary<ulong, ulong>();
 
-                            await OnOffline.Invoke(this);
+                            if(OnOffline != null) await OnOffline.Invoke(this);
                             foreach (ulong channel in ChannelMessages.Keys.Where(x => Specifications[x].NotifyOnOffline).ToList())
                                 await OnMinorChangeTracked(channel, $"{Name} went Offline!");
 
@@ -207,7 +207,7 @@ namespace MopsBot.Data.Tracker
                             var host = (await hostInformation()).hosts.First();
                             if (host.IsHosting())
                             {
-                                await OnHosting.Invoke(host.host_display_name, host.target_display_name, (int)ViewerGraph.PlotDataPoints.LastOrDefault().Value.Value);
+                                if(OnHosting != null) await OnHosting.Invoke(host.host_display_name, host.target_display_name, (int)ViewerGraph.PlotDataPoints.LastOrDefault().Value.Value);
 
                                 foreach (ulong channel in ChannelMessages.Keys.Where(x => Specifications[x].NotifyOnHost).ToList())
                                     await OnMinorChangeTracked(channel, $"{Name} is now hosting {host.target_display_name} for {(int)ViewerGraph.PlotDataPoints.LastOrDefault().Value.Value} viewers!");
@@ -224,7 +224,7 @@ namespace MopsBot.Data.Tracker
                         CurGame = StreamerStatus.stream.game;
                         ViewerGraph.AddValue(CurGame, 0, DateTime.Parse(StreamerStatus.stream.created_at).AddHours(-2));
 
-                        await OnLive.Invoke(this);
+                        if(OnLive != null) await OnLive.Invoke(this);
                         foreach (ulong channel in ChannelMessages.Keys.Where(x => Specifications[x].NotifyOnOnline).ToList())
                             await OnMinorChangeTracked(channel, ChannelMessages[channel]);
 
