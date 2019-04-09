@@ -25,6 +25,7 @@ namespace MopsBot.Data
         public abstract HashSet<Tracker.BaseTracker> GetTrackerSet();
         public abstract Dictionary<string, Tracker.BaseTracker> GetTrackers();
         public abstract IEnumerable<BaseTracker> GetTrackers(ulong channelID);
+        public abstract IEnumerable<BaseTracker> GetGuildTrackers(ulong guildId);
         public abstract Embed GetTrackersEmbed(ulong channelID);
         public abstract BaseTracker GetTracker(ulong channelID, string name);
         public abstract Type GetTrackerType();
@@ -81,7 +82,7 @@ namespace MopsBot.Data
             trackers = (trackers == null ? new Dictionary<string, T>() : trackers);
 
             if(collection.Count > 0){
-                int gap = 600000 / collection.Count;
+                int gap = 60000 / collection.Count;
 
                 for (int i = trackers.Count - 1; i >= 0; i--)
                 {
@@ -183,6 +184,7 @@ namespace MopsBot.Data
                 {
                     trackers[name].ChannelMessages.Add(channelID, notification);
                     await UpdateDBAsync(trackers[name]);
+                    trackers[name].PostChannelAdded(channelID);
                 }
             }
             else
@@ -194,6 +196,7 @@ namespace MopsBot.Data
                 trackers[name].OnMajorEventFired += OnMajorEvent;
                 trackers[name].OnMinorEventFired += OnMinorEvent;
                 await InsertToDBAsync(trackers[name]);
+                tracker.PostInitialisation();
             }
 
             await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Started a new {typeof(T).Name} for {name}\nChannels: {string.Join(",", trackers[name].ChannelMessages.Keys)}\nMessage: {notification}"));
@@ -216,6 +219,24 @@ namespace MopsBot.Data
         public override IEnumerable<BaseTracker> GetTrackers(ulong channelID)
         {
             return trackers.Select(x => x.Value).Where(x => x.ChannelMessages.ContainsKey(channelID));
+        }
+
+        public override IEnumerable<BaseTracker> GetGuildTrackers(ulong guildId)
+        {
+            var channels = Program.Client.GetGuild(guildId).TextChannels;
+            var allTrackers = trackers.Select(x => x.Value as TwitchTracker).ToList();
+            var guildTrackers = allTrackers.Where(x => x.ChannelMessages.Keys.Any(y => channels.Select(z => z.Id).Contains(y))).ToList();
+            return guildTrackers;
+        }
+
+        public async Task<bool> TryModifyTrackerAsync(string name, ulong channelId, Action<T> modifier){
+            var tracker = GetTracker(channelId, name) as T;
+            if(tracker != null){
+                modifier(tracker);
+                await UpdateDBAsync(tracker);
+                return true;
+            } else
+                return false;
         }
 
         public override Embed GetTrackersEmbed(ulong channelID)

@@ -35,13 +35,31 @@ namespace MopsBot.Data.Entities
 
         public async Task PostInitialisation()
         {
-            tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTrackers().First(x => x.Key.ToLower().Equals(TwitchName.ToLower())).Value as TwitchTracker;
+            tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTrackers().FirstOrDefault(x => x.Key.ToLower().Equals(TwitchName.ToLower())).Value as TwitchTracker;
+
+            if(tracker == null){
+                await CreateSilentTrackerAsync(TwitchName, StaticBase.TwitchGuilds[Guilds.First()].notifyChannel);
+                tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTracker(StaticBase.TwitchGuilds[Guilds.First()].notifyChannel, TwitchName) as TwitchTracker;
+            } else if(tracker.IsOnline) {
+                await WentLive();
+            }
+
             tracker.OnHosting += Hosting;
-            tracker.OnMinorEventFired += async (ulong channelID, Tracker.BaseTracker sender, string notification) =>
-            {
-                if (notification.Contains("Offline")) await WentOffline();
-                else if (!notification.Contains("switched games")) await WentLive();
-            };
+            tracker.OnLive += WentLive;
+            tracker.OnOffline += WentOffline;
+        }
+
+        public static async Task CreateSilentTrackerAsync(string name, ulong channelId){
+            await StaticBase.Trackers[BaseTracker.TrackerType.Twitch].AddTrackerAsync(name, channelId);
+            var tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTracker(channelId, name) as TwitchTracker;
+            await tracker.ModifyAsync(x => x.Specifications[channelId] = new TwitchTracker.NotifyConfig(){
+                LargeThumbnail = false,
+                NotifyOnGameChange = false,
+                NotifyOnHost = false,
+                NotifyOnOffline = false,
+                NotifyOnOnline = false,
+                ShowEmbed = false
+            });
         }
 
         private async Task SetRole()
@@ -101,7 +119,7 @@ namespace MopsBot.Data.Entities
                         .WithDescription(sb.ToString()).Build();
         }
 
-        public async Task WentLive()
+        public async Task WentLive(BaseTracker sender = null)
         {
             LiveCount++;
             await ModifyAsync(x => x.Points += 20);
@@ -119,8 +137,12 @@ namespace MopsBot.Data.Entities
             }
         }
 
-        public async Task WentOffline()
+        public async Task WentOffline(BaseTracker sender)
         {
+            if(!(sender as TwitchTracker).IsHosting){
+                await ModifyAsync(x => x.Points -= 40);
+            }
+
             //Remove live role on each server
             foreach (var guild in Guilds)
             {

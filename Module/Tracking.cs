@@ -11,6 +11,8 @@ using MopsBot.Module.Preconditions;
 using System.Text.RegularExpressions;
 using static MopsBot.StaticBase;
 using MopsBot.Data.Tracker;
+using MopsBot.Data;
+using MopsBot.Data.Entities;
 using Discord.Addons.Interactive;
 using MopsBot.Module.Preconditions;
 
@@ -359,10 +361,12 @@ namespace MopsBot.Module
             [Summary("Switches the bool on whether to show the tracker embed or not.")]
             [RequireUserPermission(GuildPermission.ManageRoles)]
             [Hide]
-            public async Task SwitchEmbed(string streamer){
+            public async Task SwitchEmbed(string streamer)
+            {
                 var tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTracker(Context.Channel.Id, streamer) as TwitchTracker;
 
-                if(tracker != null){
+                if (tracker != null)
+                {
                     await tracker.ModifyAsync(x => x.Specifications[Context.Channel.Id].ShowEmbed = !tracker.Specifications[Context.Channel.Id].ShowEmbed);
                     await ReplyAsync($"Changed `ShowEmbed` for `{streamer}` to `{tracker.Specifications[Context.Channel.Id].ShowEmbed}`");
                 }
@@ -375,10 +379,12 @@ namespace MopsBot.Module
             [Summary("Switches the bool on whether to notify on game changes.")]
             [RequireUserPermission(GuildPermission.ManageRoles)]
             [Hide]
-            public async Task SwitchGame(string streamer){
+            public async Task SwitchGame(string streamer)
+            {
                 var tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTracker(Context.Channel.Id, streamer) as TwitchTracker;
 
-                if(tracker != null){
+                if (tracker != null)
+                {
                     await tracker.ModifyAsync(x => x.Specifications[Context.Channel.Id].NotifyOnGameChange = !tracker.Specifications[Context.Channel.Id].NotifyOnGameChange);
                     await ReplyAsync($"Changed `NotifyOnGameChange` for `{streamer}` to `{tracker.Specifications[Context.Channel.Id].NotifyOnGameChange}`");
                 }
@@ -391,10 +397,12 @@ namespace MopsBot.Module
             [Summary("Switches the bool on whether to notify on when the streamer goes offline.")]
             [RequireUserPermission(GuildPermission.ManageRoles)]
             [Hide]
-            public async Task SwitchOffline(string streamer){
+            public async Task SwitchOffline(string streamer)
+            {
                 var tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTracker(Context.Channel.Id, streamer) as TwitchTracker;
 
-                if(tracker != null){
+                if (tracker != null)
+                {
                     await tracker.ModifyAsync(x => x.Specifications[Context.Channel.Id].NotifyOnOffline = !tracker.Specifications[Context.Channel.Id].NotifyOnOffline);
                     await ReplyAsync($"Changed `NotifyOnOffline` for `{streamer}` to `{tracker.Specifications[Context.Channel.Id].NotifyOnOffline}`");
                 }
@@ -408,10 +416,12 @@ namespace MopsBot.Module
             [Summary("Switches the bool on whether to notify on when the streamer goes live.")]
             [RequireUserPermission(GuildPermission.ManageRoles)]
             [Hide]
-            public async Task SwitchOnline(string streamer){
+            public async Task SwitchOnline(string streamer)
+            {
                 var tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTracker(Context.Channel.Id, streamer) as TwitchTracker;
 
-                if(tracker != null){
+                if (tracker != null)
+                {
                     await tracker.ModifyAsync(x => x.Specifications[Context.Channel.Id].NotifyOnOnline = !tracker.Specifications[Context.Channel.Id].NotifyOnOnline);
                     await ReplyAsync($"Changed `NotifyOnOnline` for `{streamer}` to `{tracker.Specifications[Context.Channel.Id].NotifyOnOnline}`");
                 }
@@ -424,10 +434,12 @@ namespace MopsBot.Module
             [Summary("Switches the bool on whether to notify hosts or not.")]
             [RequireUserPermission(GuildPermission.ManageRoles)]
             [Hide]
-            public async Task SwitchHosts(string streamer){
+            public async Task SwitchHosts(string streamer)
+            {
                 var tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTracker(Context.Channel.Id, streamer) as TwitchTracker;
 
-                if(tracker != null){
+                if (tracker != null)
+                {
                     await tracker.ModifyAsync(x => x.Specifications[Context.Channel.Id].NotifyOnHost = !tracker.Specifications[Context.Channel.Id].NotifyOnHost);
                     await ReplyAsync($"Changed `NotifyOnHost` for `{streamer}` to `{tracker.Specifications[Context.Channel.Id].NotifyOnHost}`");
                 }
@@ -439,7 +451,8 @@ namespace MopsBot.Module
             [Command("GroupTrackers")]
             [Summary("Adds all trackers of the guild to a unified embed, in the channel you are calling this command in.")]
             [Hide]
-            public async Task GroupTrackers(){
+            public async Task GroupTrackers()
+            {
                 await StaticBase.Trackers[BaseTracker.TrackerType.TwitchGroup].AddTrackerAsync(Context.Guild.Id.ToString(), Context.Channel.Id);
                 await ReplyAsync("Added group tracking for this guild");
             }
@@ -447,7 +460,8 @@ namespace MopsBot.Module
             [Command("UnGroupTrackers")]
             [Summary("Removes grouping for trackers")]
             [Hide]
-            public async Task UnGroupTrackers(){
+            public async Task UnGroupTrackers()
+            {
                 await StaticBase.Trackers[BaseTracker.TrackerType.TwitchGroup].TryRemoveTrackerAsync(Context.Guild.Id.ToString(), Context.Channel.Id);
                 await ReplyAsync("Removed group tracking in this channel");
             }
@@ -456,42 +470,62 @@ namespace MopsBot.Module
             [Summary("Adds a role to your rank system.")]
             [RequireUserPermission(GuildPermission.ManageRoles)]
             [Hide]
-            public async Task AddRank(int pointsNeeded, [Remainder]SocketRole role){
+            public async Task AddRank(int pointsNeeded, [Remainder]SocketRole role)
+            {
                 var rankRoles = StaticBase.TwitchGuilds[Context.Guild.Id].RankRoles;
-                
-                if(rankRoles.Exists(x => x.Item2 == role.Id))
+
+                if (rankRoles.Exists(x => x.Item2 == role.Id))
                     rankRoles.RemoveAll(x => x.Item2 == role.Id);
-                
+
                 StaticBase.TwitchGuilds[Context.Guild.Id].RankRoles.Add(Tuple.Create(pointsNeeded, role.Id));
                 await StaticBase.TwitchGuilds[Context.Guild.Id].UpdateGuildAsync();
 
-                await ReplyAsync($"Added {role.Name} as rank role for people above {pointsNeeded} points.", embed:StaticBase.TwitchGuilds[Context.Guild.Id].GetRankRoles());
+                await ReplyAsync($"Added {role.Name} as rank role for people above {pointsNeeded} points.", embed: StaticBase.TwitchGuilds[Context.Guild.Id].GetRankRoles());
             }
 
             [Command("RemoveRankRole")]
             [Summary("Removes a role of your rank system.")]
             [RequireUserPermission(GuildPermission.ManageRoles)]
             [Hide]
-            public async Task RemoveRank([Remainder]SocketRole role){
+            public async Task RemoveRank([Remainder]SocketRole role)
+            {
                 var rankRoles = StaticBase.TwitchGuilds[Context.Guild.Id].RankRoles;
-                
-                if(rankRoles.Exists(x => x.Item2 == role.Id))
+
+                if (rankRoles.Exists(x => x.Item2 == role.Id))
                     rankRoles.RemoveAll(x => x.Item2 == role.Id);
-                
+
                 await StaticBase.TwitchGuilds[Context.Guild.Id].UpdateGuildAsync();
 
-                await ReplyAsync($"Removed {role.Name} as rank role.", embed:StaticBase.TwitchGuilds[Context.Guild.Id].GetRankRoles());
+                await ReplyAsync($"Removed {role.Name} as rank role.", embed: StaticBase.TwitchGuilds[Context.Guild.Id].GetRankRoles());
             }
 
             [Command("AddLiveRole")]
             [Summary("Assigns a role assigned when somebody goes live.")]
             [RequireUserPermission(GuildPermission.ManageRoles)]
             [Hide]
-            public async Task AddLiveRole([Remainder]SocketRole role){
+            public async Task AddLiveRole([Remainder]SocketRole role)
+            {
                 StaticBase.TwitchGuilds[Context.Guild.Id].LiveRole = role.Id;
                 await StaticBase.TwitchGuilds[Context.Guild.Id].UpdateGuildAsync();
 
                 await ReplyAsync($"Added {role.Name} as live role.");
+            }
+
+            [Command("SetHostNotificationChannel")]
+            [Summary("Sets the channel which will receive host notification.")]
+            [RequireUserPermission(GuildPermission.ManageRoles)]
+            [Hide]
+            public async Task AddHostChannel([Remainder]SocketTextChannel channel)
+            {
+                if(!StaticBase.TwitchGuilds.ContainsKey(Context.Guild.Id)){
+                    StaticBase.TwitchGuilds.Add(Context.Guild.Id, new TwitchGuild(Context.Guild.Id));
+
+                }
+
+                StaticBase.TwitchGuilds[Context.Guild.Id].notifyChannel = channel.Id;
+                await StaticBase.TwitchGuilds[Context.Guild.Id].UpdateGuildAsync();
+
+                await ReplyAsync($"Set {channel.Mention} as notify channel.");
             }
 
             [Command("Register")]
@@ -499,32 +533,35 @@ namespace MopsBot.Module
             [Hide]
             public async Task RegisterHost(string streamer, IUser owner = null)
             {
-                if(!StaticBase.TwitchGuilds.ContainsKey(Context.Guild.Id)){
-                    await ReplyAsync("A person of authority must first use the `Twitch SetHostNotification` command.");
+                if (!StaticBase.TwitchGuilds.ContainsKey(Context.Guild.Id))
+                {
+                    await ReplyAsync("A person of authority must first use the `Twitch SetHostNotificationChannel` command.");
                     return;
                 }
 
-                if(owner == null) owner = Context.User;
-                else
+                if (owner == null) owner = Context.User;
+
+                bool exists = StaticBase.TwitchUsers.ContainsKey(owner.Id);
+                var tUser = exists ? StaticBase.TwitchUsers[owner.Id] : new MopsBot.Data.Entities.TwitchUser(owner.Id, streamer);
+
+                if (!tUser.TwitchName.Equals(streamer))
                 {
-                    bool exists = StaticBase.TwitchUsers.ContainsKey(owner.Id);
-                    var tUser = exists ? StaticBase.TwitchUsers[owner.Id] : new MopsBot.Data.Entities.TwitchUser(owner.Id, streamer);
-
-                    if(!tUser.TwitchName.Equals(streamer)){
-                        await ReplyAsync("**Error:** You are already registered as " + tUser.TwitchName);
-                        return;
-                    }
-
-                    if(!tUser.Guilds.Contains(Context.Guild.Id)){
-                        await tUser.ModifyAsync(x => x.Guilds.Add(Context.Guild.Id));
-                        StaticBase.TwitchGuilds[Context.Guild.Id].AddUser(tUser);
-                    }
-
-                    if (!exists)
-                        StaticBase.TwitchUsers.Add(owner.Id, tUser);
-
-                    await ReplyAsync($"Successfully linked {owner.Mention} to {streamer}.\nHost notifications will be sent to <#{StaticBase.TwitchGuilds[Context.Guild.Id].notifyChannel}>");
+                    await ReplyAsync("**Error:** You are already registered as " + tUser.TwitchName);
+                    return;
                 }
+
+                if (!tUser.Guilds.Contains(Context.Guild.Id))
+                {
+                    await tUser.ModifyAsync(x => x.Guilds.Add(Context.Guild.Id));
+                    StaticBase.TwitchGuilds[Context.Guild.Id].AddUser(tUser);
+                }
+
+                if (!exists){
+                    StaticBase.TwitchUsers.Add(owner.Id, tUser);
+                    await tUser.PostInitialisation();
+                }
+
+                await ReplyAsync($"Successfully linked {owner.Mention} to {streamer}.\nHost notifications will be sent to <#{StaticBase.TwitchGuilds[Context.Guild.Id]?.notifyChannel}>");
             }
 
             [Command("Unregister")]
@@ -532,20 +569,24 @@ namespace MopsBot.Module
             [Hide]
             public async Task UnregisterHost(string streamer, IUser owner = null)
             {
-                if(!StaticBase.TwitchGuilds.ContainsKey(Context.Guild.Id)){
+                if (!StaticBase.TwitchGuilds.ContainsKey(Context.Guild.Id))
+                {
                     await ReplyAsync("A person of authority must first use the `Twitch SetHostNotification` command.");
                     return;
                 }
-                if(owner == null) owner = Context.User;
+                if (owner == null) owner = Context.User;
 
-                else if (StaticBase.TwitchUsers.ContainsKey(owner.Id))
+                if (StaticBase.TwitchUsers.ContainsKey(owner.Id))
                 {
                     var tUser = StaticBase.TwitchUsers[owner.Id];
 
-                    if(tUser.Guilds.Count == 1){
+                    if (tUser.Guilds.Count == 1)
+                    {
                         await tUser.DeleteAsync();
                         StaticBase.TwitchUsers.Remove(owner.Id);
-                    } else {
+                    }
+                    else
+                    {
                         await tUser.ModifyAsync(x => x.Guilds.Remove(Context.Guild.Id));
                         StaticBase.TwitchGuilds[Context.Guild.Id].RemoveUser(tUser);
                     }
@@ -557,37 +598,44 @@ namespace MopsBot.Module
             [Command("GetStats")]
             [Summary("Shows your current Twitch stats.")]
             [Hide]
-            public async Task GetStats(){
-                if(!StaticBase.TwitchGuilds.ContainsKey(Context.Guild.Id)){
+            public async Task GetStats()
+            {
+                if (!StaticBase.TwitchGuilds.ContainsKey(Context.Guild.Id))
+                {
                     await ReplyAsync("A person of authority must first use the `Twitch SetHostNotification` command.");
                     return;
                 }
 
-                await ReplyAsync(embed:StaticBase.TwitchUsers[Context.User.Id].StatEmbed(Context.Guild.Id));
+                await ReplyAsync(embed: StaticBase.TwitchUsers[Context.User.Id].StatEmbed(Context.Guild.Id));
             }
 
             [Command("GetLeaderboard")]
             [Summary("Shows current point leaderboard")]
             [Hide]
-            public async Task GetLeaderboard(uint begin = 1, uint end = 10, bool isGlobal = false){
-            using(Context.Channel.EnterTypingState()){
-                try{
-                    if(begin >= end) throw new Exception("Begin was bigger than, or equal to end.");
-                    if(begin == 0 || end == 0) throw new Exception("Begin or end was 0.");
-                    if(end - begin >= 5000) throw new Exception("Range must be smaller than 5000! (performance)");
+            public async Task GetLeaderboard(uint begin = 1, uint end = 10, bool isGlobal = false)
+            {
+                using (Context.Channel.EnterTypingState())
+                {
+                    try
+                    {
+                        if (begin >= end) throw new Exception("Begin was bigger than, or equal to end.");
+                        if (begin == 0 || end == 0) throw new Exception("Begin or end was 0.");
+                        if (end - begin >= 5000) throw new Exception("Range must be smaller than 5000! (performance)");
 
-                    long userCount = StaticBase.TwitchUsers.LongCount(x => isGlobal ? true : x.Value.Guilds.Contains(Context.Guild.Id));
+                        long userCount = StaticBase.TwitchUsers.LongCount(x => isGlobal ? true : x.Value.Guilds.Contains(Context.Guild.Id));
 
-                    if(end > userCount) 
-                        end = (uint)userCount;
+                        if (end > userCount)
+                            end = (uint)userCount;
 
-                    await ReplyAsync("", embed: await MopsBot.Data.Entities.TwitchUser.GetLeaderboardAsync(isGlobal ? null : (ulong?)Context.Guild.Id, begin: (int)begin, end: (int)end));
+                        await ReplyAsync("", embed: await MopsBot.Data.Entities.TwitchUser.GetLeaderboardAsync(isGlobal ? null : (ulong?)Context.Guild.Id, begin: (int)begin, end: (int)end));
 
-                } catch ( Exception e){
-                    await ReplyAsync("[Error]: " + e.Message);
+                    }
+                    catch (Exception e)
+                    {
+                        await ReplyAsync("[Error]: " + e.Message);
+                    }
                 }
             }
-        }
 
         }
 
