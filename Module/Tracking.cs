@@ -372,7 +372,6 @@ namespace MopsBot.Module
             [Command("SwitchShowEmbed")]
             [Summary("Switches the bool on whether to show the tracker embed or not.")]
             [RequireUserPermission(GuildPermission.ManageRoles)]
-            [Hide]
             public async Task SwitchEmbed(string streamer)
             {
                 streamer = streamer.ToLower();
@@ -391,7 +390,6 @@ namespace MopsBot.Module
             [Command("SwitchNotifyGame")]
             [Summary("Switches the bool on whether to notify on game changes.")]
             [RequireUserPermission(GuildPermission.ManageRoles)]
-            [Hide]
             public async Task SwitchGame(string streamer)
             {
                 streamer = streamer.ToLower();
@@ -410,7 +408,6 @@ namespace MopsBot.Module
             [Command("SwitchNotifyOffline")]
             [Summary("Switches the bool on whether to notify on when the streamer goes offline.")]
             [RequireUserPermission(GuildPermission.ManageRoles)]
-            [Hide]
             public async Task SwitchOffline(string streamer)
             {
                 streamer = streamer.ToLower();
@@ -430,7 +427,6 @@ namespace MopsBot.Module
             [Alias("SwitchNotifyLive")]
             [Summary("Switches the bool on whether to notify on when the streamer goes live.")]
             [RequireUserPermission(GuildPermission.ManageRoles)]
-            [Hide]
             public async Task SwitchOnline(string streamer)
             {
                 streamer = streamer.ToLower();
@@ -449,7 +445,6 @@ namespace MopsBot.Module
             [Command("SwitchNotifyHost")]
             [Summary("Switches the bool on whether to notify hosts or not.")]
             [RequireUserPermission(GuildPermission.ManageRoles)]
-            [Hide]
             public async Task SwitchHosts(string streamer)
             {
                 streamer = streamer.ToLower();
@@ -467,7 +462,6 @@ namespace MopsBot.Module
 
             [Command("GroupTrackers")]
             [Summary("Adds all trackers of the guild to a unified embed, in the channel you are calling this command in.")]
-            [Hide]
             public async Task GroupTrackers([Remainder]SocketRole rank = null)
             {
                 await StaticBase.Trackers[BaseTracker.TrackerType.TwitchGroup].AddTrackerAsync(Context.Guild.Id.ToString(), Context.Channel.Id);
@@ -477,7 +471,6 @@ namespace MopsBot.Module
 
             [Command("UnGroupTrackers")]
             [Summary("Removes grouping for trackers")]
-            [Hide]
             public async Task UnGroupTrackers()
             {
                 (StaticBase.Trackers[BaseTracker.TrackerType.TwitchGroup].GetTracker(Context.Channel.Id, Context.Guild.Id.ToString()) as TwitchGroupTracker).RankChannels.Remove(Context.Channel.Id);
@@ -485,59 +478,13 @@ namespace MopsBot.Module
                 await ReplyAsync("Removed group tracking in this channel");
             }
 
-            [Command("AddRankRole")]
-            [Summary("Adds a role to your rank system.")]
-            [RequireUserPermission(GuildPermission.ManageRoles)]
-            [Hide]
-            public async Task AddRank(int pointsNeeded, [Remainder]SocketRole role)
-            {
-                var rankRoles = StaticBase.TwitchGuilds[Context.Guild.Id].RankRoles;
-
-                if (rankRoles.Exists(x => x.Item2 == role.Id))
-                    rankRoles.RemoveAll(x => x.Item2 == role.Id);
-
-                StaticBase.TwitchGuilds[Context.Guild.Id].RankRoles.Add(Tuple.Create(pointsNeeded, role.Id));
-                await StaticBase.TwitchGuilds[Context.Guild.Id].UpdateGuildAsync();
-
-                await ReplyAsync($"Added {role.Name} as rank role for people above {pointsNeeded} points.", embed: StaticBase.TwitchGuilds[Context.Guild.Id].GetRankRoles());
-            }
-
-            [Command("RemoveRankRole")]
-            [Summary("Removes a role of your rank system.")]
-            [RequireUserPermission(GuildPermission.ManageRoles)]
-            [Hide]
-            public async Task RemoveRank([Remainder]SocketRole role)
-            {
-                var rankRoles = StaticBase.TwitchGuilds[Context.Guild.Id].RankRoles;
-
-                if (rankRoles.Exists(x => x.Item2 == role.Id))
-                    rankRoles.RemoveAll(x => x.Item2 == role.Id);
-
-                await StaticBase.TwitchGuilds[Context.Guild.Id].UpdateGuildAsync();
-
-                await ReplyAsync($"Removed {role.Name} as rank role.", embed: StaticBase.TwitchGuilds[Context.Guild.Id].GetRankRoles());
-            }
-
-            [Command("AddLiveRole")]
-            [Summary("Assigns a role assigned when somebody goes live.")]
-            [RequireUserPermission(GuildPermission.ManageRoles)]
-            [Hide]
-            public async Task AddLiveRole([Remainder]SocketRole role)
-            {
-                StaticBase.TwitchGuilds[Context.Guild.Id].LiveRole = role.Id;
-                await StaticBase.TwitchGuilds[Context.Guild.Id].UpdateGuildAsync();
-
-                await ReplyAsync($"Added {role.Name} as live role.");
-            }
-
-            [Group("TwitchGuild")]
+            [Group("Guild")]
             public class Guild : ModuleBase
             {
 
                 [Command("SetHostNotificationChannel")]
                 [Summary("Sets the channel which will receive host notification.")]
                 [RequireUserPermission(GuildPermission.ManageRoles)]
-                [Hide]
                 public async Task AddHostChannel([Remainder]SocketTextChannel channel)
                 {
                     if (!StaticBase.TwitchGuilds.ContainsKey(Context.Guild.Id))
@@ -552,9 +499,50 @@ namespace MopsBot.Module
                     await ReplyAsync($"Set {channel.Mention} as notify channel.");
                 }
 
+                [Command("AddRankRole")]
+                [Summary("Adds a role to your rank system.")]
+                [RequireUserPermission(GuildPermission.ManageRoles)]
+                public async Task AddRank(int pointsNeeded, [Remainder]SocketRole role)
+                {
+                    var rankRoles = StaticBase.TwitchGuilds[Context.Guild.Id].RankRoles;
+
+                    if (rankRoles.Exists(x => x.Item2 == role.Id))
+                        rankRoles.RemoveAll(x => x.Item2 == role.Id);
+
+                    StaticBase.TwitchGuilds[Context.Guild.Id].RankRoles.Add(Tuple.Create(pointsNeeded, role.Id));
+                    await StaticBase.TwitchGuilds[Context.Guild.Id].UpdateGuildAsync();
+
+                    await ReplyAsync($"Added {role.Name} as rank role for people above {pointsNeeded} points.", embed: StaticBase.TwitchGuilds[Context.Guild.Id].GetRankRoles());
+                }
+
+                [Command("RemoveRankRole")]
+                [Summary("Removes a role of your rank system.")]
+                [RequireUserPermission(GuildPermission.ManageRoles)]
+                public async Task RemoveRank([Remainder]SocketRole role)
+                {
+                    var rankRoles = StaticBase.TwitchGuilds[Context.Guild.Id].RankRoles;
+
+                    if (rankRoles.Exists(x => x.Item2 == role.Id))
+                        rankRoles.RemoveAll(x => x.Item2 == role.Id);
+
+                    await StaticBase.TwitchGuilds[Context.Guild.Id].UpdateGuildAsync();
+
+                    await ReplyAsync($"Removed {role.Name} as rank role.", embed: StaticBase.TwitchGuilds[Context.Guild.Id].GetRankRoles());
+                }
+
+                [Command("AddLiveRole")]
+                [Summary("Assigns a role assigned when somebody goes live.")]
+                [RequireUserPermission(GuildPermission.ManageRoles)]
+                public async Task AddLiveRole([Remainder]SocketRole role)
+                {
+                    StaticBase.TwitchGuilds[Context.Guild.Id].LiveRole = role.Id;
+                    await StaticBase.TwitchGuilds[Context.Guild.Id].UpdateGuildAsync();
+
+                    await ReplyAsync($"Added {role.Name} as live role.");
+                }
+
                 [Command("Register")]
                 [Summary("Sets you or the `owner` as the owner of the Twitch Channel.\nIf hosting, Mops will notify the host in the `notifyChannel`.")]
-                [Hide]
                 public async Task RegisterHost(string streamer, IUser owner = null)
                 {
                     streamer = streamer.ToLower();
@@ -587,7 +575,6 @@ namespace MopsBot.Module
 
                 [Command("Unregister")]
                 [Summary("Removes you or `owner` as the owner of the channel and disables host notifications.")]
-                [Hide]
                 public async Task UnregisterHost(string streamer, IUser owner = null)
                 {
                     streamer = streamer.ToLower();
@@ -608,7 +595,6 @@ namespace MopsBot.Module
 
                 [Command("GetStats")]
                 [Summary("Shows your current Twitch stats.")]
-                [Hide]
                 public async Task GetStats()
                 {
                     if (!StaticBase.TwitchGuilds.ContainsKey(Context.Guild.Id))
@@ -622,7 +608,6 @@ namespace MopsBot.Module
 
                 [Command("GetLeaderboard")]
                 [Summary("Shows current point leaderboard")]
-                [Hide]
                 public async Task GetLeaderboard(uint begin = 1, uint end = 10, bool isGlobal = false)
                 {
                     using (Context.Channel.EnterTypingState())
