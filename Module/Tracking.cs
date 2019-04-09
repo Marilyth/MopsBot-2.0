@@ -30,6 +30,7 @@ namespace MopsBot.Module
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
             public async Task trackTwitter(string twitterUser, [Remainder]string tweetNotification = "~Tweet Tweet~")
             {
+                twitterUser = twitterUser.ToLower().Replace("@", "");
                 using (Context.Channel.EnterTypingState())
                 {
                     try
@@ -50,6 +51,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task unTrackTwitter(string twitterUser)
             {
+                twitterUser = twitterUser.ToLower().Replace("@", "");
                 if (await Trackers[BaseTracker.TrackerType.Twitter].TryRemoveTrackerAsync(twitterUser, Context.Channel.Id))
                     await ReplyAsync("Stopped keeping track of " + twitterUser + "'s tweets!");
                 else
@@ -69,6 +71,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task SetNotification(string TwitterName, [Remainder]string notification = "")
             {
+                TwitterName = TwitterName.ToLower().Replace("@", "");
                 var twitter = StaticBase.Trackers[BaseTracker.TrackerType.Twitter].GetTracker(Context.Channel.Id, TwitterName);
                 try
                 {
@@ -89,6 +92,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task SetNonMainNotification(string TwitterName, [Remainder]string notification = "")
             {
+                TwitterName = TwitterName.ToLower().Replace("@", "");
                 var twitter = StaticBase.Trackers[BaseTracker.TrackerType.Twitter].GetTracker(Context.Channel.Id, TwitterName);
                 try
                 {
@@ -109,6 +113,7 @@ namespace MopsBot.Module
             [Summary("Disables tracking for the retweets and replies of the specified Twitter account.")]
             public async Task DisableRetweets(string TwitterName)
             {
+                TwitterName = TwitterName.ToLower().Replace("@", "");
                 var twitter = StaticBase.Trackers[BaseTracker.TrackerType.Twitter].GetTracker(Context.Channel.Id, TwitterName);
                 try
                 {
@@ -168,6 +173,7 @@ namespace MopsBot.Module
                 {
                     try
                     {
+                        OsuUser = OsuUser.ToLower();
                         await Trackers[BaseTracker.TrackerType.Osu].AddTrackerAsync(OsuUser, Context.Channel.Id);
 
                         await ReplyAsync("Keeping track of " + OsuUser + "'s plays above `0.1pp` gain, from now on!\nYou can change the lower pp boundary by using the `Osu SetPPBounds` subcommand!");
@@ -184,6 +190,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task unTrackOsu([Remainder]string OsuUser)
             {
+                OsuUser = OsuUser.ToLower();
                 if (await Trackers[BaseTracker.TrackerType.Osu].TryRemoveTrackerAsync(OsuUser, Context.Channel.Id))
                     await ReplyAsync("Stopped keeping track of " + OsuUser + "'s plays!");
                 else
@@ -203,6 +210,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task SetPPBounds(string osuUser, double threshold)
             {
+                osuUser = osuUser.ToLower();
                 var tracker = (OsuTracker)StaticBase.Trackers[BaseTracker.TrackerType.Osu].GetTracker(Context.Channel.Id, osuUser);
                 if (tracker != null)
                 {
@@ -225,6 +233,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task SetNotification(string osuUser, [Remainder]string notification)
             {
+                osuUser = osuUser.ToLower();
                 if (await StaticBase.Trackers[BaseTracker.TrackerType.Osu].TrySetNotificationAsync(osuUser, Context.Channel.Id, notification))
                 {
                     await ReplyAsync($"Changed notification for `{osuUser}` to `{notification}`");
@@ -312,6 +321,7 @@ namespace MopsBot.Module
                 {
                     try
                     {
+                        streamerName = streamerName.ToLower();
                         await Trackers[BaseTracker.TrackerType.Twitch].AddTrackerAsync(streamerName, Context.Channel.Id, notificationMessage);
 
                         await ReplyAsync("Keeping track of " + streamerName + "'s streams, from now on!");
@@ -329,6 +339,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task unTrackStreamer(string streamerName)
             {
+                streamerName = streamerName.ToLower();
                 if (await Trackers[BaseTracker.TrackerType.Twitch].TryRemoveTrackerAsync(streamerName, Context.Channel.Id))
                     await ReplyAsync("Stopped keeping track of " + streamerName + "'s streams!");
                 else
@@ -348,6 +359,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task SetNotification(string streamer, [Remainder]string notification)
             {
+                streamer = streamer.ToLower();
                 if (await StaticBase.Trackers[BaseTracker.TrackerType.Twitch].TrySetNotificationAsync(streamer, Context.Channel.Id, notification))
                 {
                     await ReplyAsync($"Changed notification for `{streamer}` to `{notification}`");
@@ -363,6 +375,7 @@ namespace MopsBot.Module
             [Hide]
             public async Task SwitchEmbed(string streamer)
             {
+                streamer = streamer.ToLower();
                 var tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTracker(Context.Channel.Id, streamer) as TwitchTracker;
 
                 if (tracker != null)
@@ -381,6 +394,7 @@ namespace MopsBot.Module
             [Hide]
             public async Task SwitchGame(string streamer)
             {
+                streamer = streamer.ToLower();
                 var tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTracker(Context.Channel.Id, streamer) as TwitchTracker;
 
                 if (tracker != null)
@@ -399,6 +413,7 @@ namespace MopsBot.Module
             [Hide]
             public async Task SwitchOffline(string streamer)
             {
+                streamer = streamer.ToLower();
                 var tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTracker(Context.Channel.Id, streamer) as TwitchTracker;
 
                 if (tracker != null)
@@ -418,6 +433,7 @@ namespace MopsBot.Module
             [Hide]
             public async Task SwitchOnline(string streamer)
             {
+                streamer = streamer.ToLower();
                 var tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTracker(Context.Channel.Id, streamer) as TwitchTracker;
 
                 if (tracker != null)
@@ -436,6 +452,7 @@ namespace MopsBot.Module
             [Hide]
             public async Task SwitchHosts(string streamer)
             {
+                streamer = streamer.ToLower();
                 var tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTracker(Context.Channel.Id, streamer) as TwitchTracker;
 
                 if (tracker != null)
@@ -533,6 +550,7 @@ namespace MopsBot.Module
             [Hide]
             public async Task RegisterHost(string streamer, IUser owner = null)
             {
+                streamer = streamer.ToLower();
                 if (!StaticBase.TwitchGuilds.ContainsKey(Context.Guild.Id))
                 {
                     await ReplyAsync("A person of authority must first use the `Twitch SetHostNotificationChannel` command.");
@@ -569,6 +587,7 @@ namespace MopsBot.Module
             [Hide]
             public async Task UnregisterHost(string streamer, IUser owner = null)
             {
+                streamer = streamer.ToLower();
                 if (!StaticBase.TwitchGuilds.ContainsKey(Context.Guild.Id))
                 {
                     await ReplyAsync("A person of authority must first use the `Twitch SetHostNotification` command.");
@@ -653,6 +672,7 @@ namespace MopsBot.Module
                 {
                     try
                     {
+                        streamerName = streamerName.ToLower();
                         await Trackers[BaseTracker.TrackerType.TwitchClip].AddTrackerAsync(streamerName, Context.Channel.Id, notificationMessage);
 
                         await ReplyAsync("Keeping track of " + streamerName + "'s top clips above **2** views every 30 minutes, from now on!\nUse the `SetViewThreshold` subcommand to change the threshold.");
@@ -670,6 +690,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task unTrackStreamer(string streamerName)
             {
+                streamerName = streamerName.ToLower();
                 if (await Trackers[BaseTracker.TrackerType.TwitchClip].TryRemoveTrackerAsync(streamerName, Context.Channel.Id))
                     await ReplyAsync("Stopped keeping track of " + streamerName + "'s streams!");
                 else
@@ -689,6 +710,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task SetNotification(string streamer, [Remainder]string notification = "")
             {
+                streamer = streamer.ToLower();
                 if (await StaticBase.Trackers[BaseTracker.TrackerType.TwitchClip].TrySetNotificationAsync(streamer, Context.Channel.Id, notification))
                 {
                     await ReplyAsync($"Changed notification for `{streamer}` to `{notification}`");
@@ -703,6 +725,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task SetViewThreshold(string streamer, uint threshold)
             {
+                streamer = streamer.ToLower();
                 var tracker = (TwitchClipTracker)StaticBase.Trackers[BaseTracker.TrackerType.TwitchClip].GetTracker(Context.Channel.Id, streamer);
                 if (tracker != null)
                 {
@@ -918,6 +941,7 @@ namespace MopsBot.Module
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
             public async Task Track(string name, [Remainder]string notification = "")
             {
+                name = name.ToLower();
                 using (Context.Channel.EnterTypingState())
                 {
                     try
@@ -938,6 +962,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task UnTrack([Remainder]string name)
             {
+                name = name.ToLower();
                 if (await Trackers[BaseTracker.TrackerType.OSRS].TryRemoveTrackerAsync(name, Context.Channel.Id))
                     await ReplyAsync($"Stopped keeping track of {name}!");
                 else
@@ -978,6 +1003,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task SetNotification(string name, [Remainder]string notification = "")
             {
+                name = name.ToLower();
                 if (await StaticBase.Trackers[BaseTracker.TrackerType.OSRS].TrySetNotificationAsync(name, Context.Channel.Id, notification))
                 {
                     await ReplyAsync($"Changed notification for `{name}` to `{notification}`");
@@ -1448,6 +1474,26 @@ namespace MopsBot.Module
                 }
 
                 await ReplyAsync($"```{"TrackerType",-20}{"PruneCount"}\n{string.Join("\n", pruneCount.Select(x => $"{x.Key,-20}{x.Value,-3}"))}```");
+            }
+        }
+
+        [Command("MergeTrackers", RunMode = RunMode.Async)]
+        [RequireBotManage]
+        [Hide]
+        public async Task MergeTrackers()
+        {
+            using (Context.Channel.EnterTypingState())
+            {
+                Dictionary<string, int> mergeCount = new Dictionary<string, int>();
+
+                foreach (var trackerHandler in StaticBase.Trackers)
+                {
+                    var countBefore = trackerHandler.Value.GetTrackers().Count;
+                    await trackerHandler.Value.MergeCapitalisation();
+                    mergeCount[trackerHandler.Key.ToString()] = countBefore - trackerHandler.Value.GetTrackers().Count;
+                }
+
+                await ReplyAsync($"```{"TrackerType",-20}{"MergeCount"}\n{string.Join("\n", mergeCount.Select(x => $"{x.Key,-20}{x.Value,-3}"))}```");
             }
         }
     }

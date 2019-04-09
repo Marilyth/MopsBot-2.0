@@ -19,6 +19,7 @@ namespace MopsBot.Data
         public abstract Task UpdateDBAsync(BaseTracker tracker);
         public abstract Task RemoveFromDBAsync(BaseTracker tracker);
         public abstract Task InsertToDBAsync(BaseTracker tracker);
+        public abstract Task MergeCapitalisation();
         public abstract Task<bool> TryRemoveTrackerAsync(string name, ulong channelID);
         public abstract Task<bool> TrySetNotificationAsync(string name, ulong channelID, string notificationMessage);
         public abstract Task AddTrackerAsync(string name, ulong channelID, string notification = "");
@@ -81,18 +82,22 @@ namespace MopsBot.Data
 
             trackers = (trackers == null ? new Dictionary<string, T>() : trackers);
 
-            if(collection.Count > 0){
+            if (collection.Count > 0)
+            {
                 int gap = 600000 / collection.Count;
 
                 for (int i = trackers.Count - 1; i >= 0; i--)
                 {
-                    try{
+                    try
+                    {
                         var cur = trackers[trackers.Keys.ElementAt(i)];
                         cur.SetTimer(600000, gap * (i + 1));
                         cur.PostInitialisation(trackers.Count - i);
                         cur.OnMinorEventFired += OnMinorEvent;
                         cur.OnMajorEventFired += OnMajorEvent;
-                    } catch(Exception e){
+                    }
+                    catch (Exception e)
+                    {
                         Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"Error on PostInitialisation", e));
                     }
                 }
@@ -128,6 +133,46 @@ namespace MopsBot.Data
         public override async Task RemoveFromDBAsync(BaseTracker tracker)
         {
             await StaticBase.Database.GetCollection<T>(typeof(T).Name).DeleteOneAsync(x => x.Name.Equals(tracker.Name));
+        }
+
+        public override async Task MergeCapitalisation()
+        {
+            if (typeof(T) == typeof(TwitterTracker) ||
+               typeof(T) == typeof(TwitchTracker) ||
+               typeof(T) == typeof(TwitchClipTracker) ||
+               typeof(T) == typeof(OsuTracker) ||
+               typeof(T) == typeof(OSRSTracker))
+            {
+                foreach (var tracker in trackers.ToList())
+                {
+                    if (!trackers.ContainsKey(tracker.Key.ToLower().Replace("@", "")))
+                    {
+                        await RemoveFromDBAsync(tracker.Value);
+                        tracker.Value.Name = tracker.Key.ToLower().Replace("@", "");
+                        trackers.Add(tracker.Key.ToLower().Replace("@", ""), tracker.Value);
+                        trackers.Remove(tracker.Key);
+                        await InsertToDBAsync(trackers[tracker.Key.ToLower().Replace("@", "")]);
+                    }
+                    else if (!tracker.Key.Equals(tracker.Key.ToLower().Replace("@", "")))
+                    {
+                        foreach (var channel in tracker.Value.ChannelMessages)
+                        {
+                            await AddTrackerAsync(tracker.Key.ToLower().Replace("@", ""), channel.Key, channel.Value);
+
+                            if (typeof(T) == typeof(TwitchTracker))
+                            {
+                                var curTracker = trackers[tracker.Key.ToLower().Replace("@", "")] as TwitchTracker;
+                                curTracker.Specifications[channel.Key] = (tracker.Value as TwitchTracker).Specifications[channel.Key];
+                            }
+                        }
+
+                        tracker.Value.Dispose();
+                        trackers.Remove(tracker.Key);
+                        await RemoveFromDBAsync(tracker.Value);
+                        await UpdateDBAsync(trackers[tracker.Key.ToLower().Replace("@", "")]);
+                    }
+                }
+            }
         }
 
         public override async Task<bool> TryRemoveTrackerAsync(string name, ulong channelId)
@@ -229,13 +274,16 @@ namespace MopsBot.Data
             return guildTrackers;
         }
 
-        public async Task<bool> TryModifyTrackerAsync(string name, ulong channelId, Action<T> modifier){
+        public async Task<bool> TryModifyTrackerAsync(string name, ulong channelId, Action<T> modifier)
+        {
             var tracker = GetTracker(channelId, name) as T;
-            if(tracker != null){
+            if (tracker != null)
+            {
                 modifier(tracker);
                 await UpdateDBAsync(tracker);
                 return true;
-            } else
+            }
+            else
                 return false;
         }
 
@@ -300,8 +348,10 @@ namespace MopsBot.Data
             var rawTrackers = trackers.Values.Where(x => x.ChannelMessages.Any(y => channels.Contains(y.Key)));
 
             parameters["Content"] = new List<object>();
-            foreach(var tracker in rawTrackers){
-                foreach(var channel in tracker.ChannelMessages.Keys.Where(x => channels.Contains(x))){
+            foreach (var tracker in rawTrackers)
+            {
+                foreach (var channel in tracker.ChannelMessages.Keys.Where(x => channels.Contains(x)))
+                {
                     (parameters["Content"] as List<object>).Add(tracker.GetAsScope(channel));
                 }
             }
