@@ -82,7 +82,7 @@ namespace MopsBot.Data
             trackers = (trackers == null ? new Dictionary<string, T>() : trackers);
 
             if(collection.Count > 0){
-                int gap = 60000 / collection.Count;
+                int gap = 600000 / collection.Count;
 
                 for (int i = trackers.Count - 1; i >= 0; i--)
                 {
