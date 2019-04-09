@@ -91,7 +91,7 @@ namespace MopsBot.Data.Entities
 
         public async Task UpdateUserAsync()
         {
-            TwitchUser user = (await StaticBase.Database.GetCollection<TwitchUser>("TwitchUsers").FindAsync(x => x.DiscordId == DiscordId)).FirstOrDefault();
+            TwitchUser user = (await StaticBase.Database.GetCollection<TwitchUser>("TwitchUsers").FindAsync(x => x.GuildPlusDiscordId == GuildPlusDiscordId)).FirstOrDefault();
 
             if (user == null)
             {
@@ -99,7 +99,7 @@ namespace MopsBot.Data.Entities
             }
             else
             {
-                await StaticBase.Database.GetCollection<TwitchUser>("TwitchUsers").ReplaceOneAsync(x => x.DiscordId == DiscordId, this);
+                await StaticBase.Database.GetCollection<TwitchUser>("TwitchUsers").ReplaceOneAsync(x => x.GuildPlusDiscordId == GuildPlusDiscordId, this);
             }
         }
 
