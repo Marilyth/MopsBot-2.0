@@ -111,10 +111,10 @@ namespace MopsBot
                     else if(tracker.Key != BaseTracker.TrackerType.TwitchGroup)
                         Task.Run(() => tracker.Value.PostInitialisation());
                 }
-                TwitchUsers = Database.GetCollection<Data.Entities.TwitchUser>("TwitchUsers").FindSync(x => true).ToEnumerable().ToDictionary(x => x.DiscordId);
-                foreach(var user in TwitchUsers) user.Value.PostInitialisation();
+
                 TwitchGuilds = Database.GetCollection<Data.Entities.TwitchGuild>("TwitchGuilds").FindSync(x => true).ToEnumerable().ToDictionary(x => x.DiscordId);
-                foreach(var guild in TwitchGuilds) guild.Value.LoadUsers();
+                TwitchUsers = Database.GetCollection<Data.Entities.TwitchUser>("TwitchUsers").FindSync(x => true).ToEnumerable().ToDictionary(x => x.GuildPlusDiscordId);
+                foreach(var user in TwitchUsers) user.Value.PostInitialisation();
 
                 init = true;
 

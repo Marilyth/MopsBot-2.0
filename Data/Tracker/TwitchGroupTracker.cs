@@ -46,10 +46,7 @@ namespace MopsBot.Data.Tracker
 
         public void FetchTrackers()
         {
-            //Must be changed for rank roles
-            var channels = Program.Client.GetGuild(ulong.Parse(Name)).TextChannels;
-            var allTrackers = StaticBase.Trackers[TrackerType.Twitch].GetTrackers().Select(x => x.Value as TwitchTracker).ToList();
-            var guildTrackers = allTrackers.Where(x => x.ChannelMessages.Keys.Any(y => channels.Select(z => z.Id).Contains(y))).ToList();
+            var guildTrackers = StaticBase.Trackers[TrackerType.Twitch].GetGuildTrackers(ulong.Parse(Name)).Select(x => x as TwitchTracker).ToList();
             trackers = guildTrackers;
         }
 

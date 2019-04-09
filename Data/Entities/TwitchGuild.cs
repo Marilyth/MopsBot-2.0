@@ -24,15 +24,14 @@ namespace MopsBot.Data.Entities
         public List<Tuple<int, ulong>> RankRoles;
         private List<TwitchUser> users;
 
+        public TwitchGuild(){
+            users = new List<TwitchUser>();
+        }
+
         public TwitchGuild(ulong dId)
         {
             DiscordId = dId;
-            //TwitchUsers = new List<TwitchUser>();
-            RankRoles = new List<Tuple<int, ulong>>();
-        }
-
-        public void LoadUsers(){
-            users = StaticBase.TwitchUsers.Where(x => x.Value.Guilds.Contains(DiscordId)).Select(x => x.Value).ToList();
+            users = new List<TwitchUser>();
         }
 
         public void AddUser(TwitchUser user){
@@ -45,8 +44,11 @@ namespace MopsBot.Data.Entities
 
         public List<TwitchUser> GetUsers() => users;
         public List<TwitchUser> GetUsers(ulong rankId){
-            var rankUsers = users.Where(x => RankRoles.LastOrDefault(y => y.Item1 <= x.Points)?.Item2 == rankId).ToList();
-            return rankUsers;
+            if(users.Count > 0){
+                var rankUsers = users.Where(x => RankRoles.LastOrDefault(y => y.Item1 <= x.Points)?.Item2 == rankId).ToList();
+                return rankUsers;
+            } else
+                return new List<TwitchUser>();
         }
 
         public bool ExistsUser(string twitchName, out TwitchUser user){
