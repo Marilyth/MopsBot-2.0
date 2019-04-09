@@ -24,18 +24,18 @@ namespace MopsBot.Data.Entities
         public HashSet<ulong> Guilds;
         private TwitchTracker tracker;
 
-        public TwitchUser(ulong dId, string tId)
+        public TwitchUser(ulong dId, string tId, ulong guildId = 0)
         {
             DiscordId = dId;
             TwitchName = tId;
             Hosts = new List<Tuple<DateTime, string, int>>();
-            Guilds = new HashSet<ulong>();
+            Guilds = new HashSet<ulong>(){guildId};
             PostInitialisation();
         }
 
         public async Task PostInitialisation()
         {
-            tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTrackers().FirstOrDefault(x => x.Key.ToLower().Equals(TwitchName.ToLower())).Value as TwitchTracker;
+            tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTrackers()[TwitchName.ToLower()] as TwitchTracker;
 
             if(tracker == null){
                 await CreateSilentTrackerAsync(TwitchName, StaticBase.TwitchGuilds[Guilds.First()].notifyChannel);
@@ -121,8 +121,10 @@ namespace MopsBot.Data.Entities
 
         public async Task WentLive(BaseTracker sender = null)
         {
-            LiveCount++;
-            await ModifyAsync(x => x.Points += 20);
+            if(sender != null){
+                LiveCount++;
+                await ModifyAsync(x => x.Points += 20);
+            }
 
             //Set live role on each server
             foreach (var guild in Guilds)

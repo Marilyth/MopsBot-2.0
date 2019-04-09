@@ -43,6 +43,12 @@ namespace MopsBot.Data.Entities
             users.Remove(user);
         }
 
+        public List<TwitchUser> GetUsers() => users;
+        public List<TwitchUser> GetUsers(ulong rankId){
+            var rankUsers = users.Where(x => RankRoles.LastOrDefault(y => y.Item1 <= x.Points)?.Item2 == rankId).ToList();
+            return rankUsers;
+        }
+
         public bool ExistsUser(string twitchName, out TwitchUser user){
             user = users.FirstOrDefault(x => x.TwitchName.ToLower().Equals(twitchName.ToLower()));
             return user != null;
@@ -61,6 +67,7 @@ namespace MopsBot.Data.Entities
         }
 
         public Embed GetRankRoles(){
+            RankRoles = RankRoles.OrderBy(x => x.Item1).ToList();
             var embed = new EmbedBuilder();
             embed.WithCurrentTimestamp().WithDescription(string.Join("\n", RankRoles.Select(x => $"{getRoleName(x.Item2)} starting at {x.Item1} points")));
 

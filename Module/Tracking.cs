@@ -468,10 +468,11 @@ namespace MopsBot.Module
             [Command("GroupTrackers")]
             [Summary("Adds all trackers of the guild to a unified embed, in the channel you are calling this command in.")]
             [Hide]
-            public async Task GroupTrackers()
+            public async Task GroupTrackers([Remainder]SocketRole rank = null)
             {
                 await StaticBase.Trackers[BaseTracker.TrackerType.TwitchGroup].AddTrackerAsync(Context.Guild.Id.ToString(), Context.Channel.Id);
-                await ReplyAsync("Added group tracking for this guild");
+                if(rank != null) (StaticBase.Trackers[BaseTracker.TrackerType.TwitchGroup].GetTracker(Context.Channel.Id, Context.Guild.Id.ToString()) as TwitchGroupTracker).RankChannels[Context.Channel.Id] = rank.Id;
+                await ReplyAsync("Added group tracking for this channel");
             }
 
             [Command("UnGroupTrackers")]
@@ -479,6 +480,7 @@ namespace MopsBot.Module
             [Hide]
             public async Task UnGroupTrackers()
             {
+                (StaticBase.Trackers[BaseTracker.TrackerType.TwitchGroup].GetTracker(Context.Channel.Id, Context.Guild.Id.ToString()) as TwitchGroupTracker).RankChannels.Remove(Context.Channel.Id);
                 await StaticBase.Trackers[BaseTracker.TrackerType.TwitchGroup].TryRemoveTrackerAsync(Context.Guild.Id.ToString(), Context.Channel.Id);
                 await ReplyAsync("Removed group tracking in this channel");
             }
