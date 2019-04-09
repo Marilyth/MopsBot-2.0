@@ -369,95 +369,100 @@ namespace MopsBot.Module
                                      $"Currently tracked streamers are:", embed: StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTrackersEmbed(Context.Channel.Id));
             }
 
-            [Command("SwitchShowEmbed")]
-            [Summary("Switches the bool on whether to show the tracker embed or not.")]
-            [RequireUserPermission(GuildPermission.ManageRoles)]
-            public async Task SwitchEmbed(string streamer)
+            [Group("Notifications")]
+            public class Notifications : ModuleBase
             {
-                streamer = streamer.ToLower();
-                var tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTracker(Context.Channel.Id, streamer) as TwitchTracker;
 
-                if (tracker != null)
+                [Command("SwitchShowEmbed")]
+                [Summary("Switches the bool on whether to show the tracker embed or not.")]
+                [RequireUserPermission(GuildPermission.ManageRoles)]
+                public async Task SwitchEmbed(string streamer)
                 {
-                    await tracker.ModifyAsync(x => x.Specifications[Context.Channel.Id].ShowEmbed = !tracker.Specifications[Context.Channel.Id].ShowEmbed);
-                    await ReplyAsync($"Changed `ShowEmbed` for `{streamer}` to `{tracker.Specifications[Context.Channel.Id].ShowEmbed}`");
+                    streamer = streamer.ToLower();
+                    var tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTracker(Context.Channel.Id, streamer) as TwitchTracker;
+
+                    if (tracker != null)
+                    {
+                        await tracker.ModifyAsync(x => x.Specifications[Context.Channel.Id].ShowEmbed = !tracker.Specifications[Context.Channel.Id].ShowEmbed);
+                        await ReplyAsync($"Changed `ShowEmbed` for `{streamer}` to `{tracker.Specifications[Context.Channel.Id].ShowEmbed}`");
+                    }
+                    else
+                        await ReplyAsync($"Could not find tracker for `{streamer}`\n" +
+                                         $"Currently tracked streamers are:", embed: StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTrackersEmbed(Context.Channel.Id));
                 }
-                else
-                    await ReplyAsync($"Could not find tracker for `{streamer}`\n" +
-                                     $"Currently tracked streamers are:", embed: StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTrackersEmbed(Context.Channel.Id));
-            }
 
-            [Command("SwitchNotifyGame")]
-            [Summary("Switches the bool on whether to notify on game changes.")]
-            [RequireUserPermission(GuildPermission.ManageRoles)]
-            public async Task SwitchGame(string streamer)
-            {
-                streamer = streamer.ToLower();
-                var tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTracker(Context.Channel.Id, streamer) as TwitchTracker;
-
-                if (tracker != null)
+                [Command("SwitchNotifyGame")]
+                [Summary("Switches the bool on whether to notify on game changes.")]
+                [RequireUserPermission(GuildPermission.ManageRoles)]
+                public async Task SwitchGame(string streamer)
                 {
-                    await tracker.ModifyAsync(x => x.Specifications[Context.Channel.Id].NotifyOnGameChange = !tracker.Specifications[Context.Channel.Id].NotifyOnGameChange);
-                    await ReplyAsync($"Changed `NotifyOnGameChange` for `{streamer}` to `{tracker.Specifications[Context.Channel.Id].NotifyOnGameChange}`");
+                    streamer = streamer.ToLower();
+                    var tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTracker(Context.Channel.Id, streamer) as TwitchTracker;
+
+                    if (tracker != null)
+                    {
+                        await tracker.ModifyAsync(x => x.Specifications[Context.Channel.Id].NotifyOnGameChange = !tracker.Specifications[Context.Channel.Id].NotifyOnGameChange);
+                        await ReplyAsync($"Changed `NotifyOnGameChange` for `{streamer}` to `{tracker.Specifications[Context.Channel.Id].NotifyOnGameChange}`");
+                    }
+                    else
+                        await ReplyAsync($"Could not find tracker for `{streamer}`\n" +
+                                         $"Currently tracked streamers are:", embed: StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTrackersEmbed(Context.Channel.Id));
                 }
-                else
-                    await ReplyAsync($"Could not find tracker for `{streamer}`\n" +
-                                     $"Currently tracked streamers are:", embed: StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTrackersEmbed(Context.Channel.Id));
-            }
 
-            [Command("SwitchNotifyOffline")]
-            [Summary("Switches the bool on whether to notify on when the streamer goes offline.")]
-            [RequireUserPermission(GuildPermission.ManageRoles)]
-            public async Task SwitchOffline(string streamer)
-            {
-                streamer = streamer.ToLower();
-                var tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTracker(Context.Channel.Id, streamer) as TwitchTracker;
-
-                if (tracker != null)
+                [Command("SwitchNotifyOffline")]
+                [Summary("Switches the bool on whether to notify on when the streamer goes offline.")]
+                [RequireUserPermission(GuildPermission.ManageRoles)]
+                public async Task SwitchOffline(string streamer)
                 {
-                    await tracker.ModifyAsync(x => x.Specifications[Context.Channel.Id].NotifyOnOffline = !tracker.Specifications[Context.Channel.Id].NotifyOnOffline);
-                    await ReplyAsync($"Changed `NotifyOnOffline` for `{streamer}` to `{tracker.Specifications[Context.Channel.Id].NotifyOnOffline}`");
+                    streamer = streamer.ToLower();
+                    var tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTracker(Context.Channel.Id, streamer) as TwitchTracker;
+
+                    if (tracker != null)
+                    {
+                        await tracker.ModifyAsync(x => x.Specifications[Context.Channel.Id].NotifyOnOffline = !tracker.Specifications[Context.Channel.Id].NotifyOnOffline);
+                        await ReplyAsync($"Changed `NotifyOnOffline` for `{streamer}` to `{tracker.Specifications[Context.Channel.Id].NotifyOnOffline}`");
+                    }
+                    else
+                        await ReplyAsync($"Could not find tracker for `{streamer}`\n" +
+                                         $"Currently tracked streamers are:", embed: StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTrackersEmbed(Context.Channel.Id));
                 }
-                else
-                    await ReplyAsync($"Could not find tracker for `{streamer}`\n" +
-                                     $"Currently tracked streamers are:", embed: StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTrackersEmbed(Context.Channel.Id));
-            }
 
-            [Command("SwitchNotifyOnline")]
-            [Alias("SwitchNotifyLive")]
-            [Summary("Switches the bool on whether to notify on when the streamer goes live.")]
-            [RequireUserPermission(GuildPermission.ManageRoles)]
-            public async Task SwitchOnline(string streamer)
-            {
-                streamer = streamer.ToLower();
-                var tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTracker(Context.Channel.Id, streamer) as TwitchTracker;
-
-                if (tracker != null)
+                [Command("SwitchNotifyOnline")]
+                [Alias("SwitchNotifyLive")]
+                [Summary("Switches the bool on whether to notify on when the streamer goes live.")]
+                [RequireUserPermission(GuildPermission.ManageRoles)]
+                public async Task SwitchOnline(string streamer)
                 {
-                    await tracker.ModifyAsync(x => x.Specifications[Context.Channel.Id].NotifyOnOnline = !tracker.Specifications[Context.Channel.Id].NotifyOnOnline);
-                    await ReplyAsync($"Changed `NotifyOnOnline` for `{streamer}` to `{tracker.Specifications[Context.Channel.Id].NotifyOnOnline}`");
+                    streamer = streamer.ToLower();
+                    var tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTracker(Context.Channel.Id, streamer) as TwitchTracker;
+
+                    if (tracker != null)
+                    {
+                        await tracker.ModifyAsync(x => x.Specifications[Context.Channel.Id].NotifyOnOnline = !tracker.Specifications[Context.Channel.Id].NotifyOnOnline);
+                        await ReplyAsync($"Changed `NotifyOnOnline` for `{streamer}` to `{tracker.Specifications[Context.Channel.Id].NotifyOnOnline}`");
+                    }
+                    else
+                        await ReplyAsync($"Could not find tracker for `{streamer}`\n" +
+                                         $"Currently tracked streamers are:", embed: StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTrackersEmbed(Context.Channel.Id));
                 }
-                else
-                    await ReplyAsync($"Could not find tracker for `{streamer}`\n" +
-                                     $"Currently tracked streamers are:", embed: StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTrackersEmbed(Context.Channel.Id));
-            }
 
-            [Command("SwitchNotifyHost")]
-            [Summary("Switches the bool on whether to notify hosts or not.")]
-            [RequireUserPermission(GuildPermission.ManageRoles)]
-            public async Task SwitchHosts(string streamer)
-            {
-                streamer = streamer.ToLower();
-                var tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTracker(Context.Channel.Id, streamer) as TwitchTracker;
-
-                if (tracker != null)
+                [Command("SwitchNotifyHost")]
+                [Summary("Switches the bool on whether to notify hosts or not.")]
+                [RequireUserPermission(GuildPermission.ManageRoles)]
+                public async Task SwitchHosts(string streamer)
                 {
-                    await tracker.ModifyAsync(x => x.Specifications[Context.Channel.Id].NotifyOnHost = !tracker.Specifications[Context.Channel.Id].NotifyOnHost);
-                    await ReplyAsync($"Changed `NotifyOnHost` for `{streamer}` to `{tracker.Specifications[Context.Channel.Id].NotifyOnHost}`");
+                    streamer = streamer.ToLower();
+                    var tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTracker(Context.Channel.Id, streamer) as TwitchTracker;
+
+                    if (tracker != null)
+                    {
+                        await tracker.ModifyAsync(x => x.Specifications[Context.Channel.Id].NotifyOnHost = !tracker.Specifications[Context.Channel.Id].NotifyOnHost);
+                        await ReplyAsync($"Changed `NotifyOnHost` for `{streamer}` to `{tracker.Specifications[Context.Channel.Id].NotifyOnHost}`");
+                    }
+                    else
+                        await ReplyAsync($"Could not find tracker for `{streamer}`\n" +
+                                         $"Currently tracked streamers are:", embed: StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTrackersEmbed(Context.Channel.Id));
                 }
-                else
-                    await ReplyAsync($"Could not find tracker for `{streamer}`\n" +
-                                     $"Currently tracked streamers are:", embed: StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTrackersEmbed(Context.Channel.Id));
             }
 
             [Command("GroupTrackers")]
