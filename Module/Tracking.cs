@@ -571,7 +571,7 @@ namespace MopsBot.Module
                     if (!exists)
                     {
                         StaticBase.TwitchUsers.Add(owner.Id + Context.Guild.Id, tUser);
-                        await tUser.ModifyAsync(x => x.GuildId = Context.Guild.Id);
+                        await tUser.UpdateUserAsync();
                         await tUser.PostInitialisation();
                     }
 
