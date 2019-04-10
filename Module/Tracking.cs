@@ -576,7 +576,6 @@ namespace MopsBot.Module
                     {
                         StaticBase.TwitchUsers.Add(owner.Id + Context.Guild.Id, tUser);
                         await tUser.UpdateUserAsync();
-                        await tUser.PostInitialisation();
                     }
 
                     await ReplyAsync($"Successfully linked {owner.Mention} to {streamer}.\nHost notifications will be sent to <#{StaticBase.TwitchGuilds[Context.Guild.Id]?.notifyChannel}>");
@@ -632,7 +631,7 @@ namespace MopsBot.Module
                             if (end > userCount)
                                 end = (uint)userCount;
 
-                            await ReplyAsync("", embed: await MopsBot.Data.Entities.TwitchUser.GetLeaderboardAsync(Context.Guild.Id, begin: (int)begin, end: (int)end));
+                            await ReplyAsync("", embed: await StaticBase.TwitchGuilds[Context.Guild.Id].GetLeaderboardAsync(begin: (int)begin, end: (int)end));
 
                         }
                         catch (Exception e)

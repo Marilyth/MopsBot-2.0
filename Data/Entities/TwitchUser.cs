@@ -98,29 +98,6 @@ namespace MopsBot.Data.Entities
             }
         }
 
-        public static async Task<Embed> GetLeaderboardAsync(ulong guildId, Func<TwitchUser, double> stat = null, int begin = 1, int end = 10)
-        {
-            var users = StaticBase.TwitchGuilds[guildId].GetUsers();
-
-            if (stat == null)
-                stat = x => x.Points;
-
-            users = users.OrderByDescending(x => stat(x)).Skip(begin - 1).Take(end - (begin - 1)).ToList();
-
-            List<KeyValuePair<string, double>> stats = new List<KeyValuePair<string, double>>();
-
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < end - (begin - 1); i++)
-            {
-                if (end - begin < 10) sb.Append($"#{begin + i}: {Program.Client.GetUser(users[i].DiscordId)?.Mention ?? $"<@{users[i].DiscordId}>"}\n");
-                stats.Add(KeyValuePair.Create("" + (begin + i), stat(users[i])));
-            }
-
-            var embed = new EmbedBuilder();
-            return embed.WithCurrentTimestamp().WithImageUrl(ColumnPlot.DrawPlotSorted(guildId + "Leaderboard", stats))
-                        .WithDescription(sb.ToString()).Build();
-        }
-
         public async Task WentLive(BaseTracker sender = null)
         {
             if (sender != null)
