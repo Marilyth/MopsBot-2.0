@@ -38,15 +38,10 @@ namespace MopsBot.Data.Entities
         public async Task PostInitialisation()
         {
             StaticBase.TwitchGuilds[GuildId].AddUser(this);
-            tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTrackers().ContainsKey(TwitchName.ToLower()) ?
-                        StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTrackers()[TwitchName.ToLower()] as TwitchTracker : null;
+            await CreateSilentTrackerAsync(TwitchName, StaticBase.TwitchGuilds[GuildId].notifyChannel);
+            tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTracker(StaticBase.TwitchGuilds[GuildId].notifyChannel, TwitchName) as TwitchTracker;
 
-            if (tracker == null)
-            {
-                await CreateSilentTrackerAsync(TwitchName, StaticBase.TwitchGuilds[GuildId].notifyChannel);
-                tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTracker(StaticBase.TwitchGuilds[GuildId].notifyChannel, TwitchName) as TwitchTracker;
-            }
-            else if (tracker.IsOnline)
+            if (tracker.IsOnline)
             {
                 await WentLive();
             }
@@ -171,7 +166,20 @@ namespace MopsBot.Data.Entities
         public async Task DeleteAsync()
         {
             Hosts = null;
-            await StaticBase.Trackers[BaseTracker.TrackerType.Twitch].TryRemoveTrackerAsync(TwitchName.ToLower(), StaticBase.TwitchGuilds[GuildId].notifyChannel);
+
+            try
+            {
+                var silentChannel = tracker.Specifications.FirstOrDefault(x =>
+                                                  x.Value.NotifyOnGameChange == false &&
+                                                  x.Value.NotifyOnHost == false &&
+                                                  x.Value.NotifyOnOffline == false &&
+                                                  x.Value.NotifyOnOnline == false &&
+                                                  x.Value.ShowEmbed == false).Key;
+
+                await StaticBase.Trackers[BaseTracker.TrackerType.Twitch].TryRemoveTrackerAsync(TwitchName.ToLower(), silentChannel);
+            }
+            catch { }
+
             StaticBase.TwitchGuilds[GuildId].RemoveUser(this);
             StaticBase.TwitchUsers.Remove(GuildPlusDiscordId);
             await StaticBase.Database.GetCollection<TwitchUser>("TwitchUsers").DeleteOneAsync(x => x.DiscordId == DiscordId);

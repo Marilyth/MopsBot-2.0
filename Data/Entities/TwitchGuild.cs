@@ -32,6 +32,7 @@ namespace MopsBot.Data.Entities
         {
             DiscordId = dId;
             users = new List<TwitchUser>();
+            RankRoles = new List<Tuple<int, ulong>>();
         }
 
         public void AddUser(TwitchUser user){
@@ -58,6 +59,7 @@ namespace MopsBot.Data.Entities
 
         public async Task UpdateGuildAsync()
         {
+            RankRoles = RankRoles.OrderBy(x => x.Item1).ToList();
             TwitchGuild user = (await StaticBase.Database.GetCollection<TwitchGuild>("TwitchGuilds").FindAsync(x => x.DiscordId == DiscordId)).FirstOrDefault();
 
             if (user == null)
@@ -69,7 +71,6 @@ namespace MopsBot.Data.Entities
         }
 
         public Embed GetRankRoles(){
-            RankRoles = RankRoles.OrderBy(x => x.Item1).ToList();
             var embed = new EmbedBuilder();
             embed.WithCurrentTimestamp().WithDescription(string.Join("\n", RankRoles.Select(x => $"{getRoleName(x.Item2)} starting at {x.Item1} points")));
 

@@ -470,7 +470,11 @@ namespace MopsBot.Module
             public async Task GroupTrackers([Remainder]SocketRole rank = null)
             {
                 await StaticBase.Trackers[BaseTracker.TrackerType.TwitchGroup].AddTrackerAsync(Context.Guild.Id.ToString(), Context.Channel.Id);
-                if (rank != null) (StaticBase.Trackers[BaseTracker.TrackerType.TwitchGroup].GetTracker(Context.Channel.Id, Context.Guild.Id.ToString()) as TwitchGroupTracker).RankChannels[Context.Channel.Id] = rank.Id;
+                if (rank != null){
+                    var tracker = StaticBase.Trackers[BaseTracker.TrackerType.TwitchGroup].GetTracker(Context.Channel.Id, Context.Guild.Id.ToString()) as TwitchGroupTracker;
+                    tracker.RankChannels[Context.Channel.Id] = rank.Id;
+                    await StaticBase.Trackers[BaseTracker.TrackerType.TwitchGroup].UpdateDBAsync(tracker);
+                }
                 await ReplyAsync("Added group tracking for this channel");
             }
 
