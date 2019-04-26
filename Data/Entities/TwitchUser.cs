@@ -33,6 +33,7 @@ namespace MopsBot.Data.Entities
             Hosts = new List<Tuple<DateTime, string, int>>();
             GuildId = guildId;
             PostInitialisation();
+            SetRole();
         }
 
         public async Task PostInitialisation()
