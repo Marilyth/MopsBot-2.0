@@ -159,11 +159,5 @@ namespace MopsBot.Module
                 }
             }
         }
-
-        public static async Task<Gfycat.Gfy> ConvertToGifAsync(string url)
-        {
-            var status = await StaticBase.gfy.CreateGfyAsync(url);
-            return await status.GetGfyWhenCompleteAsync();
-        }
     }
 }

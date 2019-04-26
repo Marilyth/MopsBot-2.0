@@ -12,8 +12,6 @@ using MopsBot.Data;
 using MopsBot.Data.Tracker;
 using MopsBot.Data.Interactive;
 using Tweetinvi;
-using NewsAPI;
-using SharprWowApi;
 using MongoDB.Driver;
 using MongoDB.Bson.Serialization.Options;
 using MongoDB.Bson.Serialization.Attributes;
@@ -32,7 +30,6 @@ namespace MopsBot
         public static readonly System.Net.Http.HttpClient HttpClient = new System.Net.Http.HttpClient();
         public static AuthDiscordBotListApi DiscordBotList = new AuthDiscordBotListApi(305398845389406209, Program.Config["DiscordBotListKey"]);
         public static Random ran = new Random();
-        public static Gfycat.GfycatClient gfy;
         public static List<string> Playlist = new List<string>();
         [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
         public static Dictionary<ulong, Data.Entities.WelcomeMessage> WelcomeMessages;
@@ -42,7 +39,6 @@ namespace MopsBot
         public static ReactionPoll Poll;
         //public static Crosswords Crosswords;
         public static Dictionary<BaseTracker.TrackerType, TrackerWrapper> Trackers;
-        public static NewsApiClient NewsClient;
         public static Dictionary<ulong, MopsBot.Data.Entities.TwitchUser> TwitchUsers;
         public static Dictionary<ulong, MopsBot.Data.Entities.TwitchGuild> TwitchGuilds;
 
@@ -77,10 +73,6 @@ namespace MopsBot
                 Tweetinvi.ExceptionHandler.SwallowWebExceptions = false;
                 Tweetinvi.RateLimit.RateLimitTrackerMode = RateLimitTrackerMode.TrackOnly;
                 TweetinviEvents.QueryBeforeExecute += Data.Tracker.TwitterTracker.QueryBeforeExecute;
-
-                gfy = new Gfycat.GfycatClient(Program.Config["GfyID"], Program.Config["GfySecret"]);
-
-                NewsClient = new NewsApiClient(Program.Config["NewsAPI"]);
                 //WoWTracker.WoWClient = new SharprWowApi.WowClient(Region.EU, Locale.en_GB, Program.Config["WoWKey"]);
 
                 Trackers = new Dictionary<BaseTracker.TrackerType, Data.TrackerWrapper>();
