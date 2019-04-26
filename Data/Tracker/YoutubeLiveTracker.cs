@@ -79,7 +79,7 @@ namespace MopsBot.Data.Tracker
                 ViewerGraph.InitPlot();
 
             if(VideoId != null)
-                SetTimer(60000, 60000);
+                SetTimer(120000, 120000);
 
             foreach (var channelMessage in ToUpdate ?? new Dictionary<ulong, ulong>())
             {
@@ -150,7 +150,7 @@ namespace MopsBot.Data.Tracker
                         foreach (ulong channel in ChannelMessages.Keys.ToList())
                             await OnMinorChangeTracked(channel, ChannelMessages[channel]);
                         
-                        SetTimer(60000, 60000);
+                        SetTimer(120000, 120000);
 
                         IconUrl = (await fetchChannel()).snippet.thumbnails.medium.url;
                     }
