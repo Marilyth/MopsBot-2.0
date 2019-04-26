@@ -65,9 +65,9 @@ namespace MopsBot
                 Task.Run(() =>
                 {
                     WelcomeMessages = Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").FindSync(x => true).ToEnumerable().ToDictionary(x => x.GuildId);
-                    ReactGiveaways = new ReactionGiveaway();
-                    ReactRoleJoin = new ReactionRoleJoin();
-                    Poll = new ReactionPoll();
+                    //ReactGiveaways = new ReactionGiveaway();
+                    //ReactRoleJoin = new ReactionRoleJoin();
+                    //Poll = new ReactionPoll();
                 });
 
                 Auth.SetUserCredentials(Program.Config["TwitterKey"], Program.Config["TwitterSecret"],
