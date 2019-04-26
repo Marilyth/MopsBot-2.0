@@ -38,8 +38,6 @@ namespace MopsBot
                 LogLevel = LogSeverity.Info,
                 AlwaysDownloadUsers = true
             });
-            var test = new List<int>(){0, 1, 2, 3, 4, 5, 6, 7};
-            //var tost = test[1..3];
             
             using (StreamReader sr = new StreamReader(new FileStream("mopsdata//Config.json", FileMode.Open)))
                 Config = JsonConvert.DeserializeObject<Dictionary<string, string>>(sr.ReadToEnd());

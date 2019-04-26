@@ -64,10 +64,10 @@ namespace MopsBot
 
                 Task.Run(() =>
                 {
-                    //WelcomeMessages = Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").FindSync(x => true).ToEnumerable().ToDictionary(x => x.GuildId);
-                    //ReactGiveaways = new ReactionGiveaway();
-                    //ReactRoleJoin = new ReactionRoleJoin();
-                    //Poll = new ReactionPoll();
+                    WelcomeMessages = Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").FindSync(x => true).ToEnumerable().ToDictionary(x => x.GuildId);
+                    ReactGiveaways = new ReactionGiveaway();
+                    ReactRoleJoin = new ReactionRoleJoin();
+                    Poll = new ReactionPoll();
                 });
 
                 Auth.SetUserCredentials(Program.Config["TwitterKey"], Program.Config["TwitterSecret"],
@@ -83,7 +83,7 @@ namespace MopsBot
                 NewsClient = new NewsApiClient(Program.Config["NewsAPI"]);
                 //WoWTracker.WoWClient = new SharprWowApi.WowClient(Region.EU, Locale.en_GB, Program.Config["WoWKey"]);
 
-                /*Trackers = new Dictionary<BaseTracker.TrackerType, Data.TrackerWrapper>();
+                Trackers = new Dictionary<BaseTracker.TrackerType, Data.TrackerWrapper>();
                 Trackers[BaseTracker.TrackerType.Osu] = new TrackerHandler<OsuTracker>();
                 Trackers[BaseTracker.TrackerType.Overwatch] = new TrackerHandler<OverwatchTracker>();
                 Trackers[BaseTracker.TrackerType.Twitch] = new TrackerHandler<TwitchTracker>();
@@ -114,7 +114,7 @@ namespace MopsBot
 
                 TwitchGuilds = Database.GetCollection<Data.Entities.TwitchGuild>("TwitchGuilds").FindSync(x => true).ToEnumerable().ToDictionary(x => x.DiscordId);
                 TwitchUsers = Database.GetCollection<Data.Entities.TwitchUser>("TwitchUsers").FindSync(x => true).ToEnumerable().ToDictionary(x => x.GuildPlusDiscordId);
-                foreach(var user in TwitchUsers) user.Value.PostInitialisation();*/
+                foreach(var user in TwitchUsers) user.Value.PostInitialisation();
 
                 init = true;
 
