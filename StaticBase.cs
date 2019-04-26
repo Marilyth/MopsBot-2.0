@@ -102,7 +102,7 @@ namespace MopsBot
                 //Trackers[BaseTracker.TrackerType.Tibia] = new TrackerHandler<JSONTracker>();
                 //Trackers[BaseTracker.TrackerType.TwitterRealtime] = new TrackerHandler<TwitterTracker>();
 
-                /*foreach (var tracker in Trackers)
+                foreach (var tracker in Trackers)
                 {
                     if(tracker.Key == BaseTracker.TrackerType.Twitch){
                         Task.Run(() => tracker.Value.PostInitialisation()).Wait();
@@ -110,11 +110,11 @@ namespace MopsBot
                     }
                     else if(tracker.Key != BaseTracker.TrackerType.TwitchGroup)
                         Task.Run(() => tracker.Value.PostInitialisation());
-                }*/
+                }
 
-                /*TwitchGuilds = Database.GetCollection<Data.Entities.TwitchGuild>("TwitchGuilds").FindSync(x => true).ToEnumerable().ToDictionary(x => x.DiscordId);
+                TwitchGuilds = Database.GetCollection<Data.Entities.TwitchGuild>("TwitchGuilds").FindSync(x => true).ToEnumerable().ToDictionary(x => x.DiscordId);
                 TwitchUsers = Database.GetCollection<Data.Entities.TwitchUser>("TwitchUsers").FindSync(x => true).ToEnumerable().ToDictionary(x => x.GuildPlusDiscordId);
-                foreach(var user in TwitchUsers) user.Value.PostInitialisation();*/
+                foreach(var user in TwitchUsers) user.Value.PostInitialisation();
 
                 init = true;
 
