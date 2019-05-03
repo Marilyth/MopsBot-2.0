@@ -93,7 +93,7 @@ namespace MopsBot.Data.Entities
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < end - (begin - 1); i++)
             {
-                if (end - begin < 10) sb.Append($"#{begin + i}: {Program.Client.GetUser(users[i].DiscordId)?.Mention ?? $"<@{users[i].DiscordId}>"}\n");
+                if (end - begin < 10) sb.Append($"#{begin + i}: {(await StaticBase.GetUserAsync(users[i].DiscordId))?.Mention ?? $"<@{users[i].DiscordId}>"}\n");
                 stats.Add(KeyValuePair.Create("" + (begin + i), stat(users[i])));
             }
 

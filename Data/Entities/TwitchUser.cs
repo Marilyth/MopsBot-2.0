@@ -81,7 +81,7 @@ namespace MopsBot.Data.Entities
             await curGuild.GetUser(DiscordId).AddRoleAsync(curRole);
             await curGuild.GetUser(DiscordId).RemoveRolesAsync(rolesToRemove);
 
-            await curGuild.GetTextChannel(StaticBase.TwitchGuilds[GuildId].notifyChannel).SendMessageAsync($"{Program.Client.GetUser(DiscordId).Mention} is now rank {curRole.Name}");
+            await curGuild.GetTextChannel(StaticBase.TwitchGuilds[GuildId].notifyChannel).SendMessageAsync($"{(await StaticBase.GetUserAsync(DiscordId)).Mention} is now rank {curRole.Name}");
 
         }
 
@@ -166,7 +166,7 @@ namespace MopsBot.Data.Entities
         public async Task Hosting(string hosterName, string targetName, int viewers)
         {
             await ModifyAsync(x => x.Hosts.Add(new Tuple<DateTime, string, int>(DateTime.UtcNow, targetName, viewers)));
-            var hosterDiscordName = Program.Client.GetUser(DiscordId).Username;
+            var hosterDiscordName = (await StaticBase.GetUserAsync(DiscordId)).Username;
 
             var curGuild = StaticBase.TwitchGuilds[GuildId];
             curGuild.ExistsUser(targetName, out TwitchUser user);
@@ -186,7 +186,7 @@ namespace MopsBot.Data.Entities
                         x.Text = "Twitch Hosting";
                     });
             embed.WithDescription($"[{hosterDiscordName}](https://www.twitch.tv/{hosterName}) is now hosting " +
-                                  $"[{(targetDiscordId != null ? Program.Client.GetUser(targetDiscordId.Value).Username : targetName)}](https://www.twitch.tv/{targetName})");
+                                  $"[{(targetDiscordId != null ? (await StaticBase.GetUserAsync(targetDiscordId.Value)).Username : targetName)}](https://www.twitch.tv/{targetName})");
             embed.AddField("Viewers", viewers, true);
             embed.AddField("Points", reward, true);
 
@@ -195,10 +195,10 @@ namespace MopsBot.Data.Entities
         }
 
 
-        public Embed StatEmbed(ulong guildId)
+        public async Task<Embed> StatEmbed(ulong guildId)
         {
             EmbedBuilder e = new EmbedBuilder();
-            e.WithAuthor(Program.Client.GetUser(DiscordId).Username, Program.Client.GetUser(DiscordId).GetAvatarUrl());
+            e.WithAuthor((await StaticBase.GetUserAsync(DiscordId)).Username, (await StaticBase.GetUserAsync(DiscordId)).GetAvatarUrl());
             e.WithCurrentTimestamp().WithColor(Discord.Color.Blue);
 
             var rankRoleId = StaticBase.TwitchGuilds[guildId].RankRoles.LastOrDefault(x => x.Item1 <= Points)?.Item2 ?? 0;

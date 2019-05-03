@@ -78,7 +78,7 @@ namespace MopsBot.Module
         {
             using (Context.Channel.EnterTypingState())
             {
-                await ReplyAsync("", embed: (await User.GetUserAsync(user?.Id ?? Context.User.Id)).StatEmbed());
+                await ReplyAsync("", embed: await (await User.GetUserAsync(user?.Id ?? Context.User.Id)).StatEmbed());
             }
         }
 

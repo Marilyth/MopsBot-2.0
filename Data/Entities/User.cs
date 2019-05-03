@@ -84,7 +84,7 @@ namespace MopsBot.Data.Entities
 
             StringBuilder sb = new StringBuilder();
             for(int i = 0; i < end - (begin - 1); i++){
-                if(end-begin < 10) sb.Append($"#{begin+i}: {Program.Client.GetUser(users[i].Id)?.Mention ?? $"<@{users[i].Id}>"}\n");
+                if(end-begin < 10) sb.Append($"#{begin+i}: {(await StaticBase.GetUserAsync(users[i].Id))?.Mention ?? $"<@{users[i].Id}>"}\n");
                 stats.Add(KeyValuePair.Create(""+(begin+i), stat(users[i])));
             }
 
@@ -116,10 +116,10 @@ namespace MopsBot.Data.Entities
             return output + TempOutput;
         }
 
-        public Embed StatEmbed()
+        public async Task<Embed> StatEmbed()
         {
             EmbedBuilder e = new EmbedBuilder();
-            e.WithAuthor(Program.Client.GetUser(Id).Username, Program.Client.GetUser(Id).GetAvatarUrl());
+            e.WithAuthor((await StaticBase.GetUserAsync(Id)).Username, (await StaticBase.GetUserAsync(Id)).GetAvatarUrl());
             e.WithCurrentTimestamp().WithColor(Discord.Color.Blue);
 
             e.AddField("Level", $"{CalcCurLevel()} ({Experience}/{CalcExperience(CalcCurLevel() + 1)}xp)\n{DrawProgressBar()}", true);

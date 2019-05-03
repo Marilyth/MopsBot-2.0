@@ -2,6 +2,7 @@
 using Discord;
 using Discord.WebSocket;
 using Discord.Commands;
+using Discord.Rest;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -96,6 +97,7 @@ namespace MopsBot
 
                 foreach (var tracker in Trackers)
                 {
+                    var trackerType = tracker.Key;
                     if(tracker.Key == BaseTracker.TrackerType.Twitch){
                         Task.Run(() => {
                                 tracker.Value.PostInitialisation();
@@ -155,12 +157,23 @@ namespace MopsBot
             try
             {
                 if (Program.Client.CurrentUser.Id == 305398845389406209)
-                    await (await Program.Client.GetUser(user.Id).GetOrCreateDMChannelAsync()).SendMessageAsync("Thanks for voting for me!\nI have added 10 Votepoints to your balance!");
+                    await (await (await StaticBase.GetUserAsync(user.Id)).GetOrCreateDMChannelAsync()).SendMessageAsync("Thanks for voting for me!\nI have added 10 Votepoints to your balance!");
             }
             catch (Exception e)
             {
                 await Program.MopsLog(new LogMessage(LogSeverity.Error, "", "messaging voter failed", e));
             }
+        }
+
+        public static async Task<SocketGuildUser> GetGuildUserAsync(ulong guildId, ulong userId){
+            var guild = Program.Client.GetGuild(guildId);
+            if(!guild.HasAllMembers)
+                await guild.DownloadUsersAsync();
+            return guild.GetUser(userId);
+        }
+
+        public static async Task<RestUser> GetUserAsync(ulong userId){
+            return await Program.RestClient.GetUserAsync(userId);
         }
 
         /// <summary>

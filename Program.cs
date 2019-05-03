@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Discord;
 using Discord.WebSocket;
 using Discord.Commands;
+using Discord.Rest;
 using System.Threading;
 using System.Net;
 using Newtonsoft.Json;
@@ -27,6 +28,7 @@ namespace MopsBot
             new Program().Start().GetAwaiter().GetResult();
         }
         public static DiscordSocketClient Client;
+        public static DiscordRestClient RestClient;
         public static Dictionary<string, string> Config;
         public static CommandHandler Handler { get; private set; }
         public static ReactionHandler ReactionHandler { get; private set; }
@@ -36,14 +38,17 @@ namespace MopsBot
             Client = new DiscordSocketClient(new DiscordSocketConfig()
             {
                 LogLevel = LogSeverity.Info,
-                AlwaysDownloadUsers = true
+                //AlwaysDownloadUsers = true
             });
+            RestClient = new DiscordRestClient();
             
             using (StreamReader sr = new StreamReader(new FileStream("mopsdata//Config.json", FileMode.Open)))
                 Config = JsonConvert.DeserializeObject<Dictionary<string, string>>(sr.ReadToEnd());
 
             await Client.LoginAsync(TokenType.Bot, Config["Discord"]);
             await Client.StartAsync();
+
+            await RestClient.LoginAsync(TokenType.Bot, Config["Discord"]);
 
             Client.Log += ClientLog;
             Client.Ready += onClientReady;

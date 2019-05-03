@@ -611,7 +611,7 @@ namespace MopsBot.Module
                         return;
                     }
 
-                    await ReplyAsync(embed: StaticBase.TwitchUsers[Context.User.Id + Context.Guild.Id].StatEmbed(Context.Guild.Id));
+                    await ReplyAsync(embed: await StaticBase.TwitchUsers[Context.User.Id + Context.Guild.Id].StatEmbed(Context.Guild.Id));
                 }
 
                 [Command("GetLeaderboard")]
