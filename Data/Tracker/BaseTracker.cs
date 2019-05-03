@@ -90,7 +90,9 @@ namespace MopsBot.Data.Tracker
         {
             var content = await MopsBot.Module.Information.GetURLAsync(url, headers);
             var stream = new MemoryStream(Encoding.UTF8.GetBytes(content ?? ""));
-            using (var reader = System.Xml.XmlReader.Create(stream))
+            var settings = new System.Xml.XmlReaderSettings();
+            settings.DtdProcessing = System.Xml.DtdProcessing.Parse;
+            using (var reader = System.Xml.XmlReader.Create(stream, settings))
             {
                 SyndicationFeed feed = SyndicationFeed.Load(reader);
                 return feed;
