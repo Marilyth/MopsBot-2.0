@@ -72,7 +72,9 @@ namespace MopsBot.Data.Tracker
         {
             try
             {
-                using (var reader = System.Xml.XmlReader.Create(url))
+                var settings = new System.Xml.XmlReaderSettings();
+                settings.DtdProcessing = System.Xml.DtdProcessing.Parse;
+                using (var reader = System.Xml.XmlReader.Create(url, settings))
                 {
                     SyndicationFeed feed = SyndicationFeed.Load(reader);
                     return feed;
