@@ -228,9 +228,9 @@ namespace MopsBot
                     }
                     else if (prec.GetType() == typeof(RequireBotPermissionAttribute))
                     {
-                        var permission = ((RequireUserPermissionAttribute)prec).ChannelPermission.HasValue ? 
-                                         ((RequireUserPermissionAttribute)prec).ChannelPermission.Value.ToString() :
-                                         ((RequireUserPermissionAttribute)prec).GuildPermission.Value.ToString();
+                        var permission = ((RequireBotPermissionAttribute)prec).ChannelPermission.HasValue ? 
+                                         ((RequireBotPermissionAttribute)prec).ChannelPermission.Value.ToString() :
+                                         ((RequireBotPermissionAttribute)prec).GuildPermission.Value.ToString();
                         preconditions += $"Requires BotPermission: {permission}\n";
                     }
                     else
