@@ -76,6 +76,7 @@ namespace MopsBot.Data.Tracker
                 settings.DtdProcessing = System.Xml.DtdProcessing.Parse;
                 using (var reader = System.Xml.XmlReader.Create(url, settings))
                 {
+                    
                     SyndicationFeed feed = SyndicationFeed.Load(reader);
                     return feed;
                 }
@@ -89,7 +90,7 @@ namespace MopsBot.Data.Tracker
         private async static Task<SyndicationFeed> FetchRSSDataUTF8(string url, params KeyValuePair<string, string>[] headers)
         {
             var content = await MopsBot.Module.Information.GetURLAsync(url, headers);
-            var stream = new MemoryStream(Encoding.UTF8.GetBytes(content ?? ""));
+            var stream = new MemoryStream(Encoding.UTF8.GetBytes(content?.Replace("utf8", "utf-8") ?? ""));
             var settings = new System.Xml.XmlReaderSettings();
             settings.DtdProcessing = System.Xml.DtdProcessing.Parse;
             using (var reader = System.Xml.XmlReader.Create(stream, settings))
