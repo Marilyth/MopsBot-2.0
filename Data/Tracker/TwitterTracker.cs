@@ -336,15 +336,6 @@ namespace MopsBot.Data.Tracker
 
             addUser();
 
-            if ((int)info >= DBCOUNT && STREAM.StreamState == StreamState.Stop)
-            {
-                STREAM.StreamStopped += (sender, args) => {Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"TwitterSTREAM stopped. {args.DisconnectMessage?.Reason ?? ""}", args.Exception)); RestartStream();};
-                STREAM.StreamStarted += (sender, args) => Program.MopsLog(new LogMessage(LogSeverity.Info, "", "TwitterSTREAM started."));
-                STREAM.WarningFallingBehindDetected += (sender, args) => Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"TwitterSTREAM falling behind, {args.WarningMessage.Message} ({args.WarningMessage.PercentFull}%)"));
-                STREAM.FilterLevel = Tweetinvi.Streaming.Parameters.StreamFilterLevel.Low;
-                STREAM.StartStreamMatchingAllConditionsAsync();
-            }
-
             SetTimer(1800000);
         }
 

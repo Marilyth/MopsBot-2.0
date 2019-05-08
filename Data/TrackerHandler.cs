@@ -45,38 +45,10 @@ namespace MopsBot.Data
         public Dictionary<string, T> trackers;
         public TrackerHandler()
         {
-            // using (StreamReader read = new StreamReader(new FileStream($"mopsdata//{typeof(T).Name}.json", FileMode.OpenOrCreate)))
-            // {
-            //     try
-            //     {
-            //         trackers = JsonConvert.DeserializeObject<Dictionary<string, T>>(read.ReadToEnd());
-            //     }
-            //     catch (Exception e)
-            //     {
-            //         Console.WriteLine("\n" +  e.Message + e.StackTrace);
-            //     }
-            // }
-            // trackers = (trackers == null ? new Dictionary<string, T>() : trackers);
-            // foreach(KeyValuePair<string, T> cur in trackers){
-            //     cur.Value.PostInitialisation();
-            //     cur.Value.OnMinorEventFired += OnMinorEvent;
-            //     cur.Value.OnMajorEventFired += OnMajorEvent;
-            // }
         }
 
         public override void PostInitialisation()
         {
-            //using (StreamReader read = new StreamReader(new FileStream($"mopsdata//{typeof(T).Name}.json", FileMode.OpenOrCreate)))
-            //{
-            //try
-            //{
-            //trackers = JsonConvert.DeserializeObject<Dictionary<string, T>>(read.ReadToEnd());
-            //}
-            //catch (Exception e)
-            //{
-            //Console.WriteLine("\n" +  e.Message + e.StackTrace);
-            //}
-            //}
             var collection = StaticBase.Database.GetCollection<T>(typeof(T).Name).FindSync<T>(x => true).ToList();
             trackers = collection.ToDictionary(x => x.Name);
 
@@ -98,30 +70,23 @@ namespace MopsBot.Data
                     }
                     catch (Exception e)
                     {
-                        Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"Error on PostInitialisation", e));
+                        Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"Error on PostInitialisation, {e.Message}", e));
                     }
                 }
-            }
-            // foreach(KeyValuePair<string, T> cur in trackers){
-            //     cur.Value.PostInitialisation();
-            //     cur.Value.OnMinorEventFired += OnMinorEvent;
-            //     cur.Value.OnMajorEventFired += OnMajorEvent;
-            // }
-        }
 
-        /*public override void SaveJson()
-        {
-            string dictAsJson = JsonConvert.SerializeObject(trackers, Formatting.Indented);
-            using (StreamWriter write = new StreamWriter(new FileStream($"mopsdata//{typeof(T).Name}.json", FileMode.Create)))
-                write.Write(dictAsJson);
-        }*/
+                //Start Twitter STREAM after all are initialised
+                if(typeof(T) == typeof(TwitterTracker)){
+                    TwitterTracker.STREAM.StreamStopped += (sender, args) => {Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"TwitterSTREAM stopped. {args.DisconnectMessage?.Reason ?? ""}", args.Exception)); TwitterTracker.RestartStream();};
+                    TwitterTracker.STREAM.StreamStarted += (sender, args) => Program.MopsLog(new LogMessage(LogSeverity.Info, "", "TwitterSTREAM started."));
+                    TwitterTracker.STREAM.WarningFallingBehindDetected += (sender, args) => Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"TwitterSTREAM falling behind, {args.WarningMessage.Message} ({args.WarningMessage.PercentFull}%)"));
+                    TwitterTracker.STREAM.FilterLevel = Tweetinvi.Streaming.Parameters.StreamFilterLevel.Low;
+                    TwitterTracker.STREAM.StartStreamMatchingAllConditionsAsync();
+                }
+            }
+        }
 
         public override async Task UpdateDBAsync(BaseTracker tracker)
         {
-            /*string dictAsJson = JsonConvert.SerializeObject(trackers, Formatting.Indented);
-            using (StreamWriter write = new StreamWriter(new FileStream($"mopsdata//{typeof(T).Name}.json", FileMode.Create)))
-                write.Write(dictAsJson);*/
-
             await StaticBase.Database.GetCollection<BaseTracker>(typeof(T).Name).ReplaceOneAsync(x => x.Name.Equals(tracker.Name), tracker);
         }
 
