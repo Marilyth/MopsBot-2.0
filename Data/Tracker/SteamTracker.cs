@@ -34,7 +34,7 @@ namespace MopsBot.Data.Tracker
                 SteamId = GetUserSIDAsync(name).Result;
                 if(IsProfilePrivate().Result) throw new Exception();
                 LastCheck = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                SetTimer(60000);
+                SetTimer(600000);
             }
             catch (Exception e)
             {
