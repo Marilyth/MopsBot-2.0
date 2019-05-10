@@ -244,6 +244,68 @@ namespace MopsBot.Module
             }
         }
 
+        [Group("Steam")]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
+        public class Steam : ModuleBase
+        {
+            [Command("Track", RunMode = RunMode.Async)]
+            [Summary("Keeps track of the specified steam user, in the Channel you are calling this command in.\nWill notify on game changes and achievements.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
+            public async Task Track([Remainder]string SteamName)
+            {
+                using (Context.Channel.EnterTypingState())
+                {
+                    try
+                    {
+                        SteamName = SteamName.ToLower();
+                        await Trackers[BaseTracker.TrackerType.Steam].AddTrackerAsync(SteamName, Context.Channel.Id);
+
+                        await ReplyAsync("Keeping track of " + SteamName + "'s Achievements and playing status from now on.");
+                    }
+                    catch (Exception e)
+                    {
+                        await ReplyAsync("**Error**: " + e.InnerException.Message);
+                    }
+                }
+            }
+
+            [Command("UnTrack")]
+            [Summary("Stops keeping track of the specified Steam user, in the Channel you are calling this command in.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task unTrackOsu([Remainder]string SteamName)
+            {
+                SteamName = SteamName.ToLower();
+                if (await Trackers[BaseTracker.TrackerType.Steam].TryRemoveTrackerAsync(SteamName, Context.Channel.Id))
+                    await ReplyAsync("Stopped keeping track of " + SteamName + "'s Steam data!");
+                else
+                    await ReplyAsync($"Could not find tracker for `{SteamName}`\n" +
+                                     $"Currently tracked Steam users are:", embed: StaticBase.Trackers[BaseTracker.TrackerType.Steam].GetTrackersEmbed(Context.Channel.Id));
+            }
+
+            [Command("GetTrackers")]
+            [Summary("Returns the Steam users that are tracked in the current channel.")]
+            public async Task getTrackers()
+            {
+                await ReplyAsync("Following Steam users are currently being tracked:", embed: StaticBase.Trackers[BaseTracker.TrackerType.Steam].GetTrackersEmbed(Context.Channel.Id));
+            }
+
+            [Command("SetNotification")]
+            [Summary("Sets the notification text that is used each time a new achievement was achieved.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task SetNotification(string SteamName, [Remainder]string notification)
+            {
+                SteamName = SteamName.ToLower();
+                if (await StaticBase.Trackers[BaseTracker.TrackerType.Steam].TrySetNotificationAsync(SteamName, Context.Channel.Id, notification))
+                {
+                    await ReplyAsync($"Changed notification for `{SteamName}` to `{notification}`");
+                }
+                else
+                    await ReplyAsync($"Could not find tracker for `{SteamName}`\n" +
+                                     $"Currently tracked Steam users are:", embed: StaticBase.Trackers[BaseTracker.TrackerType.Steam].GetTrackersEmbed(Context.Channel.Id));
+            }
+        }
+
         [Group("Youtube")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public class Youtube : ModuleBase
