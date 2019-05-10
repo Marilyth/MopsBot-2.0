@@ -149,7 +149,7 @@ namespace MopsBot.Data.Tracker
 
         public async Task<Beatmap> fetchBeatmap(string beatmapID, string mode = "m=0", int enabledMods = 0)
         {
-            string query = await MopsBot.Module.Information.GetURLAsync($"https://osu.ppy.sh/api/get_beatmaps?b={beatmapID}&{mode}&a=1&k={Program.Config["Osu"]}");
+            string query = await MopsBot.Module.Information.GetURLAsync($"https://osu.ppy.sh/api/get_beatmaps?b={beatmapID}&{mode}&mods={enabledMods}&a=1&k={Program.Config["Osu"]}");
 
             return JsonConvert.DeserializeObject<Beatmap>(query.Substring(1, query.Length - 2));
         }
