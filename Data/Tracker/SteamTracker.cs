@@ -109,7 +109,7 @@ namespace MopsBot.Data.Tracker
             e.Timestamp = DateTimeOffset.FromUnixTimeSeconds(achievement.unlocktime);
 
             EmbedAuthorBuilder author = new EmbedAuthorBuilder();
-            author.Name = Name;
+            author.Name = summary.personaname;
             author.Url = $"{summary.profileurl}";
             author.IconUrl = $"{summary.avatar}";
             e.Author = author;
