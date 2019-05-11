@@ -31,7 +31,8 @@ namespace MopsBot.Data.Tracker
             try
             {
                 Name = name;
-                SteamId = GetUserSIDAsync(name).Result;
+                var success = long.TryParse(name, out SteamId);
+                if(!success) SteamId = GetUserSIDAsync(name).Result;
                 if(IsProfilePrivate().Result) throw new Exception();
                 LastCheck = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
                 SetTimer(600000);
@@ -191,6 +192,10 @@ namespace MopsBot.Data.Tracker
         public async static Task<long> GetUserSIDAsync(string username)
         {
             return long.Parse((await FetchJSONDataAsync<Vanity>($"https://api.steampowered.com/ISteamUser/ResolveVanityURL/v1/?vanityurl={username}&key={Program.Config["Steam"]}")).response.steamid);
+        }
+
+        public override string TrackerUrl(){
+            return $"https://steamcommunity.com/profiles/{SteamId}";
         }
     }
 }

@@ -90,16 +90,18 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
             [RequireUserVotepoints(2)]
-            public async Task Track([Remainder]string SteamName)
+            public async Task Track([Remainder]string SteamNameOrId)
             {
                 using (Context.Channel.EnterTypingState())
                 {
                     try
                     {
-                        SteamName = SteamName.ToLower();
-                        await Trackers[BaseTracker.TrackerType.Steam].AddTrackerAsync(SteamName, Context.Channel.Id);
+                        SteamNameOrId = SteamNameOrId.ToLower();
+                        await Trackers[BaseTracker.TrackerType.Steam].AddTrackerAsync(SteamNameOrId, Context.Channel.Id);
+                        var worked = long.TryParse(SteamNameOrId, out long test);
 
-                        await ReplyAsync("Keeping track of " + SteamName + "'s Achievements and playing status from now on.");
+                        await ReplyAsync("Keeping track of " + SteamNameOrId + $"'s Achievements and playing status from now on.");
+                        if(!worked) await ReplyAsync($"Make sure this is you: https://steamcommunity.com/id/{SteamNameOrId}\nOtherwise use your steamid instead of steam name");
                     }
                     catch (Exception e)
                     {
@@ -111,13 +113,13 @@ namespace MopsBot.Module
             [Command("UnTrack")]
             [Summary("Stops keeping track of the specified Steam user, in the Channel you are calling this command in.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task unTrackOsu([Remainder]string SteamName)
+            public async Task unTrackOsu([Remainder]string SteamNameOrId)
             {
-                SteamName = SteamName.ToLower();
-                if (await Trackers[BaseTracker.TrackerType.Steam].TryRemoveTrackerAsync(SteamName, Context.Channel.Id))
-                    await ReplyAsync("Stopped keeping track of " + SteamName + "'s Steam data!");
+                SteamNameOrId = SteamNameOrId.ToLower();
+                if (await Trackers[BaseTracker.TrackerType.Steam].TryRemoveTrackerAsync(SteamNameOrId, Context.Channel.Id))
+                    await ReplyAsync("Stopped keeping track of " + SteamNameOrId + "'s Steam data!");
                 else
-                    await ReplyAsync($"Could not find tracker for `{SteamName}`\n" +
+                    await ReplyAsync($"Could not find tracker for `{SteamNameOrId}`\n" +
                                      $"Currently tracked Steam users are:", embed: StaticBase.Trackers[BaseTracker.TrackerType.Steam].GetTrackersEmbed(Context.Channel.Id));
             }
 
@@ -131,15 +133,15 @@ namespace MopsBot.Module
             [Command("SetNotification")]
             [Summary("Sets the notification text that is used each time a new achievement was achieved.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(string SteamName, [Remainder]string notification)
+            public async Task SetNotification(string SteamNameOrId, [Remainder]string notification)
             {
-                SteamName = SteamName.ToLower();
-                if (await StaticBase.Trackers[BaseTracker.TrackerType.Steam].TrySetNotificationAsync(SteamName, Context.Channel.Id, notification))
+                SteamNameOrId = SteamNameOrId.ToLower();
+                if (await StaticBase.Trackers[BaseTracker.TrackerType.Steam].TrySetNotificationAsync(SteamNameOrId, Context.Channel.Id, notification))
                 {
-                    await ReplyAsync($"Changed notification for `{SteamName}` to `{notification}`");
+                    await ReplyAsync($"Changed notification for `{SteamNameOrId}` to `{notification}`");
                 }
                 else
-                    await ReplyAsync($"Could not find tracker for `{SteamName}`\n" +
+                    await ReplyAsync($"Could not find tracker for `{SteamNameOrId}`\n" +
                                      $"Currently tracked Steam users are:", embed: StaticBase.Trackers[BaseTracker.TrackerType.Steam].GetTrackersEmbed(Context.Channel.Id));
             }
         }
