@@ -146,7 +146,7 @@ namespace MopsBot.Module
                     foreach(var kvp in headers)
                         request.Headers.TryAddWithoutValidation(kvp.Key, kvp.Value);
                     var content = (await StaticBase.HttpClient.SendAsync(request)).Content;
-                    if(content.Headers.ContentType.CharSet.Contains("utf8")) 
+                    if(content?.Headers?.ContentType?.CharSet?.Contains("utf8") ?? false) 
                         return System.Text.Encoding.UTF8.GetString(await content.ReadAsByteArrayAsync());
                     else
                         return await content.ReadAsStringAsync();
