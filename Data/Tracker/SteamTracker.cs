@@ -119,7 +119,7 @@ namespace MopsBot.Data.Tracker
             footer.Text = "Steam";
             e.Footer = footer;
 
-            e.AddField($"{achievement.displayName}", achievement.description, true);
+            e.AddField($"{achievement.displayName}", achievement.description ?? "No description", true);
             e.AddField("Rarity", Math.Round(achievement.percent, 2) + "%", true);
             e.WithThumbnailUrl(achievement.icon);
             e.WithImageUrl($"https://steamcdn-a.akamaihd.net/steam/apps/{summary.gameid}/header.jpg");
