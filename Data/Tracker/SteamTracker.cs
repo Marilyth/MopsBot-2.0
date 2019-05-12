@@ -129,34 +129,39 @@ namespace MopsBot.Data.Tracker
 
         public async Task<List<Achievement>> GetCompleteAchievements(string gameId)
         {
-            var gAchievements = await GetGameAchievements(gameId);
-            var percAchievements = await GetGameAchievementPercentage(gameId);
-            var userAchievements = await GetUserAchievementsAsync(gameId);
-            var completeAchievements = new List<Achievement>();
+            try{
+                var gAchievements = await GetGameAchievements(gameId);
+                var percAchievements = await GetGameAchievementPercentage(gameId);
+                var userAchievements = await GetUserAchievementsAsync(gameId);
+                var completeAchievements = new List<Achievement>();
 
-            foreach (var curAchievement in userAchievements)
-            {
-                var name = curAchievement.apiname;
-                var percent = percAchievements.FirstOrDefault(x => x.name.Equals(name))?.percent ?? 0;
-                var gAchievement = gAchievements.FirstOrDefault(x => x.name.Equals(name));
-
-                completeAchievements.Add(new Achievement()
+                foreach (var curAchievement in userAchievements)
                 {
-                    achieved = curAchievement.achieved,
-                    apiname = curAchievement.apiname,
-                    unlocktime = curAchievement.unlocktime,
-                    percent = percent,
-                    description = gAchievement.description,
-                    defaultvalue = gAchievement.defaultvalue,
-                    displayName = gAchievement.displayName,
-                    icon = gAchievement.icon,
-                    icongray = gAchievement.icongray,
-                    name = gAchievement.name,
-                    hidden = gAchievement.hidden
-                });
-            }
+                    var name = curAchievement.apiname;
+                    var percent = percAchievements.FirstOrDefault(x => x.name.Equals(name))?.percent ?? 0;
+                    var gAchievement = gAchievements.FirstOrDefault(x => x.name.Equals(name));
 
-            return completeAchievements.OrderByDescending(x => x.unlocktime).ToList();
+                    completeAchievements.Add(new Achievement()
+                    {
+                        achieved = curAchievement.achieved,
+                        apiname = curAchievement.apiname,
+                        unlocktime = curAchievement.unlocktime,
+                        percent = percent,
+                        description = gAchievement.description,
+                        defaultvalue = gAchievement.defaultvalue,
+                        displayName = gAchievement.displayName,
+                        icon = gAchievement.icon,
+                        icongray = gAchievement.icongray,
+                        name = gAchievement.name,
+                        hidden = gAchievement.hidden
+                    });
+                }
+
+                return completeAchievements.OrderByDescending(x => x.unlocktime).ToList();
+            } catch(Exception e){
+                //Game had no stats, probably
+                return new List<Achievement>();
+            }
         }
 
         public async Task<List<GameAchievement>> GetGameAchievements(string gameId)
