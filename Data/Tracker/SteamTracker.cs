@@ -53,12 +53,9 @@ namespace MopsBot.Data.Tracker
                     await CheckForNewAchievements(null, CurrentGame, false);
                     CurrentGame = summary.gameid;
                     await StaticBase.Trackers[TrackerType.Steam].UpdateDBAsync(this);
-                    if (CurrentGame != null)
+                    foreach (var channel in ChannelMessages)
                     {
-                        foreach (var channel in ChannelMessages)
-                        {
-                            await OnMinorChangeTracked(channel.Key, summary.personaname + $" is now playing **{summary.gameextrainfo}**");
-                        }
+                        await OnMinorChangeTracked(channel.Key, summary.personaname + $" is now playing **{summary.gameextrainfo ?? "Nothing"}**");
                     }
                 }
 
@@ -87,12 +84,13 @@ namespace MopsBot.Data.Tracker
             if (gameId != null)
             {
                 var achievements = await GetCompleteAchievements(gameId);
+                var achievedCount = achievements.Count(x => x.achieved == 1);
                 var newAchievements = achievements.TakeWhile(x => x.unlocktime > LastCheck);
                 foreach (var achievement in newAchievements)
                 {
                     foreach (var channel in ChannelMessages)
                     {
-                        await OnMajorChangeTracked(channel.Key, CreateAchievementEmbed(achievement, summary), channel.Value);
+                        await OnMajorChangeTracked(channel.Key, CreateAchievementEmbed(achievement, summary, achievements.Count, achievedCount), channel.Value);
                     }
                 }
                 if (setLastCheck) LastCheck = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
@@ -100,11 +98,11 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public Embed CreateAchievementEmbed(Achievement achievement, PlayerSummary summary)
+        public Embed CreateAchievementEmbed(Achievement achievement, PlayerSummary summary, int totalAchievements, int achieved)
         {
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(20, 48, 93);
-            e.Title = $"New achievement in {summary.gameextrainfo}";
+            e.Title = $"New achievement in {summary.gameextrainfo} ({achieved}/{totalAchievements})";
             e.Url = $"https://store.steampowered.com/app/{summary.gameid}";
             e.Timestamp = DateTimeOffset.FromUnixTimeSeconds(achievement.unlocktime);
 
