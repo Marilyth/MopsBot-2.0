@@ -36,6 +36,7 @@ namespace MopsBot
             commands = new CommandService();
             //_map.Add(commands);
 
+            commands.AddTypeReader(typeof(MopsBot.Data.Tracker.BaseTracker), new Module.TypeReader.TrackerTypeReader());
             await commands.AddModulesAsync(Assembly.GetEntryAssembly(), provider);
 
             await loadCustomCommands();
