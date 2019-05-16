@@ -25,7 +25,8 @@ namespace MopsBot.Module.TypeReader
             if (result != null)
                 return TypeReaderResult.FromSuccess(result);
 
-            return TypeReaderResult.FromError(CommandError.ParseFailed, $"Could not find a tracker for {input}.\nExisting {module}-trackers are:\n{StaticBase.Trackers[type].GetTrackersEmbed(context.Channel.Id).Description}");
+            await context.Channel.SendMessageAsync(embed: StaticBase.Trackers[type].GetTrackersEmbed(context.Channel.Id));
+            return TypeReaderResult.FromError(CommandError.ParseFailed, $"Could not find a {module}-tracker for {input}.");
         }
     }
 }
