@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using MopsBot.Data.Tracker;
+using static MopsBot.Data.Tracker.BaseTracker;
 
 namespace MopsBot.Module.TypeReader
 {
@@ -14,11 +15,13 @@ namespace MopsBot.Module.TypeReader
     {
         public override async Task<TypeReaderResult> ReadAsync(ICommandContext context, string input, IServiceProvider services)
         {
-            var command = context.Message.Content.Split(input)[0];
-            input = input.ToLower();
+            var command = context.Message.Content;
             var prefix = await StaticBase.GetGuildPrefixAsync(context.Guild.Id);
-            var module = command.Split(prefix)[1].Split(" ")[0];
-            var worked = Enum.TryParse<BaseTracker.TrackerType>(module, true, out BaseTracker.TrackerType type);
+            var module = command.Remove(0, prefix.Length).Split(" ").First(x => x.Length > 0);
+            var worked = Enum.TryParse<TrackerType>(module, true, out TrackerType type);
+            
+            if(!new List<TrackerType>{TrackerType.HTML, TrackerType.JSON, TrackerType.Overwatch, TrackerType.RSS, TrackerType.Youtube, TrackerType.YoutubeLive}.Any(x => x == type))
+                input = input.ToLower();
 
             var result = StaticBase.Trackers[type].GetTracker(context.Channel.Id, input);
 
