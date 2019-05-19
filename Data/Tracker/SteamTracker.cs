@@ -52,6 +52,7 @@ namespace MopsBot.Data.Tracker
                 {
                     await CheckForNewAchievements(null, CurrentGame, false);
                     CurrentGame = summary.gameid;
+                    if(CurrentGame == null) LastCheck = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
                     await StaticBase.Trackers[TrackerType.Steam].UpdateDBAsync(this);
                     foreach (var channel in ChannelMessages)
                     {
