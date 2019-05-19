@@ -145,7 +145,11 @@ namespace MopsBot.Module
                 {
                     foreach(var kvp in headers)
                         request.Headers.TryAddWithoutValidation(kvp.Key, kvp.Value);
-                    return await (await StaticBase.HttpClient.SendAsync(request)).Content.ReadAsStringAsync();
+                    var content = (await StaticBase.HttpClient.SendAsync(request)).Content;
+                    if(content?.Headers?.ContentType?.CharSet?.Contains("utf8") ?? false) 
+                        return System.Text.Encoding.UTF8.GetString(await content.ReadAsByteArrayAsync());
+                    else
+                        return await content.ReadAsStringAsync();
                 }
                 catch (Exception e)
                 {
@@ -158,12 +162,6 @@ namespace MopsBot.Module
                     throw e;
                 }
             }
-        }
-
-        public static async Task<Gfycat.Gfy> ConvertToGifAsync(string url)
-        {
-            var status = await StaticBase.gfy.CreateGfyAsync(url);
-            return await status.GetGfyWhenCompleteAsync();
         }
     }
 }

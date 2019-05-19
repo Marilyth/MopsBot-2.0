@@ -36,6 +36,7 @@ namespace MopsBot
             commands = new CommandService();
             //_map.Add(commands);
 
+            commands.AddTypeReader(typeof(MopsBot.Data.Tracker.BaseTracker), new Module.TypeReader.TrackerTypeReader());
             await commands.AddModulesAsync(Assembly.GetEntryAssembly(), provider);
 
             await loadCustomCommands();
@@ -193,27 +194,22 @@ namespace MopsBot
             }
 
             var output = "";
-            string commandName = message, moduleName = message;
-            string[] tempMessages;
-            if ((tempMessages = message.Split(' ')).Length > 1)
-            {
-                moduleName = tempMessages[0];
-                commandName = tempMessages[1];
-            }
+            string commandName = message;
+            string[] moduleNames;
+            string[] tempMessages = message.Split(" ");
 
-            if (commands.Commands.ToList().Exists(x => x.Name.ToLower().Equals(commandName)))
+            commandName = tempMessages.LastOrDefault(x => commands.Commands.Any(y => y.Name.ToLower().Equals(x.ToLower())));
+            moduleNames = tempMessages.TakeWhile(x => !x.Equals(commandName ?? "")).ToArray();
+
+            if (commandName != null)
             {
-                CommandInfo curCommand = commands.Commands.First(x => x.Name.ToLower().Equals(commandName));
-                if (!moduleName.Equals(commandName))
-                {
-                    curCommand = commands.Modules.First(x => x.Name.ToLower().Equals(moduleName)).Commands.First(x => x.Name.ToLower().Equals(commandName));
-                }
+                CommandInfo curCommand = commands.Commands.First(x => x.Name.ToLower().Equals(commandName) && (moduleNames.Length > 0 ? x.Module.Name.ToLower().Equals(moduleNames.LastOrDefault()) : true));
 
                 if (curCommand.Summary.Equals(""))
                 {
                     throw new Exception("Command not found");
                 }
-                output += $"`{prefix}{(curCommand.Module.IsSubmodule ? curCommand.Module.Name + " " + curCommand.Name : curCommand.Name)}";
+                output += $"`{prefix}{string.Join(" ", moduleNames.Append(curCommand.Name))}";
 
                 foreach (Discord.Commands.ParameterInfo p in curCommand.Parameters)
                 {
@@ -226,11 +222,17 @@ namespace MopsBot
                 {
                     if (prec.GetType() == typeof(RequireUserPermissionAttribute))
                     {
-                        preconditions += $"Requires UserPermission: {((RequireUserPermissionAttribute)prec).ChannelPermission.Value}\n";
+                        var permission = ((RequireUserPermissionAttribute)prec).ChannelPermission.HasValue ? 
+                                         ((RequireUserPermissionAttribute)prec).ChannelPermission.Value.ToString() :
+                                         ((RequireUserPermissionAttribute)prec).GuildPermission.Value.ToString();
+                        preconditions += $"Requires UserPermission: {permission}\n";
                     }
                     else if (prec.GetType() == typeof(RequireBotPermissionAttribute))
                     {
-                        preconditions += $"Requires BotPermission: {((RequireBotPermissionAttribute)prec).ChannelPermission.Value}\n";
+                        var permission = ((RequireBotPermissionAttribute)prec).ChannelPermission.HasValue ? 
+                                         ((RequireBotPermissionAttribute)prec).ChannelPermission.Value.ToString() :
+                                         ((RequireBotPermissionAttribute)prec).GuildPermission.Value.ToString();
+                        preconditions += $"Requires BotPermission: {permission}\n";
                     }
                     else
                     {
@@ -238,7 +240,7 @@ namespace MopsBot
                     }
                 }
 
-                e = createHelpEmbed($"{(curCommand.Module.IsSubmodule ? curCommand.Module.Name + " " + curCommand.Name : curCommand.Name)}", output, curCommand.Summary, e, preconditions);
+                e = createHelpEmbed($"{string.Join(" ", moduleNames.Append(curCommand.Name))}", output, curCommand.Summary, e, preconditions);
                 // if(curCommand.Parameters.Any(x=> x.IsOptional)){
                 //     output +="\n\n**Default Values**:";
                 //     foreach(var p in curCommand.Parameters.Where(x=>x.IsOptional))
@@ -248,13 +250,13 @@ namespace MopsBot
             }
             else
             {
-                var module = Program.Handler.commands.Modules.First(x => x.Name.ToLower().Equals(moduleName.ToLower()));
+                var module = Program.Handler.commands.Modules.First(x => x.Name.ToLower().Equals(moduleNames.Last().ToLower()));
 
                 string moduleInformation = "";
-                moduleInformation += string.Join(", ", module.Commands.Where(x => !x.Preconditions.OfType<HideAttribute>().Any()).Select(x => $"[{x.Name}]({CommandHandler.GetCommandHelpImage($"{module.Name} {x.Name}")})"));
+                moduleInformation += string.Join(", ", module.Commands.Where(x => !x.Preconditions.OfType<HideAttribute>().Any()).Select(x => $"[{x.Name}]({CommandHandler.GetCommandHelpImage($"{string.Join(" ", moduleNames)} {x.Name}")})"));
                 moduleInformation += "\n";
 
-                moduleInformation += string.Join(", ", module.Submodules.Select(x => $"{x.Name}\\*"));
+                moduleInformation += string.Join(", ", module.Submodules.Select(x => $"[{x.Name}\\*]({CommandHandler.GetCommandHelpImage($"{string.Join(" ", moduleNames)} {x.Name}")})"));
 
                 e.AddField($"**{module.Name}**", moduleInformation);
             }

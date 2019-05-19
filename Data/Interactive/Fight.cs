@@ -87,7 +87,7 @@ namespace MopsBot.Data.Interactive
                                                      x.Inventory = x.Inventory ?? new List<int>();
                                                      x.Inventory.AddRange(loot.Select(y => y.Id));});
 
-                        await Message.ModifyAsync(x => x.Embed = EndEmbed());
+                        await Message.ModifyAsync(x => x.Embed = EndEmbed().Result);
                         return;
                     }
                     else if(Health <= 0){
@@ -96,7 +96,7 @@ namespace MopsBot.Data.Interactive
                         Log = new List<string>();
                         Log.Add($"You died and lost {tmpUser.Experience/10} Experience");
 
-                        await Message.ModifyAsync(x => x.Embed = EndEmbed());
+                        await Message.ModifyAsync(x => x.Embed = EndEmbed().Result);
                         await User.ModifyUserAsync(tmpUser.Id, x => x.Experience -= x.Experience/10);
                         return;
                     }
@@ -113,7 +113,7 @@ namespace MopsBot.Data.Interactive
 
             EmbedBuilder e = new EmbedBuilder();
 
-            e.WithAuthor(Program.Client.GetUser(tmpUser.Id).Username, Program.Client.GetUser(tmpUser.Id).GetAvatarUrl());
+            e.WithAuthor((await StaticBase.GetUserAsync(tmpUser.Id)).Username, (await StaticBase.GetUserAsync(tmpUser.Id)).GetAvatarUrl());
             e.WithThumbnailUrl(Enemy.ImageUrl);
             
             e.AddField("Stats", $"HP: {Health}/{(await User.GetUserAsync(tmpUser.Id)).CalcCurLevel() + Weapon.BaseDefence + 10}\n" + 
@@ -137,10 +137,10 @@ namespace MopsBot.Data.Interactive
             return e.Build();
         }
 
-        private Embed EndEmbed(){
+        private async Task<Embed> EndEmbed(){
             EmbedBuilder e = new EmbedBuilder();
 
-            e.WithAuthor(Program.Client.GetUser(tmpUser.Id).Username, Program.Client.GetUser(tmpUser.Id).GetAvatarUrl());
+            e.WithAuthor((await StaticBase.GetUserAsync(tmpUser.Id)).Username, (await StaticBase.GetUserAsync(tmpUser.Id)).GetAvatarUrl());
             e.WithThumbnailUrl(Enemy.ImageUrl);
 
             e.AddField("Stats", $"HP: {Health}/{tmpUser.CalcCurLevel() + Weapon.BaseDefence + 10}\n" + 

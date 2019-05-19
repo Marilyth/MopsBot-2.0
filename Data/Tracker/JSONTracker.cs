@@ -4,9 +4,6 @@ using System.Linq;
 using Discord;
 using Discord.WebSocket;
 using Discord.Commands;
-using NewsAPI;
-using NewsAPI.Constants;
-using NewsAPI.Models;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
@@ -71,7 +68,7 @@ namespace MopsBot.Data.Tracker
             try
             {
                 PastInformation = getResults().Result;
-                var graphMembers = PastInformation.Where(x => x.Key.StartsWith("graph:"));
+                var graphMembers = PastInformation.Where(x => x.Key.Contains("graph:"));
                 foreach(var graphTest in graphMembers){
                     if(!graphTest.Equals(default(KeyValuePair<string,string>))){
                         bool succeeded = double.TryParse(graphTest.Value, out double test);
@@ -93,7 +90,7 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public async override void PostInitialisation()
+        public async override void PostInitialisation(object info = null)
         {
             if (DataGraph != null)
                 DataGraph.InitPlot("Date", "Value", format: "dd-MMM", relative: false);

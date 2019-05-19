@@ -14,7 +14,6 @@ using MongoDB.Bson.Serialization.Attributes;
 using MopsBot.Data.Entities;
 using MopsBot.Api;
 using MongoDB.Driver;
-using Accord.Statistics.Distributions.Univariate;
 
 namespace MopsBot.Data.Interactive
 {

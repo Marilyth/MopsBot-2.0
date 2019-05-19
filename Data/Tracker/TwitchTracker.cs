@@ -12,6 +12,8 @@ using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 using MongoDB.Bson.Serialization.Options;
 using MongoDB.Bson.Serialization.Attributes;
+using TwitchLib;
+using TwitchLib.Api;
 
 namespace MopsBot.Data.Tracker
 {
@@ -19,11 +21,18 @@ namespace MopsBot.Data.Tracker
     public class TwitchTracker : BaseUpdatingTracker
     {
         private static KeyValuePair<string, string> acceptHeader = new KeyValuePair<string, string>("Accept", "application/vnd.twitchtv.v5+json");
+        public event HostingEventHandler OnHosting;
+        public event StatusEventHandler OnLive;
+        public event StatusEventHandler OnOffline;
+        public delegate Task HostingEventHandler(string hostName, string targetName, int viewers);
+        public delegate Task StatusEventHandler(BaseTracker sender);
         public DatePlot ViewerGraph;
         private TwitchResult StreamerStatus;
         public Boolean IsOnline;
         public string CurGame, VodUrl;
-        public bool isThumbnailLarge;
+        public bool IsHosting;
+        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
+        public Dictionary<ulong, NotifyConfig> Specifications;
         public int TimeoutCount;
         public ulong TwitchId;
 
@@ -31,26 +40,30 @@ namespace MopsBot.Data.Tracker
         {
         }
 
-        public TwitchTracker(Dictionary<string, string> args) : base(){
-            isThumbnailLarge = bool.Parse(args["IsThumbnailLarge"]);
+        public TwitchTracker(Dictionary<string, string> args) : base()
+        {
             base.SetBaseValues(args, true);
 
             //Check if Name ist valid
-            try{
+            try
+            {
                 new TwitchTracker(Name).Dispose();
                 SetTimer();
-            } catch (Exception e){
+            }
+            catch (Exception e)
+            {
                 this.Dispose();
                 throw e;
             }
 
-            if(StaticBase.Trackers[TrackerType.Twitch].GetTrackers().ContainsKey(Name)){
+            if (StaticBase.Trackers[TrackerType.Twitch].GetTrackers().ContainsKey(Name))
+            {
                 this.Dispose();
 
                 args["Id"] = Name;
                 var curTracker = StaticBase.Trackers[TrackerType.Twitch].GetTrackers()[Name];
                 curTracker.ChannelMessages[ulong.Parse(args["Channel"].Split(":")[1])] = args["Notification"];
-                StaticBase.Trackers[TrackerType.Twitch].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", args}}).Wait();
+                StaticBase.Trackers[TrackerType.Twitch].UpdateContent(new Dictionary<string, Dictionary<string, string>> { { "NewValue", args }, { "OldValue", args } }).Wait();
 
                 throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
             }
@@ -65,6 +78,7 @@ namespace MopsBot.Data.Tracker
             try
             {
                 ulong Id = GetIdFromUsername(streamerName).Result;
+                Specifications = new Dictionary<ulong, NotifyConfig>();
                 SetTimer();
             }
             catch (Exception)
@@ -74,12 +88,56 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public async override void PostInitialisation()
+        public async override void PostChannelAdded(ulong channelId)
         {
-            if(IsOnline) SetTimer(60000, StaticBase.ran.Next(5000, 60000));
+            if (Specifications == null)
+            {
+                Specifications = new Dictionary<ulong, NotifyConfig>();
+            }
+            if (!Specifications.ContainsKey(channelId))
+            {
+                Specifications.Add(channelId, new NotifyConfig()
+                {
+                    ShowEmbed = true,
+                    LargeThumbnail = false,
+                    NotifyOnGameChange = true,
+                    NotifyOnHost = false,
+                    NotifyOnOffline = true,
+                    NotifyOnOnline = true
+                });
+            }
+
+            await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
+        }
+
+        public async override void PostInitialisation(object info = null)
+        {
+            if (IsOnline) SetTimer(60000, StaticBase.ran.Next(5000, 60000));
 
             if (ViewerGraph != null)
                 ViewerGraph.InitPlot();
+
+            foreach (var channel in ChannelMessages)
+            {
+                if (Specifications == null)
+                {
+                    Specifications = new Dictionary<ulong, NotifyConfig>();
+                }
+                if (!Specifications.ContainsKey(channel.Key))
+                {
+                    Specifications.Add(channel.Key, new NotifyConfig()
+                    {
+                        ShowEmbed = true,
+                        LargeThumbnail = false,
+                        NotifyOnGameChange = true,
+                        NotifyOnHost = false,
+                        NotifyOnOffline = true,
+                        NotifyOnOnline = true
+                    });
+                }
+
+                await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
+            }
 
             foreach (var channelMessage in ToUpdate)
             {
@@ -129,7 +187,7 @@ namespace MopsBot.Data.Tracker
                             TimeoutCount = 0;
                             IsOnline = false;
                             VodUrl = null;
-                            ViewerGraph.Dispose();
+                            ViewerGraph?.Dispose();
                             ViewerGraph = null;
 
                             foreach (var channelMessage in ToUpdate)
@@ -137,20 +195,37 @@ namespace MopsBot.Data.Tracker
 
                             ToUpdate = new Dictionary<ulong, ulong>();
 
-                            foreach (ulong channel in ChannelMessages.Keys.ToList())
+                            if(OnOffline != null) await OnOffline.Invoke(this);
+                            foreach (ulong channel in ChannelMessages.Keys.Where(x => Specifications[x].NotifyOnOffline).ToList())
                                 await OnMinorChangeTracked(channel, $"{Name} went Offline!");
 
                             SetTimer(600000, 600000);
+
+                        }
+                        else if (!IsHosting)
+                        {
+                            var host = (await hostInformation()).hosts.First();
+                            if (host.IsHosting())
+                            {
+                                if(OnHosting != null) await OnHosting.Invoke(host.host_display_name, host.target_display_name, (int)ViewerGraph.PlotDataPoints.LastOrDefault().Value.Value);
+
+                                foreach (ulong channel in ChannelMessages.Keys.Where(x => Specifications[x].NotifyOnHost).ToList())
+                                    await OnMinorChangeTracked(channel, $"{Name} is now hosting {host.target_display_name} for {(int)ViewerGraph.PlotDataPoints.LastOrDefault().Value.Value} viewers!");
+
+                                IsHosting = true;
+                            }
                         }
                     }
                     else
                     {
                         ViewerGraph = new DatePlot(Name, "Time since start", "Viewers");
                         IsOnline = true;
+                        IsHosting = false;
                         CurGame = StreamerStatus.stream.game;
-                        ViewerGraph.AddValue(CurGame, 0, DateTime.Parse(StreamerStatus.stream.created_at).AddHours(-1));
+                        ViewerGraph.AddValue(CurGame, 0, DateTime.Parse(StreamerStatus.stream.created_at).AddHours(-2));
 
-                        foreach (ulong channel in ChannelMessages.Keys.ToList())
+                        if(OnLive != null) await OnLive.Invoke(this);
+                        foreach (ulong channel in ChannelMessages.Keys.Where(x => Specifications[x].NotifyOnOnline).ToList())
                             await OnMinorChangeTracked(channel, ChannelMessages[channel]);
 
                         SetTimer(60000, 60000);
@@ -164,22 +239,20 @@ namespace MopsBot.Data.Tracker
                 {
                     if (VodUrl == null)
                         VodUrl = await GetVodAsync();
-                    
+
                     if (CurGame.CompareTo(StreamerStatus.stream.game) != 0)
                     {
                         CurGame = StreamerStatus.stream.game;
                         //ViewerGraph.AddValue(CurGame, StreamerStatus.stream.viewers);
 
-                        foreach (ulong channel in ChannelMessages.Keys.ToList())
+                        foreach (ulong channel in ChannelMessages.Keys.Where(x => Specifications[x].NotifyOnGameChange).ToList())
                             await OnMinorChangeTracked(channel, $"{Name} switched games to **{CurGame}**");
                     }
 
-                    ViewerGraph.AddValue(CurGame, StreamerStatus.stream.viewers);
+                    await ModifyAsync(x => x.ViewerGraph.AddValue(CurGame, StreamerStatus.stream.viewers));
 
-                    await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
-
-                    foreach (ulong channel in ChannelMessages.Keys.ToList())
-                        await OnMajorChangeTracked(channel, createEmbed());
+                    foreach (ulong channel in ChannelMessages.Keys.Where(x => Specifications[x].ShowEmbed).ToList())
+                        await OnMajorChangeTracked(channel, createEmbed(Specifications[channel].LargeThumbnail));
                 }
             }
             catch (Exception e)
@@ -198,6 +271,11 @@ namespace MopsBot.Data.Tracker
             return tmpResult;
         }
 
+        private async Task<HostObject> hostInformation()
+        {
+            return await FetchJSONDataAsync<HostObject>($"https://tmi.twitch.tv/hosts?include_logins=1&host={TwitchId}");
+        }
+
         public static async Task<ulong> GetIdFromUsername(string name)
         {
             var tmpResult = await FetchJSONDataAsync<dynamic>($"https://api.twitch.tv/kraken/users?login={name}&client_id={Program.Config["Twitch"]}", acceptHeader);
@@ -208,7 +286,7 @@ namespace MopsBot.Data.Tracker
         public async Task<string> GetVodAsync()
         {
             var tmpResult = await FetchJSONDataAsync<dynamic>($"https://api.twitch.tv/kraken/channels/{TwitchId}/videos?client_id={Program.Config["Twitch"]}", acceptHeader);
-            
+
             try
             {
                 return tmpResult["videos"][0]["url"];
@@ -219,7 +297,7 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public Embed createEmbed()
+        public Embed createEmbed(bool largeThumbnail = false)
         {
             Channel streamer = StreamerStatus.stream.channel;
             ViewerGraph.SetMaximumLine();
@@ -267,8 +345,8 @@ namespace MopsBot.Data.Tracker
             footer.Text = "Twitch";
             e.Footer = footer;
 
-            e.ThumbnailUrl = isThumbnailLarge ? ViewerGraph.DrawPlot() : $"{StreamerStatus.stream.preview.medium}?rand={StaticBase.ran.Next(0, 99999999)}";
-            e.ImageUrl = isThumbnailLarge ? $"{StreamerStatus.stream.preview.large}?rand={StaticBase.ran.Next(0, 99999999)}" : ViewerGraph.DrawPlot();
+            e.ThumbnailUrl = largeThumbnail ? ViewerGraph.DrawPlot() : $"{StreamerStatus.stream.preview.medium}?rand={StaticBase.ran.Next(0, 99999999)}";
+            e.ImageUrl = largeThumbnail ? $"{StreamerStatus.stream.preview.large}?rand={StaticBase.ran.Next(0, 99999999)}" : ViewerGraph.DrawPlot();
 
             //e.AddField("Game", CurGame, true);
             //e.AddField("Viewers", StreamerStatus.stream.viewers, true);
@@ -291,12 +369,17 @@ namespace MopsBot.Data.Tracker
         {
             if (((IGuildUser)await context.Reaction.Channel.GetUserAsync(context.Reaction.UserId)).GetPermissions((IGuildChannel)context.Channel).ManageChannel)
             {
-                isThumbnailLarge = !isThumbnailLarge;
-                await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
+                await ModifyAsync(x => x.Specifications[(context.Channel as SocketGuildChannel).Guild.Id].LargeThumbnail = !x.Specifications[(context.Channel as SocketGuildChannel).Guild.Id].LargeThumbnail);
 
                 foreach (ulong channel in ChannelMessages.Keys.ToList())
                     await OnMajorChangeTracked(channel, createEmbed());
             }
+        }
+
+        public async Task ModifyAsync(Action<TwitchTracker> action)
+        {
+            action(this);
+            await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
         }
 
         public new void Dispose()
@@ -327,14 +410,14 @@ namespace MopsBot.Data.Tracker
                 _Name = this.Name,
                 Notification = this.ChannelMessages[channelId],
                 Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId,
-                IsThumbnailLarge = this.isThumbnailLarge
+                IsThumbnailLarge = this.Specifications[((SocketGuildChannel)Program.Client.GetChannel(channelId)).Guild.Id].LargeThumbnail
             };
         }
 
         public override void Update(Dictionary<string, Dictionary<string, string>> args)
         {
             base.Update(args);
-            isThumbnailLarge = bool.Parse(args["NewValue"]["IsThumbnailLarge"]);
+            //isThumbnailLarge = bool.Parse(args["NewValue"]["IsThumbnailLarge"]);
         }
 
         public new struct ContentScope
@@ -344,6 +427,16 @@ namespace MopsBot.Data.Tracker
             public string Notification;
             public string Channel;
             public bool IsThumbnailLarge;
+        }
+
+        public class NotifyConfig
+        {
+            public bool ShowEmbed,
+            NotifyOnGameChange,
+            NotifyOnOffline,
+            NotifyOnOnline,
+            NotifyOnHost,
+            LargeThumbnail;
         }
     }
 }

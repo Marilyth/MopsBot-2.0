@@ -73,7 +73,7 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public async override void PostInitialisation()
+        public async override void PostInitialisation(object info = null)
         {
             if(ViewerGraph != null)
                 ViewerGraph.InitPlot();

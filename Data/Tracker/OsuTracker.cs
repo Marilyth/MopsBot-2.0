@@ -106,7 +106,7 @@ namespace MopsBot.Data.Tracker
 
                         RecentScore scoreInformation = recentScores.First(x => !x.rank.Equals("F"));
 
-                        Beatmap beatmapInformation = await fetchBeatmap(scoreInformation.beatmap_id, pp.Key);
+                        Beatmap beatmapInformation = await fetchBeatmap(scoreInformation.beatmap_id, pp.Key, int.Parse(scoreInformation.enabled_mods));
 
                         foreach (ulong channel in ChannelMessages.Keys.ToList())
                         {
@@ -147,9 +147,9 @@ namespace MopsBot.Data.Tracker
             return tmpResult.OrderByDescending(x => DateTime.Parse(x.date)).FirstOrDefault();
         }
 
-        public async Task<Beatmap> fetchBeatmap(string beatmapID, string mode = "m=0")
+        public async Task<Beatmap> fetchBeatmap(string beatmapID, string mode = "m=0", int enabledMods = 0)
         {
-            string query = await MopsBot.Module.Information.GetURLAsync($"https://osu.ppy.sh/api/get_beatmaps?b={beatmapID}&{mode}&a=1&k={Program.Config["Osu"]}");
+            string query = await MopsBot.Module.Information.GetURLAsync($"https://osu.ppy.sh/api/get_beatmaps?b={beatmapID}&{mode}&mods={enabledMods}&a=1&k={Program.Config["Osu"]}");
 
             return JsonConvert.DeserializeObject<Beatmap>(query.Substring(1, query.Length - 2));
         }

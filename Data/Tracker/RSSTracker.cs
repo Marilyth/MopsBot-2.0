@@ -4,9 +4,6 @@ using System.Linq;
 using Discord;
 using Discord.WebSocket;
 using Discord.Commands;
-using NewsAPI;
-using NewsAPI.Constants;
-using NewsAPI.Models;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
@@ -129,7 +126,7 @@ namespace MopsBot.Data.Tracker
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(255, 255, 255);
             e.Title = feedItem.Title?.Text;
-            e.Url = feedItem.Links?.FirstOrDefault()?.Uri?.AbsoluteUri ?? feedItem.BaseUri?.AbsoluteUri;
+            e.Url = feedItem.Links?.FirstOrDefault(x => !isImageUrl(x.Uri?.AbsoluteUri ?? ""))?.Uri?.AbsoluteUri ?? feedItem.BaseUri?.AbsoluteUri;
             
             try{
                 e.Timestamp = feedItem.PublishDate.UtcDateTime.Year > 1 ? feedItem.PublishDate.UtcDateTime : feedItem.LastUpdatedTime.UtcDateTime;

@@ -14,19 +14,23 @@ using MongoDB.Bson.Serialization.Attributes;
 namespace MopsBot.Data
 {
 
-    public class BarPlot
+    public class ColumnPlot
     {
         private PlotModel viewerChart;
         private OxyPlot.Series.ColumnSeries columnSeries;
         public string ID;
         public Dictionary<string, double> Categories;
 
-        public BarPlot(string name, params string[] categories)
+        public ColumnPlot(string name, params string[] categories)
         {
             ID = name;
             Categories = new Dictionary<string, double>();
-            foreach (var category in categories)
-                Categories.Add(category, 0);
+
+            int duplicates = 0;
+            foreach (var category in categories){
+                if(!Categories.ContainsKey(category)) Categories.Add(category, 0);
+                else Categories.Add(category + (++duplicates), 0);
+            }
 
             initPlot();
         }
@@ -40,7 +44,7 @@ namespace MopsBot.Data
             viewerChart.Axes.Add(new OxyPlot.Axes.CategoryAxis()
             {
                 Key = ID,
-                ItemsSource = Categories.Keys,
+                ItemsSource = Categories.Count > 10 ? Categories.Keys.Select(x => "") : Categories.Keys,
                 FontSize = 24,
                 AxislineColor = OxyColor.FromRgb(125, 125, 155),
                 TicklineColor = OxyColor.FromRgb(125, 125, 155)
@@ -62,9 +66,10 @@ namespace MopsBot.Data
             columnSeries = new OxyPlot.Series.ColumnSeries()
             {
                 ItemsSource = new List<OxyPlot.Series.ColumnItem>(Categories.Values.Select(x => new OxyPlot.Series.ColumnItem(x))),
-                //LabelPlacement = OxyPlot.Series.LabelPlacement.Outside, 
-                FontSize = 24,
-                //LabelFormatString = "{0}",
+                LabelPlacement = OxyPlot.Series.LabelPlacement.Outside,
+                LabelMargin = 0.1,
+                FontSize = 16,
+                LabelFormatString = Categories.Count > 10 ? null : "{0:0.##}",
                 FillColor = OxyColor.FromRgb(190, 192, 187)
             };
             viewerChart.Series.Add(columnSeries);
@@ -72,10 +77,21 @@ namespace MopsBot.Data
 
         public static string DrawPlot(string name, Dictionary<string, double> dict)
         {
-            var tmpBarPlot = new BarPlot(name, dict.Keys.ToArray());
+            var tmpBarPlot = new ColumnPlot(name, dict.Keys.ToArray());
             foreach (var key in dict.Keys)
             {
                 tmpBarPlot.AddValue(key, dict[key]);
+            }
+
+            return tmpBarPlot.DrawPlot();
+        }
+
+        public static string DrawPlotSorted(string name, List<KeyValuePair<string, double>> values)
+        {
+            var tmpBarPlot = new ColumnPlot(name, values.Select(x => x.Key).ToArray());
+            foreach (var value in values)
+            {
+                tmpBarPlot.AddValue(value.Key, value.Value);
             }
 
             return tmpBarPlot.DrawPlot();
@@ -129,6 +145,146 @@ namespace MopsBot.Data
         {
             viewerChart = null;
             columnSeries = null;
+            var file = new FileInfo($"mopsdata//plots//{ID}barplot.json");
+            file.Delete();
+            var dir = new DirectoryInfo("mopsdata//");
+            var files = dir.GetFiles().Where(x => x.Extension.ToLower().Equals($"{ID}plot.pdf"));
+            foreach (var f in files)
+                f.Delete();
+        }
+    }
+
+    public class BarPlot
+    {
+        private PlotModel viewerChart;
+        private OxyPlot.Series.BarSeries BarSeries;
+        public string ID;
+        public Dictionary<string, double> Categories;
+
+        public BarPlot(string name, params string[] categories)
+        {
+            ID = name;
+            Categories = new Dictionary<string, double>();
+
+            int duplicates = 0;
+            foreach (var category in categories){
+                if(!Categories.ContainsKey(category)) Categories.Add(category, 0);
+                else Categories.Add(category + (++duplicates), 0);
+            }
+
+            initPlot();
+        }
+
+        private void initPlot()
+        {
+            viewerChart = new PlotModel();
+            viewerChart.TextColor = OxyColor.FromRgb(175, 175, 175);
+            viewerChart.PlotAreaBorderThickness = new OxyThickness(0);
+
+            viewerChart.Axes.Add(new OxyPlot.Axes.CategoryAxis()
+            {
+                Key = ID,
+                Position = OxyPlot.Axes.AxisPosition.Left,
+                ItemsSource = Categories.Count > 20 ? null : Categories.Keys,
+                FontSize = 24,
+                AxislineColor = OxyColor.FromRgb(125, 125, 155),
+                TicklineColor = OxyColor.FromRgb(125, 125, 155)
+            });
+
+            viewerChart.Axes.Add(new OxyPlot.Axes.LinearAxis
+            {
+                Position = OxyPlot.Axes.AxisPosition.Bottom,
+                TicklineColor = OxyColor.FromRgb(125, 125, 155),
+                Minimum = 0,
+                FontSize = 24,
+                AxislineStyle = LineStyle.Solid,
+                AxislineColor = OxyColor.FromRgb(125, 125, 155)
+            });
+
+            //viewerChart.LegendFontSize = 24;
+            //viewerChart.LegendPosition = LegendPosition.BottomCenter;
+
+            BarSeries = new OxyPlot.Series.BarSeries()
+            {
+                ItemsSource = new List<OxyPlot.Series.BarItem>(Categories.Values.Select(x => new OxyPlot.Series.BarItem(x))),
+                //LabelPlacement = OxyPlot.Series.LabelPlacement.Outside, 
+                FontSize = 24,
+                //LabelFormatString = "{0}",
+                FillColor = OxyColor.FromRgb(190, 192, 187)
+            };
+            viewerChart.Series.Add(BarSeries);
+        }
+
+        public static string DrawPlot(string name, Dictionary<string, double> dict)
+        {
+            var tmpBarPlot = new BarPlot(name, dict.Keys.ToArray());
+            foreach (var key in dict.Keys)
+            {
+                tmpBarPlot.AddValue(key, dict[key]);
+            }
+
+            return tmpBarPlot.DrawPlot();
+        }
+
+        public static string DrawPlotSorted(string name, List<KeyValuePair<string, double>> values)
+        {
+            var tmpBarPlot = new BarPlot(name, values.Select(x => x.Key).ToArray());
+            foreach (var value in values)
+            {
+                tmpBarPlot.AddValue(value.Key, value.Value);
+            }
+
+            return tmpBarPlot.DrawPlot();
+        }
+
+        /// <summary>
+        /// Saves the plot as a .png and returns the URL.
+        /// </summary>
+        /// <returns>The URL</returns>
+        public string DrawPlot()
+        {
+            BarSeries.ItemsSource = Categories.Values.Select(x => new OxyPlot.Series.BarItem(x));
+
+            using (var stream = File.Create($"mopsdata//{ID}barplot.pdf"))
+            {
+                var pdfExporter = new PdfExporter { Width = 800, Height = 400 };
+                pdfExporter.Export(viewerChart, stream);
+            }
+
+            using (var prc = new System.Diagnostics.Process())
+            {
+                prc.StartInfo.FileName = "convert";
+                prc.StartInfo.Arguments = $"-set density 300 \"mopsdata//{ID}barplot.pdf\" \"//var//www//html//StreamCharts//{ID}barplot.png\"";
+
+                prc.Start();
+
+                prc.WaitForExit();
+            }
+
+            var dir = new DirectoryInfo("mopsdata//");
+            var files = dir.GetFiles().Where(x => x.Name.Contains($"{ID}barplot"));
+            foreach (var f in files)
+                f.Delete();
+
+            return $"http://5.45.104.29/StreamCharts/{ID.Replace(" ", "%20")}barplot.png?rand={StaticBase.ran.Next(0, 999999999)}";
+        }
+
+        /// <summary>
+        /// Adds a Value to the plot, to its' current Title
+        /// </summary>
+        /// <param name="value">The Value to add to the plot</param>
+        public void AddValue(string title, double value)
+        {
+            Categories[title] += value;
+        }
+
+        /// <summary>
+        /// Removes all files created by the plot class to function.
+        /// </summary>
+        public void RemovePlot()
+        {
+            viewerChart = null;
+            BarSeries = null;
             var file = new FileInfo($"mopsdata//plots//{ID}barplot.json");
             file.Delete();
             var dir = new DirectoryInfo("mopsdata//");

@@ -78,7 +78,55 @@ namespace MopsBot.Module
         {
             using (Context.Channel.EnterTypingState())
             {
-                await ReplyAsync("", embed: (await User.GetUserAsync(user?.Id ?? Context.User.Id)).StatEmbed());
+                await ReplyAsync("", embed: await (await User.GetUserAsync(user?.Id ?? Context.User.Id)).StatEmbed());
+            }
+        }
+
+        [Command("GetLeaderboard", RunMode = RunMode.Async)]
+        [Summary("Returns an embed, representing the level leaderboard of the current server.\n"+
+                 "stat: Can be Punch, Hug, Kiss, Experience, Level or Votepoints (default is Level)\n"+
+                 "begin: The index of which to begin the leaderboard (default is 1)\n"+
+                 "end: The index of which to end the leaderboard (default is 10)")]
+        [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
+        public async Task GetLeaderboard(User.Stats stat = User.Stats.Level, uint begin = 1, uint end = 10, bool isGlobal = false){
+            using(Context.Channel.EnterTypingState()){
+                try{
+                    if(begin >= end) throw new Exception("Begin was bigger than, or equal to end.");
+                    if(begin == 0 || end == 0) throw new Exception("Begin or end was 0.");
+                    if(end - begin >= 5000) throw new Exception("Range must be smaller than 5000! (performance)");
+
+                    long userCount = await User.GetDBUserCount((isGlobal ? null : (ulong?)Context.Guild.Id));
+
+                    if(end > userCount) 
+                        end = (uint)userCount;
+
+                    Func<User, double> toSort = null;
+                    switch(stat){
+                        case User.Stats.Experience:
+                            toSort = x => x.Experience;
+                            break;
+                        case User.Stats.Hug:
+                            toSort = x => x.Hugged;
+                            break;
+                        case User.Stats.Kiss:
+                            toSort = x => x.Kissed;
+                            break;
+                        case User.Stats.Punch:
+                            toSort = x => x.Punched;
+                            break;
+                        case User.Stats.Level:
+                            toSort = x => x.CalcCurLevelDouble();
+                            break;
+                        case User.Stats.Votepoints:
+                            toSort = x => x.Money;
+                            break;
+                    }
+
+                    await ReplyAsync("", embed: await User.GetLeaderboardAsync(isGlobal ? null : (ulong?)Context.Guild.Id, toSort, begin: (int)begin, end: (int)end));
+
+                } catch ( Exception e){
+                    await ReplyAsync("[Error]: " + e.Message);
+                }
             }
         }
 

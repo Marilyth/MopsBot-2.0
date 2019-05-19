@@ -22,7 +22,7 @@ namespace MopsBot.Data.Tracker
     {
         //Avoid ratelimit by placing a gap between all trackers.
         public static int ExistingTrackers = 0;
-        public enum TrackerType { Twitch, TwitchClip, Twitter, Osu, Overwatch, /*Tibia,*/ Youtube, YoutubeLive, Reddit, JSON, OSRS, HTML, RSS };
+        public enum TrackerType { Twitch, TwitchGroup, TwitchClip, Twitter, Osu, Overwatch, /*Tibia,*/ Youtube, YoutubeLive, Reddit, JSON, OSRS, HTML, RSS, Steam };
         private bool disposed = false;
         private SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
         protected System.Threading.Timer checkForChange;
@@ -43,7 +43,11 @@ namespace MopsBot.Data.Tracker
             checkForChange = new System.Threading.Timer(CheckForChange_Elapsed);
         }
 
-        public virtual void PostInitialisation()
+        public virtual void PostInitialisation(object info = null)
+        {
+        }
+
+        public virtual void PostChannelAdded(ulong channelId)
         {
         }
 
@@ -68,8 +72,11 @@ namespace MopsBot.Data.Tracker
         {
             try
             {
-                using (var reader = System.Xml.XmlReader.Create(url))
+                var settings = new System.Xml.XmlReaderSettings();
+                settings.DtdProcessing = System.Xml.DtdProcessing.Parse;
+                using (var reader = System.Xml.XmlReader.Create(url, settings))
                 {
+                    
                     SyndicationFeed feed = SyndicationFeed.Load(reader);
                     return feed;
                 }
@@ -83,8 +90,10 @@ namespace MopsBot.Data.Tracker
         private async static Task<SyndicationFeed> FetchRSSDataUTF8(string url, params KeyValuePair<string, string>[] headers)
         {
             var content = await MopsBot.Module.Information.GetURLAsync(url, headers);
-            var stream = new MemoryStream(Encoding.UTF8.GetBytes(content ?? ""));
-            using (var reader = System.Xml.XmlReader.Create(stream))
+            var stream = new MemoryStream(Encoding.UTF8.GetBytes(content?.Replace("utf8", "utf-8") ?? ""));
+            var settings = new System.Xml.XmlReaderSettings();
+            settings.DtdProcessing = System.Xml.DtdProcessing.Parse;
+            using (var reader = System.Xml.XmlReader.Create(stream, settings))
             {
                 SyndicationFeed feed = SyndicationFeed.Load(reader);
                 return feed;
@@ -109,13 +118,13 @@ namespace MopsBot.Data.Tracker
                 await OnMinorEventFired(channelID, this, notificationText);
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
         }
 
-        protected void Dispose(bool disposing)
+        protected virtual void Dispose(bool disposing)
         {
             if (disposed)
                 return;
