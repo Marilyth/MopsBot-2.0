@@ -59,7 +59,8 @@ namespace MopsBot.Module
             [Summary("Returns the twitters that are tracked in the current channel.")]
             public async Task getTrackers()
             {
-                await ReplyAsync("Following twitters are currently being tracked:", embed: StaticBase.Trackers[BaseTracker.TrackerType.Twitter].GetTrackersEmbed(Context.Channel.Id));
+                await ReplyAsync("Following twitters are currently being tracked:");
+                await MopsBot.Data.Interactive.MopsPaginator.CreatePagedMessage(Context.Channel.Id, StaticBase.Trackers[BaseTracker.TrackerType.Twitter].GetTrackersEmbed(Context.Channel.Id));
             }
 
             [Command("SetNotification")]
@@ -164,7 +165,8 @@ namespace MopsBot.Module
             [Summary("Returns the Osu players that are tracked in the current channel.")]
             public async Task getTrackers()
             {
-                await ReplyAsync("Following Osu players are currently being tracked:", embed: StaticBase.Trackers[BaseTracker.TrackerType.Osu].GetTrackersEmbed(Context.Channel.Id));
+                await ReplyAsync("Following Osu players are currently being tracked:");
+                await MopsBot.Data.Interactive.MopsPaginator.CreatePagedMessage(Context.Channel.Id, StaticBase.Trackers[BaseTracker.TrackerType.Osu].GetTrackersEmbed(Context.Channel.Id));
             }
 
             [Command("SetPPBounds")]
@@ -232,7 +234,8 @@ namespace MopsBot.Module
             [Summary("Returns the Youtubers that are tracked in the current channel.")]
             public async Task getTrackers()
             {
-                await ReplyAsync("Following Youtubers are currently being tracked:", embed: StaticBase.Trackers[BaseTracker.TrackerType.Youtube].GetTrackersEmbed(Context.Channel.Id));
+                await ReplyAsync("Following Youtubers are currently being tracked:");
+                await MopsBot.Data.Interactive.MopsPaginator.CreatePagedMessage(Context.Channel.Id, StaticBase.Trackers[BaseTracker.TrackerType.Youtube].GetTrackersEmbed(Context.Channel.Id));
             }
 
             [Command("SetNotification")]
@@ -288,7 +291,8 @@ namespace MopsBot.Module
             [Summary("Returns the streamers that are tracked in the current channel.")]
             public async Task getTrackers()
             {
-                await ReplyAsync("Following streamers are currently being tracked:", embed: StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTrackersEmbed(Context.Channel.Id));
+                await ReplyAsync("Following streamers are currently being tracked:");
+                await MopsBot.Data.Interactive.MopsPaginator.CreatePagedMessage(Context.Channel.Id, StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTrackersEmbed(Context.Channel.Id));
             }
 
             [Command("SetNotification")]
@@ -581,7 +585,8 @@ namespace MopsBot.Module
             [Summary("Returns the streamers that are tracked in the current channel.")]
             public async Task getTrackers()
             {
-                await ReplyAsync("Following streamers are currently being tracked:", embed: StaticBase.Trackers[BaseTracker.TrackerType.TwitchClip].GetTrackersEmbed(Context.Channel.Id));
+                await ReplyAsync("Following streamers are currently being tracked:");
+                await MopsBot.Data.Interactive.MopsPaginator.CreatePagedMessage(Context.Channel.Id, StaticBase.Trackers[BaseTracker.TrackerType.TwitchClip].GetTrackersEmbed(Context.Channel.Id));
             }
 
             [Command("SetNotification")]
@@ -641,16 +646,19 @@ namespace MopsBot.Module
             {
                 if (await Trackers[BaseTracker.TrackerType.Reddit].TryRemoveTrackerAsync(String.Join(" ", new string[] { subreddit, query }.Where(x => x != null)), Context.Channel.Id))
                     await ReplyAsync("Stopped keeping track of " + subreddit + "'s posts!");
-                else
+                else{
                     await ReplyAsync($"Could not find tracker for `{subreddit}`\n" +
-                                     $"Currently tracked Subreddits are:", embed: StaticBase.Trackers[BaseTracker.TrackerType.Reddit].GetTrackersEmbed(Context.Channel.Id));
+                                     $"Currently tracked Subreddits are:");
+                    await MopsBot.Data.Interactive.MopsPaginator.CreatePagedMessage(Context.Channel.Id, StaticBase.Trackers[BaseTracker.TrackerType.Reddit].GetTrackersEmbed(Context.Channel.Id));
+                }
             }
 
             [Command("GetTrackers")]
             [Summary("Returns the subreddits that are tracked in the current channel.")]
             public async Task getTrackers()
             {
-                await ReplyAsync("Following subreddits are currently being tracked:", embed: StaticBase.Trackers[BaseTracker.TrackerType.Reddit].GetTrackersEmbed(Context.Channel.Id));
+                await ReplyAsync("Following subreddits are currently being tracked:");
+                await MopsBot.Data.Interactive.MopsPaginator.CreatePagedMessage(Context.Channel.Id, StaticBase.Trackers[BaseTracker.TrackerType.Reddit].GetTrackersEmbed(Context.Channel.Id));
             }
 
             [Command("SetNotification")]
@@ -662,9 +670,11 @@ namespace MopsBot.Module
                 {
                     await ReplyAsync($"Changed notification for `{subreddit}` to `{notification}`");
                 }
-                else
+                else{
                     await ReplyAsync($"Could not find tracker for `{subreddit}`\n" +
-                                     $"Currently tracked subreddits are:", embed: StaticBase.Trackers[BaseTracker.TrackerType.Reddit].GetTrackersEmbed(Context.Channel.Id));
+                                     $"Currently tracked subreddits are:");
+                    await MopsBot.Data.Interactive.MopsPaginator.CreatePagedMessage(Context.Channel.Id, StaticBase.Trackers[BaseTracker.TrackerType.Reddit].GetTrackersEmbed(Context.Channel.Id));
+                }
             }
         }
 
@@ -715,7 +725,8 @@ namespace MopsBot.Module
             [Summary("Returns the players that are tracked in the current channel.")]
             public async Task getTrackers()
             {
-                await ReplyAsync("Following players are currently being tracked:", embed: StaticBase.Trackers[BaseTracker.TrackerType.Overwatch].GetTrackersEmbed(Context.Channel.Id));
+                await ReplyAsync("Following players are currently being tracked:");
+                await MopsBot.Data.Interactive.MopsPaginator.CreatePagedMessage(Context.Channel.Id, StaticBase.Trackers[BaseTracker.TrackerType.Overwatch].GetTrackersEmbed(Context.Channel.Id));
             }
 
             [Command("SetNotification")]
@@ -767,7 +778,8 @@ namespace MopsBot.Module
             [Summary("Returns the jsons that are tracked in the current channel.")]
             public async Task getTrackers()
             {
-                await ReplyAsync("Following jsons are currently being tracked:", embed: StaticBase.Trackers[BaseTracker.TrackerType.JSON].GetTrackersEmbed(Context.Channel.Id));
+                await ReplyAsync("Following jsons are currently being tracked:");
+                await MopsBot.Data.Interactive.MopsPaginator.CreatePagedMessage(Context.Channel.Id, StaticBase.Trackers[BaseTracker.TrackerType.JSON].GetTrackersEmbed(Context.Channel.Id));
             }
 
             [Command("SetNotification")]
@@ -840,7 +852,8 @@ namespace MopsBot.Module
             [Summary("Returns the players that are tracked in the current channel.")]
             public async Task getTrackers()
             {
-                await ReplyAsync("Following players are currently being tracked:", embed: StaticBase.Trackers[BaseTracker.TrackerType.OSRS].GetTrackersEmbed(Context.Channel.Id));
+                await ReplyAsync("Following players are currently being tracked:");
+                await MopsBot.Data.Interactive.MopsPaginator.CreatePagedMessage(Context.Channel.Id, StaticBase.Trackers[BaseTracker.TrackerType.OSRS].GetTrackersEmbed(Context.Channel.Id));
             }
 
             [Command("SetNotification")]
@@ -1027,7 +1040,8 @@ namespace MopsBot.Module
             [Summary("Returns the feeds that are tracked in the current channel.")]
             public async Task GetTrackers()
             {
-                await ReplyAsync("Following feeds are currently being tracked:", embed: StaticBase.Trackers[BaseTracker.TrackerType.RSS].GetTrackersEmbed(Context.Channel.Id));
+                await ReplyAsync("Following feeds are currently being tracked:");
+                await MopsBot.Data.Interactive.MopsPaginator.CreatePagedMessage(Context.Channel.Id, StaticBase.Trackers[BaseTracker.TrackerType.RSS].GetTrackersEmbed(Context.Channel.Id));
             }
 
             [Command("SetNotification")]

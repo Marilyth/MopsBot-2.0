@@ -30,8 +30,15 @@ namespace MopsBot.Data.Interactive
                 message = message
             };
 
-            await Program.ReactionHandler.AddHandler(message, new Emoji("◀"), paginator.PreviousPageAsync);
-            await Program.ReactionHandler.AddHandler(message, new Emoji("▶"), paginator.NextPageAsync);
+            if(pPages.Count() > 1){
+                await Program.ReactionHandler.AddHandler(message, new Emoji("◀"), paginator.PreviousPageAsync);
+                await Program.ReactionHandler.AddHandler(message, new Emoji("▶"), paginator.NextPageAsync);
+            }
+        }
+
+        public static async Task CreatePagedMessage(ulong channel, IEnumerable<Embed> pPages)
+        {
+            await CreatePagedMessage(Program.Client.GetChannel(channel) as ISocketMessageChannel, pPages);
         }
 
         public static async Task CreatePagedMessage(ISocketMessageChannel channel, IEnumerable<string> pPages)
@@ -43,6 +50,11 @@ namespace MopsBot.Data.Interactive
             }
 
             await CreatePagedMessage(channel, pages);
+        }
+
+        public static async Task CreatePagedMessage(ulong channel, IEnumerable<string> pPages)
+        {
+            await CreatePagedMessage(Program.Client.GetChannel(channel) as ISocketMessageChannel, pPages);
         }
 
         public async Task PreviousPageAsync(ReactionHandlerContext context)

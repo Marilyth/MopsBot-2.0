@@ -60,7 +60,8 @@ namespace MopsBot.Module
             [Summary("Returns the Youtubers that are tracked in the current channel.")]
             public async Task getTrackers()
             {
-                await ReplyAsync("Following Youtubers are currently being tracked:", embed: StaticBase.Trackers[BaseTracker.TrackerType.YoutubeLive].GetTrackersEmbed(Context.Channel.Id));
+                await ReplyAsync("Following Youtubers are currently being tracked:");
+                await MopsBot.Data.Interactive.MopsPaginator.CreatePagedMessage(Context.Channel.Id, StaticBase.Trackers[BaseTracker.TrackerType.YoutubeLive].GetTrackersEmbed(Context.Channel.Id));
             }
 
             [Command("SetNotification")]
@@ -115,7 +116,8 @@ namespace MopsBot.Module
             [Summary("Returns the Steam users that are tracked in the current channel.")]
             public async Task getTrackers()
             {
-                await ReplyAsync("Following Steam users are currently being tracked:", embed: StaticBase.Trackers[BaseTracker.TrackerType.Steam].GetTrackersEmbed(Context.Channel.Id));
+                await ReplyAsync("Following Steam users are currently being tracked:");
+                await MopsBot.Data.Interactive.MopsPaginator.CreatePagedMessage(Context.Channel.Id, StaticBase.Trackers[BaseTracker.TrackerType.Steam].GetTrackersEmbed(Context.Channel.Id));
             }
 
             [Command("SetNotification")]

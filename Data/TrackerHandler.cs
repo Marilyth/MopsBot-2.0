@@ -27,7 +27,7 @@ namespace MopsBot.Data
         public abstract Dictionary<string, Tracker.BaseTracker> GetTrackers();
         public abstract IEnumerable<BaseTracker> GetTrackers(ulong channelID);
         public abstract IEnumerable<BaseTracker> GetGuildTrackers(ulong guildId);
-        public abstract Embed GetTrackersEmbed(ulong channelID);
+        public abstract IEnumerable<Embed> GetTrackersEmbed(ulong channelID);
         public abstract BaseTracker GetTracker(ulong channelID, string name);
         public abstract Type GetTrackerType();
         public abstract void PostInitialisation();
@@ -252,14 +252,20 @@ namespace MopsBot.Data
                 return false;
         }
 
-        public override Embed GetTrackersEmbed(ulong channelID)
+        public override IEnumerable<Embed> GetTrackersEmbed(ulong channelID)
         {
-            EmbedBuilder e = new EmbedBuilder();
-            e.WithTitle(typeof(T).Name).WithCurrentTimestamp().WithColor(Discord.Color.Blue);
+            var trackerStrings = trackers.Where(x => x.Value.ChannelMessages.ContainsKey(channelID)).Select(x => x.Value.TrackerUrl() != null ? $"[``{x.Key}``]({x.Value.TrackerUrl()})\n" : $"``{x.Key}``\n");
+            var embeds = new List<EmbedBuilder>(){new EmbedBuilder().WithTitle(typeof(T).Name).WithCurrentTimestamp().WithColor(Discord.Color.Blue)};
+            
+            foreach(var tracker in trackerStrings){
+                if((embeds.Last().Description?.Length ?? 0) + tracker.Length > 2048){
+                    embeds.Add(new EmbedBuilder());
+                    embeds.Last().WithTitle(typeof(T).Name).WithCurrentTimestamp().WithColor(Discord.Color.Blue);
+                }
+                embeds.Last().Description += tracker;
+            }
 
-            e.WithDescription(string.Join("\n", trackers.Where(x => x.Value.ChannelMessages.ContainsKey(channelID)).Select(x => x.Value.TrackerUrl() != null ? $"[``{x.Key}``]({x.Value.TrackerUrl()})\n" : $"``{x.Key}``\n")));
-
-            return e.Build();
+            return embeds.Select(x => x.Build());
         }
 
         public override Dictionary<string, BaseTracker> GetTrackers()
