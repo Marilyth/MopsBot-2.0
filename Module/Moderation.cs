@@ -46,6 +46,21 @@ namespace MopsBot.Module
                         await ReplyAsync($"**Error**: Role `{role.Name}` could either not be found, or was beyond Mops' permissions.");
                 }
             }
+
+            [Command("Prune")]
+            [RequireBotManage]
+            [Hide]
+            public async Task Prune(bool testing = true)
+            {
+                using(Context.Channel.EnterTypingState()){
+                    var pruned = await StaticBase.ReactRoleJoin.TryPruneAsync(testing);
+                    var result = $"{"Channel",-20}{"Message"}\n{string.Join("\n", pruned.Select(x => $"{x.Key,-20}{x.Value,-20}"))}";
+                        if (result.Length < 2048)
+                            await ReplyAsync($"```{result}```");
+                        else
+                            await ReplyAsync($"Pruned {pruned.Count} objects");
+                }
+            }
         }
 
         [Group("Poll")]
@@ -79,6 +94,21 @@ namespace MopsBot.Module
                 var infoEmbed = new EmbedBuilder().WithDescription(String.Join("\n", StaticBase.Poll.Polls[Context.Channel.Id].Select(x => $"[{x.Question}](https://discordapp.com/channels/{Context.Guild.Id}/{Context.Channel.Id}/{x.MessageID})")));
                 await ReplyAsync(embed: infoEmbed.Build());
             }
+
+            [Command("Prune")]
+            [RequireBotManage]
+            [Hide]
+            public async Task Prune(bool testing = true)
+            {
+                using(Context.Channel.EnterTypingState()){
+                    var pruned = await StaticBase.Poll.TryPruneAsync(testing);
+                    var result = $"{"Channel",-20}{"Message"}\n{string.Join("\n", pruned.Select(x => $"{x.Key,-20}{x.Value,-20}"))}";
+                        if (result.Length < 2048)
+                            await ReplyAsync($"```{result}```");
+                        else
+                            await ReplyAsync($"Pruned {pruned.Count} objects");
+                }
+            }
         }
 
         [Group("Giveaway")]
@@ -109,6 +139,21 @@ namespace MopsBot.Module
                     var infoEmbed = new EmbedBuilder().WithDescription(String.Join("\n", allEmbeds.Select(x => $"[{x.Item1.Title} by {x.Item1.Author.Value.Name}](https://discordapp.com/channels/{Context.Guild.Id}/{Context.Channel.Id}/{x.Item2})")));
 
                     await ReplyAsync(embed: infoEmbed.Build());
+                }
+            }
+            
+            [Command("Prune")]
+            [RequireBotManage]
+            [Hide]
+            public async Task Prune(bool testing = true)
+            {
+                using(Context.Channel.EnterTypingState()){
+                    var pruned = await StaticBase.ReactGiveaways.TryPruneAsync(testing);
+                    var result = $"{"Channel",-20}{"Message"}\n{string.Join("\n", pruned.Select(x => $"{x.Key,-20}{x.Value,-20}"))}";
+                        if (result.Length < 2048)
+                            await ReplyAsync($"```{result}```");
+                        else
+                            await ReplyAsync($"Pruned {pruned.Count} objects");
                 }
             }
         }

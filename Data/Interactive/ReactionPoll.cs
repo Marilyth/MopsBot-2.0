@@ -91,7 +91,7 @@ namespace MopsBot.Data.Interactive
         {
             await StaticBase.Database.GetCollection<MongoKVP<ulong, List<Poll>>>(this.GetType().Name).DeleteOneAsync(x => x.Key == key);
         }
-        
+
         public async Task AddPoll(ITextChannel channel, Poll poll)
         {
             EmbedBuilder e = new EmbedBuilder();
@@ -193,6 +193,41 @@ namespace MopsBot.Data.Interactive
             {
                 x.Embed = e.Build();
             });
+        }
+
+        public async Task<List<KeyValuePair<ulong, ulong>>> TryPruneAsync(bool testing = true)
+        {
+            var pruneList = new List<KeyValuePair<ulong, ulong>>();
+
+            foreach (var channel in Polls.ToList())
+            {
+                foreach (var message in channel.Value.ToList())
+                {
+                    var curChannel = (ITextChannel)Program.Client.GetChannel(channel.Key);
+                    if (curChannel != null)
+                    {
+                        var curMessage = curChannel.GetMessageAsync(message.MessageID);
+                        if (curMessage != null) continue;
+                    }
+
+                    pruneList.Add(KeyValuePair.Create<ulong, ulong>(channel.Key, message.MessageID));
+                    if (!testing)
+                    {
+                        if (Polls[channel.Key].Count > 1)
+                        {
+                            Polls[channel.Key].Remove(message);
+                            await UpdateDBAsync(channel.Key);
+                        }
+                        else
+                        {
+                            Polls.Remove(channel.Key);
+                            await RemoveFromDBAsync(channel.Key);
+                        }
+                    }
+                }
+            }
+
+            return pruneList;
         }
 
         public static Dictionary<int, Emoji> EmojiDict = new Dictionary<int, Emoji>{

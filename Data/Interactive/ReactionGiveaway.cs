@@ -254,6 +254,41 @@ namespace MopsBot.Data.Interactive
             });
         }
 
+        public async Task<List<KeyValuePair<ulong, ulong>>> TryPruneAsync(bool testing = true)
+        {
+            var pruneList = new List<KeyValuePair<ulong, ulong>>();
+
+            foreach (var channel in Giveaways.ToList())
+            {
+                foreach (var message in channel.Value.ToList())
+                {
+                    var curChannel = (ITextChannel)Program.Client.GetChannel(channel.Key);
+                    if (curChannel != null)
+                    {
+                        var curMessage = curChannel.GetMessageAsync(message.Key);
+                        if (curMessage != null) continue;
+                    }
+
+                    pruneList.Add(KeyValuePair.Create<ulong, ulong>(channel.Key, message.Key));
+                    if (!testing)
+                    {
+                        if (Giveaways[channel.Key].Count > 1)
+                        {
+                            Giveaways[channel.Key].Remove(message.Key);
+                            await UpdateDBAsync(channel.Key);
+                        }
+                        else
+                        {
+                            Giveaways.Remove(channel.Key);
+                            await RemoveFromDBAsync(channel.Key);
+                        }
+                    }
+                }
+            }
+
+            return pruneList;
+        }
+
         public async Task AddContent(Dictionary<string, string> args){
             
         }
