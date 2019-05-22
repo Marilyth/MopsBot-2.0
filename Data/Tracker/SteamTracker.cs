@@ -91,9 +91,10 @@ namespace MopsBot.Data.Tracker
                 int curAchievementIndex = achievedCount - (newAchievements.Count() - 1);
                 foreach (var achievement in newAchievements)
                 {
+                    var embed = CreateAchievementEmbed(achievement, summary, achievements.Count, curAchievementIndex++);
                     foreach (var channel in ChannelMessages)
                     {
-                        await OnMajorChangeTracked(channel.Key, CreateAchievementEmbed(achievement, summary, achievements.Count, curAchievementIndex++), channel.Value);
+                        await OnMajorChangeTracked(channel.Key, embed, channel.Value);
                     }
                 }
                 if (setLastCheck) LastCheck = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
