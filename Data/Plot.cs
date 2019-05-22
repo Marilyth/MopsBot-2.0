@@ -344,6 +344,7 @@ namespace MopsBot.Data
                 TicklineColor = OxyColor.FromRgb(125, 125, 155),
                 Title = xAxis,
                 MaximumPadding = 0,
+                MinimumPadding = 0,
                 FontSize = 24,
                 AxislineStyle = LineStyle.Solid,
                 AxislineColor = OxyColor.FromRgb(125, 125, 155),
@@ -407,11 +408,14 @@ namespace MopsBot.Data
             if (xValue == null) xValue = DateTime.UtcNow;
             if (StartTime == null){
                 StartTime = xValue;
+                viewerChart.Axes.First(x => x.Position == OxyPlot.Axes.AxisPosition.Bottom).AbsoluteMinimum = lineSeries.First().Points.First().X;
             }
             var relativeXValue = relative ? new DateTime(1970, 01, 01).Add((xValue - StartTime).Value) : xValue;
 
             if (lineSeries.LastOrDefault()?.Title?.Equals(name) ?? false){
                 lineSeries.Last().Points.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), viewerCount));
+                var axis = viewerChart.Axes.First(x => x.Position == OxyPlot.Axes.AxisPosition.Bottom);
+                axis.AbsoluteMaximum = lineSeries.Last().Points.Max(x => x.X);
             }
 
             else
@@ -436,6 +440,7 @@ namespace MopsBot.Data
                 series.Points.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), viewerCount));
                 viewerChart.Series.Add(series);
                 lineSeries.Add(series);
+                viewerChart.Axes.First(x => x.Position == OxyPlot.Axes.AxisPosition.Bottom).AbsoluteMaximum = lineSeries.Last().Points.Max(x => x.X);
             }
 
             if (savePlot)
@@ -455,7 +460,6 @@ namespace MopsBot.Data
             else
             {
                 var series = new OxyPlot.Series.LineSeries();
-                series.InterpolationAlgorithm = InterpolationAlgorithms.CatmullRomSpline;
 
                 long colour = 1;
                 foreach (char c in name)
