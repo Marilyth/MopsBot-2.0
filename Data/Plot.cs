@@ -437,8 +437,10 @@ namespace MopsBot.Data
             }
 
             var axis = viewerChart.Axes.First(x => x.Position == OxyPlot.Axes.AxisPosition.Bottom);
-            axis.AbsoluteMaximum = axis.DataMaximum;
-            axis.AbsoluteMinimum = axis.DataMinimum;
+            var max = lineSeries.Max(x => x.Points.Max(y => y.X));
+            var min = lineSeries.Min(x => x.Points.Min(y => y.X));
+            axis.AbsoluteMaximum = max;
+            axis.AbsoluteMinimum = min;
 
             if (savePlot)
             {
@@ -457,6 +459,7 @@ namespace MopsBot.Data
             else
             {
                 var series = new OxyPlot.Series.LineSeries();
+                series.InterpolationAlgorithm = InterpolationAlgorithms.CatmullRomSpline;
 
                 long colour = 1;
                 foreach (char c in name)
@@ -475,6 +478,12 @@ namespace MopsBot.Data
                 viewerChart.Series.Add(series);
                 lineSeries.Add(series);
             }
+
+            var axis = viewerChart.Axes.First(x => x.Position == OxyPlot.Axes.AxisPosition.Bottom);
+            var max = lineSeries.Max(x => x.Points.Max(y => y.X));
+            var min = lineSeries.Min(x => x.Points.Min(y => y.X));
+            axis.AbsoluteMaximum = max;
+            axis.AbsoluteMinimum = min;
 
             if (savePlot)
             {
