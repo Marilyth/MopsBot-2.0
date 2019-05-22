@@ -406,17 +406,11 @@ namespace MopsBot.Data
         public void AddValue(string name, double viewerCount, DateTime? xValue = null, bool savePlot = true, bool relative = true)
         {
             if (xValue == null) xValue = DateTime.UtcNow;
-            if (StartTime == null){
-                StartTime = xValue;
-                viewerChart.Axes.First(x => x.Position == OxyPlot.Axes.AxisPosition.Bottom).AbsoluteMinimum = lineSeries.First().Points.First().X;
-            }
+            if (StartTime == null) StartTime = xValue;
             var relativeXValue = relative ? new DateTime(1970, 01, 01).Add((xValue - StartTime).Value) : xValue;
 
-            if (lineSeries.LastOrDefault()?.Title?.Equals(name) ?? false){
+            if (lineSeries.LastOrDefault()?.Title?.Equals(name) ?? false)
                 lineSeries.Last().Points.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), viewerCount));
-                var axis = viewerChart.Axes.First(x => x.Position == OxyPlot.Axes.AxisPosition.Bottom);
-                axis.AbsoluteMaximum = lineSeries.Last().Points.Max(x => x.X);
-            }
 
             else
             {
@@ -440,8 +434,11 @@ namespace MopsBot.Data
                 series.Points.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), viewerCount));
                 viewerChart.Series.Add(series);
                 lineSeries.Add(series);
-                viewerChart.Axes.First(x => x.Position == OxyPlot.Axes.AxisPosition.Bottom).AbsoluteMaximum = lineSeries.Last().Points.Max(x => x.X);
             }
+
+            var axis = viewerChart.Axes.First(x => x.Position == OxyPlot.Axes.AxisPosition.Bottom);
+            axis.AbsoluteMaximum = axis.DataMaximum;
+            axis.AbsoluteMinimum = axis.DataMinimum;
 
             if (savePlot)
             {
