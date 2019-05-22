@@ -343,6 +343,7 @@ namespace MopsBot.Data
                 Position = OxyPlot.Axes.AxisPosition.Bottom,
                 TicklineColor = OxyColor.FromRgb(125, 125, 155),
                 Title = xAxis,
+                MaximumPadding = 0,
                 FontSize = 24,
                 AxislineStyle = LineStyle.Solid,
                 AxislineColor = OxyColor.FromRgb(125, 125, 155),
@@ -404,11 +405,14 @@ namespace MopsBot.Data
         public void AddValue(string name, double viewerCount, DateTime? xValue = null, bool savePlot = true, bool relative = true)
         {
             if (xValue == null) xValue = DateTime.UtcNow;
-            if (StartTime == null) StartTime = xValue;
+            if (StartTime == null){
+                StartTime = xValue;
+            }
             var relativeXValue = relative ? new DateTime(1970, 01, 01).Add((xValue - StartTime).Value) : xValue;
 
-            if (lineSeries.LastOrDefault()?.Title?.Equals(name) ?? false)
+            if (lineSeries.LastOrDefault()?.Title?.Equals(name) ?? false){
                 lineSeries.Last().Points.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), viewerCount));
+            }
 
             else
             {
