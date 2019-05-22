@@ -13,6 +13,7 @@ using MopsBot.Data;
 using MopsBot.Data.Tracker;
 using MopsBot.Data.Interactive;
 using Tweetinvi;
+using Tweetinvi.Logic;
 using MongoDB.Driver;
 using MongoDB.Bson.Serialization.Options;
 using MongoDB.Bson.Serialization.Attributes;
@@ -74,6 +75,8 @@ namespace MopsBot
                 Tweetinvi.ExceptionHandler.SwallowWebExceptions = false;
                 Tweetinvi.RateLimit.RateLimitTrackerMode = RateLimitTrackerMode.TrackOnly;
                 TweetinviEvents.QueryBeforeExecute += Data.Tracker.TwitterTracker.QueryBeforeExecute;
+                Tweetinvi.Logic.JsonConverters.JsonPropertyConverterRepository.JsonConverters.Remove(typeof(Tweetinvi.Models.Language));
+                Tweetinvi.Logic.JsonConverters.JsonPropertyConverterRepository.JsonConverters.Add(typeof(Tweetinvi.Models.Language), new CustomJsonLanguageConverter());
                 //WoWTracker.WoWClient = new SharprWowApi.WowClient(Region.EU, Locale.en_GB, Program.Config["WoWKey"]);
 
                 Trackers = new Dictionary<BaseTracker.TrackerType, Data.TrackerWrapper>();
@@ -208,6 +211,15 @@ namespace MopsBot
                     await Task.Delay(30000);
                 }
             }
+        }
+    }
+    public class CustomJsonLanguageConverter : Tweetinvi.Logic.JsonConverters.JsonLanguageConverter
+    {
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, Newtonsoft.Json.JsonSerializer serializer)
+        {
+            return reader.Value != null 
+                ? base.ReadJson(reader, objectType, existingValue, serializer) 
+                : Tweetinvi.Models.Language.English;
         }
     }
 }
