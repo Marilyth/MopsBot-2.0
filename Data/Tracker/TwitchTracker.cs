@@ -360,8 +360,7 @@ namespace MopsBot.Data.Tracker
             {
                 ViewerGraph.Recolour();
 
-                foreach (ulong channel in ChannelMessages.Keys.ToList())
-                    await OnMajorChangeTracked(channel, createEmbed());
+                await OnMajorChangeTracked(context.Channel.Id, createEmbed(Specifications[context.Channel.Id].LargeThumbnail));
             }
         }
 
@@ -369,10 +368,9 @@ namespace MopsBot.Data.Tracker
         {
             if (((IGuildUser)await context.Reaction.Channel.GetUserAsync(context.Reaction.UserId)).GetPermissions((IGuildChannel)context.Channel).ManageChannel)
             {
-                await ModifyAsync(x => x.Specifications[(context.Channel as SocketGuildChannel).Guild.Id].LargeThumbnail = !x.Specifications[(context.Channel as SocketGuildChannel).Guild.Id].LargeThumbnail);
-
-                foreach (ulong channel in ChannelMessages.Keys.ToList())
-                    await OnMajorChangeTracked(channel, createEmbed());
+                await ModifyAsync(x => x.Specifications[context.Channel.Id].LargeThumbnail = !x.Specifications[context.Channel.Id].LargeThumbnail);
+                
+                await OnMajorChangeTracked(context.Channel.Id, createEmbed(Specifications[context.Channel.Id].LargeThumbnail));
             }
         }
 

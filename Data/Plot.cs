@@ -413,6 +413,7 @@ namespace MopsBot.Data
             else
             {
                 var series = new OxyPlot.Series.LineSeries();
+                series.InterpolationAlgorithm = InterpolationAlgorithms.CanonicalSpline;
 
                 long colour = 1;
                 foreach (char c in name)
@@ -450,6 +451,7 @@ namespace MopsBot.Data
             else
             {
                 var series = new OxyPlot.Series.LineSeries();
+                series.InterpolationAlgorithm = InterpolationAlgorithms.CanonicalSpline;
 
                 long colour = 1;
                 foreach (char c in name)
