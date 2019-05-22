@@ -13,7 +13,6 @@
     <PackageReference Include="Discord.Net" Version="2.0.1" />
     <PackageReference Include="Discord.Net.Rest" Version="2.0.1" />
     <PackageReference Include="Discord.Addons.Interactive" Version="1.0.1" />
-    <PackageReference Include="TweetinviAPI" Version="4.0.0" />
     <PackageReference Include="OxyPlot.Core" Version="2.0.0-unstable1035" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.7" />
@@ -25,6 +24,7 @@
     <PackageReference Include="System.ServiceModel.Primitives" Version="4.5.3" />
     <PackageReference Include="System.ServiceModel.Syndication" Version="4.6.0-preview.18571.3" />
     <PackageReference Include="TwitchLib" Version="3.0.1" />
+    <ProjectReference Include="../tweetinvi/Tweetinvi/Tweetinvi.csproj" Version="1.0.0"/>
   </ItemGroup>
 
   <ItemGroup>
