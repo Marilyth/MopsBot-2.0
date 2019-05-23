@@ -333,6 +333,12 @@ namespace MopsBot.Data
                 TicklineColor = OxyColor.FromRgb(125, 125, 155),
                 Title = yAxis,
                 FontSize = 26,
+                TitleFontSize = 26,
+                AxislineThickness = 2,
+                MinorGridlineThickness = 5,
+                MajorGridlineThickness = 5,
+                FontWeight = 700,
+                TitleFontWeight = 700,
                 AxislineStyle = LineStyle.Solid,
                 AxislineColor = OxyColor.FromRgb(125, 125, 155)
             };
@@ -344,6 +350,12 @@ namespace MopsBot.Data
                 TicklineColor = OxyColor.FromRgb(125, 125, 155),
                 Title = xAxis,
                 FontSize = 26,
+                TitleFontSize = 26,
+                AxislineThickness = 2,
+                MinorGridlineThickness = 5,
+                MajorGridlineThickness = 5,
+                FontWeight = 700,
+                TitleFontWeight = 700,
                 AxislineStyle = LineStyle.Solid,
                 AxislineColor = OxyColor.FromRgb(125, 125, 155),
                 StringFormat = format
