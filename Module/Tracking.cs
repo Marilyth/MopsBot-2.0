@@ -314,8 +314,8 @@ namespace MopsBot.Module
             [Command("SetFont")]
             [Hide]
             [RequireBotManage]
-            public async Task SetFont(BaseTracker streamer, int size){
-                (streamer as TwitchTracker).ViewerGraph.SetFontSize(size);
+            public async Task SetFont(BaseTracker streamer, int size, int weight = 700){
+                (streamer as TwitchTracker).ViewerGraph.SetFontSize(size, weight);
             }
 
             [Command("SetMajor")]

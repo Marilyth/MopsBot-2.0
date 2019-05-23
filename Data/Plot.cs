@@ -583,22 +583,21 @@ namespace MopsBot.Data
 
         public void SetAxisMajorThickness(int thickness){
             foreach(var axis in viewerChart.Axes){
-                axis.MajorTickSize = thickness;
+                axis.MajorGridlineThickness = thickness;
             }
         }
 
         public void SetAxisMinorThickness(int thickness){
             foreach(var axis in viewerChart.Axes){
-                axis.MinorTickSize = thickness;
+                axis.MinorGridlineThickness = thickness;
             }
         }
 
-        public void SetFontSize(int size){
+        public void SetFontSize(int size, int weight = 700){
             foreach(var axis in viewerChart.Axes){
                 axis.FontSize = size;
+                axis.FontWeight = weight;
             }
-            viewerChart.LegendFontSize = size;
-            viewerChart.DefaultFontSize = size;
         }
 
         public static string CreateBarDiagram<T>(int count, Func<T, int> stat, Func<T, string> id, List<T> toSort)
