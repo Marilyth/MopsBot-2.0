@@ -304,6 +304,34 @@ namespace MopsBot.Module
                 await ReplyAsync($"Changed notification for `{streamer.Name}` to `{notification}`");
             }
 
+            [Command("SetAxis")]
+            [Hide]
+            [RequireBotManage]
+            public async Task SetAxis(BaseTracker streamer, int size){
+                (streamer as TwitchTracker).ViewerGraph.SetAxisThickness(size);
+            }
+
+            [Command("SetFont")]
+            [Hide]
+            [RequireBotManage]
+            public async Task SetFont(BaseTracker streamer, int size){
+                (streamer as TwitchTracker).ViewerGraph.SetFontSize(size);
+            }
+
+            [Command("SetMajor")]
+            [Hide]
+            [RequireBotManage]
+            public async Task SetMajor(BaseTracker streamer, int size){
+                (streamer as TwitchTracker).ViewerGraph.SetAxisMajorThickness(size);
+            }
+
+            [Command("SetMinor")]
+            [Hide]
+            [RequireBotManage]
+            public async Task SetMinor(BaseTracker streamer, int size){
+                (streamer as TwitchTracker).ViewerGraph.SetAxisMinorThickness(size);
+            }
+
             [Group("Notifications")]
             public class Notifications : ModuleBase
             {

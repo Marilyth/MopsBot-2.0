@@ -573,6 +573,36 @@ namespace MopsBot.Data
             }
         }
 
+        public PlotModel GetModel(){
+            return viewerChart;
+        }
+
+        public void SetAxisThickness(int thickness){
+            foreach(var axis in viewerChart.Axes){
+                axis.AxislineThickness = thickness;
+            }
+        }
+
+        public void SetAxisMajorThickness(int thickness){
+            foreach(var axis in viewerChart.Axes){
+                axis.MajorTickSize = thickness;
+            }
+        }
+
+        public void SetAxisMinorThickness(int thickness){
+            foreach(var axis in viewerChart.Axes){
+                axis.MinorTickSize = thickness;
+            }
+        }
+
+        public void SetFontSize(int size){
+            foreach(var axis in viewerChart.Axes){
+                axis.FontSize = size;
+            }
+            viewerChart.LegendFontSize = size;
+            viewerChart.DefaultFontSize = size;
+        }
+
         public static string CreateBarDiagram<T>(int count, Func<T, int> stat, Func<T, string> id, List<T> toSort)
         {
             var sortedList = (from entry in toSort orderby stat(entry) descending select entry).Take(count).ToArray();
