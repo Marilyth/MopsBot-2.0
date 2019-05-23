@@ -332,7 +332,7 @@ namespace MopsBot.Data
                 Position = OxyPlot.Axes.AxisPosition.Left,
                 TicklineColor = OxyColor.FromRgb(125, 125, 155),
                 Title = yAxis,
-                FontSize = 24,
+                FontSize = 26,
                 AxislineStyle = LineStyle.Solid,
                 AxislineColor = OxyColor.FromRgb(125, 125, 155)
             };
@@ -345,7 +345,7 @@ namespace MopsBot.Data
                 Title = xAxis,
                 MaximumPadding = 0,
                 MinimumPadding = 0,
-                FontSize = 24,
+                FontSize = 26,
                 AxislineStyle = LineStyle.Solid,
                 AxislineColor = OxyColor.FromRgb(125, 125, 155),
                 StringFormat = format
