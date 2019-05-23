@@ -334,7 +334,7 @@ namespace MopsBot.Data
                 Title = yAxis,
                 FontSize = 26,
                 TitleFontSize = 26,
-                AxislineThickness = 2,
+                AxislineThickness = 3,
                 MinorGridlineThickness = 5,
                 MajorGridlineThickness = 5,
                 FontWeight = 700,
@@ -351,7 +351,7 @@ namespace MopsBot.Data
                 Title = xAxis,
                 FontSize = 26,
                 TitleFontSize = 26,
-                AxislineThickness = 2,
+                AxislineThickness = 3,
                 MinorGridlineThickness = 5,
                 MajorGridlineThickness = 5,
                 FontWeight = 700,
@@ -572,37 +572,6 @@ namespace MopsBot.Data
             {
                 OxyColor newColour = OxyColor.FromRgb((byte)StaticBase.ran.Next(30, 220), (byte)StaticBase.ran.Next(30, 220), (byte)StaticBase.ran.Next(30, 220));
                 series.Color = newColour;
-            }
-        }
-
-        public PlotModel GetModel(){
-            return viewerChart;
-        }
-
-        public void SetAxisThickness(int thickness){
-            foreach(var axis in viewerChart.Axes){
-                axis.AxislineThickness = thickness;
-            }
-        }
-
-        public void SetAxisMajorThickness(int thickness){
-            foreach(var axis in viewerChart.Axes){
-                axis.MajorGridlineThickness = thickness;
-            }
-        }
-
-        public void SetAxisMinorThickness(int thickness){
-            foreach(var axis in viewerChart.Axes){
-                axis.MinorGridlineThickness = thickness;
-            }
-        }
-
-        public void SetFontSize(int size, int weight = 700){
-            foreach(var axis in viewerChart.Axes){
-                axis.FontSize = size;
-                axis.FontWeight = weight;
-                axis.TitleFontSize = size;
-                axis.TitleFontWeight = weight;
             }
         }
 
