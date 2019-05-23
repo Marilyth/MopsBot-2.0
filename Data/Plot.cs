@@ -597,6 +597,8 @@ namespace MopsBot.Data
             foreach(var axis in viewerChart.Axes){
                 axis.FontSize = size;
                 axis.FontWeight = weight;
+                axis.TitleFontSize = size;
+                axis.TitleFontWeight = weight;
             }
         }
 
