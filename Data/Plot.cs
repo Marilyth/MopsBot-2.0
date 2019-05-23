@@ -301,7 +301,7 @@ namespace MopsBot.Data
     public class DatePlot
     {
         private PlotModel viewerChart;
-        private List<OxyPlot.Series.LineSeries> lineSeries;
+        private List<OxyPlot.Series.AreaSeries> areaSeries;
         private static string COLLECTIONNAME = "TwitchTracker";
         //public List<KeyValuePair<string, double>> PlotPoints;
         public List<KeyValuePair<string, KeyValuePair<double, double>>> PlotDataPoints;
@@ -355,8 +355,11 @@ namespace MopsBot.Data
             viewerChart.Axes.Add(valueAxisX);
             viewerChart.LegendFontSize = 24;
             viewerChart.LegendPosition = LegendPosition.BottomCenter;
+            viewerChart.LegendBorder = OxyColor.FromRgb(125, 125, 155);
+            viewerChart.LegendBackground = OxyColor.FromArgb(100, 255, 255, 255);
+            viewerChart.LegendTextColor = OxyColor.FromRgb(0, 0, 0);
 
-            lineSeries = new List<OxyPlot.Series.LineSeries>();
+            areaSeries = new List<OxyPlot.Series.AreaSeries>();
             /*foreach (var plotPoint in PlotPoints)
             {
                 AddValue(plotPoint.Key, plotPoint.Value, false);
@@ -409,12 +412,13 @@ namespace MopsBot.Data
             if (StartTime == null) StartTime = xValue;
             var relativeXValue = relative ? new DateTime(1970, 01, 01).Add((xValue - StartTime).Value) : xValue;
 
-            if (lineSeries.LastOrDefault()?.Title?.Equals(name) ?? false)
-                lineSeries.Last().Points.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), viewerCount));
+            if (areaSeries.LastOrDefault()?.Title?.Equals(name) ?? false){
+                areaSeries.Last().Points.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), viewerCount));
+            }
 
             else
             {
-                var series = new OxyPlot.Series.LineSeries();
+                var series = new OxyPlot.Series.AreaSeries();
                 series.InterpolationAlgorithm = InterpolationAlgorithms.CatmullRomSpline;
 
                 long colour = 1;
@@ -425,22 +429,30 @@ namespace MopsBot.Data
 
                 var oxycolour = OxyColor.FromUInt32((uint)colour + 4278190080);
                 series.Color = oxycolour;
+                series.Fill = OxyColor.FromAColor(100, oxycolour);
+                series.Color2 = OxyColors.Transparent;
 
-                if (!lineSeries.Any(x => x.Title?.Equals(name) ?? false))
+                if (!areaSeries.Any(x => x.Title?.Equals(name) ?? false))
                     series.Title = name;
 
                 series.StrokeThickness = 3;
-                lineSeries.LastOrDefault()?.Points?.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), viewerCount));
+                areaSeries.LastOrDefault()?.Points?.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), viewerCount));
                 series.Points.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), viewerCount));
                 viewerChart.Series.Add(series);
-                lineSeries.Add(series);
+                areaSeries.Add(series);
             }
 
             var axis = viewerChart.Axes.First(x => x.Position == OxyPlot.Axes.AxisPosition.Bottom);
-            var max = lineSeries.Max(x => x.Points.Max(y => y.X));
-            var min = lineSeries.Min(x => x.Points.Min(y => y.X));
+            var yaxis = viewerChart.Axes.First(x => x.Position == OxyPlot.Axes.AxisPosition.Left);
+            var max = areaSeries.Max(x => x.Points.Max(y => y.X));
+            var min = areaSeries.Min(x => x.Points.Min(y => y.X));
+            var ymin = areaSeries.Min(x => x.Points.Min(y => y.Y));
+            foreach(var series in areaSeries){
+                series.ConstantY2 = ymin;
+            }
             axis.AbsoluteMaximum = max;
             axis.AbsoluteMinimum = min;
+            yaxis.AbsoluteMinimum = ymin;
 
             if (savePlot)
             {
@@ -453,12 +465,12 @@ namespace MopsBot.Data
             if (StartTime == null) StartTime = xValue;
             var relativeXValue = relative ? new DateTime(1970, 01, 01).Add((xValue - StartTime).Value) : xValue;
 
-            if (lineSeries.FirstOrDefault(x => x.Title.Equals(name)) != null)
-                lineSeries.FirstOrDefault(x => x.Title.Equals(name)).Points.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), viewerCount));
+            if (areaSeries.FirstOrDefault(x => x.Title.Equals(name)) != null)
+                areaSeries.FirstOrDefault(x => x.Title.Equals(name)).Points.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), viewerCount));
 
             else
             {
-                var series = new OxyPlot.Series.LineSeries();
+                var series = new OxyPlot.Series.AreaSeries();
                 series.InterpolationAlgorithm = InterpolationAlgorithms.CatmullRomSpline;
 
                 long colour = 1;
@@ -469,21 +481,29 @@ namespace MopsBot.Data
 
                 var oxycolour = OxyColor.FromUInt32((uint)colour + 4278190080);
                 series.Color = oxycolour;
+                series.Fill = OxyColor.FromAColor(100, oxycolour);
+                series.Color2 = OxyColors.Transparent;
 
-                if (!lineSeries.Any(x => x.Title?.Equals(name) ?? false))
+                if (!areaSeries.Any(x => x.Title?.Equals(name) ?? false))
                     series.Title = name;
 
                 series.StrokeThickness = 3;
                 series.Points.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), viewerCount));
                 viewerChart.Series.Add(series);
-                lineSeries.Add(series);
+                areaSeries.Add(series);
             }
 
             var axis = viewerChart.Axes.First(x => x.Position == OxyPlot.Axes.AxisPosition.Bottom);
-            var max = lineSeries.Max(x => x.Points.Max(y => y.X));
-            var min = lineSeries.Min(x => x.Points.Min(y => y.X));
+            var yaxis = viewerChart.Axes.First(x => x.Position == OxyPlot.Axes.AxisPosition.Left);
+            var max = areaSeries.Max(x => x.Points.Max(y => y.X));
+            var min = areaSeries.Min(x => x.Points.Min(y => y.X));
+            var ymin = areaSeries.Min(x => x.Points.Min(y => y.Y));
+            foreach(var series in areaSeries){
+                series.ConstantY2 = ymin;
+            }
             axis.AbsoluteMaximum = max;
             axis.AbsoluteMinimum = min;
+            yaxis.AbsoluteMinimum = ymin;
 
             if (savePlot)
             {
@@ -508,7 +528,7 @@ namespace MopsBot.Data
                     max.Points.Clear();
 
                 DataPoint maxPoint = new DataPoint(0, 0);
-                foreach (var series in lineSeries)
+                foreach (var series in areaSeries)
                 {
                     foreach (var point in series.Points)
                     {
@@ -516,8 +536,9 @@ namespace MopsBot.Data
                     }
                 }
 
+                var ymin = areaSeries.Min(x => x.Points.Min(y => y.Y));
                 max.Points.Add(maxPoint);
-                max.Points.Add(new DataPoint(DateTimeAxis.ToDouble(DateTimeAxis.ToDateTime(maxPoint.X).AddMilliseconds(-1)), 0));
+                max.Points.Add(new DataPoint(DateTimeAxis.ToDouble(DateTimeAxis.ToDateTime(maxPoint.X).AddMilliseconds(-1)), ymin));
                 max.Title = "Max Value: " + maxPoint.Y;
 
                 return maxPoint;
@@ -534,7 +555,7 @@ namespace MopsBot.Data
         public void RemovePlot()
         {
             viewerChart = null;
-            lineSeries = null;
+            areaSeries = null;
             // var file = new FileInfo($"mopsdata//plots//{ID}plot.json");
             // file.Delete();
             var dir = new DirectoryInfo("mopsdata//");
@@ -545,7 +566,7 @@ namespace MopsBot.Data
 
         public void Recolour()
         {
-            foreach (var series in lineSeries)
+            foreach (var series in areaSeries)
             {
                 OxyColor newColour = OxyColor.FromRgb((byte)StaticBase.ran.Next(30, 220), (byte)StaticBase.ran.Next(30, 220), (byte)StaticBase.ran.Next(30, 220));
                 series.Color = newColour;
