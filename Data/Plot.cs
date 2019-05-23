@@ -452,21 +452,10 @@ namespace MopsBot.Data
                 areaSeries.Add(series);
             }
 
-            var axis = viewerChart.Axes.First(x => x.Position == OxyPlot.Axes.AxisPosition.Bottom);
-            var yaxis = viewerChart.Axes.First(x => x.Position == OxyPlot.Axes.AxisPosition.Left);
-            var max = areaSeries.Max(x => x.Points.Max(y => y.X));
-            var min = areaSeries.Min(x => x.Points.Min(y => y.X));
-            var ymin = areaSeries.Min(x => x.Points.Min(y => y.Y));
-            foreach(var series in areaSeries){
-                series.ConstantY2 = ymin;
-            }
-            axis.AbsoluteMaximum = max;
-            axis.AbsoluteMinimum = min;
-            yaxis.AbsoluteMinimum = ymin;
-
             if (savePlot)
             {
                 PlotDataPoints.Add(new KeyValuePair<string, KeyValuePair<double, double>>(name, new KeyValuePair<double, double>(DateTimeAxis.ToDouble(xValue), viewerCount)));
+                AdjustAxisRange();
             }
         }
 
@@ -503,6 +492,14 @@ namespace MopsBot.Data
                 areaSeries.Add(series);
             }
 
+            if (savePlot)
+            {
+                PlotDataPoints.Add(new KeyValuePair<string, KeyValuePair<double, double>>(name, new KeyValuePair<double, double>(DateTimeAxis.ToDouble(xValue), viewerCount)));
+                AdjustAxisRange();
+            }
+        }
+
+        public void AdjustAxisRange(){
             var axis = viewerChart.Axes.First(x => x.Position == OxyPlot.Axes.AxisPosition.Bottom);
             var yaxis = viewerChart.Axes.First(x => x.Position == OxyPlot.Axes.AxisPosition.Left);
             var max = areaSeries.Max(x => x.Points.Max(y => y.X));
@@ -514,11 +511,6 @@ namespace MopsBot.Data
             axis.AbsoluteMaximum = max;
             axis.AbsoluteMinimum = min;
             yaxis.AbsoluteMinimum = ymin;
-
-            if (savePlot)
-            {
-                PlotDataPoints.Add(new KeyValuePair<string, KeyValuePair<double, double>>(name, new KeyValuePair<double, double>(DateTimeAxis.ToDouble(xValue), viewerCount)));
-            }
         }
 
         public DataPoint? SetMaximumLine()
