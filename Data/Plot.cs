@@ -343,8 +343,6 @@ namespace MopsBot.Data
                 Position = OxyPlot.Axes.AxisPosition.Bottom,
                 TicklineColor = OxyColor.FromRgb(125, 125, 155),
                 Title = xAxis,
-                MaximumPadding = 0,
-                MinimumPadding = 0,
                 FontSize = 26,
                 AxislineStyle = LineStyle.Solid,
                 AxislineColor = OxyColor.FromRgb(125, 125, 155),
