@@ -335,6 +335,12 @@ namespace MopsBot.Data
                 TicklineColor = OxyColor.FromRgb(125, 125, 155),
                 Title = yAxis,
                 FontSize = 26,
+                TitleFontSize = 26,
+                AxislineThickness = 3,
+                MinorGridlineThickness = 5,
+                MajorGridlineThickness = 5,
+                FontWeight = 700,
+                TitleFontWeight = 700,
                 AxislineStyle = LineStyle.Solid,
                 AxislineColor = OxyColor.FromRgb(125, 125, 155)
             };
@@ -345,9 +351,13 @@ namespace MopsBot.Data
                 Position = OxyPlot.Axes.AxisPosition.Bottom,
                 TicklineColor = OxyColor.FromRgb(125, 125, 155),
                 Title = xAxis,
-                MaximumPadding = 0,
-                MinimumPadding = 0,
                 FontSize = 26,
+                TitleFontSize = 26,
+                AxislineThickness = 3,
+                MinorGridlineThickness = 5,
+                MajorGridlineThickness = 5,
+                FontWeight = 700,
+                TitleFontWeight = 700,
                 AxislineStyle = LineStyle.Solid,
                 AxislineColor = OxyColor.FromRgb(125, 125, 155),
                 StringFormat = format
@@ -440,22 +450,10 @@ namespace MopsBot.Data
                 areaSeries.Add(series);
             }
 
-            var axis = viewerChart.Axes.First(x => x.Position == OxyPlot.Axes.AxisPosition.Bottom);
-            var yaxis = viewerChart.Axes.First(x => x.Position == OxyPlot.Axes.AxisPosition.Left);
-            var max = areaSeries.Max(x => x.Points.Max(y => y.X));
-            var min = areaSeries.Min(x => x.Points.Min(y => y.X));
-            var ymin = areaSeries.Min(x => x.Points.Min(y => y.Y));
-            foreach (var series in areaSeries)
-            {
-                series.ConstantY2 = ymin;
-            }
-            axis.AbsoluteMaximum = max;
-            axis.AbsoluteMinimum = min;
-            yaxis.AbsoluteMinimum = ymin;
-
             if (savePlot)
             {
                 PlotDataPoints.Add(new KeyValuePair<string, KeyValuePair<double, double>>(name, new KeyValuePair<double, double>(DateTimeAxis.ToDouble(xValue), viewerCount)));
+                AdjustAxisRange();
             }
         }
 
@@ -486,6 +484,14 @@ namespace MopsBot.Data
                 areaSeries.Add(series);
             }
 
+            if (savePlot)
+            {
+                PlotDataPoints.Add(new KeyValuePair<string, KeyValuePair<double, double>>(name, new KeyValuePair<double, double>(DateTimeAxis.ToDouble(xValue), viewerCount)));
+                AdjustAxisRange();
+            }
+        }
+
+        public void AdjustAxisRange(){
             var axis = viewerChart.Axes.First(x => x.Position == OxyPlot.Axes.AxisPosition.Bottom);
             var yaxis = viewerChart.Axes.First(x => x.Position == OxyPlot.Axes.AxisPosition.Left);
             var max = areaSeries.Max(x => x.Points.Max(y => y.X));
@@ -498,11 +504,6 @@ namespace MopsBot.Data
             axis.AbsoluteMaximum = max;
             axis.AbsoluteMinimum = min;
             yaxis.AbsoluteMinimum = ymin;
-
-            if (savePlot)
-            {
-                PlotDataPoints.Add(new KeyValuePair<string, KeyValuePair<double, double>>(name, new KeyValuePair<double, double>(DateTimeAxis.ToDouble(xValue), viewerCount)));
-            }
         }
 
         public DataPoint? SetMaximumLine()
