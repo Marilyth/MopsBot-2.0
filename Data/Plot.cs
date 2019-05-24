@@ -27,8 +27,9 @@ namespace MopsBot.Data
             Categories = new Dictionary<string, double>();
 
             int duplicates = 0;
-            foreach (var category in categories){
-                if(!Categories.ContainsKey(category)) Categories.Add(category, 0);
+            foreach (var category in categories)
+            {
+                if (!Categories.ContainsKey(category)) Categories.Add(category, 0);
                 else Categories.Add(category + (++duplicates), 0);
             }
 
@@ -167,8 +168,9 @@ namespace MopsBot.Data
             Categories = new Dictionary<string, double>();
 
             int duplicates = 0;
-            foreach (var category in categories){
-                if(!Categories.ContainsKey(category)) Categories.Add(category, 0);
+            foreach (var category in categories)
+            {
+                if (!Categories.ContainsKey(category)) Categories.Add(category, 0);
                 else Categories.Add(category + (++duplicates), 0);
             }
 
@@ -365,12 +367,13 @@ namespace MopsBot.Data
                 AddValue(plotPoint.Key, plotPoint.Value, false);
             }*/
 
-            if(PlotDataPoints.Count > 0){
+            if (PlotDataPoints.Count > 0)
+            {
                 PlotDataPoints = PlotDataPoints.Skip(Math.Max(0, PlotDataPoints.Count - 2000)).ToList();
                 StartTime = DateTimeAxis.ToDateTime(PlotDataPoints.First().Value.Key);
                 foreach (var dataPoint in PlotDataPoints)
                 {
-                    if(!MultipleLines) AddValue(dataPoint.Key, dataPoint.Value.Value, DateTimeAxis.ToDateTime(dataPoint.Value.Key), false, relative);
+                    if (!MultipleLines) AddValue(dataPoint.Key, dataPoint.Value.Value, DateTimeAxis.ToDateTime(dataPoint.Value.Key), false, relative);
                     else AddValueSeperate(dataPoint.Key, dataPoint.Value.Value, DateTimeAxis.ToDateTime(dataPoint.Value.Key), false, relative);
                 }
             }
@@ -412,7 +415,8 @@ namespace MopsBot.Data
             if (StartTime == null) StartTime = xValue;
             var relativeXValue = relative ? new DateTime(1970, 01, 01).Add((xValue - StartTime).Value) : xValue;
 
-            if (areaSeries.LastOrDefault()?.Title?.Equals(name) ?? false){
+            if (areaSeries.LastOrDefault()?.Title?.Equals(name) ?? false)
+            {
                 areaSeries.Last().Points.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), viewerCount));
             }
 
@@ -421,15 +425,9 @@ namespace MopsBot.Data
                 var series = new OxyPlot.Series.AreaSeries();
                 series.InterpolationAlgorithm = InterpolationAlgorithms.CatmullRomSpline;
 
-                long colour = 1;
-                foreach (char c in name)
-                {
-                    colour = (((int)c * colour) % 12829635) + 1973790;
-                }
-
-                var oxycolour = OxyColor.FromUInt32((uint)colour + 4278190080);
-                series.Color = oxycolour;
-                series.Fill = OxyColor.FromAColor(100, oxycolour);
+                var colour = StringToColour(name);
+                series.Color = colour;
+                series.Fill = OxyColor.FromAColor(100, colour);
                 series.Color2 = OxyColors.Transparent;
 
                 if (!areaSeries.Any(x => x.Title?.Equals(name) ?? false))
@@ -447,7 +445,8 @@ namespace MopsBot.Data
             var max = areaSeries.Max(x => x.Points.Max(y => y.X));
             var min = areaSeries.Min(x => x.Points.Min(y => y.X));
             var ymin = areaSeries.Min(x => x.Points.Min(y => y.Y));
-            foreach(var series in areaSeries){
+            foreach (var series in areaSeries)
+            {
                 series.ConstantY2 = ymin;
             }
             axis.AbsoluteMaximum = max;
@@ -460,7 +459,8 @@ namespace MopsBot.Data
             }
         }
 
-        public void AddValueSeperate(string name, double viewerCount, DateTime? xValue = null, bool savePlot = true, bool relative = true){
+        public void AddValueSeperate(string name, double viewerCount, DateTime? xValue = null, bool savePlot = true, bool relative = true)
+        {
             if (xValue == null) xValue = DateTime.UtcNow;
             if (StartTime == null) StartTime = xValue;
             var relativeXValue = relative ? new DateTime(1970, 01, 01).Add((xValue - StartTime).Value) : xValue;
@@ -472,16 +472,9 @@ namespace MopsBot.Data
             {
                 var series = new OxyPlot.Series.AreaSeries();
                 series.InterpolationAlgorithm = InterpolationAlgorithms.CatmullRomSpline;
-
-                long colour = 1;
-                foreach (char c in name)
-                {
-                    colour = (((int)c * colour) % 12829635) + 1973790;
-                }
-
-                var oxycolour = OxyColor.FromUInt32((uint)colour + 4278190080);
-                series.Color = oxycolour;
-                series.Fill = OxyColor.FromAColor(100, oxycolour);
+                var colour = StringToColour(name);
+                series.Color = colour;
+                series.Fill = OxyColor.FromAColor(100, colour);
                 series.Color2 = OxyColors.Transparent;
 
                 if (!areaSeries.Any(x => x.Title?.Equals(name) ?? false))
@@ -498,7 +491,8 @@ namespace MopsBot.Data
             var max = areaSeries.Max(x => x.Points.Max(y => y.X));
             var min = areaSeries.Min(x => x.Points.Min(y => y.X));
             var ymin = areaSeries.Min(x => x.Points.Min(y => y.Y));
-            foreach(var series in areaSeries){
+            foreach (var series in areaSeries)
+            {
                 series.ConstantY2 = ymin;
             }
             axis.AbsoluteMaximum = max;
@@ -564,12 +558,39 @@ namespace MopsBot.Data
                 f.Delete();
         }
 
+        /// Forces r, g or b to be bright enough for darkmode
+        public static OxyColor StringToColour(string name)
+        {
+            int[] colour = { 0, 0, 0 };
+            foreach (char c in name)
+            {
+                colour[0] = (((int)c * (colour[0]) + 1) % 105);
+            }
+            colour[0] += 150;
+            for (int i = 1; i < 3; i++)
+            {
+                colour[i] = colour[i - 1];
+                foreach (char c in name)
+                {
+                    colour[i] = (((int)c * (colour[i]) + 1) % 255);
+                }
+            }
+            int firstPos = colour[0] % 3;
+            int tempColour = colour[firstPos];
+            colour[firstPos] = colour[0];
+            colour[0] = tempColour;
+
+            var oxycolour = OxyColor.FromRgb((byte)colour[0], (byte)colour[1], (byte)colour[2]);
+            return oxycolour;
+        }
+
         public void Recolour()
         {
             foreach (var series in areaSeries)
             {
                 OxyColor newColour = OxyColor.FromRgb((byte)StaticBase.ran.Next(30, 220), (byte)StaticBase.ran.Next(30, 220), (byte)StaticBase.ran.Next(30, 220));
                 series.Color = newColour;
+                series.Fill = OxyColor.FromAColor(100, newColour);
             }
         }
 
