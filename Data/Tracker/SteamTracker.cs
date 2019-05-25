@@ -181,6 +181,7 @@ namespace MopsBot.Data.Tracker
             catch (Exception e)
             {
                 //Game had no stats, probably
+                await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $" error by {Name}", e));
                 return new List<Achievement>();
             }
         }
