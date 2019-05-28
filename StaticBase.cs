@@ -43,6 +43,7 @@ namespace MopsBot
         public static Dictionary<BaseTracker.TrackerType, TrackerWrapper> Trackers;
         public static Dictionary<ulong, MopsBot.Data.Entities.TwitchUser> TwitchUsers;
         public static Dictionary<ulong, MopsBot.Data.Entities.TwitchGuild> TwitchGuilds;
+        public static Dictionary<ulong, MopsBot.Data.Entities.ChannelJanitor> ChannelJanitors;
 
         public static bool init = false;
 
@@ -63,6 +64,7 @@ namespace MopsBot
                 Task.Run(() =>
                 {
                     WelcomeMessages = Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").FindSync(x => true).ToEnumerable().ToDictionary(x => x.GuildId);
+                    ChannelJanitors = MopsBot.Data.Entities.ChannelJanitor.GetJanitors().Result;
                     ReactGiveaways = new ReactionGiveaway();
                     ReactRoleJoin = new ReactionRoleJoin();
                     Poll = new ReactionPoll();

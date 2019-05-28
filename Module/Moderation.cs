@@ -14,6 +14,7 @@ using MopsBot.Data.Tracker;
 using MongoDB.Driver;
 using static MopsBot.StaticBase;
 using Discord.Addons.Interactive;
+using MopsBot.Data.Entities;
 
 namespace MopsBot.Module
 {
@@ -52,13 +53,14 @@ namespace MopsBot.Module
             [Hide]
             public async Task Prune(bool testing = true)
             {
-                using(Context.Channel.EnterTypingState()){
+                using (Context.Channel.EnterTypingState())
+                {
                     var pruned = await StaticBase.ReactRoleJoin.TryPruneAsync(testing);
                     var result = $"{"Channel",-20}{"Message"}\n{string.Join("\n", pruned.Select(x => $"{x.Key,-20}{x.Value,-20}"))}";
-                        if (result.Length < 2048)
-                            await ReplyAsync($"```{result}```");
-                        else
-                            await ReplyAsync($"Pruned {pruned.Count} objects");
+                    if (result.Length < 2048)
+                        await ReplyAsync($"```{result}```");
+                    else
+                        await ReplyAsync($"Pruned {pruned.Count} objects");
                 }
             }
         }
@@ -100,13 +102,14 @@ namespace MopsBot.Module
             [Hide]
             public async Task Prune(bool testing = true)
             {
-                using(Context.Channel.EnterTypingState()){
+                using (Context.Channel.EnterTypingState())
+                {
                     var pruned = await StaticBase.Poll.TryPruneAsync(testing);
                     var result = $"{"Channel",-20}{"Message"}\n{string.Join("\n", pruned.Select(x => $"{x.Key,-20}{x.Value,-20}"))}";
-                        if (result.Length < 2048)
-                            await ReplyAsync($"```{result}```");
-                        else
-                            await ReplyAsync($"Pruned {pruned.Count} objects");
+                    if (result.Length < 2048)
+                        await ReplyAsync($"```{result}```");
+                    else
+                        await ReplyAsync($"Pruned {pruned.Count} objects");
                 }
             }
         }
@@ -141,19 +144,20 @@ namespace MopsBot.Module
                     await ReplyAsync(embed: infoEmbed.Build());
                 }
             }
-            
+
             [Command("Prune")]
             [RequireBotManage]
             [Hide]
             public async Task Prune(bool testing = true)
             {
-                using(Context.Channel.EnterTypingState()){
+                using (Context.Channel.EnterTypingState())
+                {
                     var pruned = await StaticBase.ReactGiveaways.TryPruneAsync(testing);
                     var result = $"{"Channel",-20}{"Message"}\n{string.Join("\n", pruned.Select(x => $"{x.Key,-20}{x.Value,-20}"))}";
-                        if (result.Length < 2048)
-                            await ReplyAsync($"```{result}```");
-                        else
-                            await ReplyAsync($"Pruned {pruned.Count} objects");
+                    if (result.Length < 2048)
+                        await ReplyAsync($"```{result}```");
+                    else
+                        await ReplyAsync($"Pruned {pruned.Count} objects");
                 }
             }
         }
@@ -176,6 +180,58 @@ namespace MopsBot.Module
                 await InsertOrUpdatePrefixAsync(Context.Guild.Id, prefix);
 
                 await ReplyAsync($"Changed prefix from `{oldPrefix}` to `{prefix}`");
+            }
+        }
+
+        [Group("Janitor")]
+        public class Janitor : ModuleBase
+        {
+            [Command("Set")]
+            [Alias("AutoRemove")]
+            [Summary("Adds a janitor service, which removes messages older than `messageDuration`\nOnly checks the past 100 messages")]
+            [RequireBotPermission(ChannelPermission.ManageMessages)]
+            [RequireUserPermission(ChannelPermission.ManageMessages)]
+            public async Task SetJanitor([Remainder]TimeSpan messageDuration)
+            {
+                using (Context.Channel.EnterTypingState())
+                {
+                    if (!StaticBase.ChannelJanitors.ContainsKey(Context.Channel.Id))
+                    {
+                        var janitor = new ChannelJanitor(Context.Channel.Id, messageDuration);
+                        await ChannelJanitor.InsertToDBAsync(janitor);
+
+                        await ReplyAsync($"Added janitor with timespan: {messageDuration.ToString(@"d\d\ h\h\ m\m\ s\s")}\n**This will only check the most recent 100 messages starting from now!**");
+                    }
+                    else
+                    {
+                        var janitor = StaticBase.ChannelJanitors[Context.Channel.Id];
+                        janitor.MessageDuration = messageDuration;
+                        janitor.NextCheck = DateTime.UtcNow.AddMinutes(1);
+                        await janitor.SetTimer();
+                        await ReplyAsync($"Replaced janitor timespan: {messageDuration.ToString(@"d\d\ h\h\ m\m\ s\s")}");
+                    }
+                }
+            }
+            [Command("Remove")]
+            [Summary("Stops the janitor service in this channel")]
+            [RequireUserPermission(ChannelPermission.ManageMessages)]
+            public async Task RemoveJanitor()
+            {
+                using (Context.Channel.EnterTypingState())
+                {
+                    bool worked = StaticBase.ChannelJanitors.TryGetValue(Context.Channel.Id, out ChannelJanitor janitor);
+
+                    if (worked)
+                    {
+                        await ChannelJanitor.RemoveFromDBAsync(janitor);
+                        StaticBase.ChannelJanitors.Remove(Context.Channel.Id);
+                        await ReplyAsync("Removed janitor for this channel.");
+                    }
+                    else
+                    {
+                        await ReplyAsync("Could not find a janitor service for this channel.");
+                    }
+                }
             }
         }
 
