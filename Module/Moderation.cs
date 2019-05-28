@@ -199,6 +199,7 @@ namespace MopsBot.Module
                     {
                         var janitor = new ChannelJanitor(Context.Channel.Id, messageDuration);
                         await ChannelJanitor.InsertToDBAsync(janitor);
+                        StaticBase.ChannelJanitors.Add(Context.Channel.Id, janitor);
 
                         await ReplyAsync($"Added janitor with timespan: {messageDuration.ToString(@"d\d\ h\h\ m\m\ s\s")}\n**This will only check the most recent 100 messages starting from now!**");
                     }
