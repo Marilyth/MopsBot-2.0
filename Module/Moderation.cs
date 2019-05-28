@@ -193,6 +193,11 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageMessages)]
             public async Task SetJanitor([Remainder]TimeSpan messageDuration)
             {
+                if(messageDuration < TimeSpan.FromMinutes(1)){
+                    await ReplyAsync("Duration must be at least 1 minute long!");
+                    return;
+                }
+
                 using (Context.Channel.EnterTypingState())
                 {
                     if (!StaticBase.ChannelJanitors.ContainsKey(Context.Channel.Id))
