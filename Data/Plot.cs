@@ -325,7 +325,7 @@ namespace MopsBot.Data
         public void InitPlot(string xAxis = "Time", string yAxis = "Viewers", string format = "HH:mm", bool relative = true)
         {
             if (PlotDataPoints == null) PlotDataPoints = new List<KeyValuePair<string, KeyValuePair<double, double>>>();
-
+            
             viewerChart = new PlotModel();
             viewerChart.TextColor = OxyColor.FromRgb(175, 175, 175);
             viewerChart.PlotAreaBorderThickness = new OxyThickness(0);
@@ -339,13 +339,14 @@ namespace MopsBot.Data
                 AxislineThickness = 3,
                 MinorGridlineThickness = 5,
                 MajorGridlineThickness = 5,
+                MajorGridlineStyle = LineStyle.Solid,
                 FontWeight = 700,
                 TitleFontWeight = 700,
                 AxislineStyle = LineStyle.Solid,
                 AxislineColor = OxyColor.FromRgb(125, 125, 155)
             };
             if (relative) valueAxisY.Minimum = 0;
-
+            
             var valueAxisX = new OxyPlot.Axes.DateTimeAxis
             {
                 Position = OxyPlot.Axes.AxisPosition.Bottom,
@@ -356,6 +357,7 @@ namespace MopsBot.Data
                 AxislineThickness = 3,
                 MinorGridlineThickness = 5,
                 MajorGridlineThickness = 5,
+                MajorGridlineStyle = LineStyle.Solid,
                 FontWeight = 700,
                 TitleFontWeight = 700,
                 AxislineStyle = LineStyle.Solid,
