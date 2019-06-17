@@ -120,11 +120,9 @@ namespace MopsBot
                     // If the command failed, notify the user
                     if (!result.IsSuccess && !result.ErrorReason.Equals(""))
                     {
-                        if (result.ErrorReason.Contains("Object reference not set to an instance of an object"))
-                            await message.Channel.SendMessageAsync($"**Error:** Mops just restarted and needs to initialise things first.\nTry again in a minute!");
-                        else if (result.ErrorReason.Contains("The input text has too many parameters"))
+                        if (result.ErrorReason.Contains("The input text has too many parameters"))
                             await message.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}\nIf your parameter contains spaces, please wrap it around quotation marks like this: `\"A Parameter\"`.");
-                        else
+                        else if(!result.ErrorReason.Contains("Command not found"))
                             await message.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}");
                     }
                 }
@@ -250,7 +248,8 @@ namespace MopsBot
             }
             else
             {
-                var module = Program.Handler.commands.Modules.First(x => x.Name.ToLower().Equals(moduleNames.Last().ToLower()));
+                var module = Program.Handler.commands.Modules.FirstOrDefault(x => x.Name.ToLower().Equals(moduleNames.Last().ToLower()));
+                if(module == null) throw new Exception("Command not found");
 
                 string moduleInformation = "";
                 moduleInformation += string.Join(", ", module.Commands.Where(x => !x.Preconditions.OfType<HideAttribute>().Any()).Select(x => $"[{x.Name}]({CommandHandler.GetCommandHelpImage($"{string.Join(" ", moduleNames)} {x.Name}")})"));

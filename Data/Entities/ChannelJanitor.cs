@@ -21,11 +21,13 @@ namespace MopsBot.Data.Entities
         public DateTime NextCheck;
         public DateTime JanitorBegin;
 
-        public ChannelJanitor(){
-            Task.Run(() => {
+        public ChannelJanitor()
+        {
+            Task.Run(() =>
+            {
                 Task.Delay(1000).Wait();
                 var nextCheck = NextCheck - DateTime.UtcNow;
-                if(nextCheck > TimeSpan.FromMilliseconds(0))
+                if (nextCheck > TimeSpan.FromMilliseconds(0))
                     checkMessages = new System.Threading.Timer(CheckMessages, null, nextCheck, TimeSpan.FromMilliseconds(-1));
                 else
                     checkMessages = new System.Threading.Timer(CheckMessages, null, TimeSpan.FromMinutes(1), TimeSpan.FromMilliseconds(-1));
@@ -44,49 +46,58 @@ namespace MopsBot.Data.Entities
 
         public async void CheckMessages(object state)
         {
-            while (true)
+            try
             {
-                try
+                while (true)
                 {
                     var messages = await (Program.Client.GetChannel(ChannelId) as ITextChannel).GetMessagesAsync().Flatten().Where(x => GetMessageTime(x) > JanitorBegin).OrderByDescending(x => GetMessageTime(x)).ToArray();
                     var messagesToDelete = messages.Where(x => DateTimeOffset.UtcNow - GetMessageTime(x) > MessageDuration);
                     foreach (var message in messagesToDelete)
                     {
-                        try{
+                        try
+                        {
                             await message.DeleteAsync();
-                        } catch(Exception e){
+                        }
+                        catch (Exception e)
+                        {
                             await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $" error by {ChannelId} message deletion: {message.Id}", e));
                         }
 
                         await Task.Delay(1000);
                     }
-                    if(messagesToDelete.Count() == 100) continue;
+                    if (messagesToDelete.Count() == 100) continue;
 
-                    if(messages.Count() == 0 || (messagesToDelete.FirstOrDefault()?.Equals(messages.First()) ?? false)){
+                    if (messages.Count() == 0 || (messagesToDelete.FirstOrDefault()?.Equals(messages.First()) ?? false))
+                    {
                         NextCheck = (DateTime.UtcNow + MessageDuration).AddMinutes(1);
                         break;
-                    } else if(!messagesToDelete.FirstOrDefault()?.Equals(messages.First()) ?? true){
+                    }
+                    else if (!messagesToDelete.FirstOrDefault()?.Equals(messages.First()) ?? true)
+                    {
                         NextCheck = GetMessageTime(messages[messages.Count() - messagesToDelete.Count() - 1]) + MessageDuration;
                         break;
                     }
                 }
-                catch (Exception e)
-                {
-                    await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $" error by {ChannelId}", e));
-                }
+            }
+            catch (Exception e)
+            {
+                await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $" error by {ChannelId}", e));
+                NextCheck = DateTime.UtcNow + MessageDuration;
             }
 
             await SetTimer();
         }
 
-        private static DateTime GetMessageTime(IMessage message){
+        private static DateTime GetMessageTime(IMessage message)
+        {
             return message.EditedTimestamp?.UtcDateTime ?? message.Timestamp.UtcDateTime;
         }
 
-        public async Task SetTimer(){
+        public async Task SetTimer()
+        {
             await UpdateDBAsync(this);
             var nextCheck = NextCheck - DateTime.UtcNow;
-            if(nextCheck > TimeSpan.FromMilliseconds(0))
+            if (nextCheck > TimeSpan.FromMilliseconds(0))
                 checkMessages.Change(nextCheck, TimeSpan.FromMilliseconds(-1));
             else
                 checkMessages.Change(TimeSpan.FromMinutes(1), TimeSpan.FromMilliseconds(-1));
@@ -107,7 +118,8 @@ namespace MopsBot.Data.Entities
             await StaticBase.Database.GetCollection<ChannelJanitor>("ChannelJanitor").DeleteOneAsync(x => x.ChannelId.Equals(janitor.ChannelId));
         }
 
-        public static async Task<Dictionary<ulong, ChannelJanitor>> GetJanitors(){
+        public static async Task<Dictionary<ulong, ChannelJanitor>> GetJanitors()
+        {
             return (await StaticBase.Database.GetCollection<ChannelJanitor>("ChannelJanitor").FindAsync(x => true)).ToEnumerable().ToDictionary(x => x.ChannelId) ?? new Dictionary<ulong, MopsBot.Data.Entities.ChannelJanitor>();
         }
     }

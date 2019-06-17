@@ -17,6 +17,8 @@ namespace MopsBot.Module.TypeReader
         {
             var command = context.Message.Content;
             var prefix = await StaticBase.GetGuildPrefixAsync(context.Guild.Id);
+            if(!command.StartsWith(prefix))
+                prefix = Program.Client.CurrentUser.Mention;
             var module = command.Remove(0, prefix.Length).Split(" ").First(x => x.Length > 0);
             var worked = Enum.TryParse<TrackerType>(module, true, out TrackerType type);
             
