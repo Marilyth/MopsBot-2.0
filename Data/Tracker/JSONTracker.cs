@@ -131,7 +131,11 @@ namespace MopsBot.Data.Tracker
 
         private async Task<Dictionary<string, string>> getResults()
         {
-            var json = await FetchJSONDataAsync<dynamic>(TrackerUrl());
+            return await GetResults(TrackerUrl(), ToTrack.ToArray());
+        }
+
+        public static async Task<Dictionary<string, string>> GetResults(string JSONUrl, string[] ToTrack){
+            var json = await FetchJSONDataAsync<dynamic>(JSONUrl);
             var result = new Dictionary<string, string>();
 
             foreach(string cur in ToTrack){

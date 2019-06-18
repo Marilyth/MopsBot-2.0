@@ -790,6 +790,14 @@ namespace MopsBot.Module
                 jsonSource.ChannelMessages[Context.Channel.Id] = notification;
                 await ReplyAsync($"Changed notification for `{jsonSource.Name}` to `{notification}`");
             }
+
+            [Command("Check", RunMode = RunMode.Async)]
+            [Summary("Checks the json for the specified paths, and returns the values")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task Check(string Url, params string[] paths){
+                var result = await JSONTracker.GetResults(Url, paths);
+                await ReplyAsync(string.Join("\n", result.Select(x => $"{x.Key.Split("->").Last()}: {x.Value}")));
+            }
         }
 
         [Group("OSRS")]
@@ -1051,6 +1059,14 @@ namespace MopsBot.Module
             {
                 url.ChannelMessages[Context.Channel.Id] = notification;
                 await ReplyAsync($"Changed notification for `{url.Name}` to `{notification}`");
+            }
+
+            [Command("Check", RunMode = RunMode.Async)]
+            [Summary("Returns the newest entry in the rss feed")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task Check(string rssFeed){
+                var result = await RSSTracker.GetFeed(rssFeed);
+                await ReplyAsync(embed: result);
             }
         }
 

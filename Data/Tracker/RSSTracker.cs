@@ -121,7 +121,7 @@ namespace MopsBot.Data.Tracker
             return await FetchRSSData(Name);
         }
 
-        private Embed createEmbed(SyndicationItem feedItem, SyndicationFeed parent)
+        private static Embed createEmbed(SyndicationItem feedItem, SyndicationFeed parent)
         {
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(255, 255, 255);
@@ -194,6 +194,11 @@ namespace MopsBot.Data.Tracker
             text = stripFormattingRegex.Replace(text, string.Empty);
 
             return text;
+        }
+
+        public static async Task<Embed> GetFeed(string url){
+            var data = await FetchRSSData(url);
+            return createEmbed(data.Items.First(), data);
         }
 
         public new struct ContentScope

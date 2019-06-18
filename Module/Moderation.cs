@@ -394,7 +394,7 @@ namespace MopsBot.Module
             await ReplyAsync(result.ReturnValue.ToString());
         }*/
 
-        [Command("UseCustomCommand")]
+        [Command("UseCustomCommand", RunMode = RunMode.Async)]
         [Hide()]
         public async Task UseCustomCommand(string command)
         {
