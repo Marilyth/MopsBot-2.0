@@ -193,7 +193,8 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageMessages)]
             public async Task SetJanitor([Remainder]TimeSpan messageDuration)
             {
-                if(messageDuration < TimeSpan.FromMinutes(1)){
+                if (messageDuration < TimeSpan.FromMinutes(1))
+                {
                     await ReplyAsync("Duration must be at least 1 minute long!");
                     return;
                 }
@@ -348,18 +349,25 @@ namespace MopsBot.Module
         [Command("CreateCommand")]
         [Summary("Allows you to create a simple response command.\n" +
                  "Name of user: {User.Username}\n" +
-                 "Mention of user: {User.Mention}")]
+                 "Mention of user: {User.Mention}\n" +
+                 "User parameters: {User.Parameters}\n" +
+                 "Wrap another command (cannot be custom): {Command:CommandName Parameters}\n")]
         [RequireUserPermission(ChannelPermission.ManageChannels)]
         public async Task CreateCommand(string command, [Remainder] string responseText)
         {
-            if (!StaticBase.CustomCommands.ContainsKey(Context.Guild.Id))
+            if (responseText.Split("{Command:").Length <= 2)
             {
-                StaticBase.CustomCommands.Add(Context.Guild.Id, new Data.Entities.CustomCommands(Context.Guild.Id));
+                if (!StaticBase.CustomCommands.ContainsKey(Context.Guild.Id))
+                {
+                    StaticBase.CustomCommands.Add(Context.Guild.Id, new Data.Entities.CustomCommands(Context.Guild.Id));
+                }
+
+                await StaticBase.CustomCommands[Context.Guild.Id].AddCommandAsync(command, responseText);
+
+                await ReplyAsync($"Command **{command}** has been created.");
             }
-
-            await StaticBase.CustomCommands[Context.Guild.Id].AddCommandAsync(command, responseText);
-
-            await ReplyAsync($"Command **{command}** has been created.");
+            else
+                await ReplyAsync("A command can only wrap a maximum of 1 other command!\nThis is for the safety of Mops.");
         }
 
         [Command("RemoveCommand")]
@@ -386,15 +394,28 @@ namespace MopsBot.Module
             await ReplyAsync(result.ReturnValue.ToString());
         }*/
 
-        [Command("UseCustomCommand", RunMode = RunMode.Async)]
+        [Command("UseCustomCommand")]
         [Hide()]
         public async Task UseCustomCommand(string command)
         {
             using (Context.Channel.EnterTypingState())
             {
-                var reply = StaticBase.CustomCommands[Context.Guild.Id].Commands[command];
+                var commandParams = command.Split(" ");
+                var commandName = commandParams.First();
+                var commandArgs = commandParams.Skip(1);
+
+                var reply = StaticBase.CustomCommands[Context.Guild.Id].Commands[commandName];
                 reply = reply.Replace("{User.Username}", $"{Context.User.Username}")
-                             .Replace("{User.Mention}", $"{Context.User.Mention}");
+                             .Replace("{User.Mention}", $"{Context.User.Mention}")
+                             .Replace("{User.Parameters}", string.Join(" ", commandArgs));
+
+                if (reply.Contains("{Command:"))
+                {
+                    commandName = reply.Split("{Command:").Last().Split("}").First();
+                    reply = reply.Replace("{Command:" + commandName + "}", "");
+                    await (await ReplyAsync("[ProcessBotMessage]" + commandName)).DeleteAsync();
+                }
+
                 await ReplyAsync(reply);
             }
         }

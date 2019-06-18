@@ -83,7 +83,7 @@ namespace MopsBot
             {
                 // Don't handle the command if it is a system message
                 var message = parameterMessage as SocketUserMessage;
-                if (message == null || message.Author.IsBot) return;
+                if (message == null || (message.Author.IsBot && !message.Content.StartsWith("[ProcessBotMessage]"))) return;
 
                 // Mark where the prefix ends and the command begins
                 int argPos = 0;
@@ -95,7 +95,7 @@ namespace MopsBot
                 var prefix = await GetGuildPrefixAsync(id);
 
                 // Determine if the message has a valid prefix, adjust argPos 
-                if (!(message.HasMentionPrefix(client.CurrentUser, ref argPos) || message.HasStringPrefix(prefix, ref argPos) || message.HasCharPrefix('?', ref argPos))) return;
+                if (!message.Content.StartsWith("[ProcessBotMessage]") && !(message.HasMentionPrefix(client.CurrentUser, ref argPos) || message.HasStringPrefix(prefix, ref argPos) || message.HasCharPrefix('?', ref argPos))) return;
 
                 //StaticBase.people.AddStat(parameterMessage.Author.Id, 0, "experience");
 
@@ -107,6 +107,9 @@ namespace MopsBot
                     await getCommands(parameterMessage, prefix);
                     return;
                 }
+
+                if(message.Content.StartsWith("[ProcessBotMessage]"))
+                    argPos = "[ProcessBotMessage]".Length;
 
                 // Create a Command Context
                 var context = new SocketCommandContext(client, message);
@@ -128,7 +131,7 @@ namespace MopsBot
                 }
 
                 //Else execute custom commands
-                else if (CustomCommands.ContainsKey(context.Guild.Id) && CustomCommands[context.Guild.Id].Commands.ContainsKey(context.Message.Content.Substring(argPos)))
+                else if (!message.Author.IsBot && CustomCommands.ContainsKey(context.Guild.Id) && CustomCommands[context.Guild.Id].Commands.ContainsKey(context.Message.Content.Substring(argPos).Split(" ").First()))
                 {
                     await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"executed command: {parameterMessage.Content.Substring(argPos)}"));
                     await commands.Commands.First(x => x.Name.Equals("UseCustomCommand")).ExecuteAsync(context, new List<object> { $"{context.Message.Content.Substring(argPos)}" }, new List<object> { }, _provider);
