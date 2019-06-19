@@ -410,6 +410,18 @@ namespace MopsBot.Module
                 reply = reply.Replace("{User.Username}", $"{Context.User.Username}")
                              .Replace("{User.Mention}", $"{Context.User.Mention}")
                              .Replace("{User.Parameters}", string.Join(" ", commandArgs));
+                var paramRequests = reply.Split("{User.Parameters:");
+                foreach(var param in paramRequests){
+                    var paramNumber = param.Split("}").First();
+                    string toInsert = "";
+                    if(paramNumber.Contains(":")){
+                        var range = paramNumber.Split(":");
+                        if(!int.TryParse(range.First(), out int from)) from = 0;
+                        if(!int.TryParse(range.Last(), out int to)) to = commandArgs.Count();
+                        toInsert = string.Join(" ", commandArgs.Skip(from).Take(to - from + 1));
+                    }
+                    reply = reply.Replace("{User.Parameters:" + paramNumber + "}", toInsert);
+                }
 
                 if (reply.Contains("{Command:"))
                 {
