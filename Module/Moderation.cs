@@ -20,6 +20,8 @@ namespace MopsBot.Module
 {
     public class Moderation : ModuleBase
     {
+        public static Dictionary<ulong, ulong> CustomCaller = new Dictionary<ulong, ulong>();
+
         [Group("Role")]
         [RequireBotPermission(ChannelPermission.ManageRoles)]
         [RequireBotPermission(ChannelPermission.SendMessages)]
@@ -411,6 +413,7 @@ namespace MopsBot.Module
 
                 if (reply.Contains("{Command:"))
                 {
+                    CustomCaller[Context.Channel.Id] = Context.User.Id;
                     commandName = reply.Split("{Command:").Last().Split("}").First();
                     reply = reply.Replace("{Command:" + commandName + "}", "");
                     await (await ReplyAsync("[ProcessBotMessage]" + commandName)).DeleteAsync();

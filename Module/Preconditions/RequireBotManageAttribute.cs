@@ -2,6 +2,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Linq;
 using System;
 
 namespace MopsBot.Module.Preconditions{
@@ -10,7 +11,12 @@ namespace MopsBot.Module.Preconditions{
     {
         public async override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services)
         {
-            if(new List<string>(Program.Config["BotManager"].Split(":")).Contains(context.User.Id.ToString())||context.User.Id.Equals((await Program.Client.GetApplicationInfoAsync()).Owner.Id))
+            var owners = Program.Config["BotManager"].Split(":").Select(x => ulong.Parse(x)).ToHashSet();
+            owners.Add((await Program.Client.GetApplicationInfoAsync()).Owner.Id);
+            bool isOwner = owners.Contains(context.User.Id) || owners.Contains(Moderation.CustomCaller[context.Channel.Id]);
+            Moderation.CustomCaller.Remove(context.Channel.Id);
+
+            if(isOwner)
                 return PreconditionResult.FromSuccess();
             return PreconditionResult.FromError("");
         }

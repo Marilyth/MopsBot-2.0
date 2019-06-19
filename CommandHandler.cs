@@ -119,6 +119,7 @@ namespace MopsBot
                 {
                     await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"executed command: {parameterMessage.Content.Substring(argPos)}"));
                     var result = await commands.ExecuteAsync(context, argPos, _provider);
+                    MopsBot.Module.Moderation.CustomCaller.Remove(message.Channel.Id);
 
                     // If the command failed, notify the user
                     if (!result.IsSuccess && !result.ErrorReason.Equals(""))
