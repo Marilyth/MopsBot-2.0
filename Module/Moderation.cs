@@ -402,6 +402,11 @@ namespace MopsBot.Module
         {
             using (Context.Channel.EnterTypingState())
             {
+                if(command.Contains("{Command:")){
+                    await ReplyAsync("Command arguments were probably an injection. Stopping execution.");
+                    return;
+                }
+
                 var commandParams = command.Split(" ");
                 var commandName = commandParams.First();
                 var commandArgs = commandParams.Skip(1);
