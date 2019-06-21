@@ -24,7 +24,7 @@ namespace MopsBot
     {
         public static void Main(string[] args)
         {
-            Task.Run(() => BuildWebHost(args).Run());
+            //Task.Run(() => BuildWebHost(args).Run());
             new Program().Start().GetAwaiter().GetResult();
         }
         public static DiscordSocketClient Client;
