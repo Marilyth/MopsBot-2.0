@@ -96,7 +96,7 @@ namespace MopsBot
                 //Trackers[ITracker.TrackerType.WoWGuild] = new TrackerHandler<WoWGuildTracker>();
                 Trackers[BaseTracker.TrackerType.OSRS] = new TrackerHandler<OSRSTracker>();
                 Trackers[BaseTracker.TrackerType.HTML] = new TrackerHandler<HTMLTracker>();
-                // Trackers[BaseTracker.TrackerType.RSS] = new TrackerHandler<RSSTracker>();
+                Trackers[BaseTracker.TrackerType.RSS] = new TrackerHandler<RSSTracker>();
                 Trackers[BaseTracker.TrackerType.Steam] = new TrackerHandler<SteamTracker>();
                 //Trackers[BaseTracker.TrackerType.Tibia] = new TrackerHandler<JSONTracker>();
                 //Trackers[BaseTracker.TrackerType.TwitterRealtime] = new TrackerHandler<TwitterTracker>();
@@ -115,6 +115,8 @@ namespace MopsBot
                     }
                     else if(tracker.Key != BaseTracker.TrackerType.TwitchGroup)
                         Task.Run(() => tracker.Value.PostInitialisation());
+
+                    Program.MopsLog(new LogMessage(LogSeverity.Info, "Tracker init", $"Initialising {trackerType.ToString()}"));
                 }
 
                 init = true;
