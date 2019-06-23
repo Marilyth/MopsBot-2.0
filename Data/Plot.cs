@@ -435,7 +435,7 @@ namespace MopsBot.Data
             else
             {
                 var series = new OxyPlot.Series.AreaSeries();
-                series.InterpolationAlgorithm = InterpolationAlgorithms.CatmullRomSpline;
+                //series.InterpolationAlgorithm = InterpolationAlgorithms.CatmullRomSpline;
 
                 var colour = StringToColour(name);
                 series.Color = colour;
@@ -471,7 +471,7 @@ namespace MopsBot.Data
             else
             {
                 var series = new OxyPlot.Series.AreaSeries();
-                series.InterpolationAlgorithm = InterpolationAlgorithms.CatmullRomSpline;
+                //series.InterpolationAlgorithm = InterpolationAlgorithms.CatmullRomSpline;
                 var colour = StringToColour(name);
                 series.Color = colour;
                 series.Fill = OxyColor.FromAColor(100, colour);
