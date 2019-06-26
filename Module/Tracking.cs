@@ -545,9 +545,9 @@ namespace MopsBot.Module
 
         }
 
-        [Group("TwitchClips")]
+        [Group("TwitchClip")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public class TwitchClips : ModuleBase
+        public class TwitchClip : ModuleBase
         {
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified streamer's top clips every 30 minutes, in the Channel you are calling this command in.")]
