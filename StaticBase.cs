@@ -115,6 +115,8 @@ namespace MopsBot
                     }
                     else if(tracker.Key != BaseTracker.TrackerType.TwitchGroup)
                         Task.Run(() => tracker.Value.PostInitialisation());
+
+                    Program.MopsLog(new LogMessage(LogSeverity.Info, "Tracker init", $"Initialising {trackerType.ToString()}"));
                 }
 
                 init = true;

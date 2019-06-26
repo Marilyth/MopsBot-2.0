@@ -12,8 +12,6 @@ using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 using MongoDB.Bson.Serialization.Options;
 using MongoDB.Bson.Serialization.Attributes;
-using TwitchLib;
-using TwitchLib.Api;
 
 namespace MopsBot.Data.Tracker
 {

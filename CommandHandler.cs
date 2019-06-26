@@ -56,7 +56,7 @@ namespace MopsBot
             {
                 if (!arg.Author.IsBot && !arg.Content.StartsWith(GetGuildPrefixAsync(((ITextChannel)(arg.Channel)).GuildId).Result))
                 {
-                    MopsBot.Data.Entities.User.ModifyUserAsync(arg.Author.Id, x => x.Experience += arg.Content.Length).Wait();
+                    //MopsBot.Data.Entities.User.ModifyUserAsync(arg.Author.Id, x => x.Experience += arg.Content.Length).Wait();
                 }
             });
         }
