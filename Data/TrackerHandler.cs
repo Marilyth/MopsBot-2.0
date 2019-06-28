@@ -19,7 +19,6 @@ namespace MopsBot.Data
         public abstract Task UpdateDBAsync(BaseTracker tracker);
         public abstract Task RemoveFromDBAsync(BaseTracker tracker);
         public abstract Task InsertToDBAsync(BaseTracker tracker);
-        public abstract Task MergeCapitalisation();
         public abstract Task<bool> TryRemoveTrackerAsync(string name, ulong channelID);
         public abstract Task<bool> TrySetNotificationAsync(string name, ulong channelID, string notificationMessage);
         public abstract Task AddTrackerAsync(string name, ulong channelID, string notification = "");
@@ -101,46 +100,6 @@ namespace MopsBot.Data
         public override async Task RemoveFromDBAsync(BaseTracker tracker)
         {
             await StaticBase.Database.GetCollection<T>(typeof(T).Name).DeleteOneAsync(x => x.Name.Equals(tracker.Name));
-        }
-
-        public override async Task MergeCapitalisation()
-        {
-            if (typeof(T) == typeof(TwitterTracker) ||
-               typeof(T) == typeof(TwitchTracker) ||
-               typeof(T) == typeof(TwitchClipTracker) ||
-               typeof(T) == typeof(OsuTracker) ||
-               typeof(T) == typeof(OSRSTracker))
-            {
-                foreach (var tracker in trackers.ToList())
-                {
-                    if (!trackers.ContainsKey(tracker.Key.ToLower().Replace("@", "")))
-                    {
-                        await RemoveFromDBAsync(tracker.Value);
-                        tracker.Value.Name = tracker.Key.ToLower().Replace("@", "");
-                        trackers.Add(tracker.Key.ToLower().Replace("@", ""), tracker.Value);
-                        trackers.Remove(tracker.Key);
-                        await InsertToDBAsync(trackers[tracker.Key.ToLower().Replace("@", "")]);
-                    }
-                    else if (!tracker.Key.Equals(tracker.Key.ToLower().Replace("@", "")))
-                    {
-                        foreach (var channel in tracker.Value.ChannelConfig)
-                        {
-                            await AddTrackerAsync(tracker.Key.ToLower().Replace("@", ""), channel.Key, (string)channel.Value["Notification"]);
-
-                            if (typeof(T) == typeof(TwitchTracker))
-                            {
-                                var curTracker = trackers[tracker.Key.ToLower().Replace("@", "")] as TwitchTracker;
-                                curTracker.Specifications[channel.Key] = (tracker.Value as TwitchTracker).Specifications[channel.Key];
-                            }
-                        }
-
-                        tracker.Value.Dispose();
-                        trackers.Remove(tracker.Key);
-                        await RemoveFromDBAsync(tracker.Value);
-                        await UpdateDBAsync(trackers[tracker.Key.ToLower().Replace("@", "")]);
-                    }
-                }
-            }
         }
 
         public override async Task<bool> TryRemoveTrackerAsync(string name, ulong channelId)

@@ -44,16 +44,6 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public override void Conversion(object info = null)
-        {
-            base.Conversion(info);
-
-            foreach(var channel in ChannelMessages){
-                ChannelConfig[channel.Key][GAMECONFIG] = true;
-                ChannelConfig[channel.Key][ACHIEVEMENTCONFIG] = true;
-            }
-        }
-
         public async override void PostChannelAdded(ulong channelId)
         {
             base.PostChannelAdded(channelId);

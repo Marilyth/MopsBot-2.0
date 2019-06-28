@@ -32,10 +32,10 @@ namespace MopsBot.Api.Controllers
             IEnumerable<IContent> allResults = new List<IContent>();
 
             allResults = StaticBase.Trackers.First(x => parameters["type"].Any(y => y.Equals(x.Key.ToString())))
-                        .Value.GetTrackers().Where(x => channels.Any(y => x.Value.ChannelMessages.ContainsKey(y)))
+                        .Value.GetTrackers().Where(x => channels.Any(y => x.Value.ChannelConfig.ContainsKey(y)))
                         .Select(x => new IContent(){Name=x.Value.Name, 
-                                                    Channel=x.Value.ChannelMessages.First(y => channels.ToList().Contains(y.Key)).Key,
-                                                    Notification=x.Value.ChannelMessages.First(y => channels.ToList().Contains(y.Key)).Value});
+                                                    Channel=x.Value.ChannelConfig.First(y => channels.ToList().Contains(y.Key)).Key,
+                                                    Notification=(string)x.Value.ChannelConfig.First(y => channels.ToList().Contains(y.Key)).Value["Notification"]});
             
             ParameterPair<IEnumerable<IContent>> result = new ParameterPair<IEnumerable<IContent>>(Parameters, allResults);
 

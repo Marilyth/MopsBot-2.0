@@ -31,8 +31,6 @@ namespace MopsBot.Data.Tracker
         public delegate Task MinorEventHandler(ulong channelID, BaseTracker self, string notificationText);
         public delegate Task MainEventHandler(ulong channelID, Embed embed, BaseTracker self, string notificationText = "");
         [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
-        public Dictionary<ulong, string> ChannelMessages;
-        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
         public Dictionary<ulong, Dictionary<string, object>> ChannelConfig;
 
         [BsonId]
@@ -41,19 +39,13 @@ namespace MopsBot.Data.Tracker
         public BaseTracker()
         {
             ExistingTrackers++;
-            ChannelMessages = new Dictionary<ulong, string>();
             ChannelConfig = new Dictionary<ulong, Dictionary<string, object>>();
             checkForChange = new System.Threading.Timer(CheckForChange_Elapsed);
         }
 
         public virtual void PostInitialisation(object info = null){}
 
-        public virtual void Conversion(object info = null)
-        {
-            foreach(var channel in ChannelMessages){
-                ChannelConfig[channel.Key] = new Dictionary<string, object>(new List<KeyValuePair<string, object>>(){KeyValuePair.Create("Notification", (object)ChannelMessages[channel.Key])});
-            }
-        }
+        public virtual void Conversion(object info = null){}
 
         public virtual void PostChannelAdded(ulong channelId){}
 
@@ -163,7 +155,7 @@ namespace MopsBot.Data.Tracker
             {
                 Id = this.Name,
                 _Name = this.Name,
-                Notification = this.ChannelMessages[channelId],
+                Notification = (string)this.ChannelConfig[channelId]["Notification"],
                 Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId
             };
         }
@@ -175,7 +167,7 @@ namespace MopsBot.Data.Tracker
             var newChannelId = ulong.Parse(args["NewValue"]["Channel"].Split(":")[1]);
             var oldChannelId = ulong.Parse(args["OldValue"]["Channel"].Split(":")[1]);
             if (newChannelId != oldChannelId)
-                ChannelMessages.Remove(oldChannelId);
+                ChannelConfig.Remove(oldChannelId);
         }
 
         public void SetBaseValues(Dictionary<string, string> args, bool setName = false)
@@ -184,7 +176,7 @@ namespace MopsBot.Data.Tracker
             {
                 if (setName) Name = args["_Name"];
                 var newChannelId = ulong.Parse(args["Channel"].Split(":")[1]);
-                ChannelMessages[newChannelId] = args["Notification"];
+                ChannelConfig[newChannelId]["Notification"] = args["Notification"];
             }
             catch (Exception e)
             {

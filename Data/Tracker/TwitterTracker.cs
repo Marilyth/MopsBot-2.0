@@ -304,7 +304,7 @@ namespace MopsBot.Data.Tracker
 
                 args["Id"] = Name;
                 var curTracker = StaticBase.Trackers[TrackerType.Twitter].GetTrackers()[Name];
-                curTracker.ChannelMessages[ulong.Parse(args["Channel"].Split(":")[1])] = args["Notification"];
+                curTracker.ChannelConfig[ulong.Parse(args["Channel"].Split(":")[1])]["Notification"] = args["Notification"];
                 StaticBase.Trackers[TrackerType.Twitter].UpdateContent(new Dictionary<string, Dictionary<string, string>> { { "NewValue", args }, { "OldValue", args } }).Wait();
 
                 throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
@@ -343,25 +343,6 @@ namespace MopsBot.Data.Tracker
             addUser();
 
             SetTimer(1800000);
-        }
-
-        public override void Conversion(object info = null)
-        {
-            base.Conversion();
-            foreach (var channel in ChannelMessages)
-            {
-                var messages = ChannelMessages[channel.Key].Split("|");
-                if (messages.Length > 1)
-                {
-                    ChannelConfig[channel.Key][SHOWRETWEETS] = !messages[1].Equals("NONE");
-                    ChannelConfig[channel.Key][SHOWREPLIES] = !messages[1].Equals("NONE");
-                    ChannelConfig[channel.Key][SHOWMAIN] = !messages[0].Equals("NONE");
-
-                    ChannelConfig[channel.Key][RETWEETNOTIFICATION] = messages[1];
-                    ChannelConfig[channel.Key][REPLYNOTIFICATION] = messages[1];
-                    ChannelConfig[channel.Key]["Notification"] = messages[0];
-                }
-            }
         }
 
         public async override void PostChannelAdded(ulong channelId)
@@ -590,11 +571,11 @@ namespace MopsBot.Data.Tracker
             {
                 Id = this.Name,
                 _Name = this.Name,
-                MainNotification = this.ChannelMessages[channelId].Split("|")[0],
-                NonMainNotification = this.ChannelMessages[channelId].Split("|")[1],
+                MainNotification = (string)this.ChannelConfig[channelId]["Notification"],
+                NonMainNotification = (string)this.ChannelConfig[channelId][REPLYNOTIFICATION],
                 Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId,
-                TrackMainTweets = !this.ChannelMessages[channelId].Split("|")[0].Equals("NONE"),
-                TrackNonMainTweets = !this.ChannelMessages[channelId].Split("|")[1].Equals("NONE")
+                TrackMainTweets = (bool)this.ChannelConfig[channelId][SHOWMAIN],
+                TrackNonMainTweets = (bool)this.ChannelConfig[channelId][SHOWREPLIES]
             };
         }
 
@@ -603,13 +584,9 @@ namespace MopsBot.Data.Tracker
             base.Update(args);
             var channelId = ulong.Parse(args["NewValue"]["Channel"].Split(":")[1]);
             var newChannelId = ulong.Parse(args["NewValue"]["Channel"].Split(":")[1]);
-            ChannelMessages[newChannelId] = args["NewValue"]["MainNotification"] + "|" + args["NewValue"]["NonMainNotification"];
-
-            if (!bool.Parse(args["NewValue"]["TrackMainTweets"]))
-                ChannelMessages[channelId] = "NONE|" + ChannelMessages[channelId].Split("|")[1];
-
-            if (!bool.Parse(args["NewValue"]["TrackNonMainTweets"]))
-                ChannelMessages[channelId] = ChannelMessages[channelId].Split("|")[0] + "|NONE";
+            ChannelConfig[newChannelId]["Notification"] = args["NewValue"]["MainNotification"];
+            ChannelConfig[newChannelId][REPLYNOTIFICATION] = args["NewValue"]["NonMainNotification"];
+            ChannelConfig[newChannelId][RETWEETNOTIFICATION] = args["NewValue"]["NonMainNotification"];
         }
 
         public new struct ContentScope

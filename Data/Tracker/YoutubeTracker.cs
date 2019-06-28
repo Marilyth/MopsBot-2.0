@@ -46,7 +46,7 @@ namespace MopsBot.Data.Tracker
 
                 args["Id"] = Name;
                 var curTracker = StaticBase.Trackers[TrackerType.Youtube].GetTrackers()[Name];
-                curTracker.ChannelMessages[ulong.Parse(args["Channel"].Split(":")[1])] = args["Notification"];
+                curTracker.ChannelConfig[ulong.Parse(args["Channel"].Split(":")[1])]["Notification"] = args["Notification"];
                 StaticBase.Trackers[TrackerType.Youtube].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", args}}).Wait();
 
                 throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");

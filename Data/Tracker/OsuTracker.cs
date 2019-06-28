@@ -18,7 +18,6 @@ namespace MopsBot.Data.Tracker
     public class OsuTracker : BaseTracker
     {
         public Dictionary<string, double> AllPP;
-        public double PPThreshold;
         public static readonly string PPTHRESHOLD = "PPThreshold";
 
         public OsuTracker() : base()
@@ -30,13 +29,17 @@ namespace MopsBot.Data.Tracker
             AllPP.Add("m=3", 0);
         }
 
-        public OsuTracker(Dictionary<string, string> args) : base(){
+        public OsuTracker(Dictionary<string, string> args) : base()
+        {
             base.SetBaseValues(args, true);
-            
+
             //Check if Name ist valid
-            try{
+            try
+            {
                 new OsuTracker(Name).Dispose();
-            } catch (Exception e){
+            }
+            catch (Exception e)
+            {
                 this.Dispose();
                 throw e;
             }
@@ -46,16 +49,17 @@ namespace MopsBot.Data.Tracker
             AllPP.Add("m=1", 0);
             AllPP.Add("m=2", 0);
             AllPP.Add("m=3", 0);
-            PPThreshold = double.Parse(args["PPThreshold"]);
+            ChannelConfig[ulong.Parse(args["Channel"].Split(":")[1])][PPTHRESHOLD] = double.Parse(args["PPThreshold"]);
             SetTimer();
 
-            if(StaticBase.Trackers[TrackerType.Osu].GetTrackers().ContainsKey(Name)){
+            if (StaticBase.Trackers[TrackerType.Osu].GetTrackers().ContainsKey(Name))
+            {
                 this.Dispose();
 
                 args["Id"] = Name;
                 var curTracker = StaticBase.Trackers[TrackerType.Osu].GetTrackers()[Name];
-                curTracker.ChannelMessages[ulong.Parse(args["Channel"].Split(":")[1])] = args["Notification"];
-                StaticBase.Trackers[TrackerType.Osu].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", args}}).Wait();
+                curTracker.ChannelConfig[ulong.Parse(args["Channel"].Split(":")[1])]["Notification"] = args["Notification"];
+                StaticBase.Trackers[TrackerType.Osu].UpdateContent(new Dictionary<string, Dictionary<string, string>> { { "NewValue", args }, { "OldValue", args } }).Wait();
 
                 throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
             }
@@ -69,7 +73,6 @@ namespace MopsBot.Data.Tracker
             AllPP.Add("m=1", 0);
             AllPP.Add("m=2", 0);
             AllPP.Add("m=3", 0);
-            PPThreshold = 0.1;
 
             //Check if person exists by forcing Exceptions if not.
             try
@@ -85,18 +88,10 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public override void Conversion(object info = null)
-        {
-            base.Conversion();
-            foreach(var channel in ChannelMessages){
-                ChannelConfig[channel.Key][PPTHRESHOLD] = PPThreshold;
-            }
-        }
-
         public async override void PostChannelAdded(ulong channelId)
         {
             base.PostChannelAdded(channelId);
-            ChannelConfig[channelId][PPTHRESHOLD] = PPThreshold;
+            ChannelConfig[channelId][PPTHRESHOLD] = 0.1;
 
             await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
         }
@@ -108,33 +103,31 @@ namespace MopsBot.Data.Tracker
                 foreach (var pp in AllPP.ToList())
                 {
                     OsuResult userInformation = await fetchUser(pp.Key);
+                    var recentScores = await fetchRecent(pp.Key);
+                    RecentScore scoreInformation = recentScores.First(x => !x.rank.Equals("F"));
+                    Beatmap beatmapInformation = await fetchBeatmap(scoreInformation.beatmap_id, pp.Key, int.Parse(scoreInformation.enabled_mods));
                     if (userInformation == null) return;
 
-                    if (pp.Value > 0 && pp.Value + PPThreshold <= double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture))
+                    foreach (var channel in ChannelConfig)
                     {
-                        var recentScores = await fetchRecent(pp.Key);
 
-                        if (recentScores == null)
+                        if (pp.Value > 0 && pp.Value + (double)channel.Value[PPTHRESHOLD] <= double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture))
+                        {
+                            if (recentScores == null)
+                            {
+                                AllPP[pp.Key] = double.Parse(userInformation.pp_raw ?? "0", CultureInfo.InvariantCulture);
+                                await StaticBase.Trackers[TrackerType.Osu].UpdateDBAsync(this);
+                                return;
+                            }
+                            await OnMajorChangeTracked(channel.Key, createEmbed(userInformation, beatmapInformation, await fetchScore(scoreInformation.beatmap_id, pp.Key),
+                                                           Math.Round(double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture) - pp.Value, 2), pp.Key), (string)channel.Value["Notification"]);
+                        }
+
+                        if (pp.Value != double.Parse(userInformation.pp_raw ?? "0", CultureInfo.InvariantCulture))
                         {
                             AllPP[pp.Key] = double.Parse(userInformation.pp_raw ?? "0", CultureInfo.InvariantCulture);
                             await StaticBase.Trackers[TrackerType.Osu].UpdateDBAsync(this);
-                            return;
                         }
-
-                        RecentScore scoreInformation = recentScores.First(x => !x.rank.Equals("F"));
-
-                        Beatmap beatmapInformation = await fetchBeatmap(scoreInformation.beatmap_id, pp.Key, int.Parse(scoreInformation.enabled_mods));
-
-                        foreach (ulong channel in ChannelConfig.Keys.ToList())
-                        {
-                            await OnMajorChangeTracked(channel, createEmbed(userInformation, beatmapInformation, await fetchScore(scoreInformation.beatmap_id, pp.Key),
-                                                       Math.Round(double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture) - pp.Value, 2), pp.Key), (string)ChannelConfig[channel]["Notification"]);
-                        }
-                    }
-
-                    if(pp.Value != double.Parse(userInformation.pp_raw ?? "0", CultureInfo.InvariantCulture)){
-                        AllPP[pp.Key] = double.Parse(userInformation.pp_raw ?? "0", CultureInfo.InvariantCulture);
-                        await StaticBase.Trackers[TrackerType.Osu].UpdateDBAsync(this);
                     }
                 }
             }
@@ -305,19 +298,22 @@ namespace MopsBot.Data.Tracker
             return parentParameters;
         }
 
-        public override object GetAsScope(ulong channelId){
-            return new ContentScope(){
+        public override object GetAsScope(ulong channelId)
+        {
+            return new ContentScope()
+            {
                 Id = this.Name,
                 _Name = this.Name,
-                Notification = this.ChannelMessages[channelId],
+                Notification = (string)this.ChannelConfig[channelId]["Notification"],
                 Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId,
-                PPThreshold = this.PPThreshold
+                PPThreshold = (double)this.ChannelConfig[channelId][PPTHRESHOLD]
             };
         }
 
-        public override void Update(Dictionary<string, Dictionary<string, string>> args){
+        public override void Update(Dictionary<string, Dictionary<string, string>> args)
+        {
             base.Update(args);
-            PPThreshold = double.Parse(args["NewValue"]["PPThreshold"]);
+            //PPThreshold = double.Parse(args["NewValue"]["PPThreshold"]);
         }
 
         public new struct ContentScope

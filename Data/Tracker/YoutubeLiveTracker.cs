@@ -23,7 +23,6 @@ namespace MopsBot.Data.Tracker
         public string VideoId, IconUrl;
         private string channelThumbnailUrl;
         public DatePlot ViewerGraph;
-        public bool IsThumbnailLarge;
         private LiveVideoItem liveStatus;
         public static readonly string SHOWEMBED = "ShowEmbed", THUMBNAIL = "LargeThumbnail", OFFLINE = "NotifyOnOffline", ONLINE = "NotifyOnOnline";
 
@@ -32,7 +31,7 @@ namespace MopsBot.Data.Tracker
         }
 
         public YoutubeLiveTracker(Dictionary<string, string> args) : base(){
-            IsThumbnailLarge = bool.Parse(args["IsThumbnailLarge"]);
+            ChannelConfig[ulong.Parse(args["Channel"].Split(":")[1])][THUMBNAIL] = bool.Parse(args["IsThumbnailLarge"]);
             base.SetBaseValues(args, true);
 
             //Check if Name ist valid
@@ -49,7 +48,7 @@ namespace MopsBot.Data.Tracker
 
                 args["Id"] = Name;
                 var curTracker = StaticBase.Trackers[TrackerType.YoutubeLive].GetTrackers()[Name];
-                curTracker.ChannelMessages[ulong.Parse(args["Channel"].Split(":")[1])] = args["Notification"];
+                curTracker.ChannelConfig[ulong.Parse(args["Channel"].Split(":")[1])]["Notification"] = args["Notification"];
                 StaticBase.Trackers[TrackerType.YoutubeLive].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", args}}).Wait();
 
                 throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
@@ -91,19 +90,6 @@ namespace MopsBot.Data.Tracker
                 catch
                 {
                 }
-            }
-        }
-
-        public override void Conversion(object info = null)
-        {
-            base.Conversion();
-            foreach (var channel in ChannelMessages)
-            {
-                var config = ChannelConfig[channel.Key];
-                config[SHOWEMBED] = true;
-                config[THUMBNAIL] = IsThumbnailLarge;
-                config[OFFLINE] = true;
-                config[ONLINE] = true;
             }
         }
 
@@ -262,7 +248,7 @@ namespace MopsBot.Data.Tracker
         {
             if (((IGuildUser)await context.Reaction.Channel.GetUserAsync(context.Reaction.UserId)).GetPermissions((IGuildChannel)context.Channel).ManageChannel)
             {
-                IsThumbnailLarge = !IsThumbnailLarge;
+                ChannelConfig[context.Channel.Id][THUMBNAIL] = !(bool)ChannelConfig[context.Channel.Id][THUMBNAIL];
                 await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
 
                 foreach (ulong channel in ChannelConfig.Keys.ToList())
@@ -279,16 +265,16 @@ namespace MopsBot.Data.Tracker
 
         public override void Update(Dictionary<string, Dictionary<string, string>> args){
             base.Update(args);
-            IsThumbnailLarge = bool.Parse(args["NewValue"]["IsThumbnailLarge"]);
+            //IsThumbnailLarge = bool.Parse(args["NewValue"]["IsThumbnailLarge"]);
         }
 
         public override object GetAsScope(ulong channelId){
             return new ContentScope(){
                 Id = this.Name,
                 _Name = this.Name,
-                Notification = this.ChannelMessages[channelId],
+                Notification = (string)this.ChannelConfig[channelId]["Notification"],
                 Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId,
-                IsThumbnailLarge = this.IsThumbnailLarge
+                IsThumbnailLarge = (bool)this.ChannelConfig[channelId][THUMBNAIL]
             };
         }
 

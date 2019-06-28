@@ -56,14 +56,13 @@ namespace MopsBot.Data.Entities
         {
             await StaticBase.Trackers[BaseTracker.TrackerType.Twitch].AddTrackerAsync(name.ToLower(), channelId);
             var tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTracker(channelId, name.ToLower()) as TwitchTracker;
-            await tracker.ModifyAsync(x => x.Specifications[channelId] = new TwitchTracker.NotifyConfig()
-            {
-                LargeThumbnail = false,
-                NotifyOnGameChange = false,
-                NotifyOnHost = false,
-                NotifyOnOffline = false,
-                NotifyOnOnline = false,
-                ShowEmbed = false
+            await tracker.ModifyAsync(x => {
+                x.ChannelConfig[channelId][TwitchTracker.HOST] = false;
+                x.ChannelConfig[channelId][TwitchTracker.GAMECHANGE] = false;
+                x.ChannelConfig[channelId][TwitchTracker.ONLINE] = false;
+                x.ChannelConfig[channelId][TwitchTracker.OFFLINE] = false;
+                x.ChannelConfig[channelId][TwitchTracker.SHOWEMBED] = false;
+                x.ChannelConfig[channelId][TwitchTracker.THUMBNAIL] = false;
             });
         }
 
@@ -147,12 +146,12 @@ namespace MopsBot.Data.Entities
 
             try
             {
-                var silentChannel = tracker.Specifications.FirstOrDefault(x =>
-                                                  x.Value.NotifyOnGameChange == false &&
-                                                  x.Value.NotifyOnHost == false &&
-                                                  x.Value.NotifyOnOffline == false &&
-                                                  x.Value.NotifyOnOnline == false &&
-                                                  x.Value.ShowEmbed == false).Key;
+                var silentChannel = tracker.ChannelConfig.FirstOrDefault(x =>
+                                                  (bool)x.Value[TwitchTracker.GAMECHANGE] == false &&
+                                                  (bool)x.Value[TwitchTracker.HOST] == false &&
+                                                  (bool)x.Value[TwitchTracker.OFFLINE] == false &&
+                                                  (bool)x.Value[TwitchTracker.ONLINE] == false &&
+                                                  (bool)x.Value[TwitchTracker.SHOWEMBED] == false).Key;
 
                 await StaticBase.Trackers[BaseTracker.TrackerType.Twitch].TryRemoveTrackerAsync(TwitchName.ToLower(), silentChannel);
             }

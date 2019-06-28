@@ -1251,25 +1251,5 @@ namespace MopsBot.Module
                 await ReplyAsync($"```{"TrackerType",-20}{"PruneCount"}\n{string.Join("\n", pruneCount.Select(x => $"{x.Key,-20}{x.Value,-3}"))}```");
             }
         }
-
-        [Command("MergeTrackers", RunMode = RunMode.Async)]
-        [RequireBotManage]
-        [Hide]
-        public async Task MergeTrackers()
-        {
-            using (Context.Channel.EnterTypingState())
-            {
-                Dictionary<string, int> mergeCount = new Dictionary<string, int>();
-
-                foreach (var trackerHandler in StaticBase.Trackers)
-                {
-                    var countBefore = trackerHandler.Value.GetTrackers().Count;
-                    await trackerHandler.Value.MergeCapitalisation();
-                    mergeCount[trackerHandler.Key.ToString()] = countBefore - trackerHandler.Value.GetTrackers().Count;
-                }
-
-                await ReplyAsync($"```{"TrackerType",-20}{"MergeCount"}\n{string.Join("\n", mergeCount.Select(x => $"{x.Key,-20}{x.Value,-3}"))}```");
-            }
-        }
     }
 }
