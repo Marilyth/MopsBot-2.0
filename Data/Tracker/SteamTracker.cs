@@ -20,6 +20,7 @@ namespace MopsBot.Data.Tracker
     {
         public long SteamId, LastCheck;
         public string CurrentGame;
+        public static readonly string GAMECONFIG = "NotifyOnGameChange", ACHIEVEMENTCONFIG = "NotifyOnAchievement";
 
         public SteamTracker() : base()
         {
@@ -43,6 +44,25 @@ namespace MopsBot.Data.Tracker
             }
         }
 
+        public override void Conversion(object info = null)
+        {
+            base.Conversion(info);
+
+            foreach(var channel in ChannelMessages){
+                ChannelConfig[channel.Key][GAMECONFIG] = true;
+                ChannelConfig[channel.Key][ACHIEVEMENTCONFIG] = true;
+            }
+        }
+
+        public async override void PostChannelAdded(ulong channelId)
+        {
+            base.PostChannelAdded(channelId);
+            ChannelConfig[channelId][GAMECONFIG] = true;
+            ChannelConfig[channelId][ACHIEVEMENTCONFIG] = true;
+
+            await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
+        }
+
         protected async override void CheckForChange_Elapsed(object sender)
         {
             try
@@ -55,9 +75,9 @@ namespace MopsBot.Data.Tracker
                     CurrentGame = summary.gameid;
                     if (CurrentGame == null) LastCheck = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
                     await StaticBase.Trackers[TrackerType.Steam].UpdateDBAsync(this);
-                    foreach (var channel in ChannelMessages)
+                    foreach (var channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][GAMECONFIG]))
                     {
-                        await OnMinorChangeTracked(channel.Key, summary.personaname + $" is now playing **{summary.gameextrainfo ?? "Nothing"}**");
+                        await OnMinorChangeTracked(channel, summary.personaname + $" is now playing **{summary.gameextrainfo ?? "Nothing"}**");
                     }
                 }
 
@@ -92,9 +112,9 @@ namespace MopsBot.Data.Tracker
                 foreach (var achievement in newAchievements)
                 {
                     var embed = CreateAchievementEmbed(achievement, summary, achievements.Count, curAchievementIndex++);
-                    foreach (var channel in ChannelMessages)
+                    foreach (var channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][ACHIEVEMENTCONFIG]))
                     {
-                        await OnMajorChangeTracked(channel.Key, embed, channel.Value);
+                        await OnMajorChangeTracked(channel, embed, (string)ChannelConfig[channel]["Notification"]);
                     }
                 }
                 if (setLastCheck) LastCheck = DateTimeOffset.UtcNow.ToUnixTimeSeconds();

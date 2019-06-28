@@ -93,9 +93,9 @@ namespace MopsBot.Data.Tracker
 
                     newPosts = newPosts.Reverse().ToArray();
                     foreach (var post in newPosts)
-                        foreach (ulong channel in ChannelMessages.Keys.ToList())
+                        foreach (ulong channel in ChannelConfig.Keys.ToList())
                         {
-                            await OnMajorChangeTracked(channel, await createEmbed(post.data), "");
+                            await OnMajorChangeTracked(channel, await createEmbed(post.data), (string)ChannelConfig[channel]["Notification"]);
                         }
                 }
             }

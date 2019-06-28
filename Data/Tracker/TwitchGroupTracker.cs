@@ -66,19 +66,19 @@ namespace MopsBot.Data.Tracker
                     viewers = viewers.OrderByDescending(x => x.Value.Item2).ToList();
                 }
 
-                foreach (var channel in ChannelMessages)
+                foreach (var channel in ChannelConfig)
                 {
                     if (RankChannels.ContainsKey(channel.Key))
                     {
                         var rankUsers = StaticBase.TwitchGuilds[ulong.Parse(Name)].GetUsers(RankChannels[channel.Key]);
                         var role = (Program.Client.GetChannel(channel.Key) as SocketTextChannel).Guild.GetRole(RankChannels[channel.Key]);
                         var embed = createEmbed(viewers.Where(x => rankUsers.Any(y => y.TwitchName.ToLower().Equals(x.Key.ToLower()))).ToList(), role.Name);
-                        await OnMajorChangeTracked(channel.Key, embed, channel.Value);
+                        await OnMajorChangeTracked(channel.Key, embed, (string)channel.Value["Notification"]);
                     }
                     else
                     {
                         var embed = createEmbed(viewers);
-                        await OnMajorChangeTracked(channel.Key, embed, channel.Value);
+                        await OnMajorChangeTracked(channel.Key, embed, (string)channel.Value["Notification"]);
                     }
                 }
             }

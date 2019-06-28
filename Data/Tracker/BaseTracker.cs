@@ -32,6 +32,8 @@ namespace MopsBot.Data.Tracker
         public delegate Task MainEventHandler(ulong channelID, Embed embed, BaseTracker self, string notificationText = "");
         [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
         public Dictionary<ulong, string> ChannelMessages;
+        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
+        public Dictionary<ulong, Dictionary<string, object>> ChannelConfig;
 
         [BsonId]
         public string Name;
@@ -40,16 +42,20 @@ namespace MopsBot.Data.Tracker
         {
             ExistingTrackers++;
             ChannelMessages = new Dictionary<ulong, string>();
+            ChannelConfig = new Dictionary<ulong, Dictionary<string, object>>();
             checkForChange = new System.Threading.Timer(CheckForChange_Elapsed);
         }
 
-        public virtual void PostInitialisation(object info = null)
+        public virtual void PostInitialisation(object info = null){}
+
+        public virtual void Conversion(object info = null)
         {
+            foreach(var channel in ChannelMessages){
+                ChannelConfig[channel.Key] = new Dictionary<string, object>(new List<KeyValuePair<string, object>>(){KeyValuePair.Create("Notification", (object)ChannelMessages[channel.Key])});
+            }
         }
 
-        public virtual void PostChannelAdded(ulong channelId)
-        {
-        }
+        public virtual void PostChannelAdded(ulong channelId){}
 
         public void SetTimer(int interval = 600000, int delay = -1)
         {
@@ -193,6 +199,19 @@ namespace MopsBot.Data.Tracker
             public string _Name;
             public string Notification;
             public string Channel;
+        }
+
+        public class Config{
+            [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
+            public Dictionary<string, object> Values = new Dictionary<string, object>();
+
+            public Config(){}
+
+            public Config(params KeyValuePair<string, object>[] values){
+                foreach(var value in values){
+                    Values.Add(value.Key, value.Value);
+                }
+            }
         }
     }
 }

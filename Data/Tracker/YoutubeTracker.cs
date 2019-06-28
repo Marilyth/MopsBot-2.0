@@ -114,9 +114,9 @@ namespace MopsBot.Data.Tracker
 
                 foreach (Video video in newVideos)
                 {
-                    foreach (ulong channel in ChannelMessages.Keys.ToList())
+                    foreach (ulong channel in ChannelConfig.Keys.ToList())
                     {
-                        await OnMajorChangeTracked(channel, await createEmbed(video), ChannelMessages[channel]);
+                        await OnMajorChangeTracked(channel, await createEmbed(video), (string)ChannelConfig[channel]["Notification"]);
                     }
                 }
 

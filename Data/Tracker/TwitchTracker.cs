@@ -33,6 +33,7 @@ namespace MopsBot.Data.Tracker
         public Dictionary<ulong, NotifyConfig> Specifications;
         public int TimeoutCount;
         public ulong TwitchId;
+        public static readonly string GAMECHANGE = "NotifyOnGameChange", HOST = "NotifyOnHost", ONLINE = "NotifyOnOnline", OFFLINE = "NotifyOnOffline", SHOWEMBED = "ShowEmbed", THUMBNAIL = "LargeThumbnail";
 
         public TwitchTracker() : base()
         {
@@ -86,8 +87,25 @@ namespace MopsBot.Data.Tracker
             }
         }
 
+        public override void Conversion(object info = null)
+        {
+            base.Conversion();
+            foreach (var channel in ChannelMessages)
+            {
+                var config = ChannelConfig[channel.Key];
+                config[SHOWEMBED] = Specifications[channel.Key].ShowEmbed;
+                config[THUMBNAIL] = Specifications[channel.Key].LargeThumbnail;
+                config[GAMECHANGE] = Specifications[channel.Key].NotifyOnGameChange;
+                config[HOST] = Specifications[channel.Key].NotifyOnHost;
+                config[OFFLINE] = Specifications[channel.Key].NotifyOnOffline;
+                config[ONLINE] = Specifications[channel.Key].NotifyOnOnline;
+            }
+        }
+
         public async override void PostChannelAdded(ulong channelId)
         {
+            base.PostChannelAdded(channelId);
+
             if (Specifications == null)
             {
                 Specifications = new Dictionary<ulong, NotifyConfig>();
@@ -104,6 +122,14 @@ namespace MopsBot.Data.Tracker
                     NotifyOnOnline = true
                 });
             }
+            
+            var config = ChannelConfig[channelId];
+            config[SHOWEMBED] = true;
+            config[THUMBNAIL] = false;
+            config[GAMECHANGE] = true;
+            config[HOST] = false;
+            config[OFFLINE] = true;
+            config[ONLINE] = true;
 
             await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
         }
@@ -115,7 +141,7 @@ namespace MopsBot.Data.Tracker
             if (ViewerGraph != null)
                 ViewerGraph.InitPlot();
 
-            foreach (var channel in ChannelMessages)
+            foreach (var channel in ChannelConfig)
             {
                 if (Specifications == null)
                 {
@@ -193,8 +219,8 @@ namespace MopsBot.Data.Tracker
 
                             ToUpdate = new Dictionary<ulong, ulong>();
 
-                            if(OnOffline != null) await OnOffline.Invoke(this);
-                            foreach (ulong channel in ChannelMessages.Keys.Where(x => Specifications[x].NotifyOnOffline).ToList())
+                            if (OnOffline != null) await OnOffline.Invoke(this);
+                            foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][OFFLINE]).ToList())
                                 await OnMinorChangeTracked(channel, $"{Name} went Offline!");
 
                             SetTimer(600000, 600000);
@@ -205,7 +231,7 @@ namespace MopsBot.Data.Tracker
                             var host = (await hostInformation()).hosts.First();
                             if (host.IsHosting())
                             {
-                                if(OnHosting != null) await OnHosting.Invoke(host.host_display_name, host.target_display_name, (int)ViewerGraph.PlotDataPoints.LastOrDefault().Value.Value);
+                                if (OnHosting != null) await OnHosting.Invoke(host.host_display_name, host.target_display_name, (int)ViewerGraph.PlotDataPoints.LastOrDefault().Value.Value);
 
                                 foreach (ulong channel in ChannelMessages.Keys.Where(x => Specifications[x].NotifyOnHost).ToList())
                                     await OnMinorChangeTracked(channel, $"{Name} is now hosting {host.target_display_name} for {(int)ViewerGraph.PlotDataPoints.LastOrDefault().Value.Value} viewers!");
@@ -222,9 +248,9 @@ namespace MopsBot.Data.Tracker
                         CurGame = StreamerStatus.stream.game;
                         ViewerGraph.AddValue(CurGame, 0, DateTime.Parse(StreamerStatus.stream.created_at).AddHours(-2));
 
-                        if(OnLive != null) await OnLive.Invoke(this);
-                        foreach (ulong channel in ChannelMessages.Keys.Where(x => Specifications[x].NotifyOnOnline).ToList())
-                            await OnMinorChangeTracked(channel, ChannelMessages[channel]);
+                        if (OnLive != null) await OnLive.Invoke(this);
+                        foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][ONLINE]).ToList())
+                            await OnMinorChangeTracked(channel, (string)ChannelConfig[channel]["Notification"]);
 
                         SetTimer(60000, 60000);
                     }
@@ -243,13 +269,13 @@ namespace MopsBot.Data.Tracker
                         CurGame = StreamerStatus.stream.game;
                         //ViewerGraph.AddValue(CurGame, StreamerStatus.stream.viewers);
 
-                        foreach (ulong channel in ChannelMessages.Keys.Where(x => Specifications[x].NotifyOnGameChange).ToList())
+                        foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][GAMECHANGE]).ToList())
                             await OnMinorChangeTracked(channel, $"{Name} switched games to **{CurGame}**");
                     }
 
                     await ModifyAsync(x => x.ViewerGraph.AddValue(CurGame, StreamerStatus.stream.viewers));
 
-                    foreach (ulong channel in ChannelMessages.Keys.Where(x => Specifications[x].ShowEmbed).ToList())
+                    foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][SHOWEMBED]).ToList())
                         await OnMajorChangeTracked(channel, createEmbed(Specifications[channel].LargeThumbnail));
                 }
             }
@@ -367,7 +393,7 @@ namespace MopsBot.Data.Tracker
             if (((IGuildUser)await context.Reaction.Channel.GetUserAsync(context.Reaction.UserId)).GetPermissions((IGuildChannel)context.Channel).ManageChannel)
             {
                 await ModifyAsync(x => x.Specifications[context.Channel.Id].LargeThumbnail = !x.Specifications[context.Channel.Id].LargeThumbnail);
-                
+
                 await OnMajorChangeTracked(context.Channel.Id, createEmbed(Specifications[context.Channel.Id].LargeThumbnail));
             }
         }

@@ -273,33 +273,39 @@ namespace MopsBot.Data.Tracker
         public long UserId, lastMessage;
         public int FailCount = 0;
         private bool hasChecked = false;
+        public static readonly string SHOWREPLIES = "ShowReplies", SHOWRETWEETS = "ShowRetweets", SHOWMAIN = "ShowMain", RETWEETNOTIFICATION = "RetweetNotification", REPLYNOTIFICATION = "ReplyNotification";
 
         public TwitterTracker() : base()
         {
         }
 
-        public TwitterTracker(Dictionary<string, string> args) : base(){
-            Update(new Dictionary<string, Dictionary<string, string>>(){{"NewValue", args}, {"OldValue", args}});
+        public TwitterTracker(Dictionary<string, string> args) : base()
+        {
+            Update(new Dictionary<string, Dictionary<string, string>>() { { "NewValue", args }, { "OldValue", args } });
             base.SetBaseValues(args, true);
 
             //Check if Name ist valid
-            try{
+            try
+            {
                 var test = new TwitterTracker(Name);
                 test.Dispose();
                 lastMessage = test.lastMessage;
                 SetTimer();
-            } catch (Exception e){
+            }
+            catch (Exception e)
+            {
                 this.Dispose();
                 throw e;
             }
 
-            if(StaticBase.Trackers[TrackerType.Twitter].GetTrackers().ContainsKey(Name)){
+            if (StaticBase.Trackers[TrackerType.Twitter].GetTrackers().ContainsKey(Name))
+            {
                 this.Dispose();
 
                 args["Id"] = Name;
                 var curTracker = StaticBase.Trackers[TrackerType.Twitter].GetTrackers()[Name];
                 curTracker.ChannelMessages[ulong.Parse(args["Channel"].Split(":")[1])] = args["Notification"];
-                StaticBase.Trackers[TrackerType.Twitter].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", args}}).Wait();
+                StaticBase.Trackers[TrackerType.Twitter].UpdateContent(new Dictionary<string, Dictionary<string, string>> { { "NewValue", args }, { "OldValue", args } }).Wait();
 
                 throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
             }
@@ -339,6 +345,38 @@ namespace MopsBot.Data.Tracker
             SetTimer(1800000);
         }
 
+        public override void Conversion(object info = null)
+        {
+            base.Conversion();
+            foreach (var channel in ChannelMessages)
+            {
+                var messages = ChannelMessages[channel.Key].Split("|");
+                if (messages.Length > 1)
+                {
+                    ChannelConfig[channel.Key][SHOWRETWEETS] = !messages[1].Equals("NONE");
+                    ChannelConfig[channel.Key][SHOWREPLIES] = !messages[1].Equals("NONE");
+                    ChannelConfig[channel.Key][SHOWMAIN] = !messages[0].Equals("NONE");
+
+                    ChannelConfig[channel.Key][RETWEETNOTIFICATION] = messages[1];
+                    ChannelConfig[channel.Key][REPLYNOTIFICATION] = messages[1];
+                    ChannelConfig[channel.Key]["Notification"] = messages[0];
+                }
+            }
+        }
+
+        public async override void PostChannelAdded(ulong channelId)
+        {
+            base.PostChannelAdded(channelId);
+            ChannelConfig[channelId][SHOWRETWEETS] = true;
+            ChannelConfig[channelId][SHOWREPLIES] = true;
+            ChannelConfig[channelId][SHOWMAIN] = true;
+
+            ChannelConfig[channelId][RETWEETNOTIFICATION] = ChannelConfig[channelId]["Notification"];
+            ChannelConfig[channelId][REPLYNOTIFICATION] = ChannelConfig[channelId]["Notification"];
+
+            await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
+        }
+
         protected async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
@@ -369,19 +407,24 @@ namespace MopsBot.Data.Tracker
                     await checkMissedTweets(tweet.Id - 1);
                 }
 
-                if(updateDB) lastMessage = tweet.Id;
+                if (updateDB) lastMessage = tweet.Id;
 
                 if (!tweet.CreatedBy.Id.Equals(UserId)) return;
-                foreach (ulong channel in ChannelMessages.Keys.ToList())
+                foreach (ulong channel in ChannelConfig.Keys.ToList())
                 {
-                    if (tweet.InReplyToScreenName == null && !tweet.IsRetweet)
+                    if (tweet.InReplyToScreenName != null)
                     {
-                        if (!ChannelMessages[channel].Split("|")[0].Equals("NONE"))
-                            await OnMajorChangeTracked(channel, createEmbed(tweet), ChannelMessages[channel].Split("|")[0]);
+                        if ((bool)ChannelConfig[channel][SHOWREPLIES])
+                            await OnMajorChangeTracked(channel, createEmbed(tweet), (string)ChannelConfig[channel][REPLYNOTIFICATION]);
                     }
-                    else if (!ChannelMessages[channel].Split("|")[1].Equals("NONE"))
+                    else if (tweet.IsRetweet)
                     {
-                        await OnMajorChangeTracked(channel, createEmbed(tweet), ChannelMessages[channel].Split("|")[1]);
+                        if ((bool)ChannelConfig[channel][SHOWRETWEETS])
+                            await OnMajorChangeTracked(channel, createEmbed(tweet), (string)ChannelConfig[channel][RETWEETNOTIFICATION]);
+                    }
+                    else
+                    {
+                        await OnMajorChangeTracked(channel, createEmbed(tweet), (string)ChannelConfig[channel]["Notification"]);
                     }
                 }
 
@@ -435,29 +478,29 @@ namespace MopsBot.Data.Tracker
         private void addUser()
         {
             bool restart = STREAM.StreamState == StreamState.Running;
-            if(restart) STREAM.StopStream();
+            if (restart) STREAM.StopStream();
 
             if (STREAM.ContainsFollow(UserId)) STREAM.FollowingUserIds[UserId] += x => TweetReceived(x);
             else STREAM.AddFollow(UserId, x => TweetReceived(x));
 
-            if(restart && STREAM.FollowingUserIds.Count == 1) STREAM.StartStreamMatchingAllConditionsAsync();
+            if (restart && STREAM.FollowingUserIds.Count == 1) STREAM.StartStreamMatchingAllConditionsAsync();
         }
 
         private async Task checkMissedTweets(long beforeId = 0)
         {
             //if (!hasChecked)
             //{
-                var missedTweets = getNewTweets(lastMessage, beforeId);
-                hasChecked = true;
-                int i = 0;
-                foreach (var curTweet in missedTweets)
-                {
-                    i++;
-                    if (i != missedTweets.Length)
-                        await TweetReceived(curTweet, false);
-                    else
-                        await TweetReceived(curTweet);
-                }
+            var missedTweets = getNewTweets(lastMessage, beforeId);
+            hasChecked = true;
+            int i = 0;
+            foreach (var curTweet in missedTweets)
+            {
+                i++;
+                if (i != missedTweets.Length)
+                    await TweetReceived(curTweet, false);
+                else
+                    await TweetReceived(curTweet);
+            }
             //}
         }
 
@@ -490,9 +533,11 @@ namespace MopsBot.Data.Tracker
             return e.Build();
         }
 
-        public static async Task RestartStream(){
+        public static async Task RestartStream()
+        {
             await Task.Delay(5000);
-            if(STREAM.StreamState == StreamState.Stop){
+            if (STREAM.StreamState == StreamState.Stop)
+            {
                 STREAM.StartStreamMatchingAllConditionsAsync();
             }
         }

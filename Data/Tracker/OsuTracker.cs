@@ -19,6 +19,7 @@ namespace MopsBot.Data.Tracker
     {
         public Dictionary<string, double> AllPP;
         public double PPThreshold;
+        public static readonly string PPTHRESHOLD = "PPThreshold";
 
         public OsuTracker() : base()
         {
@@ -84,6 +85,22 @@ namespace MopsBot.Data.Tracker
             }
         }
 
+        public override void Conversion(object info = null)
+        {
+            base.Conversion();
+            foreach(var channel in ChannelMessages){
+                ChannelConfig[channel.Key][PPTHRESHOLD] = PPThreshold;
+            }
+        }
+
+        public async override void PostChannelAdded(ulong channelId)
+        {
+            base.PostChannelAdded(channelId);
+            ChannelConfig[channelId][PPTHRESHOLD] = PPThreshold;
+
+            await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
+        }
+
         protected async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
@@ -108,10 +125,10 @@ namespace MopsBot.Data.Tracker
 
                         Beatmap beatmapInformation = await fetchBeatmap(scoreInformation.beatmap_id, pp.Key, int.Parse(scoreInformation.enabled_mods));
 
-                        foreach (ulong channel in ChannelMessages.Keys.ToList())
+                        foreach (ulong channel in ChannelConfig.Keys.ToList())
                         {
                             await OnMajorChangeTracked(channel, createEmbed(userInformation, beatmapInformation, await fetchScore(scoreInformation.beatmap_id, pp.Key),
-                                                       Math.Round(double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture) - pp.Value, 2), pp.Key), ChannelMessages[channel]);
+                                                       Math.Round(double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture) - pp.Value, 2), pp.Key), (string)ChannelConfig[channel]["Notification"]);
                         }
                     }
 

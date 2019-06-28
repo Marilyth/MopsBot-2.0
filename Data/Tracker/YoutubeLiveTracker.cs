@@ -25,6 +25,7 @@ namespace MopsBot.Data.Tracker
         public DatePlot ViewerGraph;
         public bool IsThumbnailLarge;
         private LiveVideoItem liveStatus;
+        public static readonly string SHOWEMBED = "ShowEmbed", THUMBNAIL = "LargeThumbnail", OFFLINE = "NotifyOnOffline", ONLINE = "NotifyOnOnline";
 
         public YoutubeLiveTracker() : base()
         {
@@ -93,6 +94,32 @@ namespace MopsBot.Data.Tracker
             }
         }
 
+        public override void Conversion(object info = null)
+        {
+            base.Conversion();
+            foreach (var channel in ChannelMessages)
+            {
+                var config = ChannelConfig[channel.Key];
+                config[SHOWEMBED] = true;
+                config[THUMBNAIL] = IsThumbnailLarge;
+                config[OFFLINE] = true;
+                config[ONLINE] = true;
+            }
+        }
+
+        public async override void PostChannelAdded(ulong channelId)
+        {
+            base.PostChannelAdded(channelId);
+            
+            var config = ChannelConfig[channelId];
+            config[SHOWEMBED] = true;
+            config[THUMBNAIL] = false;
+            config[OFFLINE] = true;
+            config[ONLINE] = true;
+
+            await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
+        }
+
         public async override Task setReaction(IUserMessage message)
         {
             await Program.ReactionHandler.AddHandler(message, new Emoji("🖌"), recolour);
@@ -147,8 +174,8 @@ namespace MopsBot.Data.Tracker
                     {
                         ViewerGraph = new DatePlot(Name, "Time since start", "Viewers");
 
-                        foreach (ulong channel in ChannelMessages.Keys.ToList())
-                            await OnMinorChangeTracked(channel, ChannelMessages[channel]);
+                        foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][ONLINE]).ToList())
+                            await OnMinorChangeTracked(channel, (string)ChannelConfig[channel]["Notification"]);
                         
                         SetTimer(60000, 60000);
 
@@ -172,15 +199,15 @@ namespace MopsBot.Data.Tracker
 
                     ToUpdate = new Dictionary<ulong, ulong>();
 
-                    foreach (ulong channel in ChannelMessages.Keys.ToList())
+                    foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][OFFLINE]).ToList())
                         await OnMinorChangeTracked(channel, $"{liveStatus.snippet.channelTitle} went Offline!");
                 }
                 else
                 {
                     ViewerGraph.AddValue("Viewers", double.Parse(liveStatus.liveStreamingDetails.concurrentViewers));
 
-                    foreach (ulong channel in ChannelMessages.Keys.ToList())
-                        await OnMajorChangeTracked(channel, createEmbed());
+                    foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][SHOWEMBED]).ToList())
+                        await OnMajorChangeTracked(channel, createEmbed((bool)ChannelConfig[channel][THUMBNAIL]));
                 }
 
                 await StaticBase.Trackers[TrackerType.YoutubeLive].UpdateDBAsync(this);
@@ -191,7 +218,7 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public Embed createEmbed()
+        public Embed createEmbed(bool largeThumbnail = false)
         {
             ViewerGraph.SetMaximumLine();
             EmbedBuilder e = new EmbedBuilder();
@@ -212,8 +239,8 @@ namespace MopsBot.Data.Tracker
             footer.Text = "Youtube-Live";
             e.Footer = footer;
 
-            e.ThumbnailUrl = IsThumbnailLarge ? ViewerGraph.DrawPlot() : $"{liveStatus.snippet.thumbnails.medium.url}?rand={StaticBase.ran.Next(0, 99999999)}";
-            e.ImageUrl = IsThumbnailLarge ? $"{liveStatus.snippet.thumbnails.maxres?.url ?? liveStatus.snippet.thumbnails.medium.url}?rand={StaticBase.ran.Next(0, 99999999)}" : ViewerGraph.DrawPlot();
+            e.ThumbnailUrl = largeThumbnail ? ViewerGraph.DrawPlot() : $"{liveStatus.snippet.thumbnails.medium.url}?rand={StaticBase.ran.Next(0, 99999999)}";
+            e.ImageUrl = largeThumbnail ? $"{liveStatus.snippet.thumbnails.maxres?.url ?? liveStatus.snippet.thumbnails.medium.url}?rand={StaticBase.ran.Next(0, 99999999)}" : ViewerGraph.DrawPlot();
 
             e.AddField("Viewers", liveStatus.liveStreamingDetails.concurrentViewers, true);
 
@@ -226,7 +253,7 @@ namespace MopsBot.Data.Tracker
             {
                 ViewerGraph.Recolour();
 
-                foreach (ulong channel in ChannelMessages.Keys.ToList())
+                foreach (ulong channel in ChannelConfig.Keys.ToList())
                     await OnMajorChangeTracked(channel, createEmbed());
             }
         }
@@ -238,7 +265,7 @@ namespace MopsBot.Data.Tracker
                 IsThumbnailLarge = !IsThumbnailLarge;
                 await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
 
-                foreach (ulong channel in ChannelMessages.Keys.ToList())
+                foreach (ulong channel in ChannelConfig.Keys.ToList())
                     await OnMajorChangeTracked(channel, createEmbed());
             }
         }

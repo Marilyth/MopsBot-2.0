@@ -125,9 +125,9 @@ namespace MopsBot.Data.Tracker
                     StatGraph.AddValue("Level", StatGraph.PlotDataPoints.Last().Value.Value, relative: false);
                     StatGraph.AddValue("Level", await OverallStats.GetLevelAsync(Name), relative: false);
 
-                    foreach (ulong channel in ChannelMessages.Keys.ToList())
+                    foreach (ulong channel in ChannelConfig.Keys.ToList())
                     {
-                        await OnMajorChangeTracked(channel, createEmbed(newInformation, changedStats, getSessionMostPlayed(information.getNotNull().heroes.playtime, newInformation.getNotNull().heroes.playtime)), ChannelMessages[channel]);
+                        await OnMajorChangeTracked(channel, createEmbed(newInformation, changedStats, getSessionMostPlayed(information.getNotNull().heroes.playtime, newInformation.getNotNull().heroes.playtime)), (string)ChannelConfig[channel]["Notification"]);
                     }
 
                     information = newInformation;

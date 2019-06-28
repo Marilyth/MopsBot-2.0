@@ -107,8 +107,8 @@ namespace MopsBot.Data.Tracker
                             if(success) DataGraph.AddValue("Value", value, relative: false);
                         }
 
-                        foreach (var channel in ChannelMessages.Keys.ToList())
-                            await OnMajorChangeTracked(channel, CreateChangeEmbed($"{oldMatch} -> {match}", isNumeric), ChannelMessages[channel]);
+                        foreach (var channel in ChannelConfig.Keys.ToList())
+                            await OnMajorChangeTracked(channel, CreateChangeEmbed($"{oldMatch} -> {match}", isNumeric), (string)ChannelConfig[channel]["Notification"]);
                         
                         oldMatch = match;
                         await StaticBase.Trackers[TrackerType.HTML].UpdateDBAsync(this);

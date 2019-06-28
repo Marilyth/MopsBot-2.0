@@ -21,6 +21,7 @@ namespace MopsBot.Data.Tracker
         
         [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
         public Dictionary<DateTime, KeyValuePair<int, double>> TrackedClips;
+        public static readonly string VIEWTHRESHOLD = "ViewerThreshold";
         public TwitchClipTracker() : base()
         {
         }
@@ -33,7 +34,6 @@ namespace MopsBot.Data.Tracker
             try{
                 new TwitchClipTracker(Name).Dispose();
                 TrackedClips = new Dictionary<DateTime, KeyValuePair<int, double>>();
-                ChannelMessages = new Dictionary<ulong, string>();
                 SetTimer();
             } catch (Exception e){
                 this.Dispose();
@@ -56,7 +56,6 @@ namespace MopsBot.Data.Tracker
         {
             Name = streamerName;
             TrackedClips = new Dictionary<DateTime, KeyValuePair<int, double>>();
-            ChannelMessages = new Dictionary<ulong, string>();
             ViewThreshold = 2;
 
             try
@@ -70,6 +69,22 @@ namespace MopsBot.Data.Tracker
                 Dispose();
                 throw new Exception($"Streamer {TrackerUrl()} could not be found on Twitch!");
             }
+        }
+
+        public override void Conversion(object info = null)
+        {
+            base.Conversion();
+            foreach(var channel in ChannelMessages){
+                ChannelConfig[channel.Key][VIEWTHRESHOLD] = ViewThreshold;
+            }
+        }
+
+        public async override void PostChannelAdded(ulong channelId)
+        {
+            base.PostChannelAdded(channelId);
+            ChannelConfig[channelId][VIEWTHRESHOLD] = ViewThreshold;
+
+            await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
         }
 
         protected async override void CheckForChange_Elapsed(object stateinfo)
@@ -88,9 +103,9 @@ namespace MopsBot.Data.Tracker
                 foreach (Clip clip in clips.clips)
                 {
                     var embed = createEmbed(clip);
-                    foreach (ulong channel in ChannelMessages.Keys.ToList())
+                    foreach (ulong channel in ChannelConfig.Keys.ToList())
                     {
-                        await OnMajorChangeTracked(channel, embed, ChannelMessages[channel]);
+                        await OnMajorChangeTracked(channel, embed, (string)ChannelConfig[channel]["Notification"]);
                     }
                 }
             }

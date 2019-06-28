@@ -64,7 +64,10 @@ namespace MopsBot.Data
                     {
                         var cur = trackers[trackers.Keys.ElementAt(i)];
                         cur.SetTimer(600000, gap * (i + 1));
+                        bool save = cur.ChannelConfig.Count == 0;
+                        cur.Conversion(trackers.Count - i);
                         cur.PostInitialisation(trackers.Count - i);
+                        if(save) UpdateDBAsync(cur).Wait();
                         cur.OnMinorEventFired += OnMinorEvent;
                         cur.OnMajorEventFired += OnMajorEvent;
                     }
@@ -120,9 +123,9 @@ namespace MopsBot.Data
                     }
                     else if (!tracker.Key.Equals(tracker.Key.ToLower().Replace("@", "")))
                     {
-                        foreach (var channel in tracker.Value.ChannelMessages)
+                        foreach (var channel in tracker.Value.ChannelConfig)
                         {
-                            await AddTrackerAsync(tracker.Key.ToLower().Replace("@", ""), channel.Key, channel.Value);
+                            await AddTrackerAsync(tracker.Key.ToLower().Replace("@", ""), channel.Key, (string)channel.Value["Notification"]);
 
                             if (typeof(T) == typeof(TwitchTracker))
                             {
@@ -142,7 +145,7 @@ namespace MopsBot.Data
 
         public override async Task<bool> TryRemoveTrackerAsync(string name, ulong channelId)
         {
-            if (trackers.ContainsKey(name) && trackers[name].ChannelMessages.ContainsKey(channelId))
+            if (trackers.ContainsKey(name) && trackers[name].ChannelConfig.ContainsKey(channelId))
             {
                 if (typeof(T) == typeof(BaseUpdatingTracker))
                     foreach (var channel in (trackers[name] as BaseUpdatingTracker).ToUpdate.Where(x => x.Key.Equals(channelId)))
@@ -154,9 +157,9 @@ namespace MopsBot.Data
                         {
                         }
 
-                if (trackers[name].ChannelMessages.Keys.Count > 1)
+                if (trackers[name].ChannelConfig.Keys.Count > 1)
                 {
-                    trackers[name].ChannelMessages.Remove(channelId);
+                    trackers[name].ChannelConfig.Remove(channelId);
 
                     if (trackers.First().Value.GetType() == typeof(Tracker.TwitchTracker))
                     {
@@ -190,11 +193,11 @@ namespace MopsBot.Data
         {
             if (trackers.ContainsKey(name))
             {
-                if (!trackers[name].ChannelMessages.ContainsKey(channelID))
+                if (!trackers[name].ChannelConfig.ContainsKey(channelID))
                 {
-                    trackers[name].ChannelMessages.Add(channelID, notification);
-                    await UpdateDBAsync(trackers[name]);
+                    trackers[name].ChannelConfig[channelID]["Notification"] = notification;
                     trackers[name].PostChannelAdded(channelID);
+                    await UpdateDBAsync(trackers[name]);
                 }
             }
             else
@@ -202,14 +205,14 @@ namespace MopsBot.Data
                 var tracker = (T)Activator.CreateInstance(typeof(T), new object[] { name });
                 name = tracker.Name;
                 trackers.Add(name, tracker);
-                trackers[name].ChannelMessages.Add(channelID, notification);
+                trackers[name].ChannelConfig[channelID]["Notification"] = notification;
                 trackers[name].OnMajorEventFired += OnMajorEvent;
                 trackers[name].OnMinorEventFired += OnMinorEvent;
                 await InsertToDBAsync(trackers[name]);
                 tracker.PostInitialisation();
             }
 
-            await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Started a new {typeof(T).Name} for {name}\nChannels: {string.Join(",", trackers[name].ChannelMessages.Keys)}\nMessage: {notification}"));
+            await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Started a new {typeof(T).Name} for {name}\nChannels: {string.Join(",", trackers[name].ChannelConfig.Keys)}\nMessage: {notification}"));
         }
 
         public override async Task<bool> TrySetNotificationAsync(string name, ulong channelID, string notificationMessage)
@@ -218,7 +221,7 @@ namespace MopsBot.Data
 
             if (tracker != null)
             {
-                tracker.ChannelMessages[channelID] = notificationMessage;
+                tracker.ChannelConfig[channelID]["Notification"] = notificationMessage;
                 await UpdateDBAsync(tracker);
                 return true;
             }
@@ -228,14 +231,14 @@ namespace MopsBot.Data
 
         public override IEnumerable<BaseTracker> GetTrackers(ulong channelID)
         {
-            return trackers.Select(x => x.Value).Where(x => x.ChannelMessages.ContainsKey(channelID));
+            return trackers.Select(x => x.Value).Where(x => x.ChannelConfig.ContainsKey(channelID));
         }
 
         public override IEnumerable<BaseTracker> GetGuildTrackers(ulong guildId)
         {
             var channels = Program.Client.GetGuild(guildId).TextChannels;
             var allTrackers = trackers.Select(x => x.Value as TwitchTracker).ToList();
-            var guildTrackers = allTrackers.Where(x => x.ChannelMessages.Keys.Any(y => channels.Select(z => z.Id).Contains(y))).ToList();
+            var guildTrackers = allTrackers.Where(x => x.ChannelConfig.Keys.Any(y => channels.Select(z => z.Id).Contains(y))).ToList();
             return guildTrackers;
         }
 
@@ -254,7 +257,7 @@ namespace MopsBot.Data
 
         public override IEnumerable<Embed> GetTrackersEmbed(ulong channelID)
         {
-            var trackerStrings = trackers.Where(x => x.Value.ChannelMessages.ContainsKey(channelID)).Select(x => x.Value.TrackerUrl() != null ? $"[``{x.Key}``]({x.Value.TrackerUrl()})\n" : $"``{x.Key}``\n");
+            var trackerStrings = trackers.Where(x => x.Value.ChannelConfig.ContainsKey(channelID)).Select(x => x.Value.TrackerUrl() != null ? $"[``{x.Key}``]({x.Value.TrackerUrl()})\n" : $"``{x.Key}``\n");
             var embeds = new List<EmbedBuilder>(){new EmbedBuilder().WithTitle(typeof(T).Name).WithCurrentTimestamp().WithColor(Discord.Color.Blue)};
             
             foreach(var tracker in trackerStrings){
@@ -275,7 +278,7 @@ namespace MopsBot.Data
 
         public override BaseTracker GetTracker(ulong channelID, string name)
         {
-            return trackers.FirstOrDefault(x => x.Key.Equals(name) && x.Value.ChannelMessages.ContainsKey(channelID)).Value;
+            return trackers.FirstOrDefault(x => x.Key.Equals(name) && x.Value.ChannelConfig.ContainsKey(channelID)).Value;
         }
 
         public override HashSet<BaseTracker> GetTrackerSet()
@@ -316,12 +319,12 @@ namespace MopsBot.Data
             tmp.Dispose();
 
             List<ulong> channels = ((string[])((Dictionary<string, object>)parameters["Parameters"])["Channel"]).Select(x => ulong.Parse((x.Split(":")[1]))).ToList();
-            var rawTrackers = trackers.Values.Where(x => x.ChannelMessages.Any(y => channels.Contains(y.Key)));
+            var rawTrackers = trackers.Values.Where(x => x.ChannelConfig.Any(y => channels.Contains(y.Key)));
 
             parameters["Content"] = new List<object>();
             foreach (var tracker in rawTrackers)
             {
-                foreach (var channel in tracker.ChannelMessages.Keys.Where(x => channels.Contains(x)))
+                foreach (var channel in tracker.ChannelConfig.Keys.Where(x => channels.Contains(x)))
                 {
                     (parameters["Content"] as List<object>).Add(tracker.GetAsScope(channel));
                 }

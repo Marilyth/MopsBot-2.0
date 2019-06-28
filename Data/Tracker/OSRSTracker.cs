@@ -91,8 +91,8 @@ namespace MopsBot.Data.Tracker
                 }
 
                 if (changedStats.Count > 0)
-                    foreach (var channel in ChannelMessages.Keys.ToList())
-                        await OnMajorChangeTracked(channel, CreateChangeEmbed(changedStats), ChannelMessages[channel]);
+                    foreach (var channel in ChannelConfig.Keys.ToList())
+                        await OnMajorChangeTracked(channel, CreateChangeEmbed(changedStats), (string)ChannelConfig[channel]["Notification"]);
 
                 stats = newStats;
             }
