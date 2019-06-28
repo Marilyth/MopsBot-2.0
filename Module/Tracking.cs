@@ -125,26 +125,9 @@ namespace MopsBot.Module
                             continue;
                         }
 
-                        object result = null;
-                        var worked = true;
                         var value = kv[1].Trim();  
-                        switch(settings[option]){
-                            case bool b:
-                                worked = bool.TryParse(value, out bool boolResult);
-                                result = boolResult;
-                                break;
-                            case string s:
-                                result = value;
-                                break;
-                            case double d:
-                                worked = double.TryParse(value, out double doubleResult);
-                                result = doubleResult;
-                                break;
-                            case int i:
-                                worked = int.TryParse(value, out int intResult);
-                                result = intResult;
-                                break;
-                        }
+                        var worked = TryCastUserConfig(settings[option], value, out var result);
+
                         if(!worked){
                             await ReplyAsync($"Skipping `{line}` due to false value type, must be `{settings[option].GetType().ToString()}`");
                         }else{
@@ -284,26 +267,9 @@ namespace MopsBot.Module
                             continue;
                         }
 
-                        object result = null;
-                        var worked = true;
                         var value = kv[1].Trim();  
-                        switch(settings[option]){
-                            case bool b:
-                                worked = bool.TryParse(value, out bool boolResult);
-                                result = boolResult;
-                                break;
-                            case string s:
-                                result = value;
-                                break;
-                            case double d:
-                                worked = double.TryParse(value, out double doubleResult);
-                                result = doubleResult;
-                                break;
-                            case int i:
-                                worked = int.TryParse(value, out int intResult);
-                                result = intResult;
-                                break;
-                        }
+                        var worked = TryCastUserConfig(settings[option], value, out var result);
+
                         if(!worked){
                             await ReplyAsync($"Skipping `{line}` due to false value type, must be `{settings[option].GetType().ToString()}`");
                         }else{
@@ -398,26 +364,9 @@ namespace MopsBot.Module
                             continue;
                         }
 
-                        object result = null;
-                        var worked = true;
                         var value = kv[1].Trim();  
-                        switch(settings[option]){
-                            case bool b:
-                                worked = bool.TryParse(value, out bool boolResult);
-                                result = boolResult;
-                                break;
-                            case string s:
-                                result = value;
-                                break;
-                            case double d:
-                                worked = double.TryParse(value, out double doubleResult);
-                                result = doubleResult;
-                                break;
-                            case int i:
-                                worked = int.TryParse(value, out int intResult);
-                                result = intResult;
-                                break;
-                        }
+                        var worked = TryCastUserConfig(settings[option], value, out var result);
+                        
                         if(!worked){
                             await ReplyAsync($"Skipping `{line}` due to false value type, must be `{settings[option].GetType().ToString()}`");
                         }else{
@@ -516,26 +465,9 @@ namespace MopsBot.Module
                             continue;
                         }
 
-                        object result = null;
-                        var worked = true;
                         var value = kv[1].Trim();  
-                        switch(settings[option]){
-                            case bool b:
-                                worked = bool.TryParse(value, out bool boolResult);
-                                result = boolResult;
-                                break;
-                            case string s:
-                                result = value;
-                                break;
-                            case double d:
-                                worked = double.TryParse(value, out double doubleResult);
-                                result = doubleResult;
-                                break;
-                            case int i:
-                                worked = int.TryParse(value, out int intResult);
-                                result = intResult;
-                                break;
-                        }
+                        var worked = TryCastUserConfig(settings[option], value, out var result);
+                        
                         if(!worked){
                             await ReplyAsync($"Skipping `{line}` due to false value type, must be `{settings[option].GetType().ToString()}`");
                         }else{
@@ -822,26 +754,9 @@ namespace MopsBot.Module
                             continue;
                         }
 
-                        object result = null;
-                        var worked = true;
                         var value = kv[1].Trim();  
-                        switch(settings[option]){
-                            case bool b:
-                                worked = bool.TryParse(value, out bool boolResult);
-                                result = boolResult;
-                                break;
-                            case string s:
-                                result = value;
-                                break;
-                            case double d:
-                                worked = double.TryParse(value, out double doubleResult);
-                                result = doubleResult;
-                                break;
-                            case int i:
-                                worked = int.TryParse(value, out int intResult);
-                                result = intResult;
-                                break;
-                        }
+                        var worked = TryCastUserConfig(settings[option], value, out var result);
+                        
                         if(!worked){
                             await ReplyAsync($"Skipping `{line}` due to false value type, must be `{settings[option].GetType().ToString()}`");
                         }else{
@@ -949,26 +864,9 @@ namespace MopsBot.Module
                             continue;
                         }
 
-                        object result = null;
-                        var worked = true;
                         var value = kv[1].Trim();  
-                        switch(settings[option]){
-                            case bool b:
-                                worked = bool.TryParse(value, out bool boolResult);
-                                result = boolResult;
-                                break;
-                            case string s:
-                                result = value;
-                                break;
-                            case double d:
-                                worked = double.TryParse(value, out double doubleResult);
-                                result = doubleResult;
-                                break;
-                            case int i:
-                                worked = int.TryParse(value, out int intResult);
-                                result = intResult;
-                                break;
-                        }
+                        var worked = TryCastUserConfig(settings[option], value, out var result);
+                        
                         if(!worked){
                             await ReplyAsync($"Skipping `{line}` due to false value type, must be `{settings[option].GetType().ToString()}`");
                         }else{
@@ -1071,26 +969,9 @@ namespace MopsBot.Module
                             continue;
                         }
 
-                        object result = null;
-                        var worked = true;
                         var value = kv[1].Trim();  
-                        switch(settings[option]){
-                            case bool b:
-                                worked = bool.TryParse(value, out bool boolResult);
-                                result = boolResult;
-                                break;
-                            case string s:
-                                result = value;
-                                break;
-                            case double d:
-                                worked = double.TryParse(value, out double doubleResult);
-                                result = doubleResult;
-                                break;
-                            case int i:
-                                worked = int.TryParse(value, out int intResult);
-                                result = intResult;
-                                break;
-                        }
+                        var worked = TryCastUserConfig(settings[option], value, out var result);
+                        
                         if(!worked){
                             await ReplyAsync($"Skipping `{line}` due to false value type, must be `{settings[option].GetType().ToString()}`");
                         }else{
@@ -1193,26 +1074,9 @@ namespace MopsBot.Module
                             continue;
                         }
 
-                        object result = null;
-                        var worked = true;
                         var value = kv[1].Trim();  
-                        switch(settings[option]){
-                            case bool b:
-                                worked = bool.TryParse(value, out bool boolResult);
-                                result = boolResult;
-                                break;
-                            case string s:
-                                result = value;
-                                break;
-                            case double d:
-                                worked = double.TryParse(value, out double doubleResult);
-                                result = doubleResult;
-                                break;
-                            case int i:
-                                worked = int.TryParse(value, out int intResult);
-                                result = intResult;
-                                break;
-                        }
+                        var worked = TryCastUserConfig(settings[option], value, out var result);
+                        
                         if(!worked){
                             await ReplyAsync($"Skipping `{line}` due to false value type, must be `{settings[option].GetType().ToString()}`");
                         }else{
@@ -1328,26 +1192,9 @@ namespace MopsBot.Module
                             continue;
                         }
 
-                        object result = null;
-                        var worked = true;
                         var value = kv[1].Trim();  
-                        switch(settings[option]){
-                            case bool b:
-                                worked = bool.TryParse(value, out bool boolResult);
-                                result = boolResult;
-                                break;
-                            case string s:
-                                result = value;
-                                break;
-                            case double d:
-                                worked = double.TryParse(value, out double doubleResult);
-                                result = doubleResult;
-                                break;
-                            case int i:
-                                worked = int.TryParse(value, out int intResult);
-                                result = intResult;
-                                break;
-                        }
+                        var worked = TryCastUserConfig(settings[option], value, out var result);
+                        
                         if(!worked){
                             await ReplyAsync($"Skipping `{line}` due to false value type, must be `{settings[option].GetType().ToString()}`");
                         }else{
@@ -1592,26 +1439,9 @@ namespace MopsBot.Module
                             continue;
                         }
 
-                        object result = null;
-                        var worked = true;
                         var value = kv[1].Trim();  
-                        switch(settings[option]){
-                            case bool b:
-                                worked = bool.TryParse(value, out bool boolResult);
-                                result = boolResult;
-                                break;
-                            case string s:
-                                result = value;
-                                break;
-                            case double d:
-                                worked = double.TryParse(value, out double doubleResult);
-                                result = doubleResult;
-                                break;
-                            case int i:
-                                worked = int.TryParse(value, out int intResult);
-                                result = intResult;
-                                break;
-                        }
+                        var worked = TryCastUserConfig(settings[option], value, out var result);
+                        
                         if(!worked){
                             await ReplyAsync($"Skipping `{line}` due to false value type, must be `{settings[option].GetType().ToString()}`");
                         }else{
@@ -1708,26 +1538,9 @@ namespace MopsBot.Module
                             continue;
                         }
 
-                        object result = null;
-                        var worked = true;
                         var value = kv[1].Trim();  
-                        switch(settings[option]){
-                            case bool b:
-                                worked = bool.TryParse(value, out bool boolResult);
-                                result = boolResult;
-                                break;
-                            case string s:
-                                result = value;
-                                break;
-                            case double d:
-                                worked = double.TryParse(value, out double doubleResult);
-                                result = doubleResult;
-                                break;
-                            case int i:
-                                worked = int.TryParse(value, out int intResult);
-                                result = intResult;
-                                break;
-                        }
+                        var worked = TryCastUserConfig(settings[option], value, out var result);
+                        
                         if(!worked){
                             await ReplyAsync($"Skipping `{line}` due to false value type, must be `{settings[option].GetType().ToString()}`");
                         }else{
@@ -1772,6 +1585,36 @@ namespace MopsBot.Module
 
                 await ReplyAsync($"```yaml\n{"TrackerType",-20}{"PruneCount"}\n{string.Join("\n", pruneCount.Select(x => $"{x.Key,-20}{x.Value,-3}"))}```");
             }
+        }
+
+        public static bool TryCastUserConfig(object srcOption, string value, out object result){
+            var worked = true;
+            result = null;
+            switch(srcOption){
+                case bool b:
+                    worked = bool.TryParse(value, out bool boolResult);
+                    result = boolResult;
+                    break;
+                case string s:
+                    result = value;
+                    break;
+                case double d:
+                    worked = double.TryParse(value, out double doubleResult);
+                    result = doubleResult;
+                    break;
+                case int i:
+                    worked = int.TryParse(value, out int intResult);
+                    result = intResult;
+                    break;
+                case uint ui:
+                    worked = uint.TryParse(value, out uint uintResult);
+                    result = uintResult;
+                    break;
+                default:
+                    worked = false;
+                    break; 
+            }
+            return worked;
         }
     }
 }

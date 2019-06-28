@@ -101,26 +101,9 @@ namespace MopsBot.Module
                             continue;
                         }
 
-                        object result = null;
-                        var worked = true;
                         var value = kv[1].Trim();  
-                        switch(settings[option]){
-                            case bool b:
-                                worked = bool.TryParse(value, out bool boolResult);
-                                result = boolResult;
-                                break;
-                            case string s:
-                                result = value;
-                                break;
-                            case double d:
-                                worked = double.TryParse(value, out double doubleResult);
-                                result = doubleResult;
-                                break;
-                            case int i:
-                                worked = int.TryParse(value, out int intResult);
-                                result = intResult;
-                                break;
-                        }
+                        var worked = Tracking.TryCastUserConfig(settings[option], value, out var result);
+
                         if(!worked){
                             await ReplyAsync($"Skipping `{line}` due to false value type, must be `{settings[option].GetType().ToString()}`");
                         }else{
