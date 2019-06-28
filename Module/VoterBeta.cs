@@ -19,7 +19,7 @@ namespace MopsBot.Module
     {
         [Group("YoutubeLive")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public class YoutubeLive : ModuleBase
+        public class YoutubeLive : InteractiveBase
         {
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified Youtubers livestreams, in the Channel you are calling this command in.")]
@@ -81,39 +81,56 @@ namespace MopsBot.Module
                 await ReplyAsync($"{string.Join("\n", tracker.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}");
             }
 
-            [Group("Notifications")]
-            public class Notifications : ModuleBase
-            {
+            [Command("ChangeConfig", RunMode=RunMode.Async)]
+            [Summary("Edit the Configuration for the tracker")]
+            public async Task ChangeConfig(BaseTracker ChannelID){
+                await ReplyAsync($"Current Config:\n{string.Join("\n", ChannelID.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}\n\nPlease reply with one or more changed lines.");
+                var reply = await NextMessageAsync(new EnsureSourceUserCriterion(), TimeSpan.FromMinutes(1));
+                var settings = ChannelID.ChannelConfig[Context.Channel.Id];
+                if(reply != null){
+                    foreach(var line in reply.Content.Split("\n")){
+                        var kv = line.Split(":",2);
+                        if(kv.Length != 2){
+                            await ReplyAsync($"Skipping `{line}` due to no value.");
+                            continue;
+                        }
 
-                [Command("SwitchShowEmbed")]
-                [Summary("Switches the bool on whether to show the tracker embed or not.")]
-                [RequireUserPermission(GuildPermission.ManageRoles)]
-                public async Task SwitchEmbed(BaseTracker channelId)
-                {
-                    channelId.ChannelConfig[Context.Channel.Id][YoutubeLiveTracker.SHOWEMBED] = !(bool)channelId.ChannelConfig[Context.Channel.Id][YoutubeLiveTracker.SHOWEMBED];
-                    await StaticBase.Trackers[BaseTracker.TrackerType.YoutubeLive].UpdateDBAsync(channelId);
-                    await ReplyAsync($"Changed `ShowEmbed` for `{channelId.Name}` to `{channelId.ChannelConfig[Context.Channel.Id][YoutubeLiveTracker.SHOWEMBED]}`");
-                }
+                        var option = kv[0];
+                        if(!settings.Keys.Contains(option)){
+                            await ReplyAsync($"Skipping `{line}` due to unkown option.");
+                            continue;
+                        }
 
-                [Command("SwitchNotifyOffline")]
-                [Summary("Switches the bool on whether to notify on when the streamer goes offline.")]
-                [RequireUserPermission(GuildPermission.ManageRoles)]
-                public async Task SwitchOffline(BaseTracker channelId)
-                {
-                    channelId.ChannelConfig[Context.Channel.Id][YoutubeLiveTracker.OFFLINE] = !(bool)channelId.ChannelConfig[Context.Channel.Id][YoutubeLiveTracker.OFFLINE];
-                    await StaticBase.Trackers[BaseTracker.TrackerType.YoutubeLive].UpdateDBAsync(channelId);
-                    await ReplyAsync($"Changed `{YoutubeLiveTracker.OFFLINE}` for `{channelId.Name}` to `{channelId.ChannelConfig[Context.Channel.Id][YoutubeLiveTracker.OFFLINE]}`");
-                }
-
-                [Command("SwitchNotifyOnline")]
-                [Alias("SwitchNotifyLive")]
-                [Summary("Switches the bool on whether to notify on when the streamer goes live.")]
-                [RequireUserPermission(GuildPermission.ManageRoles)]
-                public async Task SwitchOnline(BaseTracker channelId)
-                {
-                    channelId.ChannelConfig[Context.Channel.Id][YoutubeLiveTracker.ONLINE] = !(bool)channelId.ChannelConfig[Context.Channel.Id][YoutubeLiveTracker.ONLINE];
-                    await StaticBase.Trackers[BaseTracker.TrackerType.YoutubeLive].UpdateDBAsync(channelId);
-                    await ReplyAsync($"Changed `{YoutubeLiveTracker.ONLINE}` for `{channelId.Name}` to `{channelId.ChannelConfig[Context.Channel.Id][YoutubeLiveTracker.ONLINE]}`");
+                        object result = null;
+                        var worked = true;
+                        var value = kv[1].Trim();  
+                        switch(settings[option]){
+                            case bool b:
+                                worked = bool.TryParse(value, out bool boolResult);
+                                result = boolResult;
+                                break;
+                            case string s:
+                                result = value;
+                                break;
+                            case double d:
+                                worked = double.TryParse(value, out double doubleResult);
+                                result = doubleResult;
+                                break;
+                            case int i:
+                                worked = int.TryParse(value, out int intResult);
+                                result = intResult;
+                                break;
+                        }
+                        if(!worked){
+                            await ReplyAsync($"Skipping `{line}` due to false value type, must be `{settings[option].GetType().ToString()}`");
+                        }else{
+                            settings[option] = result;
+                        }
+                    }
+                    await StaticBase.Trackers[BaseTracker.TrackerType.YoutubeLive].UpdateDBAsync(ChannelID);
+                    await ReplyAsync($"New Config:\n{string.Join("\n", ChannelID.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}");
+                }else{
+                    await ReplyAsync($"No timely reply received.");
                 }
             }
         }

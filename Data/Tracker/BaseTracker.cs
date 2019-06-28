@@ -49,6 +49,7 @@ namespace MopsBot.Data.Tracker
 
         public virtual void PostChannelAdded(ulong channelId){
             ChannelConfig.Add(channelId, new Dictionary<string, object>());
+            ChannelConfig[channelId]["Notification"] = "";
         }
 
         public void SetTimer(int interval = 600000, int delay = -1)
