@@ -107,8 +107,9 @@ namespace MopsBot.Module
 
             [Command("ChangeConfig", RunMode=RunMode.Async)]
             [Summary("Edit the Configuration for the tracker")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task ChangeConfig(BaseTracker TwitterName){
-                await ReplyAsync($"Current Config:\n```yaml\n{string.Join("\n", TwitterName.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```\n\nPlease reply with one or more changed lines.");
+                await ReplyAsync($"Current Config:\n```yaml\n{string.Join("\n", TwitterName.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```\nPlease reply with one or more changed lines.");
                 var reply = await NextMessageAsync(new EnsureSourceUserCriterion(), TimeSpan.FromMinutes(5));
                 var settings = TwitterName.ChannelConfig[Context.Channel.Id];
                 if(reply != null){
@@ -249,8 +250,9 @@ namespace MopsBot.Module
 
             [Command("ChangeConfig", RunMode=RunMode.Async)]
             [Summary("Edit the Configuration for the tracker")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task ChangeConfig(BaseTracker osuUser){
-                await ReplyAsync($"Current Config:\n```yaml\n{string.Join("\n", osuUser.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```\n\nPlease reply with one or more changed lines.");
+                await ReplyAsync($"Current Config:\n```yaml\n{string.Join("\n", osuUser.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```\nPlease reply with one or more changed lines.");
                 var reply = await NextMessageAsync(new EnsureSourceUserCriterion(), TimeSpan.FromMinutes(5));
                 var settings = osuUser.ChannelConfig[Context.Channel.Id];
                 if(reply != null){
@@ -346,8 +348,9 @@ namespace MopsBot.Module
 
             [Command("ChangeConfig", RunMode=RunMode.Async)]
             [Summary("Edit the Configuration for the tracker")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task ChangeConfig(BaseTracker channelID){
-                await ReplyAsync($"Current Config:\n```yaml\n{string.Join("\n", channelID.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```\n\nPlease reply with one or more changed lines.");
+                await ReplyAsync($"Current Config:\n```yaml\n{string.Join("\n", channelID.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```\nPlease reply with one or more changed lines.");
                 var reply = await NextMessageAsync(new EnsureSourceUserCriterion(), TimeSpan.FromMinutes(5));
                 var settings = channelID.ChannelConfig[Context.Channel.Id];
                 if(reply != null){
@@ -447,8 +450,9 @@ namespace MopsBot.Module
 
             [Command("ChangeConfig", RunMode=RunMode.Async)]
             [Summary("Edit the Configuration for the tracker")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task ChangeConfig(BaseTracker streamerName){
-                await ReplyAsync($"Current Config:\n```yaml\n{string.Join("\n", streamerName.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```\n\nPlease reply with one or more changed lines.");
+                await ReplyAsync($"Current Config:\n```yaml\n{string.Join("\n", streamerName.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```\nPlease reply with one or more changed lines.");
                 var reply = await NextMessageAsync(new EnsureSourceUserCriterion(), TimeSpan.FromMinutes(5));
                 var settings = streamerName.ChannelConfig[Context.Channel.Id];
                 if(reply != null){
@@ -736,8 +740,9 @@ namespace MopsBot.Module
 
             [Command("ChangeConfig", RunMode=RunMode.Async)]
             [Summary("Edit the Configuration for the tracker")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task ChangeConfig(BaseTracker streamerName){
-                await ReplyAsync($"Current Config:\n```yaml\n{string.Join("\n", streamerName.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```\n\nPlease reply with one or more changed lines.");
+                await ReplyAsync($"Current Config:\n```yaml\n{string.Join("\n", streamerName.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```\nPlease reply with one or more changed lines.");
                 var reply = await NextMessageAsync(new EnsureSourceUserCriterion(), TimeSpan.FromMinutes(5));
                 var settings = streamerName.ChannelConfig[Context.Channel.Id];
                 if(reply != null){
@@ -846,8 +851,9 @@ namespace MopsBot.Module
 
             [Command("ChangeConfig", RunMode=RunMode.Async)]
             [Summary("Edit the Configuration for the tracker")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task ChangeConfig([Remainder]BaseTracker subreddit){
-                await ReplyAsync($"Current Config:\n```yaml\n{string.Join("\n", subreddit.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```\n\nPlease reply with one or more changed lines.");
+                await ReplyAsync($"Current Config:\n```yaml\n{string.Join("\n", subreddit.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```\nPlease reply with one or more changed lines.");
                 var reply = await NextMessageAsync(new EnsureSourceUserCriterion(), TimeSpan.FromMinutes(5));
                 var settings = subreddit.ChannelConfig[Context.Channel.Id];
                 if(reply != null){
@@ -951,8 +957,9 @@ namespace MopsBot.Module
 
             [Command("ChangeConfig", RunMode=RunMode.Async)]
             [Summary("Edit the Configuration for the tracker")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task ChangeConfig(BaseTracker owUser){
-                await ReplyAsync($"Current Config:\n```yaml\n{string.Join("\n", owUser.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```\n\nPlease reply with one or more changed lines.");
+                await ReplyAsync($"Current Config:\n```yaml\n{string.Join("\n", owUser.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```\nPlease reply with one or more changed lines.");
                 var reply = await NextMessageAsync(new EnsureSourceUserCriterion(), TimeSpan.FromMinutes(5));
                 var settings = owUser.ChannelConfig[Context.Channel.Id];
                 if(reply != null){
@@ -1056,8 +1063,9 @@ namespace MopsBot.Module
 
             [Command("ChangeConfig", RunMode=RunMode.Async)]
             [Summary("Edit the Configuration for the tracker")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task ChangeConfig([Remainder]BaseTracker jsonSource){
-                await ReplyAsync($"Current Config:\n```yaml\n{string.Join("\n", jsonSource.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```\n\nPlease reply with one or more changed lines.");
+                await ReplyAsync($"Current Config:\n```yaml\n{string.Join("\n", jsonSource.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```\nPlease reply with one or more changed lines.");
                 var reply = await NextMessageAsync(new EnsureSourceUserCriterion(), TimeSpan.FromMinutes(5));
                 var settings = jsonSource.ChannelConfig[Context.Channel.Id];
                 if(reply != null){
@@ -1174,8 +1182,9 @@ namespace MopsBot.Module
 
             [Command("ChangeConfig", RunMode=RunMode.Async)]
             [Summary("Edit the Configuration for the tracker")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task ChangeConfig(BaseTracker name){
-                await ReplyAsync($"Current Config:\n```yaml\n{string.Join("\n", name.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```\n\nPlease reply with one or more changed lines.");
+                await ReplyAsync($"Current Config:\n```yaml\n{string.Join("\n", name.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```\nPlease reply with one or more changed lines.");
                 var reply = await NextMessageAsync(new EnsureSourceUserCriterion(), TimeSpan.FromMinutes(5));
                 var settings = name.ChannelConfig[Context.Channel.Id];
                 if(reply != null){
@@ -1421,8 +1430,9 @@ namespace MopsBot.Module
 
             [Command("ChangeConfig", RunMode=RunMode.Async)]
             [Summary("Edit the Configuration for the tracker")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task ChangeConfig(BaseTracker url){
-                await ReplyAsync($"Current Config:\n```yaml\n{string.Join("\n", url.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```\n\nPlease reply with one or more changed lines.");
+                await ReplyAsync($"Current Config:\n```yaml\n{string.Join("\n", url.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```\nPlease reply with one or more changed lines.");
                 var reply = await NextMessageAsync(new EnsureSourceUserCriterion(), TimeSpan.FromMinutes(5));
                 var settings = url.ChannelConfig[Context.Channel.Id];
                 if(reply != null){
@@ -1520,8 +1530,9 @@ namespace MopsBot.Module
 
             [Command("ChangeConfig", RunMode=RunMode.Async)]
             [Summary("Edit the Configuration for the tracker")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task ChangeConfig(BaseTracker SteamNameOrId){
-                await ReplyAsync($"Current Config:\n```yaml\n{string.Join("\n", SteamNameOrId.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```\n\nPlease reply with one or more changed lines.");
+                await ReplyAsync($"Current Config:\n```yaml\n{string.Join("\n", SteamNameOrId.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```\nPlease reply with one or more changed lines.");
                 var reply = await NextMessageAsync(new EnsureSourceUserCriterion(), TimeSpan.FromMinutes(5));
                 var settings = SteamNameOrId.ChannelConfig[Context.Channel.Id];
                 if(reply != null){

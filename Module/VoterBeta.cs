@@ -83,8 +83,9 @@ namespace MopsBot.Module
 
             [Command("ChangeConfig", RunMode=RunMode.Async)]
             [Summary("Edit the Configuration for the tracker")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task ChangeConfig(BaseTracker ChannelID){
-                await ReplyAsync($"Current Config:\n{string.Join("\n", ChannelID.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}\n\nPlease reply with one or more changed lines.");
+                await ReplyAsync($"Current Config:\n```yaml\n{string.Join("\n", ChannelID.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```\nPlease reply with one or more changed lines.");
                 var reply = await NextMessageAsync(new EnsureSourceUserCriterion(), TimeSpan.FromMinutes(5));
                 var settings = ChannelID.ChannelConfig[Context.Channel.Id];
                 if(reply != null){
