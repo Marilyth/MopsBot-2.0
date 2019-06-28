@@ -78,14 +78,14 @@ namespace MopsBot.Module
             [Hide]
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig(BaseTracker tracker){
-                await ReplyAsync($"{string.Join("\n", tracker.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}");
+                await ReplyAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```");
             }
 
             [Command("ChangeConfig", RunMode=RunMode.Async)]
             [Summary("Edit the Configuration for the tracker")]
             public async Task ChangeConfig(BaseTracker ChannelID){
                 await ReplyAsync($"Current Config:\n{string.Join("\n", ChannelID.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}\n\nPlease reply with one or more changed lines.");
-                var reply = await NextMessageAsync(new EnsureSourceUserCriterion(), TimeSpan.FromMinutes(1));
+                var reply = await NextMessageAsync(new EnsureSourceUserCriterion(), TimeSpan.FromMinutes(5));
                 var settings = ChannelID.ChannelConfig[Context.Channel.Id];
                 if(reply != null){
                     foreach(var line in reply.Content.Split("\n")){
@@ -128,7 +128,7 @@ namespace MopsBot.Module
                         }
                     }
                     await StaticBase.Trackers[BaseTracker.TrackerType.YoutubeLive].UpdateDBAsync(ChannelID);
-                    await ReplyAsync($"New Config:\n{string.Join("\n", ChannelID.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}");
+                    await ReplyAsync($"New Config:\n```yaml\n{string.Join("\n", ChannelID.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```");
                 }else{
                     await ReplyAsync($"No timely reply received.");
                 }
