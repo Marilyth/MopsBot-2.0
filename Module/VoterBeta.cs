@@ -69,8 +69,16 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task SetNotification(BaseTracker channelID, [Remainder]string notification = "")
             {
-                channelID.ChannelMessages[Context.Channel.Id] = notification;
+                channelID.ChannelConfig[Context.Channel.Id]["Notification"] = notification;
+                await StaticBase.Trackers[BaseTracker.TrackerType.YoutubeLive].UpdateDBAsync(channelID);
                 await ReplyAsync($"Changed notification for `{channelID.Name}` to `{notification}`");
+            }
+
+            [Command("ShowConfig")]
+            [Hide]
+            [Summary("Shows all the settings for this tracker, and their values")]
+            public async Task ShowConfig(BaseTracker tracker){
+                await ReplyAsync($"{string.Join("\n", tracker.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}");
             }
         }
     }
