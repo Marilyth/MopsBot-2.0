@@ -80,6 +80,42 @@ namespace MopsBot.Module
             public async Task ShowConfig(BaseTracker tracker){
                 await ReplyAsync($"{string.Join("\n", tracker.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}");
             }
+
+            [Group("Notifications")]
+            public class Notifications : ModuleBase
+            {
+
+                [Command("SwitchShowEmbed")]
+                [Summary("Switches the bool on whether to show the tracker embed or not.")]
+                [RequireUserPermission(GuildPermission.ManageRoles)]
+                public async Task SwitchEmbed(BaseTracker channelId)
+                {
+                    channelId.ChannelConfig[Context.Channel.Id][YoutubeLiveTracker.SHOWEMBED] = !(bool)channelId.ChannelConfig[Context.Channel.Id][YoutubeLiveTracker.SHOWEMBED];
+                    await StaticBase.Trackers[BaseTracker.TrackerType.YoutubeLive].UpdateDBAsync(channelId);
+                    await ReplyAsync($"Changed `ShowEmbed` for `{channelId.Name}` to `{channelId.ChannelConfig[Context.Channel.Id][YoutubeLiveTracker.SHOWEMBED]}`");
+                }
+
+                [Command("SwitchNotifyOffline")]
+                [Summary("Switches the bool on whether to notify on when the streamer goes offline.")]
+                [RequireUserPermission(GuildPermission.ManageRoles)]
+                public async Task SwitchOffline(BaseTracker channelId)
+                {
+                    channelId.ChannelConfig[Context.Channel.Id][YoutubeLiveTracker.OFFLINE] = !(bool)channelId.ChannelConfig[Context.Channel.Id][YoutubeLiveTracker.OFFLINE];
+                    await StaticBase.Trackers[BaseTracker.TrackerType.YoutubeLive].UpdateDBAsync(channelId);
+                    await ReplyAsync($"Changed `{YoutubeLiveTracker.OFFLINE}` for `{channelId.Name}` to `{channelId.ChannelConfig[Context.Channel.Id][YoutubeLiveTracker.OFFLINE]}`");
+                }
+
+                [Command("SwitchNotifyOnline")]
+                [Alias("SwitchNotifyLive")]
+                [Summary("Switches the bool on whether to notify on when the streamer goes live.")]
+                [RequireUserPermission(GuildPermission.ManageRoles)]
+                public async Task SwitchOnline(BaseTracker channelId)
+                {
+                    channelId.ChannelConfig[Context.Channel.Id][YoutubeLiveTracker.ONLINE] = !(bool)channelId.ChannelConfig[Context.Channel.Id][YoutubeLiveTracker.ONLINE];
+                    await StaticBase.Trackers[BaseTracker.TrackerType.YoutubeLive].UpdateDBAsync(channelId);
+                    await ReplyAsync($"Changed `{YoutubeLiveTracker.ONLINE}` for `{channelId.Name}` to `{channelId.ChannelConfig[Context.Channel.Id][YoutubeLiveTracker.ONLINE]}`");
+                }
+            }
         }
     }
 }

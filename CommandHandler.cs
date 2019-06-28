@@ -252,7 +252,10 @@ namespace MopsBot
             }
             else
             {
-                var module = Program.Handler.commands.Modules.FirstOrDefault(x => x.Name.ToLower().Equals(moduleNames.Last().ToLower()));
+                var module = Program.Handler.commands.Modules.FirstOrDefault(x => x.Name.ToLower().Equals(moduleNames.First().ToLower()));
+                foreach(var mod in moduleNames.Skip(1)){
+                    module = module.Submodules.FirstOrDefault(x => x.Name.Equals(mod, StringComparison.InvariantCultureIgnoreCase));
+                }
                 if(module == null) throw new Exception("Command not found");
 
                 string moduleInformation = "";

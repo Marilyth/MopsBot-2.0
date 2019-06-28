@@ -154,8 +154,8 @@ namespace MopsBot.Data
             {
                 if (!trackers[name].ChannelConfig.ContainsKey(channelID))
                 {
-                    trackers[name].ChannelConfig[channelID]["Notification"] = notification;
                     trackers[name].PostChannelAdded(channelID);
+                    trackers[name].ChannelConfig[channelID]["Notification"] = notification;
                     await UpdateDBAsync(trackers[name]);
                 }
             }
@@ -164,11 +164,12 @@ namespace MopsBot.Data
                 var tracker = (T)Activator.CreateInstance(typeof(T), new object[] { name });
                 name = tracker.Name;
                 trackers.Add(name, tracker);
+                tracker.PostInitialisation();
+                tracker.PostChannelAdded(channelID);
                 trackers[name].ChannelConfig[channelID]["Notification"] = notification;
                 trackers[name].OnMajorEventFired += OnMajorEvent;
                 trackers[name].OnMinorEventFired += OnMinorEvent;
                 await InsertToDBAsync(trackers[name]);
-                tracker.PostInitialisation();
             }
 
             await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Started a new {typeof(T).Name} for {name}\nChannels: {string.Join(",", trackers[name].ChannelConfig.Keys)}\nMessage: {notification}"));

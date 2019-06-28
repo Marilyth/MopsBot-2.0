@@ -47,7 +47,9 @@ namespace MopsBot.Data.Tracker
 
         public virtual void Conversion(object info = null){}
 
-        public virtual void PostChannelAdded(ulong channelId){}
+        public virtual void PostChannelAdded(ulong channelId){
+            ChannelConfig.Add(channelId, new Dictionary<string, object>());
+        }
 
         public void SetTimer(int interval = 600000, int delay = -1)
         {
