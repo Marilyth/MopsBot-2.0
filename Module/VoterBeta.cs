@@ -85,37 +85,7 @@ namespace MopsBot.Module
             [Summary("Edit the Configuration for the tracker")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task ChangeConfig(BaseTracker ChannelID){
-                await ReplyAsync($"Current Config:\n```yaml\n{string.Join("\n", ChannelID.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```\nPlease reply with one or more changed lines.");
-                var reply = await NextMessageAsync(new EnsureSourceUserCriterion(), TimeSpan.FromMinutes(5));
-                var settings = ChannelID.ChannelConfig[Context.Channel.Id];
-                if(reply != null){
-                    foreach(var line in reply.Content.Split("\n")){
-                        var kv = line.Split(":",2);
-                        if(kv.Length != 2){
-                            await ReplyAsync($"Skipping `{line}` due to no value.");
-                            continue;
-                        }
-
-                        var option = kv[0];
-                        if(!settings.Keys.Contains(option)){
-                            await ReplyAsync($"Skipping `{line}` due to unkown option.");
-                            continue;
-                        }
-
-                        var value = kv[1].Trim();  
-                        var worked = Tracking.TryCastUserConfig(settings[option], value, out var result);
-
-                        if(!worked){
-                            await ReplyAsync($"Skipping `{line}` due to false value type, must be `{settings[option].GetType().ToString()}`");
-                        }else{
-                            settings[option] = result;
-                        }
-                    }
-                    await StaticBase.Trackers[BaseTracker.TrackerType.YoutubeLive].UpdateDBAsync(ChannelID);
-                    await ReplyAsync($"New Config:\n```yaml\n{string.Join("\n", ChannelID.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```");
-                }else{
-                    await ReplyAsync($"No timely reply received.");
-                }
+                await Tracking.ModifyConfig(this, ChannelID, BaseTracker.TrackerType.YoutubeLive);
             }
         }
     }
