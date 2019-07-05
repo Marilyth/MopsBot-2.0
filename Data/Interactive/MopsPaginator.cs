@@ -32,7 +32,9 @@ namespace MopsBot.Data.Interactive
 
             if(pPages.Count() > 1){
                 await Program.ReactionHandler.AddHandler(message, new Emoji("◀"), paginator.PreviousPageAsync);
+                await Program.ReactionHandler.AddHandler(message, new Emoji("◀"), paginator.PreviousPageAsync, true);
                 await Program.ReactionHandler.AddHandler(message, new Emoji("▶"), paginator.NextPageAsync);
+                await Program.ReactionHandler.AddHandler(message, new Emoji("▶"), paginator.NextPageAsync, true);
             }
         }
 
