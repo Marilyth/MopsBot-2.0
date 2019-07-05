@@ -201,6 +201,10 @@ namespace MopsBot.Data.Tracker
             return createEmbed(data.Items.First(), data);
         }
 
+        public override string TrackerUrl(){
+            return Name;
+        }
+
         public new struct ContentScope
         {
             public string Id;
