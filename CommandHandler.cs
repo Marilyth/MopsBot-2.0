@@ -40,25 +40,8 @@ namespace MopsBot
             await commands.AddModulesAsync(Assembly.GetEntryAssembly(), provider);
 
             await loadCustomCommands();
-            client.MessageReceived += Client_MessageReceived;
             client.MessageReceived += HandleCommand;
             client.UserJoined += Client_UserJoined;
-        }
-
-        /// <summary>
-        /// Manages experience gain whenever a message is recieved
-        /// </summary>
-        /// <param name="arg">The recieved message</param>
-        private async Task Client_MessageReceived(SocketMessage arg)
-        {
-            //User Experience
-            Task.Run(() =>
-            {
-                if (!arg.Author.IsBot && !arg.Content.StartsWith(GetGuildPrefixAsync(((ITextChannel)(arg.Channel)).GuildId).Result))
-                {
-                    //MopsBot.Data.Entities.User.ModifyUserAsync(arg.Author.Id, x => x.Experience += arg.Content.Length).Wait();
-                }
-            });
         }
 
         /// <summary>
@@ -129,6 +112,9 @@ namespace MopsBot
                         else if(!result.ErrorReason.Contains("Command not found"))
                             await message.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}");
                     }
+
+                    //Add experience the size of the command length
+                    await MopsBot.Data.Entities.User.ModifyUserAsync(context.User.Id, x => x.Experience += context.Message.Content.Length * 10);
                 }
 
                 //Else execute custom commands

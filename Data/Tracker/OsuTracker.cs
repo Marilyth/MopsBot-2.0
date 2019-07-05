@@ -104,16 +104,15 @@ namespace MopsBot.Data.Tracker
                 {
                     OsuResult userInformation = await fetchUser(pp.Key);
                     var recentScores = await fetchRecent(pp.Key);
-                    RecentScore scoreInformation = recentScores.First(x => !x.rank.Equals("F"));
-                    Beatmap beatmapInformation = await fetchBeatmap(scoreInformation.beatmap_id, pp.Key, int.Parse(scoreInformation.enabled_mods));
+                    RecentScore scoreInformation = recentScores.FirstOrDefault(x => !x.rank.Equals("F"));
+                    Beatmap beatmapInformation = scoreInformation != null ? await fetchBeatmap(scoreInformation.beatmap_id, pp.Key, int.Parse(scoreInformation.enabled_mods)) : null;
                     if (userInformation == null) return;
 
                     foreach (var channel in ChannelConfig)
                     {
-
                         if (pp.Value > 0 && pp.Value + (double)channel.Value[PPTHRESHOLD] <= double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture))
                         {
-                            if (recentScores == null)
+                            if (scoreInformation == null)
                             {
                                 AllPP[pp.Key] = double.Parse(userInformation.pp_raw ?? "0", CultureInfo.InvariantCulture);
                                 await StaticBase.Trackers[TrackerType.Osu].UpdateDBAsync(this);

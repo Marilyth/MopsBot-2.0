@@ -325,7 +325,7 @@ namespace MopsBot.Data
         public void InitPlot(string xAxis = "Time", string yAxis = "Viewers", string format = "HH:mm", bool relative = true)
         {
             if (PlotDataPoints == null) PlotDataPoints = new List<KeyValuePair<string, KeyValuePair<double, double>>>();
-            
+
             viewerChart = new PlotModel();
             viewerChart.TextColor = OxyColor.FromRgb(175, 175, 175);
             viewerChart.PlotAreaBorderThickness = new OxyThickness(0);
@@ -346,7 +346,7 @@ namespace MopsBot.Data
                 AxislineColor = OxyColor.FromRgb(125, 125, 155)
             };
             if (relative) valueAxisY.Minimum = 0;
-            
+
             var valueAxisX = new OxyPlot.Axes.DateTimeAxis
             {
                 Position = OxyPlot.Axes.AxisPosition.Bottom,
@@ -395,30 +395,38 @@ namespace MopsBot.Data
         /// Saves the plot as a .png and returns the URL.
         /// </summary>
         /// <returns>The URL</returns>
-        public string DrawPlot()
+        public string DrawPlot(bool returnPdf = false, string fileName = null)
         {
-            using (var stream = File.Create($"mopsdata//{ID}plot.pdf"))
+            if(fileName == null)
+                fileName = $"{ID}plot";
+            using (var stream = File.Create($"mopsdata//{fileName}.pdf"))
             {
                 var pdfExporter = new PdfExporter { Width = 800, Height = 400 };
                 pdfExporter.Export(viewerChart, stream);
             }
 
-            using (var prc = new System.Diagnostics.Process())
+            if (!returnPdf)
             {
-                prc.StartInfo.FileName = "convert";
-                prc.StartInfo.Arguments = $"-set density 300 \"mopsdata//{ID}plot.pdf\" \"//var//www//html//StreamCharts//{ID}plot.png\"";
+                using (var prc = new System.Diagnostics.Process())
+                {
+                    prc.StartInfo.FileName = "convert";
+                    prc.StartInfo.Arguments = $"-set density 300 \"mopsdata//{fileName}.pdf\" \"//var//www//html//StreamCharts//{fileName}.png\"";
 
-                prc.Start();
+                    prc.Start();
 
-                prc.WaitForExit();
+                    prc.WaitForExit();
+                }
+
+                var dir = new DirectoryInfo("mopsdata//");
+                var files = dir.GetFiles().Where(x => x.Name.Contains($"{fileName}"));
+                foreach (var f in files)
+                    f.Delete();
+
+                return $"http://5.45.104.29/StreamCharts/{fileName}.png?rand={StaticBase.ran.Next(0, 999999999)}";
             }
-
-            var dir = new DirectoryInfo("mopsdata//");
-            var files = dir.GetFiles().Where(x => x.Name.Contains($"{ID}plot"));
-            foreach (var f in files)
-                f.Delete();
-
-            return $"http://5.45.104.29/StreamCharts/{ID}plot.png?rand={StaticBase.ran.Next(0, 999999999)}";
+            else{
+                return $"mopsdata//{fileName}.pdf";
+            }
         }
 
         public void AddValue(string name, double viewerCount, DateTime? xValue = null, bool savePlot = true, bool relative = true)
@@ -493,7 +501,8 @@ namespace MopsBot.Data
             }
         }
 
-        public void AdjustAxisRange(){
+        public void AdjustAxisRange()
+        {
             var axis = viewerChart.Axes.First(x => x.Position == OxyPlot.Axes.AxisPosition.Bottom);
             var yaxis = viewerChart.Axes.First(x => x.Position == OxyPlot.Axes.AxisPosition.Left);
             var max = areaSeries.Max(x => x.Points.Max(y => y.X));

@@ -31,7 +31,7 @@ namespace MopsBot.Data.Tracker
         public bool IsHosting;
         public int TimeoutCount;
         public ulong TwitchId;
-        public static readonly string GAMECHANGE = "NotifyOnGameChange", HOST = "NotifyOnHost", ONLINE = "NotifyOnOnline", OFFLINE = "NotifyOnOffline", SHOWEMBED = "ShowEmbed", THUMBNAIL = "LargeThumbnail";
+        public static readonly string GAMECHANGE = "NotifyOnGameChange", HOST = "NotifyOnHost", ONLINE = "NotifyOnOnline", OFFLINE = "NotifyOnOffline", SHOWEMBED = "ShowEmbed", THUMBNAIL = "LargeThumbnail", SendPDF = "SendGraphPDFAfterOffline";
 
         public TwitchTracker() : base()
         {
@@ -145,17 +145,26 @@ namespace MopsBot.Data.Tracker
 
                 Boolean isStreaming = StreamerStatus.stream.channel != null;
 
-                if (IsOnline != isStreaming)
+                if (IsOnline != isStreaming || Name == "jakads")
                 {
-                    if (IsOnline)
+                    if (IsOnline || Name == "jakads")
                     {
-                        if (++TimeoutCount >= 10)
+                        if (++TimeoutCount >= 3 || Name == "jakads")
                         {
                             TimeoutCount = 0;
                             IsOnline = false;
-                            VodUrl = null;
+
+                            var pdf = ViewerGraph.DrawPlot(true, $"{Name}-{DateTime.UtcNow.ToString("MM-dd-yy_hh-mm")}");
+                            foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x]["SendGraphPDFAfterOffline"]).ToList())
+                                await (Program.Client.GetChannel(channel) as SocketTextChannel).SendFileAsync(pdf, "Graph PDF for personal use:");
+                            File.Delete(pdf);
+
+                            foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][SHOWEMBED]).ToList())
+                                await OnMajorChangeTracked(channel, createEmbed((bool)ChannelConfig[channel][THUMBNAIL], true));
+
                             ViewerGraph?.Dispose();
                             ViewerGraph = null;
+                            VodUrl = null;
 
                             foreach (var channelMessage in ToUpdate)
                                 await Program.ReactionHandler.ClearHandler((IUserMessage)await ((ITextChannel)Program.Client.GetChannel(channelMessage.Key)).GetMessageAsync(channelMessage.Value));
@@ -228,6 +237,18 @@ namespace MopsBot.Data.Tracker
             }
         }
 
+        public override async void Conversion(object obj = null){
+            bool save = false;
+            foreach(var channel in ChannelConfig.Keys.ToList()){
+                if(!ChannelConfig[channel].ContainsKey(SendPDF)){
+                    ChannelConfig[channel][SendPDF] = false;
+                    save = true;
+                }
+            }
+            if(save)
+                await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
+        }
+
         private async Task<TwitchResult> streamerInformation()
         {
             TwitchResult tmpResult = await FetchJSONDataAsync<TwitchResult>($"https://api.twitch.tv/kraken/streams/{TwitchId}?client_id={Program.Config["Twitch"]}", acceptHeader);
@@ -264,7 +285,7 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public Embed createEmbed(bool largeThumbnail = false)
+        public Embed createEmbed(bool largeThumbnail = false, bool lastEmbed = false)
         {
             Channel streamer = StreamerStatus.stream.channel;
             ViewerGraph.SetMaximumLine();
@@ -274,7 +295,7 @@ namespace MopsBot.Data.Tracker
             e.Title = streamer.status;
             e.Url = streamer.url;
             e.WithCurrentTimestamp();
-            e.Description = "**For people with manage channel permission**:\n🖌: Change chart colour\n🔄: Switch thumbnail and chart position\n";
+            e.Description = lastEmbed ? "" : "**For people with manage channel permission**:\n🖌: Change chart colour\n🔄: Switch thumbnail and chart position\n";
 
             if (VodUrl != null)
             {
