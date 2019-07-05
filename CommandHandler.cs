@@ -114,7 +114,7 @@ namespace MopsBot
                     }
 
                     //Add experience the size of the command length
-                    await MopsBot.Data.Entities.User.ModifyUserAsync(context.User.Id, x => x.Experience += context.Message.Content.Length * 10);
+                    await MopsBot.Data.Entities.User.ModifyUserAsync(context.User.Id, x => x.Experience += context.Message.Content.Length * 40);
                 }
 
                 //Else execute custom commands
