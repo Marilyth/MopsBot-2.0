@@ -67,10 +67,10 @@ namespace MopsBot.Data.Tracker
                 channelThumbnailUrl = checkExists.snippet.thumbnails.medium.url;
                 SetTimer();
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 Dispose();
-                throw new Exception($"Channel {TrackerUrl()} could not be found on Youtube!\nPerhaps you used the channel-name instead?");
+                throw new Exception($"Channel {TrackerUrl()} could not be found on Youtube!\nPerhaps you used the channel-name instead?", e);
             }
         }
 

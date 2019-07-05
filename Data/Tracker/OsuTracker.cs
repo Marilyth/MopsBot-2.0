@@ -81,10 +81,10 @@ namespace MopsBot.Data.Tracker
                 var test = checkExists.username;
                 SetTimer();
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 Dispose();
-                throw new Exception($"Player {TrackerUrl()} could not be found on Osu!");
+                throw new Exception($"Player {TrackerUrl()} could not be found on Osu!", e);
             }
         }
 

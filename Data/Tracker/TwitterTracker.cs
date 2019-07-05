@@ -325,10 +325,10 @@ namespace MopsBot.Data.Tracker
 
                 addUser();
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 Dispose();
-                throw new Exception($"{TrackerUrl()} could not be found on Twitter!");
+                throw new Exception($"{TrackerUrl()} could not be found on Twitter!", e);
             }
         }
 

@@ -73,7 +73,7 @@ namespace MopsBot.Data.Tracker
                 catch (Exception e)
                 {
                     Dispose();
-                    throw new Exception($"Player {TrackerUrl()} could not be found on Overwatch!\nPerhaps the profile is private?");
+                    throw new Exception($"Player {TrackerUrl()} could not be found on Overwatch!\nPerhaps the profile is private?", e);
                 }
             }
         }

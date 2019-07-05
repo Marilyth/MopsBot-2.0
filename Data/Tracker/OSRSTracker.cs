@@ -62,10 +62,10 @@ namespace MopsBot.Data.Tracker
                 stats = checkExists;
                 SetTimer();
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 Dispose();
-                throw new Exception($"Player `{name}` could not be found on OSRS!\nPerhaps none of their skills are in the top 2 million?");
+                throw new Exception($"Player `{name}` could not be found on OSRS!\nPerhaps none of their skills are in the top 2 million?", e);
             }
         }
 

@@ -33,17 +33,9 @@ namespace MopsBot.Module
             {
                 using (Context.Channel.EnterTypingState())
                 {
-                    try
-                    {
-                        await Trackers[BaseTracker.TrackerType.YoutubeLive].AddTrackerAsync(channelID, Context.Channel.Id, notificationMessage);
+                    await Trackers[BaseTracker.TrackerType.YoutubeLive].AddTrackerAsync(channelID, Context.Channel.Id, notificationMessage);
 
-                        await ReplyAsync("Keeping track of " + channelID + "'s streams, from now on!");
-
-                    }
-                    catch (Exception e)
-                    {
-                        await ReplyAsync("**Error**: " + e.InnerException.Message);
-                    }
+                    await ReplyAsync("Keeping track of " + channelID + "'s streams, from now on!");
                 }
             }
 
@@ -77,14 +69,16 @@ namespace MopsBot.Module
             [Command("ShowConfig")]
             [Hide]
             [Summary("Shows all the settings for this tracker, and their values")]
-            public async Task ShowConfig(BaseTracker tracker){
+            public async Task ShowConfig(BaseTracker tracker)
+            {
                 await ReplyAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```");
             }
 
-            [Command("ChangeConfig", RunMode=RunMode.Async)]
+            [Command("ChangeConfig", RunMode = RunMode.Async)]
             [Summary("Edit the Configuration for the tracker")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task ChangeConfig(BaseTracker ChannelID){
+            public async Task ChangeConfig(BaseTracker ChannelID)
+            {
                 await Tracking.ModifyConfig(this, ChannelID, BaseTracker.TrackerType.YoutubeLive);
             }
         }

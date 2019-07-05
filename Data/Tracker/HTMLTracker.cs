@@ -67,10 +67,10 @@ namespace MopsBot.Data.Tracker
 
                 SetTimer();
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 Dispose();
-                throw new Exception($"Expression `{name}` yielded no result!");
+                throw new Exception($"Expression `{name}` yielded no result!", e);
             }
         }
 

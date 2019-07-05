@@ -20,5 +20,9 @@ namespace MopsBot.Module.Preconditions{
                 return PreconditionResult.FromSuccess();
             return PreconditionResult.FromError("");
         }
+
+        public override string ToString(){
+            return $"Requires user to be a bot dev";
+        }
     }
 }

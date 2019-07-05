@@ -34,16 +34,9 @@ namespace MopsBot.Module
                 twitterUser = twitterUser.ToLower().Replace("@", "");
                 using (Context.Channel.EnterTypingState())
                 {
-                    try
-                    {
-                        await Trackers[TrackerType.Twitter].AddTrackerAsync(twitterUser, Context.Channel.Id, tweetNotification);
+                    await Trackers[TrackerType.Twitter].AddTrackerAsync(twitterUser, Context.Channel.Id, tweetNotification);
 
-                        await ReplyAsync("Keeping track of " + twitterUser + "'s tweets, replies and retweets, from now on!\nTo disable replies and retweets, please use the `Twitter DisableNonMain` subcommand!");
-                    }
-                    catch (Exception e)
-                    {
-                        await ReplyAsync("**Error**: " + e.InnerException.Message);
-                    }
+                    await ReplyAsync("Keeping track of " + twitterUser + "'s tweets, replies and retweets, from now on!\nTo disable replies and retweets, please use the `Twitter DisableNonMain` subcommand!");
                 }
             }
 
@@ -156,17 +149,10 @@ namespace MopsBot.Module
             {
                 using (Context.Channel.EnterTypingState())
                 {
-                    try
-                    {
-                        OsuUser = OsuUser.ToLower();
-                        await Trackers[BaseTracker.TrackerType.Osu].AddTrackerAsync(OsuUser, Context.Channel.Id);
+                    OsuUser = OsuUser.ToLower();
+                    await Trackers[BaseTracker.TrackerType.Osu].AddTrackerAsync(OsuUser, Context.Channel.Id);
 
-                        await ReplyAsync("Keeping track of " + OsuUser + "'s plays above `0.1pp` gain, from now on!\nYou can change the lower pp boundary by using the `Osu SetPPBounds` subcommand!");
-                    }
-                    catch (Exception e)
-                    {
-                        await ReplyAsync("**Error**: " + e.InnerException.Message);
-                    }
+                    await ReplyAsync("Keeping track of " + OsuUser + "'s plays above `0.1pp` gain, from now on!\nYou can change the lower pp boundary by using the `Osu SetPPBounds` subcommand!");
                 }
             }
 
@@ -242,17 +228,9 @@ namespace MopsBot.Module
             {
                 using (Context.Channel.EnterTypingState())
                 {
-                    try
-                    {
-                        await Trackers[BaseTracker.TrackerType.Youtube].AddTrackerAsync(channelID, Context.Channel.Id, notificationMessage);
+                    await Trackers[BaseTracker.TrackerType.Youtube].AddTrackerAsync(channelID, Context.Channel.Id, notificationMessage);
 
-                        await ReplyAsync("Keeping track of " + channelID + "'s videos, from now on!");
-
-                    }
-                    catch (Exception e)
-                    {
-                        await ReplyAsync("**Error**: " + e.InnerException.Message);
-                    }
+                    await ReplyAsync("Keeping track of " + channelID + "'s videos, from now on!");
                 }
             }
 
@@ -315,18 +293,10 @@ namespace MopsBot.Module
             {
                 using (Context.Channel.EnterTypingState())
                 {
-                    try
-                    {
-                        streamerName = streamerName.ToLower();
-                        await Trackers[BaseTracker.TrackerType.Twitch].AddTrackerAsync(streamerName, Context.Channel.Id, notificationMessage);
+                    streamerName = streamerName.ToLower();
+                    await Trackers[BaseTracker.TrackerType.Twitch].AddTrackerAsync(streamerName, Context.Channel.Id, notificationMessage);
 
-                        await ReplyAsync("Keeping track of " + streamerName + "'s streams, from now on!");
-
-                    }
-                    catch (Exception e)
-                    {
-                        await ReplyAsync("**Error**: " + e.InnerException.Message);
-                    }
+                    await ReplyAsync("Keeping track of " + streamerName + "'s streams, from now on!");
                 }
             }
 
@@ -529,24 +499,16 @@ namespace MopsBot.Module
                 {
                     using (Context.Channel.EnterTypingState())
                     {
-                        try
-                        {
-                            if (begin >= end) throw new Exception("Begin was bigger than, or equal to end.");
-                            if (begin == 0 || end == 0) throw new Exception("Begin or end was 0.");
-                            if (end - begin >= 5000) throw new Exception("Range must be smaller than 5000! (performance)");
+                        if (begin >= end) throw new Exception("Begin was bigger than, or equal to end.");
+                        if (begin == 0 || end == 0) throw new Exception("Begin or end was 0.");
+                        if (end - begin >= 5000) throw new Exception("Range must be smaller than 5000! (performance)");
 
-                            long userCount = StaticBase.TwitchGuilds[Context.Guild.Id].GetUsers().Count;
+                        long userCount = StaticBase.TwitchGuilds[Context.Guild.Id].GetUsers().Count;
 
-                            if (end > userCount)
-                                end = (uint)userCount;
+                        if (end > userCount)
+                            end = (uint)userCount;
 
-                            await ReplyAsync("", embed: await StaticBase.TwitchGuilds[Context.Guild.Id].GetLeaderboardAsync(begin: (int)begin, end: (int)end));
-
-                        }
-                        catch (Exception e)
-                        {
-                            await ReplyAsync("[Error]: " + e.Message);
-                        }
+                        await ReplyAsync("", embed: await StaticBase.TwitchGuilds[Context.Guild.Id].GetLeaderboardAsync(begin: (int)begin, end: (int)end));
                     }
                 }
             }
@@ -565,18 +527,10 @@ namespace MopsBot.Module
             {
                 using (Context.Channel.EnterTypingState())
                 {
-                    try
-                    {
-                        streamerName = streamerName.ToLower();
-                        await Trackers[BaseTracker.TrackerType.TwitchClip].AddTrackerAsync(streamerName, Context.Channel.Id, notificationMessage);
+                    streamerName = streamerName.ToLower();
+                    await Trackers[BaseTracker.TrackerType.TwitchClip].AddTrackerAsync(streamerName, Context.Channel.Id, notificationMessage);
 
-                        await ReplyAsync("Keeping track of " + streamerName + "'s top clips above **2** views every 30 minutes, from now on!\nUse the `SetViewThreshold` subcommand to change the threshold.");
-
-                    }
-                    catch (Exception e)
-                    {
-                        await ReplyAsync("**Error**: " + e.InnerException.Message);
-                    }
+                    await ReplyAsync("Keeping track of " + streamerName + "'s top clips above **2** views every 30 minutes, from now on!\nUse the `SetViewThreshold` subcommand to change the threshold.");
                 }
             }
 
@@ -650,17 +604,9 @@ namespace MopsBot.Module
             {
                 using (Context.Channel.EnterTypingState())
                 {
-                    try
-                    {
-                        await Trackers[BaseTracker.TrackerType.Reddit].AddTrackerAsync(String.Join(" ", new string[] { subreddit, query }.Where(x => x != null)), Context.Channel.Id);
+                    await Trackers[BaseTracker.TrackerType.Reddit].AddTrackerAsync(String.Join(" ", new string[] { subreddit, query }.Where(x => x != null)), Context.Channel.Id);
 
-                        await ReplyAsync("Keeping track of " + subreddit + $"'s posts, from now on, using {query}!");
-
-                    }
-                    catch (Exception e)
-                    {
-                        await ReplyAsync("**Error**: " + e.InnerException.Message);
-                    }
+                    await ReplyAsync("Keeping track of " + subreddit + $"'s posts, from now on, using {query}!");
                 }
             }
 
@@ -733,18 +679,10 @@ namespace MopsBot.Module
             {
                 using (Context.Channel.EnterTypingState())
                 {
-                    try
-                    {
-                        owUser = owUser.Replace("#", "-");
-                        await Trackers[BaseTracker.TrackerType.Overwatch].AddTrackerAsync(owUser, Context.Channel.Id);
+                    owUser = owUser.Replace("#", "-");
+                    await Trackers[BaseTracker.TrackerType.Overwatch].AddTrackerAsync(owUser, Context.Channel.Id);
 
-                        await ReplyAsync("Keeping track of " + owUser + "'s stats, from now on!");
-
-                    }
-                    catch (Exception e)
-                    {
-                        await ReplyAsync("**Error**: " + e.InnerException.Message);
-                    }
+                    await ReplyAsync("Keeping track of " + owUser + "'s stats, from now on!");
                 }
             }
 
@@ -813,15 +751,8 @@ namespace MopsBot.Module
             {
                 using (Context.Channel.EnterTypingState())
                 {
-                    try
-                    {
-                        await Trackers[BaseTracker.TrackerType.JSON].AddTrackerAsync(String.Join("|||", new string[] { source, String.Join(",", query) }), Context.Channel.Id);
-                        await ReplyAsync($"Keeping track of `{source}`'s attributes from now on!");
-                    }
-                    catch (Exception e)
-                    {
-                        await ReplyAsync("**Error**: " + e.InnerException.Message);
-                    }
+                    await Trackers[BaseTracker.TrackerType.JSON].AddTrackerAsync(String.Join("|||", new string[] { source, String.Join(",", query) }), Context.Channel.Id);
+                    await ReplyAsync($"Keeping track of `{source}`'s attributes from now on!");
                 }
             }
 
@@ -891,16 +822,8 @@ namespace MopsBot.Module
                 name = name.ToLower();
                 using (Context.Channel.EnterTypingState())
                 {
-                    try
-                    {
-                        await Trackers[BaseTracker.TrackerType.OSRS].AddTrackerAsync(name, Context.Channel.Id);
-                        await ReplyAsync($"Keeping track of `{name}` stats after each playsession, from now on!");
-
-                    }
-                    catch (Exception e)
-                    {
-                        await ReplyAsync("**Error**: " + e.InnerException.Message);
-                    }
+                    await Trackers[BaseTracker.TrackerType.OSRS].AddTrackerAsync(name, Context.Channel.Id);
+                    await ReplyAsync($"Keeping track of `{name}` stats after each playsession, from now on!");
                 }
             }
 
@@ -981,16 +904,8 @@ namespace MopsBot.Module
             {
                 using (Context.Channel.EnterTypingState())
                 {
-                    try
-                    {
-                        await Trackers[BaseTracker.TrackerType.HTML].AddTrackerAsync(website + "|||" + scrapeRegex, Context.Channel.Id);
-                        await ReplyAsync($"Keeping track of `{website}` data using ```html\n{scrapeRegex}```, from now on!\n\nInitial value was: **{await HTMLTracker.FetchData(website + "|||" + scrapeRegex)}**");
-
-                    }
-                    catch (Exception e)
-                    {
-                        await ReplyAsync("**Error**: " + e.InnerException.Message);
-                    }
+                    await Trackers[BaseTracker.TrackerType.HTML].AddTrackerAsync(website + "|||" + scrapeRegex, Context.Channel.Id);
+                    await ReplyAsync($"Keeping track of `{website}` data using ```html\n{scrapeRegex}```, from now on!\n\nInitial value was: **{await HTMLTracker.FetchData(website + "|||" + scrapeRegex)}**");
                 }
             }
 
@@ -1048,15 +963,7 @@ namespace MopsBot.Module
             {
                 using (Context.Channel.EnterTypingState())
                 {
-                    try
-                    {
-                        await ReplyAsync($"Regex returned value: {await HTMLTracker.FetchData(website + "|||" + scrapeRegex)}");
-
-                    }
-                    catch (Exception e)
-                    {
-                        await ReplyAsync("**Error**: " + e.InnerException.Message);
-                    }
+                    await ReplyAsync($"Regex returned value: {await HTMLTracker.FetchData(website + "|||" + scrapeRegex)}");
                 }
             }
 
@@ -1124,17 +1031,9 @@ namespace MopsBot.Module
             {
                 using (Context.Channel.EnterTypingState())
                 {
-                    try
-                    {
-                        await Trackers[BaseTracker.TrackerType.RSS].AddTrackerAsync(url, Context.Channel.Id, notification);
+                    await Trackers[BaseTracker.TrackerType.RSS].AddTrackerAsync(url, Context.Channel.Id, notification);
 
-                        await ReplyAsync("Keeping track of " + url + $"'s feed, from now on!");
-
-                    }
-                    catch (Exception e)
-                    {
-                        await ReplyAsync("**Error**: " + e.InnerException.Message);
-                    }
+                    await ReplyAsync("Keeping track of " + url + $"'s feed, from now on!");
                 }
             }
 
@@ -1203,19 +1102,12 @@ namespace MopsBot.Module
             {
                 using (Context.Channel.EnterTypingState())
                 {
-                    try
-                    {
-                        SteamNameOrId = SteamNameOrId.ToLower();
-                        await Trackers[BaseTracker.TrackerType.Steam].AddTrackerAsync(SteamNameOrId, Context.Channel.Id);
-                        var worked = long.TryParse(SteamNameOrId, out long test);
+                    SteamNameOrId = SteamNameOrId.ToLower();
+                    await Trackers[BaseTracker.TrackerType.Steam].AddTrackerAsync(SteamNameOrId, Context.Channel.Id);
+                    var worked = long.TryParse(SteamNameOrId, out long test);
 
-                        await ReplyAsync("Keeping track of " + SteamNameOrId + $"'s Achievements and playing status from now on.");
-                        if (!worked) await ReplyAsync($"Make sure this is you: https://steamcommunity.com/id/{SteamNameOrId}\nOtherwise use your steamid instead of steam name");
-                    }
-                    catch (Exception e)
-                    {
-                        await ReplyAsync("**Error**: " + e.InnerException.Message);
-                    }
+                    await ReplyAsync("Keeping track of " + SteamNameOrId + $"'s Achievements and playing status from now on.");
+                    if (!worked) await ReplyAsync($"Make sure this is you: https://steamcommunity.com/id/{SteamNameOrId}\nOtherwise use your steamid instead of steam name");
                 }
             }
 
@@ -1306,9 +1198,11 @@ namespace MopsBot.Module
                 await ReplyAsync("Following trackers currently exist on this server:");
 
                 IEnumerable<Embed> pages = new List<Embed>();
-                foreach(var tracker in StaticBase.Trackers){
+                foreach (var tracker in StaticBase.Trackers)
+                {
                     var curPages = tracker.Value.GetTrackersEmbed(Context.Channel.Id, true);
-                    if(!(curPages.Count() == 1 && (curPages.First().Description?.Equals("") ?? true))){
+                    if (!(curPages.Count() == 1 && (curPages.First().Description?.Equals("") ?? true)))
+                    {
                         pages = pages.Concat(curPages);
                     }
                 }

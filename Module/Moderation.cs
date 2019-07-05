@@ -402,7 +402,8 @@ namespace MopsBot.Module
         {
             using (Context.Channel.EnterTypingState())
             {
-                if(command.Contains("{Command:")){
+                if (command.Contains("{Command:"))
+                {
                     await ReplyAsync("Command arguments were probably an injection. Stopping execution.");
                     return;
                 }
@@ -416,13 +417,15 @@ namespace MopsBot.Module
                              .Replace("{User.Mention}", $"{Context.User.Mention}")
                              .Replace("{User.Parameters}", string.Join(" ", commandArgs));
                 var paramRequests = reply.Split("{User.Parameters:");
-                foreach(var param in paramRequests){
+                foreach (var param in paramRequests)
+                {
                     var paramNumber = param.Split("}").First();
                     string toInsert = "";
-                    if(paramNumber.Contains(":")){
+                    if (paramNumber.Contains(":"))
+                    {
                         var range = paramNumber.Split(":");
-                        if(!int.TryParse(range.First(), out int from)) from = 0;
-                        if(!int.TryParse(range.Last(), out int to)) to = commandArgs.Count();
+                        if (!int.TryParse(range.First(), out int from)) from = 0;
+                        if (!int.TryParse(range.Last(), out int to)) to = commandArgs.Count();
                         toInsert = string.Join(" ", commandArgs.Skip(from).Take(to - from + 1));
                     }
                     reply = reply.Replace("{User.Parameters:" + paramNumber + "}", toInsert);
@@ -468,29 +471,22 @@ namespace MopsBot.Module
         {
             using (Context.Channel.EnterTypingState())
             {
-                try
-                {
-                    var imports = Microsoft.CodeAnalysis.Scripting.ScriptOptions.Default.WithReferences(typeof(MopsBot.Program).Assembly, typeof(Discord.Attachment).Assembly).WithImports("MopsBot", "Discord");
-                    var preCompilationTime = DateTime.Now.Ticks / 10000;
-                    var script = CSharpScript.Create(expression, globalsType: typeof(MopsBot.Module.Moderation)).WithOptions(imports);
-                    script.Compile();
-                    var preExecutionTime = DateTime.Now.Ticks / 10000;
-                    var result = await script.RunAsync(this);
-                    var postExecutionTime = DateTime.Now.Ticks / 10000;
+                var imports = Microsoft.CodeAnalysis.Scripting.ScriptOptions.Default.WithReferences(typeof(MopsBot.Program).Assembly, typeof(Discord.Attachment).Assembly).WithImports("MopsBot", "Discord");
+                var preCompilationTime = DateTime.Now.Ticks / 10000;
+                var script = CSharpScript.Create(expression, globalsType: typeof(MopsBot.Module.Moderation)).WithOptions(imports);
+                script.Compile();
+                var preExecutionTime = DateTime.Now.Ticks / 10000;
+                var result = await script.RunAsync(this);
+                var postExecutionTime = DateTime.Now.Ticks / 10000;
 
-                    var embed = new EmbedBuilder();
-                    embed.Author = new EmbedAuthorBuilder().WithName(Context.User.Username).WithIconUrl(Context.User.GetAvatarUrl());
-                    embed.WithDescription($"```csharp\n{expression}```").WithTitle("Evaluation of code");
-                    embed.AddField("Compilation time", $"{preExecutionTime - preCompilationTime}ms", true);
-                    embed.AddField("Execution time", $"{postExecutionTime - preExecutionTime}ms", true);
-                    embed.AddField("Return value", result.ReturnValue?.ToString() ?? "`null or void`");
+                var embed = new EmbedBuilder();
+                embed.Author = new EmbedAuthorBuilder().WithName(Context.User.Username).WithIconUrl(Context.User.GetAvatarUrl());
+                embed.WithDescription($"```csharp\n{expression}```").WithTitle("Evaluation of code");
+                embed.AddField("Compilation time", $"{preExecutionTime - preCompilationTime}ms", true);
+                embed.AddField("Execution time", $"{postExecutionTime - preExecutionTime}ms", true);
+                embed.AddField("Return value", result.ReturnValue?.ToString() ?? "`null or void`");
 
-                    await ReplyAsync("", embed: embed.Build());
-                }
-                catch (Exception e)
-                {
-                    await ReplyAsync("**Error:** " + e.Message);
-                }
+                await ReplyAsync("", embed: embed.Build());
             }
         }
 

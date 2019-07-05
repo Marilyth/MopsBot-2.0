@@ -77,10 +77,10 @@ namespace MopsBot.Data.Tracker
                 ulong Id = GetIdFromUsername(streamerName).Result;
                 SetTimer();
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 Dispose();
-                throw new Exception($"Streamer {TrackerUrl()} could not be found on Twitch!");
+                throw new Exception($"Streamer {TrackerUrl()} could not be found on Twitch!", e);
             }
         }
 

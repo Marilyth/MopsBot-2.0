@@ -83,10 +83,10 @@ namespace MopsBot.Data.Tracker
                 }
                 SetTimer();
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 Dispose();
-                throw new Exception($"{Name} could not be resolved, using the given paths.");
+                throw new Exception($"{Name} could not be resolved, using the given paths.", e);
             }
         }
 

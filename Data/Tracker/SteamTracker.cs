@@ -40,7 +40,7 @@ namespace MopsBot.Data.Tracker
             }
             catch (Exception e)
             {
-                throw new Exception($"Could not resolve {name}.\nMake sure your **Game Details** are public, then retry in about 10 minutes");
+                throw new Exception($"Could not resolve {name}.\nMake sure your **Game Details** are public, then retry in about 10 minutes", e);
             }
         }
 

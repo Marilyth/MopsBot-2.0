@@ -64,10 +64,10 @@ namespace MopsBot.Data.Tracker
                 var test = checkExists.broadcaster_language;
                 SetTimer();
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 Dispose();
-                throw new Exception($"Streamer {TrackerUrl()} could not be found on Twitch!");
+                throw new Exception($"Streamer {TrackerUrl()} could not be found on Twitch!", e);
             }
         }
 

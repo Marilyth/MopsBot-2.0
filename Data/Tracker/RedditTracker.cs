@@ -67,11 +67,11 @@ namespace MopsBot.Data.Tracker
                     throw new Exception("");
                 SetTimer();
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 Dispose();
                 throw new Exception($"No results were found for Subreddit {TrackerUrl()}" +
-                                    $"{(Name.Split(" ").Length > 1 ? $" with restriction(s) `{Name.Split(" ")[1]}`." : ".")}");
+                                    $"{(Name.Split(" ").Length > 1 ? $" with restriction(s) `{Name.Split(" ")[1]}`." : ".")}", e);
             }
         }
 
