@@ -307,7 +307,8 @@ namespace MopsBot.Data
                 return;
             try
             {
-                await ((Discord.WebSocket.SocketTextChannel)Program.Client.GetChannel(channelID)).SendMessageAsync(notification);
+                if(!notification.Equals(""))
+                    await ((Discord.WebSocket.SocketTextChannel)Program.Client.GetChannel(channelID)).SendMessageAsync(notification);
             }
             catch
             {
