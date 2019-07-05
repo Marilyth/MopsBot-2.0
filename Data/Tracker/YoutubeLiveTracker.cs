@@ -160,7 +160,7 @@ namespace MopsBot.Data.Tracker
                     {
                         ViewerGraph = new DatePlot(Name, "Time since start", "Viewers");
 
-                        foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][ONLINE]).ToList())
+                        foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][ONLINE] && !ChannelConfig[x]["Notification"].Equals("")).ToList())
                             await OnMinorChangeTracked(channel, (string)ChannelConfig[channel]["Notification"]);
                         
                         SetTimer(60000, 60000);

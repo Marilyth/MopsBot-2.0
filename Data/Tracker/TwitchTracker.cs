@@ -199,7 +199,7 @@ namespace MopsBot.Data.Tracker
                         ViewerGraph.AddValue(CurGame, 0, DateTime.Parse(StreamerStatus.stream.created_at).AddHours(-2));
 
                         if (OnLive != null) await OnLive.Invoke(this);
-                        foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][ONLINE]).ToList())
+                        foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][ONLINE] && !ChannelConfig[x]["Notification"].Equals("")).ToList())
                             await OnMinorChangeTracked(channel, (string)ChannelConfig[channel]["Notification"]);
 
                         SetTimer(60000, 60000);
