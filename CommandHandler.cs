@@ -341,7 +341,7 @@ namespace MopsBot
 
             embed.AddField("Error", result.ErrorReason.Length > 0 ? result.ErrorReason : "None");
             if(mostRecentException != null)
-                embed.AddField("Exception", (mostRecentException.Message?.Length ?? 0) > 0 ? mostRecentException.Message : "None");
+                embed.AddField("Exception", (mostRecentException.GetBaseException().Message?.Length ?? 0) > 0 ? mostRecentException.GetBaseException().Message : "None");
 
             return embed.Build();
         }
