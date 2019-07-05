@@ -26,7 +26,7 @@ namespace MopsBot.Data
         public abstract Dictionary<string, Tracker.BaseTracker> GetTrackers();
         public abstract IEnumerable<BaseTracker> GetTrackers(ulong channelID);
         public abstract IEnumerable<BaseTracker> GetGuildTrackers(ulong guildId);
-        public abstract IEnumerable<Embed> GetTrackersEmbed(ulong channelID);
+        public abstract IEnumerable<Embed> GetTrackersEmbed(ulong channelID, bool searchServer = false);
         public abstract BaseTracker GetTracker(ulong channelID, string name);
         public abstract Type GetTrackerType();
         public abstract void PostInitialisation();
@@ -197,7 +197,7 @@ namespace MopsBot.Data
         public override IEnumerable<BaseTracker> GetGuildTrackers(ulong guildId)
         {
             var channels = Program.Client.GetGuild(guildId).TextChannels;
-            var allTrackers = trackers.Select(x => x.Value as TwitchTracker).ToList();
+            var allTrackers = trackers.Select(x => x.Value).ToList();
             var guildTrackers = allTrackers.Where(x => x.ChannelConfig.Keys.Any(y => channels.Select(z => z.Id).Contains(y))).ToList();
             return guildTrackers;
         }
@@ -215,9 +215,12 @@ namespace MopsBot.Data
                 return false;
         }
 
-        public override IEnumerable<Embed> GetTrackersEmbed(ulong channelID)
+        public override IEnumerable<Embed> GetTrackersEmbed(ulong channelID, bool searchServer = false)
         {
-            var trackerStrings = trackers.Where(x => x.Value.ChannelConfig.ContainsKey(channelID)).Select(x => x.Value.TrackerUrl() != null ? $"[``{x.Key}``]({x.Value.TrackerUrl()})\n" : $"``{x.Key}``\n");
+            var guild = (Program.Client.GetChannel(channelID) as SocketGuildChannel).Guild;
+            var foundTrackers = (searchServer ? GetGuildTrackers(guild.Id) : trackers.Where(x => x.Value.ChannelConfig.ContainsKey(channelID)).Select(x => x.Value));
+            var trackerStrings = foundTrackers.Select(x => x.TrackerUrl() != null ? $"[``{x.Name}``]({x.TrackerUrl()}) [{string.Join(" ", x.ChannelConfig.Keys.Where(y => guild.GetTextChannel(y) != null).Select(y => (Program.Client.GetChannel(y) as SocketTextChannel).Mention))}]\n" 
+                                                                                  : $"``{x.Name}`` [{string.Join(" ", x.ChannelConfig.Keys.Where(y => guild.GetTextChannel(y) != null).Select(y => (Program.Client.GetChannel(y) as SocketTextChannel).Mention))}]\n");
             var embeds = new List<EmbedBuilder>(){new EmbedBuilder().WithTitle(typeof(T).Name).WithCurrentTimestamp().WithColor(Discord.Color.Blue)};
             
             foreach(var tracker in trackerStrings){

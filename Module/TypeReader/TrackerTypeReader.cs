@@ -30,8 +30,8 @@ namespace MopsBot.Module.TypeReader
             if (result != null)
                 return TypeReaderResult.FromSuccess(result);
 
-            await MopsBot.Data.Interactive.MopsPaginator.CreatePagedMessage(context.Channel.Id, StaticBase.Trackers[type].GetTrackersEmbed(context.Channel.Id));
-            return TypeReaderResult.FromError(CommandError.ParseFailed, $"Could not find a {module}-tracker for {input}.");
+            await MopsBot.Data.Interactive.MopsPaginator.CreatePagedMessage(context.Channel.Id, StaticBase.Trackers[type].GetTrackersEmbed(context.Channel.Id, true));
+            return TypeReaderResult.FromError(CommandError.ParseFailed, $"Could not find a {module}-tracker for {input} in this channel.");
         }
     }
 }
