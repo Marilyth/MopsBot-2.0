@@ -146,17 +146,17 @@ namespace MopsBot.Data.Tracker
 
                 Boolean isStreaming = StreamerStatus.stream.channel != null;
 
-                if (IsOnline != isStreaming || Name == "jakads")
+                if (IsOnline != isStreaming)
                 {
-                    if (IsOnline || Name == "jakads")
+                    if (IsOnline)
                     {
-                        if (++TimeoutCount >= 3 || Name == "jakads")
+                        if (++TimeoutCount >= 3)
                         {
                             TimeoutCount = 0;
                             IsOnline = false;
 
                             var pdf = ViewerGraph.DrawPlot(true, $"{Name}-{DateTime.UtcNow.ToString("MM-dd-yy_hh-mm")}");
-                            foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x]["SendGraphPDFAfterOffline"]).ToList())
+                            foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][SENDPDF]).ToList())
                                 await (Program.Client.GetChannel(channel) as SocketTextChannel).SendFileAsync(pdf, "Graph PDF for personal use:");
                             File.Delete(pdf);
 
