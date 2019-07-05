@@ -31,7 +31,7 @@ namespace MopsBot.Data.Tracker
         public bool IsHosting;
         public int TimeoutCount;
         public ulong TwitchId;
-        public static readonly string GAMECHANGE = "NotifyOnGameChange", HOST = "NotifyOnHost", ONLINE = "NotifyOnOnline", OFFLINE = "NotifyOnOffline", SHOWEMBED = "ShowEmbed", THUMBNAIL = "LargeThumbnail", SendPDF = "SendGraphPDFAfterOffline";
+        public static readonly string GAMECHANGE = "NotifyOnGameChange", HOST = "NotifyOnHost", ONLINE = "NotifyOnOnline", OFFLINE = "NotifyOnOffline", SHOWEMBED = "ShowEmbed", THUMBNAIL = "LargeThumbnail", SENDPDF = "SendGraphPDFAfterOffline";
 
         public TwitchTracker() : base()
         {
@@ -95,6 +95,7 @@ namespace MopsBot.Data.Tracker
             config[HOST] = false;
             config[OFFLINE] = true;
             config[ONLINE] = true;
+            config[SENDPDF] = false;
 
             await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
         }
@@ -240,8 +241,8 @@ namespace MopsBot.Data.Tracker
         public override async void Conversion(object obj = null){
             bool save = false;
             foreach(var channel in ChannelConfig.Keys.ToList()){
-                if(!ChannelConfig[channel].ContainsKey(SendPDF)){
-                    ChannelConfig[channel][SendPDF] = false;
+                if(!ChannelConfig[channel].ContainsKey(SENDPDF)){
+                    ChannelConfig[channel][SENDPDF] = false;
                     save = true;
                 }
             }
