@@ -160,9 +160,6 @@ namespace MopsBot.Data.Tracker
                                 await (Program.Client.GetChannel(channel) as SocketTextChannel).SendFileAsync(pdf, "Graph PDF for personal use:");
                             File.Delete(pdf);
 
-                            foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][SHOWEMBED]).ToList())
-                                await OnMajorChangeTracked(channel, createEmbed((bool)ChannelConfig[channel][THUMBNAIL], true));
-
                             ViewerGraph?.Dispose();
                             ViewerGraph = null;
                             VodUrl = null;
