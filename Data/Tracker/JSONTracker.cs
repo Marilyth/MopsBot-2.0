@@ -62,7 +62,7 @@ namespace MopsBot.Data.Tracker
         {
             //name = name.Replace(" ", string.Empty);
             Name = name;
-            ToTrack = name.Split("|||")[1].Replace(" ", string.Empty).Split(",").ToList();
+            ToTrack = name.Split("|||")[1].Replace("\n", string.Empty).Split(",").ToList();
 
             //Check if name yields proper results.
             try

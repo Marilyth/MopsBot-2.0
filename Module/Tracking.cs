@@ -786,9 +786,9 @@ namespace MopsBot.Module
             [Command("Check", RunMode = RunMode.Async)]
             [Summary("Checks the json for the specified paths, and returns the values")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task Check(string Url, params string[] paths)
+            public async Task Check(string Url, [Remainder]string paths)
             {
-                var result = await JSONTracker.GetResults(Url, paths);
+                var result = await JSONTracker.GetResults(Url, paths.Split("\n"));
                 await ReplyAsync(string.Join("\n", result.Select(x => $"{x.Key.Split("->").Last()}: {x.Value}")));
             }
 
