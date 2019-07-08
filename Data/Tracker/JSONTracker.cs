@@ -158,20 +158,20 @@ namespace MopsBot.Data.Tracker
                         break;
                     }
                     else if(find){
+                        find = false;
+                        var tmpKeywords = keyword.Split("=");
+                        int.TryParse(tmpKeywords[0], out int i);
                         foreach(var element in tmpJson){
-                            find = false;
-                            var tmpKeywords = keyword.Split("=");
-                            int.TryParse(tmpKeywords[0], out int i);
                             if(i > 0){
                                 if(element[i].ToString().Equals(tmpKeywords[1])){
                                     tmpJson = element;
-                                    continue;
+                                    break;
                                 }
                             }
                             else{
                                 if(element[tmpKeywords[0]].ToString().Equals(tmpKeywords[1])){
                                     tmpJson = element;
-                                    continue;
+                                    break;
                                 }
                             }
                         }
