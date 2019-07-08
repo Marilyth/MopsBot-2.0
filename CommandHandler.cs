@@ -278,7 +278,7 @@ namespace MopsBot
 
         public static string GetCommandHelpImage(string command)
         {
-            return $"http://37.221.195.236/mops_example_usage/{command.ToLower()}.PNG?rand={StaticBase.ran.Next(0, 999999999)}".Replace(" ", "%20");
+            return $"http://5.45.104.29/mops_example_usage/{command.ToLower()}.PNG?rand={StaticBase.ran.Next(0, 999999999)}".Replace(" ", "%20");
         }
 
         /// <summary>
