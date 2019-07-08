@@ -119,7 +119,7 @@ namespace MopsBot
         public async Task CommandExecuted(Discord.Optional<CommandInfo> commandInfo, ICommandContext context, IResult result)
         {
             // If the command failed, notify the user
-            if (!result.IsSuccess && !result.ErrorReason.Equals(""))
+            if (!result.IsSuccess && !result.ErrorReason.Equals("") && !context.Guild.Id.Equals(264445053596991498))
             {
                 Task.Run(async () => {
                     //Wait for exception to reach log

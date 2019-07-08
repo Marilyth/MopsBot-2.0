@@ -192,7 +192,7 @@ namespace MopsBot.Module
             [Command("SetNotification")]
             [Summary("Sets the notification text that is used each time a player gained pp.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(BaseTracker osuUser, [Remainder]string notification)
+            public async Task SetNotification(BaseTracker osuUser, [Remainder]string notification = "")
             {
                 osuUser.ChannelConfig[Context.Channel.Id]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.Osu].UpdateDBAsync(osuUser);
@@ -320,7 +320,7 @@ namespace MopsBot.Module
             [Command("SetNotification")]
             [Summary("Sets the notification text that is used each time a streamer goes live.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(BaseTracker streamer, [Remainder]string notification)
+            public async Task SetNotification(BaseTracker streamer, [Remainder]string notification = "")
             {
                 streamer.ChannelConfig[Context.Channel.Id]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.Twitch].UpdateDBAsync(streamer);
@@ -1057,7 +1057,7 @@ namespace MopsBot.Module
             [Command("SetNotification")]
             [Summary("Sets the notification text that is used each time a new post was found.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(BaseTracker url, string notification = "")
+            public async Task SetNotification(BaseTracker url, [Remainder]string notification = "")
             {
                 url.ChannelConfig[Context.Channel.Id]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.RSS].UpdateDBAsync(url);
@@ -1131,7 +1131,7 @@ namespace MopsBot.Module
             [Command("SetNotification")]
             [Summary("Sets the notification text that is used each time a new achievement was achieved.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(BaseTracker SteamNameOrId, [Remainder]string notification)
+            public async Task SetNotification(BaseTracker SteamNameOrId, [Remainder]string notification = "")
             {
                 SteamNameOrId.ChannelConfig[Context.Channel.Id]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.Steam].UpdateDBAsync(SteamNameOrId);
