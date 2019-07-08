@@ -144,14 +144,50 @@ namespace MopsBot.Data.Tracker
                 if(curMod.Contains("always:")) curMod = curMod.Replace("always:", string.Empty);
                 string[] keywords = curMod.Split("->");
                 var tmpJson = json;
-
+                bool summarize = false;
+                bool find = false;
                 foreach(string keyword in keywords){
                     int.TryParse(keyword, out int index);
-                    if(index > 0) tmpJson = tmpJson[index - 1];
-                    else tmpJson = tmpJson[keyword];
-                }
+                    if(summarize){
+                        result[cur] = "";
+                        foreach(var element in tmpJson){
+                            if(index > 0) result[cur] += element[index - 1].ToString() + " ";
+                            else result[cur] += element[keyword].ToString() + " ";
+                        }
 
-                result[cur] = tmpJson.ToString();
+                        break;
+                    }
+                    else if(find){
+                        foreach(var element in tmpJson){
+                            find = false;
+                            var tmpKeywords = keyword.Split("=");
+                            int.TryParse(tmpKeywords[0], out int i);
+                            if(i > 0){
+                                if(element[i].ToString().Equals(tmpKeywords[1])){
+                                    tmpJson = element;
+                                    continue;
+                                }
+                            }
+                            else{
+                                if(element[tmpKeywords[0]].ToString().Equals(tmpKeywords[1])){
+                                    tmpJson = element;
+                                    continue;
+                                }
+                            }
+                        }
+                    }
+                    else{
+                        if(index > 0) tmpJson = tmpJson[index - 1];
+                        else if(!keyword.StartsWith("all") && !keyword.StartsWith("find")) tmpJson = tmpJson[keyword];
+                        else if(keyword.StartsWith("all")) summarize = true;
+                        else find = true;
+                    }
+                }
+                
+                if(summarize == false)
+                    result[cur] = tmpJson.ToString();
+                else if(keywords.Last().StartsWith("all"))
+                    result[cur] = string.Join(", ", tmpJson);
             }
 
             return result;
