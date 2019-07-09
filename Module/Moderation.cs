@@ -519,8 +519,23 @@ namespace MopsBot.Module
                         moduleInformation += "\n";
 
                         moduleInformation += string.Join(", ", module.Submodules.Select(x => $"[{x.Name}\\*]({CommandHandler.GetCommandHelpImage(x.Name)})"));
-
-                        e.AddField($"**{module.Name}**", moduleInformation);
+                        var modulesections = moduleInformation.Length/1024 + 1;
+                        if(modulesections > 1){
+                            var segments = moduleInformation.Split(", ");
+                            var submoduleInformation = "";
+                            foreach(var segment in segments){
+                                if(submoduleInformation.Length + segment.Length > 1024){
+                                    submoduleInformation = string.Concat(submoduleInformation.SkipLast(2));
+                                    e.AddField($"**{module.Name}**", submoduleInformation);
+                                    submoduleInformation = "";
+                                }
+                                submoduleInformation += segment + ", ";
+                            }
+                            e.AddField($"**{module.Name}**", submoduleInformation);
+                        }
+                        else{
+                            e.AddField($"**{module.Name}**", moduleInformation);
+                        }
                     }
                 }
 
