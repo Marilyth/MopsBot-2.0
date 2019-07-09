@@ -156,7 +156,7 @@ namespace MopsBot.Data.Tracker
                             if(index > 0) result[cur] += element[index - 1].ToString() + ", ";
                             else result[cur] += element[keyword].ToString() + ", ";
                         }
-
+                        if(result[cur].Equals(string.Empty)) result[cur] = "No values";
                         break;
                     }
                     else if(find){

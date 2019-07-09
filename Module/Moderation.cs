@@ -439,7 +439,8 @@ namespace MopsBot.Module
                     await (await ReplyAsync("[ProcessBotMessage]" + commandName)).DeleteAsync();
                 }
 
-                await ReplyAsync(reply);
+                if(!reply.Equals(string.Empty))
+                    await ReplyAsync(reply);
             }
         }
 
