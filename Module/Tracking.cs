@@ -789,7 +789,16 @@ namespace MopsBot.Module
             public async Task Check(string Url, [Remainder]string paths)
             {
                 var result = await JSONTracker.GetResults(Url, paths.Split("\n"));
-                await ReplyAsync(string.Join("\n", result.Select(x => $"{x.Key.Split("->").Last()}: {x.Value}")));
+                var embed = new EmbedBuilder().WithCurrentTimestamp().WithColor(255, 227, 21).WithFooter(x => {
+                    x.Text = "JsonTracker"; 
+                    x.IconUrl="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/JSON_vector_logo.svg/160px-JSON_vector_logo.svg.png";
+                });
+                
+                foreach(var cur in result){
+                    var resultName = cur.Key.Contains("as:") ? cur.Key.Split(":").Last() : cur.Key.Split("->").Last();
+                    embed.AddField(resultName, cur.Value);
+                }
+                await ReplyAsync(embed: embed.Build());
             }
 
             [Command("ShowConfig")]

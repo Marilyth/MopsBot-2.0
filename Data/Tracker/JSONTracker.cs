@@ -109,9 +109,10 @@ namespace MopsBot.Data.Tracker
                     var graphMembers = newInformation.Where(x => x.Key.Contains("graph:"));
 
                     foreach(var graphValue in graphMembers){
+                        var name = graphValue.Key.Contains("as:") ? graphValue.Key.Split(":").Last() : graphValue.Key;
                         if(!graphValue.Equals(default(KeyValuePair<string,string>))){
-                            DataGraph.AddValueSeperate(graphValue.Key, double.Parse(PastInformation[graphValue.Key]), relative: false);
-                            DataGraph.AddValueSeperate(graphValue.Key, double.Parse(graphValue.Value), relative: false);
+                            DataGraph.AddValueSeperate(name, double.Parse(PastInformation[graphValue.Key]), relative: false);
+                            DataGraph.AddValueSeperate(name, double.Parse(graphValue.Value), relative: false);
                         }
                     }
 
@@ -140,6 +141,7 @@ namespace MopsBot.Data.Tracker
 
             foreach(string cur in ToTrack){
                 string curMod = cur;
+                if(curMod.StartsWith("as:")) break;
                 if(curMod.Contains("graph:")) curMod = curMod.Replace("graph:", string.Empty);
                 if(curMod.Contains("always:")) curMod = curMod.Replace("always:", string.Empty);
                 string[] keywords = curMod.Split("->");
@@ -151,8 +153,8 @@ namespace MopsBot.Data.Tracker
                     if(summarize){
                         result[cur] = "";
                         foreach(var element in tmpJson){
-                            if(index > 0) result[cur] += element[index - 1].ToString() + " ";
-                            else result[cur] += element[keyword].ToString() + " ";
+                            if(index > 0) result[cur] += element[index - 1].ToString() + ", ";
+                            else result[cur] += element[keyword].ToString() + ", ";
                         }
 
                         break;
@@ -207,13 +209,14 @@ namespace MopsBot.Data.Tracker
             foreach(var kvp in newInformation){
                 string oldS = oldInformation[kvp.Key];
                 string newS = kvp.Value;
+                var keyName = kvp.Key.Contains("as:") ? kvp.Key.Split(":").Last() : kvp.Key.Split("->").Last();
 
                 if(!newS.Equals(oldS)){
                     changed = true;
-                    embed.AddField(kvp.Key.Split("->").Last(), $"{oldS} -> {newS}", true);
+                    embed.AddField(keyName, $"{oldS} -> {newS}", true);
                 }
                 else if(kvp.Key.Contains("always:")){
-                    embed.AddField(kvp.Key.Split("->").Last(), newS, true);
+                    embed.AddField(keyName, newS, true);
                 }
             }
 
