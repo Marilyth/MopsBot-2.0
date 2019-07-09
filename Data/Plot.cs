@@ -127,7 +127,7 @@ namespace MopsBot.Data
             foreach (var f in files)
                 f.Delete();
 
-            return $"http://5.45.104.29/StreamCharts/{ID.Replace(" ", "%20")}barplot.png?rand={StaticBase.ran.Next(0, 999999999)}";
+            return $"http://37.221.195.236/StreamCharts/{ID.Replace(" ", "%20")}barplot.png?rand={StaticBase.ran.Next(0, 999999999)}";
         }
 
         /// <summary>
@@ -268,7 +268,7 @@ namespace MopsBot.Data
             foreach (var f in files)
                 f.Delete();
 
-            return $"http://5.45.104.29/StreamCharts/{ID.Replace(" ", "%20")}barplot.png?rand={StaticBase.ran.Next(0, 999999999)}";
+            return $"http://37.221.195.236/StreamCharts/{ID.Replace(" ", "%20")}barplot.png?rand={StaticBase.ran.Next(0, 999999999)}";
         }
 
         /// <summary>
@@ -422,7 +422,7 @@ namespace MopsBot.Data
                 foreach (var f in files)
                     f.Delete();
 
-                return $"http://5.45.104.29/StreamCharts/{fileName}.png?rand={StaticBase.ran.Next(0, 999999999)}";
+                return $"http://37.221.195.236/StreamCharts/{fileName}.png?rand={StaticBase.ran.Next(0, 999999999)}";
             }
             else{
                 return $"mopsdata//{fileName}.pdf";
