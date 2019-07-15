@@ -126,14 +126,16 @@ namespace MopsBot.Module
 
         public static async Task<string> GetURLAsync(string URL, params KeyValuePair<string, string>[] headers)
         {
-            using (var request = new HttpRequestMessage(HttpMethod.Get, URL))
+            try
             {
-                try
+                using (var request = new HttpRequestMessage(HttpMethod.Get, URL))
                 {
                     foreach (var kvp in headers)
                         request.Headers.TryAddWithoutValidation(kvp.Key, kvp.Value);
-                    using(var response = await StaticBase.HttpClient.SendAsync(request)){
-                        using(var content = response.Content){
+                    using (var response = await StaticBase.HttpClient.SendAsync(request))
+                    {
+                        using (var content = response.Content)
+                        {
                             if (content?.Headers?.ContentType?.CharSet?.Contains("utf8") ?? false)
                                 return System.Text.Encoding.UTF8.GetString(await content.ReadAsByteArrayAsync());
                             else
@@ -141,17 +143,18 @@ namespace MopsBot.Module
                         }
                     }
                 }
-                catch (Exception e)
-                {
-                    if (!e.GetBaseException().Message.Contains("the remote party has closed the transport stream") && !e.GetBaseException().Message.Contains("The server returned an invalid or unrecognized response"))
-                        await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"error for sending request to {URL}", e.GetBaseException()));
-                    else if (e.GetBaseException().Message.Contains("the remote party has closed the transport stream"))
-                        await Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"Remote party closed the transport stream: {URL}."));
-                    else
-                        await Program.MopsLog(new LogMessage(LogSeverity.Debug, "", $"Osu API messed up again: {URL}"));
-                    throw e;
-                }
+            }
+            catch (Exception e)
+            {
+                if (!e.GetBaseException().Message.Contains("the remote party has closed the transport stream") && !e.GetBaseException().Message.Contains("The server returned an invalid or unrecognized response"))
+                    await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"error for sending request to {URL}", e.GetBaseException()));
+                else if (e.GetBaseException().Message.Contains("the remote party has closed the transport stream"))
+                    await Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"Remote party closed the transport stream: {URL}."));
+                else
+                    await Program.MopsLog(new LogMessage(LogSeverity.Debug, "", $"Osu API messed up again: {URL}"));
+                throw e;
             }
         }
     }
 }
+
