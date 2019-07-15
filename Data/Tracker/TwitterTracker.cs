@@ -388,6 +388,7 @@ namespace MopsBot.Data.Tracker
                     await checkMissedTweets(tweet.Id - 1);
                 }
 
+                if (lastMessage >= tweet.Id) return;
                 if (updateDB) lastMessage = tweet.Id;
 
                 if (!tweet.CreatedBy.Id.Equals(UserId)) return;
@@ -395,13 +396,15 @@ namespace MopsBot.Data.Tracker
                 {
                     if (tweet.InReplyToScreenName != null)
                     {
-                        if ((bool)ChannelConfig[channel][SHOWREPLIES])
+                        if ((bool)ChannelConfig[channel][SHOWREPLIES]){
                             await OnMajorChangeTracked(channel, createEmbed(tweet), (string)ChannelConfig[channel][REPLYNOTIFICATION]);
+                        }
                     }
                     else if (tweet.IsRetweet)
                     {
-                        if ((bool)ChannelConfig[channel][SHOWRETWEETS])
+                        if ((bool)ChannelConfig[channel][SHOWRETWEETS]){
                             await OnMajorChangeTracked(channel, createEmbed(tweet), (string)ChannelConfig[channel][RETWEETNOTIFICATION]);
+                        }
                     }
                     else
                     {
