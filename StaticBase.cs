@@ -59,6 +59,8 @@ namespace MopsBot
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
                 HttpClient.DefaultRequestHeaders.ConnectionClose = true;
                 HttpClient.Timeout = TimeSpan.FromSeconds(10);
+                ServicePointManager.DefaultConnectionLimit = 100;
+                ServicePointManager.MaxServicePointIdleTime = 10000;
                 MopsBot.Data.Entities.UserEvent.UserVoted += UserVoted;
                 Task.Run(() => new MopsBot.Data.Entities.UserEvent().CheckUsersVotedLoop());
 
