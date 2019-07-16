@@ -909,7 +909,7 @@ namespace MopsBot.Module
         {
             [Command("TrackRegex", RunMode = RunMode.Async)]
             [Summary("Tracks regex on a webpage. Use () around the text you want to track to signify a match.")]
-            public async Task TrackRegex(string website, string scrapeRegex)
+            public async Task TrackRegex(string website, [Remainder]string scrapeRegex)
             {
                 using (Context.Channel.EnterTypingState())
                 {
@@ -968,7 +968,7 @@ namespace MopsBot.Module
 
             [Command("TestRegex", RunMode = RunMode.Async)]
             [Summary("Tests the regex and returns it's value. Handy if you want to check your regex before tracking with it!")]
-            public async Task Test(string website, string scrapeRegex)
+            public async Task Test(string website, [Remainder]string scrapeRegex)
             {
                 using (Context.Channel.EnterTypingState())
                 {
