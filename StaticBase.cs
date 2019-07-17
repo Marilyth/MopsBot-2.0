@@ -214,7 +214,7 @@ namespace MopsBot
                         status = 0;
                         await UpdateServerCount();
                     }
-
+                    await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", "Heartbeat. I am still alive :)"));
                     await Task.Delay(30000);
                 }
             }
