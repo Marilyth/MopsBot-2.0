@@ -150,6 +150,8 @@ namespace MopsBot
         public static async Task UpdateServerCount()
         {
             await Program.Client.SetActivityAsync(new Game($"{Program.Client.Guilds.Count} servers", ActivityType.Watching));
+            await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", "Heartbeat. I am still alive :)"));
+            
             try
             {
                 if (Program.Client.CurrentUser.Id == 305398845389406209)
@@ -196,7 +198,10 @@ namespace MopsBot
             if (!init)
             {
                 await Program.Client.SetActivityAsync(new Game("Currently Restarting!", ActivityType.Playing));
-                await Task.Delay(60000);
+                await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", "Heartbeat. I was born :)"));
+                await Task.Delay(30000);
+                await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", "Heartbeat. I am still alive :)"));
+                await Task.Delay(30000);
 
                 int status = Enum.GetNames(typeof(BaseTracker.TrackerType)).Length;
                 while (true)
@@ -206,6 +211,7 @@ namespace MopsBot
                         BaseTracker.TrackerType type = (BaseTracker.TrackerType)status++;
                         var trackerCount = Trackers[type].GetTrackers().Count;
                         await Program.Client.SetActivityAsync(new Game($"{trackerCount} {type.ToString()} Trackers", ActivityType.Watching));
+                        await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", "Heartbeat. I am still alive :)"));
                     }
                     catch
                     {
@@ -214,7 +220,6 @@ namespace MopsBot
                         status = 0;
                         await UpdateServerCount();
                     }
-                    await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", "Heartbeat. I am still alive :)"));
                     await Task.Delay(30000);
                 }
             }
