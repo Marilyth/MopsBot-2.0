@@ -1198,6 +1198,7 @@ namespace MopsBot.Module
 
         [Command("GetAllTrackers", RunMode = RunMode.Async)]
         [Summary("Returns an embed containing all trackers of all channels of this server.")]
+        [Hide]
         [RequireUserPermission(ChannelPermission.ManageChannels)]
         [Ratelimit(1, 1, Measure.Minutes, RatelimitFlags.GuildwideLimit)]
         public async Task GetAllTrackers()
