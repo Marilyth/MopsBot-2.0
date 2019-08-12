@@ -141,7 +141,6 @@ namespace MopsBot.Data.Tracker
 
             foreach(string cur in ToTrack){
                 string curMod = cur;
-                if(curMod.StartsWith("as:")) break;
                 if(curMod.Contains("graph:")) curMod = curMod.Replace("graph:", string.Empty);
                 if(curMod.Contains("always:")) curMod = curMod.Replace("always:", string.Empty);
                 string[] keywords = curMod.Split("->");
@@ -149,6 +148,7 @@ namespace MopsBot.Data.Tracker
                 bool summarize = false;
                 bool find = false;
                 foreach(string keyword in keywords){
+                    if(keyword.StartsWith("as:")) break;
                     int.TryParse(keyword, out int index);
                     if(summarize){
                         result[cur] = "";
