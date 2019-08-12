@@ -62,7 +62,7 @@ namespace MopsBot.Data.Tracker
         {
             //name = name.Replace(" ", string.Empty);
             Name = name;
-            ToTrack = name.Split("|||")[1].Replace("\n", string.Empty).Split(",").ToList();
+            ToTrack = name.Split("|||")[1].Split("\n").ToList();
 
             //Check if name yields proper results.
             try
@@ -207,7 +207,7 @@ namespace MopsBot.Data.Tracker
 
             changed = false;
             foreach(var kvp in newInformation){
-                string oldS = oldInformation[kvp.Key];
+                string oldS = oldInformation.ContainsKey(kvp.Key) ? oldInformation[kvp.Key] : "No Value Found";
                 string newS = kvp.Value;
                 var keyName = kvp.Key.Contains("as:") ? kvp.Key.Split(":").Last() : kvp.Key.Split("->").Last();
 

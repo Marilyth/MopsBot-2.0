@@ -747,11 +747,11 @@ namespace MopsBot.Module
                      "always:<location> adds the value to the embed, regardless of whether it changed or not.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
-            public async Task trackJson(string source, params string[] query)
+            public async Task trackJson(string source, [Remainder]string paths)
             {
                 using (Context.Channel.EnterTypingState())
                 {
-                    await Trackers[BaseTracker.TrackerType.JSON].AddTrackerAsync(String.Join("|||", new string[] { source, String.Join(",", query) }), Context.Channel.Id);
+                    await Trackers[BaseTracker.TrackerType.JSON].AddTrackerAsync(String.Join("|||", new string[] { source, paths }), Context.Channel.Id);
                     await ReplyAsync($"Keeping track of `{source}`'s attributes from now on!");
                 }
             }
