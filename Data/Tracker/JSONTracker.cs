@@ -188,8 +188,13 @@ namespace MopsBot.Data.Tracker
                 
                 if(summarize == false)
                     result[cur] = tmpJson.ToString();
-                else if(keywords.Last().StartsWith("all") || keywords.Last().StartsWith("as:"))
-                    result[cur] = string.Join(", ", tmpJson);
+                else if(keywords.Last().StartsWith("all") || keywords.Last().StartsWith("as:")){
+                    try{
+                        result[cur] = string.Join(", ", tmpJson);
+                    } catch {
+                        result[cur] = "No Value Found";
+                    }
+                }
             }
 
             return result;
