@@ -365,7 +365,7 @@ namespace MopsBot.Data.Tracker
                         else
                             chatPreview += comments[i].commenter.display_name + ": " + comments[i].message.body + "\n";
                     }
-                    if(chatPreview.Equals("```yaml\n")) chatPreview += "Could not fetch chat messages.";
+                    if(chatPreview.Equals("```yaml\n")) chatPreview += "Could not fetch chat messages.\nFollowers/Subs only, or empty?";
                     chatPreview += "```";
 
                     e.AddField("Chat Preview", chatPreview);
