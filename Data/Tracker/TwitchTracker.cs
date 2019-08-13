@@ -292,12 +292,12 @@ namespace MopsBot.Data.Tracker
 
         private static async Task<RootChatObject> GetVodChat(ulong vodID, string nextCursor = null)
         {
-            return await FetchJSONDataAsync<RootChatObject>($"https://api.twitch.tv/v5/videos/" + vodID + "/comments?cursor=" + nextCursor, KeyValuePair.Create("Client-ID", "2b20365ibn3ai5ko6n4jp9k7qrkw0o"), acceptHeader);
+            return await FetchJSONDataAsync<RootChatObject>($"https://api.twitch.tv/v5/videos/" + vodID + "/comments?cursor=" + nextCursor, KeyValuePair.Create("Client-ID", $"{Program.Config["Twitch"]}"), acceptHeader);
         }
 
         public static async Task<RootChatObject> GetVodChat(ulong vodID, uint secsIntoVod = 0, bool fetchNexts = true)
         {
-            var result = await FetchJSONDataAsync<RootChatObject>($"https://api.twitch.tv/v5/videos/" + vodID + "/comments?content_offset_seconds=" + secsIntoVod, KeyValuePair.Create("Client-ID", "2b20365ibn3ai5ko6n4jp9k7qrkw0o"), acceptHeader);
+            var result = await FetchJSONDataAsync<RootChatObject>($"https://api.twitch.tv/v5/videos/" + vodID + "/comments?content_offset_seconds=" + secsIntoVod, KeyValuePair.Create("Client-ID", $"{Program.Config["Twitch"]}"), acceptHeader);
             string next = result._next;
             while (fetchNexts && next != null)
             {
