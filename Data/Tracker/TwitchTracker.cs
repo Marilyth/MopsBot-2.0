@@ -360,7 +360,7 @@ namespace MopsBot.Data.Tracker
                     for (int i = 0; i < comments.Count; i++)
                     {
                         if (comments[i].message.body.Length > 100)
-                            chatPreview += comments[i].commenter.display_name + ": " + comments[i].message.body.Take(100) + " [...]\n";
+                            chatPreview += comments[i].commenter.display_name + ": " + string.Join("", comments[i].message.body.Take(100)) + " [...]\n";
                         else
                             chatPreview += comments[i].commenter.display_name + ": " + comments[i].message.body + "\n";
                     }
