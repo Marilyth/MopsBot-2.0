@@ -78,8 +78,11 @@ namespace MopsBot.Data.Tracker
             if(ViewerGraph != null)
                 ViewerGraph.InitPlot();
 
-            if(VideoId != null)
-                SetTimer(60000, 60000);
+            if(VideoId != null){
+                SetTimer(60000);
+            } else {
+                SetTimer(900000);
+            }
 
             foreach (var channelMessage in ToUpdate ?? new Dictionary<ulong, ulong>())
             {
@@ -171,7 +174,7 @@ namespace MopsBot.Data.Tracker
 
                 liveStatus = await fetchLiveVideoContent();
 
-                bool isStreaming = liveStatus.snippet.liveBroadcastContent.Equals("live");
+                bool isStreaming = liveStatus?.snippet?.liveBroadcastContent?.Equals("live") ?? false;
 
                 if (!isStreaming)
                 {
