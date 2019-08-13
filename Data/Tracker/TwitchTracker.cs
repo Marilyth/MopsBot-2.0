@@ -305,7 +305,8 @@ namespace MopsBot.Data.Tracker
                 next = tmpResult._next;
                 result.comments = result.comments.Concat(tmpResult.comments).ToList();
             }
-            result.comments.Reverse();
+            if(result.comments == null) result.comments = new List<Comment>();
+            else result.comments.Reverse();
             return result;
         }
 
@@ -364,6 +365,7 @@ namespace MopsBot.Data.Tracker
                         else
                             chatPreview += comments[i].commenter.display_name + ": " + comments[i].message.body + "\n";
                     }
+                    if(chatPreview.Equals("```yaml\n")) chatPreview += "Could not fetch chat messages.";
                     chatPreview += "```";
 
                     e.AddField("Chat Preview", chatPreview);
