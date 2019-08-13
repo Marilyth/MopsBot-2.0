@@ -24,6 +24,7 @@ namespace MopsBot.Data.Tracker
         public event StatusEventHandler OnOffline;
         public delegate Task HostingEventHandler(string hostName, string targetName, int viewers);
         public delegate Task StatusEventHandler(BaseTracker sender);
+        private List<Comment> comments = new List<Comment>();
         public DatePlot ViewerGraph;
         private TwitchResult StreamerStatus;
         public Boolean IsOnline;
@@ -31,7 +32,7 @@ namespace MopsBot.Data.Tracker
         public bool IsHosting;
         public int TimeoutCount;
         public ulong TwitchId;
-        public static readonly string GAMECHANGE = "NotifyOnGameChange", HOST = "NotifyOnHost", ONLINE = "NotifyOnOnline", OFFLINE = "NotifyOnOffline", SHOWEMBED = "ShowEmbed", THUMBNAIL = "LargeThumbnail", SENDPDF = "SendGraphPDFAfterOffline";
+        public static readonly string GAMECHANGE = "NotifyOnGameChange", HOST = "NotifyOnHost", ONLINE = "NotifyOnOnline", OFFLINE = "NotifyOnOffline", SHOWEMBED = "ShowEmbed", SHOWCHAT = "ShowChat", SHOWVOD = "ShowVod", THUMBNAIL = "LargeThumbnail", SENDPDF = "SendGraphPDFAfterOffline";
 
         public TwitchTracker() : base()
         {
@@ -87,9 +88,11 @@ namespace MopsBot.Data.Tracker
         public async override void PostChannelAdded(ulong channelId)
         {
             base.PostChannelAdded(channelId);
-            
+
             var config = ChannelConfig[channelId];
             config[SHOWEMBED] = true;
+            config[SHOWCHAT] = true;
+            config[SHOWVOD] = true;
             config[THUMBNAIL] = false;
             config[GAMECHANGE] = true;
             config[HOST] = false;
@@ -226,7 +229,7 @@ namespace MopsBot.Data.Tracker
                     await ModifyAsync(x => x.ViewerGraph.AddValue(CurGame, StreamerStatus.stream.viewers));
 
                     foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][SHOWEMBED]).ToList())
-                        await OnMajorChangeTracked(channel, createEmbed((bool)ChannelConfig[channel][THUMBNAIL]));
+                        await OnMajorChangeTracked(channel, createEmbed((bool)ChannelConfig[channel][THUMBNAIL], (bool)ChannelConfig[channel][SHOWCHAT], (bool)ChannelConfig[channel][SHOWVOD]));
                 }
             }
             catch (Exception e)
@@ -235,15 +238,19 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public override async void Conversion(object obj = null){
+        public override async void Conversion(object obj = null)
+        {
             bool save = false;
-            foreach(var channel in ChannelConfig.Keys.ToList()){
-                if(!ChannelConfig[channel].ContainsKey(SENDPDF)){
-                    ChannelConfig[channel][SENDPDF] = false;
+            foreach (var channel in ChannelConfig.Keys.ToList())
+            {
+                if (!ChannelConfig[channel].ContainsKey(SHOWCHAT))
+                {
+                    ChannelConfig[channel][SHOWCHAT] = true;
+                    ChannelConfig[channel][SHOWVOD] = true;
                     save = true;
                 }
             }
-            if(save)
+            if (save)
                 await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
         }
 
@@ -283,7 +290,26 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public Embed createEmbed(bool largeThumbnail = false, bool lastEmbed = false)
+        private static async Task<RootChatObject> GetVodChat(ulong vodID, string nextCursor = null)
+        {
+            return await FetchJSONDataAsync<RootChatObject>($"https://api.twitch.tv/v5/videos/" + vodID + "/comments?cursor=" + nextCursor, KeyValuePair.Create("Client-ID", "2b20365ibn3ai5ko6n4jp9k7qrkw0o"), acceptHeader);
+        }
+
+        public static async Task<RootChatObject> GetVodChat(ulong vodID, uint secsIntoVod = 0, bool fetchNexts = true)
+        {
+            var result = await FetchJSONDataAsync<RootChatObject>($"https://api.twitch.tv/v5/videos/" + vodID + "/comments?content_offset_seconds=" + secsIntoVod, KeyValuePair.Create("Client-ID", "2b20365ibn3ai5ko6n4jp9k7qrkw0o"), acceptHeader);
+            string next = result._next;
+            while (fetchNexts && next != null)
+            {
+                var tmpResult = await GetVodChat(vodID, next);
+                next = tmpResult._next;
+                result.comments = result.comments.Concat(tmpResult.comments).ToList();
+            }
+            result.comments.Reverse();
+            return result;
+        }
+
+        public Embed createEmbed(bool largeThumbnail = false, bool showChat = false, bool showVod = false)
         {
             Channel streamer = StreamerStatus.stream.channel;
             ViewerGraph.SetMaximumLine();
@@ -293,30 +319,54 @@ namespace MopsBot.Data.Tracker
             e.Title = streamer.status;
             e.Url = streamer.url;
             e.WithCurrentTimestamp();
-            e.Description = lastEmbed ? "" : "**For people with manage channel permission**:\n🖌: Change chart colour\n🔄: Switch thumbnail and chart position\n";
 
             if (VodUrl != null)
             {
-                List<KeyValuePair<string, double>> games = new List<KeyValuePair<string, double>>();
-                for (int i = 0; i < ViewerGraph.PlotDataPoints.Count; i++)
+                if (showVod)
                 {
-                    string current = ViewerGraph.PlotDataPoints[i].Key;
-                    games.Add(new KeyValuePair<string, double>(current, ViewerGraph.PlotDataPoints[i].Value.Key));
-
-                    while (i < ViewerGraph.PlotDataPoints.Count && ViewerGraph.PlotDataPoints[i].Key.Equals(current))
+                    List<KeyValuePair<string, double>> games = new List<KeyValuePair<string, double>>();
+                    for (int i = 0; i < ViewerGraph.PlotDataPoints.Count; i++)
                     {
-                        i++;
+                        string current = ViewerGraph.PlotDataPoints[i].Key;
+                        games.Add(new KeyValuePair<string, double>(current, ViewerGraph.PlotDataPoints[i].Value.Key));
+
+                        while (i < ViewerGraph.PlotDataPoints.Count && ViewerGraph.PlotDataPoints[i].Key.Equals(current))
+                        {
+                            i++;
+                        }
+                        i--;
                     }
-                    i--;
+
+                    string vods = "";
+                    for (int i = Math.Max(0, games.Count - 6); i < games.Count; i++)
+                    {
+                        TimeSpan duration = i != games.Count - 1 ? OxyPlot.Axes.DateTimeAxis.ToDateTime(games[i + 1].Value) - OxyPlot.Axes.DateTimeAxis.ToDateTime(games[i].Value)
+                                                                 : DateTime.UtcNow - OxyPlot.Axes.DateTimeAxis.ToDateTime(games[i].Value);
+                        TimeSpan timestamp = OxyPlot.Axes.DateTimeAxis.ToDateTime(games[i].Value) - OxyPlot.Axes.DateTimeAxis.ToDateTime(games[0].Value);
+                        vods += $"\n[{games[i].Key}]({VodUrl}?t={(int)timestamp.TotalMinutes}m) ({duration.ToString("hh")}h {duration.ToString("mm")}m)";
+                    }
+                    e.AddField("VOD Segments", vods);
                 }
 
-                e.Description += "\n**VOD Segments**";
-                for (int i = Math.Max(0, games.Count - 10); i < games.Count; i++)
+                if (showChat)
                 {
-                    TimeSpan duration = i != games.Count - 1 ? OxyPlot.Axes.DateTimeAxis.ToDateTime(games[i + 1].Value) - OxyPlot.Axes.DateTimeAxis.ToDateTime(games[i].Value)
-                                                             : DateTime.UtcNow - OxyPlot.Axes.DateTimeAxis.ToDateTime(games[i].Value);
-                    TimeSpan timestamp = OxyPlot.Axes.DateTimeAxis.ToDateTime(games[i].Value) - OxyPlot.Axes.DateTimeAxis.ToDateTime(games[0].Value);
-                    e.Description += $"\n[{games[i].Key}]({VodUrl}?t={(int)timestamp.TotalMinutes}m) ({duration.ToString("hh")}h {duration.ToString("mm")}m)";
+                    var streamDuration = DateTime.UtcNow - OxyPlot.Axes.DateTimeAxis.ToDateTime(ViewerGraph.PlotDataPoints[0].Value.Key);
+                    var chat = GetVodChat(ulong.Parse(VodUrl.Split("/").Last()), (uint)streamDuration.TotalSeconds - 10).Result;
+
+                    if(chat.comments.Count >= 5) comments = chat.comments.Take(5).ToList();
+                    else comments = chat.comments.Concat(comments.Take(Math.Min(comments.Count, 5 - chat.comments.Count))).ToList();
+
+                    string chatPreview = "```yaml\n";
+                    for (int i = 0; i < comments.Count; i++)
+                    {
+                        if (comments[i].message.body.Length > 100)
+                            chatPreview += comments[i].commenter.display_name + ": " + comments[i].message.body.Take(100) + " [...]\n";
+                        else
+                            chatPreview += comments[i].commenter.display_name + ": " + comments[i].message.body + "\n";
+                    }
+                    chatPreview += "```";
+
+                    e.AddField("Chat Preview", chatPreview);
                 }
             }
 
