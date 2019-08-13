@@ -357,7 +357,7 @@ namespace MopsBot.Data.Tracker
                     else comments = chat.comments.Concat(comments.Take(Math.Min(comments.Count, 5 - chat.comments.Count))).ToList();
 
                     string chatPreview = "```yaml\n";
-                    for (int i = comments.Count - 1; i >= 0; i++)
+                    for (int i = comments.Count - 1; i >= 0; i--)
                     {
                         if (comments[i].message.body.Length > 100)
                             chatPreview += comments[i].commenter.display_name + ": " + string.Join("", comments[i].message.body.Take(100)) + " [...]\n";
