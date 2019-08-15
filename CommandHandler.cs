@@ -121,17 +121,21 @@ namespace MopsBot
             // If the command failed, notify the user
             if (!result.IsSuccess && !result.ErrorReason.Equals("") && !context.Guild.Id.Equals(264445053596991498))
             {
-                Task.Run(async () => {
+                Task.Run(async () =>
+                {
                     //Wait for exception to reach log
                     await Task.Delay(100);
                     var embed = await CreateErrorEmbedAsync(commandInfo.Value, context as SocketCommandContext, result);
-                    if(mostRecentException != null){
-                        using(var writer = File.CreateText("mopsdata//Exception.txt"))
+                    if (mostRecentException != null)
+                    {
+                        using (var writer = File.CreateText("mopsdata//Exception.txt"))
                             writer.WriteLine(mostRecentException.ToString());
                         await (Program.Client.GetChannel(583906837351366657) as ITextChannel).SendFileAsync("mopsdata//Exception.txt", "", embed: embed);
                         File.Delete("mopsdata//Exception.txt");
                         mostRecentException = null;
-                    } else{
+                    }
+                    else
+                    {
                         await (Program.Client.GetChannel(583906837351366657) as ITextChannel).SendMessageAsync("", embed: embed);
                     }
                 });
@@ -140,6 +144,16 @@ namespace MopsBot
                     await context.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}\nIf your parameter contains spaces, please wrap it around quotation marks like this: `\"A Parameter\"`.");
                 else if (!result.ErrorReason.Contains("Command not found"))
                     await context.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}");
+            }
+
+
+            else if (result.IsSuccess && context.Message.Content.Contains("track", StringComparison.InvariantCultureIgnoreCase))
+            {
+                if ((await MopsBot.Data.Entities.User.GetUserAsync(context.User.Id)).IsTaCDue())
+                {
+                    await context.Channel.SendMessageAsync("Weekly reminder:\nBy using Mops's tracking services, you agree to these terms and conditions: http://37.221.195.236/Terms_And_Conditions");
+                    await MopsBot.Data.Entities.User.ModifyUserAsync(context.User.Id, x => x.LastTaCReminder = DateTime.UtcNow);
+                }
             }
 
             //Add experience the size of the command length
@@ -299,7 +313,7 @@ namespace MopsBot
         private async Task<Embed> CreateErrorEmbedAsync(CommandInfo command, SocketCommandContext context, IResult result)
         {
             var embed = new EmbedBuilder();
-            if(context.IsPrivate) return embed.WithDescription("Private channel. Not taken serious.").Build();
+            if (context.IsPrivate) return embed.WithDescription("Private channel. Not taken serious.").Build();
 
             embed.WithAuthor(x => x.WithName("Command failed").WithIconUrl(context.User.GetAvatarUrl()).WithUrl(context.Message.GetJumpUrl()));
             embed.WithDescription($"**{context.Message.Content}**\nGuild: {context.Guild.Name} ({context.Guild.Id})\nChannel: {context.Channel.Name} ({context.Channel.Id})");
@@ -330,17 +344,19 @@ namespace MopsBot
                                      ((RequireBotPermissionAttribute)prec).GuildPermission.Value.ToString();
                     preconditions += $"Requires BotPermission: {permission} ({((await prec.CheckPermissionsAsync(context, command, _provider)).IsSuccess ? "**passed**" : "**failed**")})\n";
                 }
-                else if(prec.GetType() != typeof(RequireUserVotepoints) && prec.GetType() != typeof(RatelimitAttribute)){
+                else if (prec.GetType() != typeof(RequireUserVotepoints) && prec.GetType() != typeof(RatelimitAttribute))
+                {
                     preconditions += prec + $" ({((await prec.CheckPermissionsAsync(context, command, _provider)).IsSuccess ? "**passed**" : "**failed**")})\n";
                 }
-                else{
+                else
+                {
                     preconditions += prec + " (Cannot test)\n";
                 }
             }
             embed.AddField("Preconditions", preconditions.Length > 0 ? preconditions : "None");
 
             embed.AddField("Error", result.ErrorReason.Length > 0 ? result.ErrorReason : "None");
-            if(mostRecentException != null)
+            if (mostRecentException != null)
                 embed.AddField("Exception", (mostRecentException.GetBaseException().Message?.Length ?? 0) > 0 ? mostRecentException.GetBaseException().Message : "None");
 
             return embed.Build();

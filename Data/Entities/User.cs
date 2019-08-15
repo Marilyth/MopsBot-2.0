@@ -21,6 +21,7 @@ namespace MopsBot.Data.Entities
         public int Money, Experience, Punched, Hugged, Kissed;
         public int WeaponId;
         public List<int> Inventory;
+        public DateTime LastTaCReminder = DateTime.MinValue;
 
         private User(ulong pId)
         {
@@ -40,6 +41,10 @@ namespace MopsBot.Data.Entities
         public double CalcCurLevelDouble()
         {
             return Math.Sqrt(Experience / 200.0);
+        }
+
+        public bool IsTaCDue(){
+            return (DateTime.UtcNow - LastTaCReminder).TotalDays >= 7;
         }
 
         public static async Task<User> GetUserAsync(ulong id)
