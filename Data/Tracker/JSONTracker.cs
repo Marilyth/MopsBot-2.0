@@ -20,6 +20,7 @@ namespace MopsBot.Data.Tracker
         public Dictionary<string, string> PastInformation;
         public List<string> ToTrack;
         public DatePlot DataGraph;
+        public static readonly string INTERVAL = "IntervalInMs";
 
         public JSONTracker() : base()
         {
@@ -90,12 +91,46 @@ namespace MopsBot.Data.Tracker
             }
         }
 
+        public override async void Conversion(object obj = null)
+        {
+            bool save = false;
+            foreach (var channel in ChannelConfig.Keys.ToList())
+            {
+                if (!ChannelConfig[channel].ContainsKey(INTERVAL))
+                {
+                    ChannelConfig[channel][INTERVAL] = 60000;
+                    save = true;
+                }
+            }
+            if (save)
+                await StaticBase.Trackers[TrackerType.JSON].UpdateDBAsync(this);
+        }
+
+        public async override void PostChannelAdded(ulong channelId)
+        {
+            base.PostChannelAdded(channelId);
+
+            var config = ChannelConfig[channelId];
+            config[INTERVAL] = 600000;
+
+            await StaticBase.Trackers[TrackerType.JSON].UpdateDBAsync(this);
+        }
+
+        public override bool IsConfigValid(Dictionary<string, object> config, out string reason){
+            reason = "";
+            if((int)config[INTERVAL] < 60000){
+                reason = "Interval can't be lower than 1 minute";
+                return false;
+            }
+            return true;
+        }
+
         public async override void PostInitialisation(object info = null)
         {
             if (DataGraph != null)
                 DataGraph.InitPlot("Date", "Value", format: "dd-MMM", relative: false);
 
-            SetTimer(60000);
+            SetTimer((int)ChannelConfig.First().Value[INTERVAL]);
         }
 
         protected async override void CheckForChange_Elapsed(object stateinfo)

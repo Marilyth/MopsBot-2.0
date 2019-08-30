@@ -1225,7 +1225,7 @@ namespace MopsBot.Module
         {
             await context.Context.Channel.SendMessageAsync($"Current Config:\n```yaml\n{string.Join("\n", tracker.ChannelConfig[context.Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```\nPlease reply with one or more changed lines.");
             var reply = await context.NextMessageAsync(new EnsureSourceUserCriterion(), TimeSpan.FromMinutes(5));
-            var settings = tracker.ChannelConfig[reply.Channel.Id];
+            var settings = tracker.ChannelConfig[reply.Channel.Id].ToDictionary(x => x.Key, x => x.Value);
 
             if (reply != null)
             {
@@ -1258,8 +1258,14 @@ namespace MopsBot.Module
                     }
                 }
 
-                await StaticBase.Trackers[trackerType].UpdateDBAsync(tracker);
-                await reply.Channel.SendMessageAsync($"New Config:\n```yaml\n{string.Join("\n", tracker.ChannelConfig[reply.Channel.Id].Select(x => x.Key + ": " + x.Value))}```");
+                if(!tracker.IsConfigValid(settings, out string reason)){
+                    await reply.Channel.SendMessageAsync($"Updating failed due to:\n{reason}");
+                }
+                else{
+                    tracker.ChannelConfig[reply.Channel.Id] = settings;
+                    await StaticBase.Trackers[trackerType].UpdateDBAsync(tracker);
+                    await reply.Channel.SendMessageAsync($"New Config:\n```yaml\n{string.Join("\n", tracker.ChannelConfig[reply.Channel.Id].Select(x => x.Key + ": " + x.Value))}```");
+                }
             }
             else
             {
