@@ -75,8 +75,9 @@ namespace MopsBot.Data.Tracker
                         bool succeeded = double.TryParse(graphTest.Value, out double test);
 
                         if(succeeded){
+                            var chosenName = graphTest.Key.Contains("as:") ? graphTest.Key.Split(":").Last() : graphTest.Key;
                             if(DataGraph == null) DataGraph = new DatePlot("JSON" + Name.GetHashCode(), "Date", "Value", format: "dd-MMM", relativeTime: false, multipleLines: true);
-                            DataGraph.AddValueSeperate(graphTest.Key, test, relative:false);
+                            DataGraph.AddValueSeperate(chosenName, test, relative:false);
                         }
 
                         else throw new Exception("Graph value is not a number!");
