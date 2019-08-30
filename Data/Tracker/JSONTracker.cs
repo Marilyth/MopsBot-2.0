@@ -263,7 +263,7 @@ namespace MopsBot.Data.Tracker
                 }
             }
 
-            if(DataGraph != null) embed.ImageUrl = DataGraph.DrawPlot();
+            if(DataGraph != null && changed) embed.ImageUrl = DataGraph.DrawPlot();
 
             return embed.Build();
         }
