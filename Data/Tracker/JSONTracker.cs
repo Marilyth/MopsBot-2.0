@@ -131,7 +131,7 @@ namespace MopsBot.Data.Tracker
             if (DataGraph != null)
                 DataGraph.InitPlot("Date", "Value", format: "dd-MMM", relative: false);
 
-            SetTimer((int)ChannelConfig.First().Value[INTERVAL]);
+            SetTimer((int)ChannelConfig.FirstOrDefault().Value[INTERVAL]);
         }
 
         protected async override void CheckForChange_Elapsed(object stateinfo)
