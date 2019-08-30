@@ -413,6 +413,8 @@ namespace MopsBot.Module
                 var commandArgs = commandParams.Skip(1);
 
                 var reply = StaticBase.CustomCommands[Context.Guild.Id].Commands[commandName];
+
+                //Replace regular code
                 reply = reply.Replace("{User.Username}", $"{Context.User.Username}")
                              .Replace("{User.Mention}", $"{Context.User.Mention}")
                              .Replace("{User.Parameters}", string.Join(" ", commandArgs));
@@ -429,6 +431,25 @@ namespace MopsBot.Module
                         toInsert = string.Join(" ", commandArgs.Skip(from).Take(to - from + 1));
                     }
                     reply = reply.Replace("{User.Parameters:" + paramNumber + "}", toInsert);
+                }
+
+                //Replace URL code
+                reply = reply.Replace("%7BUser.Username%7D", $"{Context.User.Username.Replace(" ", "%20")}")
+                             .Replace("%7BUser.Mention%7D", $"{Context.User.Mention.Replace(" ", "%20")}")
+                             .Replace("%7BUser.Parameters%7D", string.Join(" ", commandArgs).Replace(" ", "%20"));
+                paramRequests = reply.Split("%7BUser.Parameters:");
+                foreach (var param in paramRequests)
+                {
+                    var paramNumber = param.Split("%7D").First();
+                    string toInsert = "";
+                    if (paramNumber.Contains(":"))
+                    {
+                        var range = paramNumber.Split(":");
+                        if (!int.TryParse(range.First(), out int from)) from = 0;
+                        if (!int.TryParse(range.Last(), out int to)) to = commandArgs.Count();
+                        toInsert = string.Join(" ", commandArgs.Skip(from).Take(to - from + 1));
+                    }
+                    reply = reply.Replace("%7BUser.Parameters:" + paramNumber + "%7D", toInsert.Replace(" ", "%20"));
                 }
 
                 if (reply.Contains("{Command:"))
