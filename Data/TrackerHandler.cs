@@ -164,8 +164,8 @@ namespace MopsBot.Data
                 var tracker = (T)Activator.CreateInstance(typeof(T), new object[] { name });
                 name = tracker.Name;
                 trackers.Add(name, tracker);
-                tracker.PostInitialisation();
                 tracker.PostChannelAdded(channelID);
+                tracker.PostInitialisation();
                 trackers[name].ChannelConfig[channelID]["Notification"] = notification;
                 trackers[name].OnMajorEventFired += OnMajorEvent;
                 trackers[name].OnMinorEventFired += OnMinorEvent;
