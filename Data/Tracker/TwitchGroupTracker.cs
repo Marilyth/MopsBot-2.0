@@ -44,8 +44,12 @@ namespace MopsBot.Data.Tracker
 
         public void FetchTrackers()
         {
-            var guildTrackers = StaticBase.Trackers[TrackerType.Twitch].GetGuildTrackers(ulong.Parse(Name)).Select(x => x as TwitchTracker).ToList();
-            trackers = guildTrackers;
+            try{
+                var guildTrackers = StaticBase.Trackers[TrackerType.Twitch].GetGuildTrackers(ulong.Parse(Name)).Select(x => x as TwitchTracker).ToList();
+                trackers = guildTrackers;
+            } catch {
+                var guildTrackers = new List<TwitchTracker>();
+            }
         }
 
         protected async override void CheckForChange_Elapsed(object stateinfo)
