@@ -196,10 +196,14 @@ namespace MopsBot.Data
 
         public override IEnumerable<BaseTracker> GetGuildTrackers(ulong guildId)
         {
-            var channels = Program.Client.GetGuild(guildId).TextChannels;
-            var allTrackers = trackers.Select(x => x.Value).ToList();
-            var guildTrackers = allTrackers.Where(x => x.ChannelConfig.Keys.Any(y => channels.Select(z => z.Id).Contains(y))).ToList();
-            return guildTrackers;
+            try{
+                var channels = Program.Client.GetGuild(guildId).TextChannels;
+                var allTrackers = trackers.Select(x => x.Value).ToList();
+                var guildTrackers = allTrackers.Where(x => x.ChannelConfig.Keys.Any(y => channels.Select(z => z.Id).Contains(y))).ToList();
+                return guildTrackers;
+            } catch {
+                return new List<BaseTracker>();
+            }
         }
 
         public async Task<bool> TryModifyTrackerAsync(string name, ulong channelId, Action<T> modifier)
