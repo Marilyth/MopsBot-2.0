@@ -39,7 +39,8 @@ namespace MopsBot.Data.Tracker
         {
             if (RankChannels == null) RankChannels = new Dictionary<ulong, ulong>();
             FetchTrackers();
-            SetTimer(60000);
+            if(trackers.Count != 0) 
+                SetTimer(60000);
         }
 
         public void FetchTrackers()
@@ -49,6 +50,7 @@ namespace MopsBot.Data.Tracker
                 trackers = guildTrackers;
             } catch {
                 var guildTrackers = new List<TwitchTracker>();
+                trackers = guildTrackers;
             }
         }
 
