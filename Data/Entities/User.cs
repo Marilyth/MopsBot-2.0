@@ -70,7 +70,7 @@ namespace MopsBot.Data.Entities
             double dateValue = OxyPlot.Axes.DateTimeAxis.ToDouble(DateTime.Today);
             
             if(MessageGraph == null){
-                MessageGraph = new DatePlot(Id + "MessageGraph", "Date", "Letters sent", "dd-MMM", false);
+                MessageGraph = new DatePlot(Id + "MessageGraph", "Date", "Characters sent", "dd-MMM", false);
                 MessageGraph.AddValue("Value", 0, DateTime.Today.AddDays(-1));
                 MessageGraph.AddValue("Value", 0, DateTime.Today.AddMilliseconds(-1));
                 MessageGraph.AddValue("Value", value, DateTime.Today);
@@ -95,9 +95,9 @@ namespace MopsBot.Data.Entities
 
         public void InitPlot(){
             if(MessageGraph == null){
-                MessageGraph = new DatePlot(Id + "MessageGraph", "Date", "Letters sent", "dd-MMM", false);
+                MessageGraph = new DatePlot(Id + "MessageGraph", "Date", "Characters sent", "dd-MMM", false);
             } else {
-                MessageGraph.InitPlot("Date", "Letters sent", "dd-MMM", false);
+                MessageGraph.InitPlot("Date", "Characters sent", "dd-MMM", false);
             }
         }
 
