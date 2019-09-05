@@ -22,6 +22,7 @@ namespace MopsBot.Data.Entities
         public int WeaponId;
         public List<int> Inventory;
         public DateTime LastTaCReminder = DateTime.MinValue;
+        public DatePlot MessageGraph;
 
         private User(ulong pId)
         {
@@ -63,6 +64,39 @@ namespace MopsBot.Data.Entities
         public static async Task ModifyUserAsync(ulong id, Action<User> modification)
         {
             await (await GetUserAsync(id)).ModifyAsync(modification);
+        }
+
+        public void AddGraphValue(int value){
+            double dateValue = OxyPlot.Axes.DateTimeAxis.ToDouble(DateTime.Today);
+            
+            if(MessageGraph == null){
+                MessageGraph = new DatePlot(Id + "MessageGraph", "Date", "Letters sent", "dd-MMM", false);
+                MessageGraph.AddValue("Value", value, DateTime.Today);
+            }
+
+            else {
+                if(MessageGraph.PlotDataPoints.Last().Value.Key < dateValue){
+                    //Finalize block of the last date captured
+                    var endOfLastDay = OxyPlot.Axes.DateTimeAxis.ToDouble(OxyPlot.Axes.DateTimeAxis.ToDateTime(MessageGraph.PlotDataPoints.Last().Value.Key).AddDays(1).AddMilliseconds(-2));
+                    MessageGraph.PlotDataPoints.Add(new KeyValuePair<string, KeyValuePair<double, double>>("Value", new KeyValuePair<double, double>(endOfLastDay, MessageGraph.PlotDataPoints.Last().Value.Value)));
+                    MessageGraph.PlotDataPoints.Add(new KeyValuePair<string, KeyValuePair<double, double>>("Value", new KeyValuePair<double, double>(endOfLastDay, 0)));
+                    
+                    //Start new block for today
+                    var startOfToday = OxyPlot.Axes.DateTimeAxis.ToDouble(DateTime.Today.AddMilliseconds(-1));
+                    MessageGraph.PlotDataPoints.Add(new KeyValuePair<string, KeyValuePair<double, double>>("Value", new KeyValuePair<double, double>(startOfToday, 0)));
+                    MessageGraph.PlotDataPoints.Add(new KeyValuePair<string, KeyValuePair<double, double>>("Value", new KeyValuePair<double, double>(dateValue, value)));
+                } else {
+                    MessageGraph.PlotDataPoints[MessageGraph.PlotDataPoints.Count - 1] = new KeyValuePair<string, KeyValuePair<double, double>>("Value", new KeyValuePair<double, double>(dateValue, MessageGraph.PlotDataPoints.Last().Value.Value + value));
+                }
+            }
+        }
+
+        public void InitPlot(){
+            if(MessageGraph == null){
+                MessageGraph = new DatePlot(Id + "MessageGraph", "Date", "Letters sent", "dd-MMM", false);
+            } else {
+                MessageGraph.InitPlot("Date", "Letters sent", "dd-MMM", false);
+            }
         }
 
         public static async Task<long> GetDBUserCount(ulong? guildId = null){
@@ -130,6 +164,11 @@ namespace MopsBot.Data.Entities
             e.AddField("Level", $"{CalcCurLevel()} ({Experience}/{CalcExperience(CalcCurLevel() + 1)}xp)\n{DrawProgressBar()}", true);
             e.AddField("Interactions", $"**Kissed** {Kissed} times\n**Hugged** {Hugged} times\n**Punched** {Punched} times", true);
             e.AddField("Votepoints", Money, false);
+
+            if(MessageGraph != null){
+                InitPlot();
+                e.WithThumbnailUrl(MessageGraph.DrawPlot());
+            }
 
             return e.Build();
         }

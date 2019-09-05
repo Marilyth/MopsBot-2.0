@@ -81,8 +81,12 @@ namespace MopsBot
                 var prefix = await GetGuildPrefixAsync(id);
 
                 //Add experience the size of the message length
-                if(!message.Author.IsBot)
-                    await MopsBot.Data.Entities.User.ModifyUserAsync(message.Author.Id, x => x.Experience += message.Content.Length);
+                if(!message.Author.IsBot){
+                    await MopsBot.Data.Entities.User.ModifyUserAsync(message.Author.Id, x => {
+                        x.Experience += message.Content.Length;
+                        x.AddGraphValue(message.Content.Length);
+                    });
+                }
 
                 // Determine if the message has a valid prefix, adjust argPos 
                 if (!message.Content.StartsWith("[ProcessBotMessage]") && !(message.HasMentionPrefix(client.CurrentUser, ref argPos) || message.HasStringPrefix(prefix, ref argPos) || message.HasCharPrefix('?', ref argPos))) return;
