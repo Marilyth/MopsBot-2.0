@@ -83,7 +83,9 @@ namespace MopsBot
                 // Determine if the message has a valid prefix, adjust argPos 
                 if (!message.Content.StartsWith("[ProcessBotMessage]") && !(message.HasMentionPrefix(client.CurrentUser, ref argPos) || message.HasStringPrefix(prefix, ref argPos) || message.HasCharPrefix('?', ref argPos))) return;
 
-                //StaticBase.people.AddStat(parameterMessage.Author.Id, 0, "experience");
+                //Add experience the size of the message length
+                if(!message.Author.IsBot)
+                    await MopsBot.Data.Entities.User.ModifyUserAsync(message.Author.Id, x => x.Experience += message.Content.Length);
 
                 if (char.IsWhiteSpace(message.Content[argPos]))
                     argPos += 1;
@@ -151,13 +153,10 @@ namespace MopsBot
             {
                 if ((await MopsBot.Data.Entities.User.GetUserAsync(context.User.Id)).IsTaCDue())
                 {
-                    await context.Channel.SendMessageAsync("Weekly reminder:\nBy using Mops's tracking services, you agree to these terms and conditions: http://37.221.195.236/Terms_And_Conditions");
+                    await context.Channel.SendMessageAsync($"Weekly reminder:\nBy using Mops's tracking services, you agree to these terms and conditions: {Program.Config["ServerAddress"]}/Terms_And_Conditions");
                     await MopsBot.Data.Entities.User.ModifyUserAsync(context.User.Id, x => x.LastTaCReminder = DateTime.UtcNow);
                 }
             }
-
-            //Add experience the size of the command length
-            await MopsBot.Data.Entities.User.ModifyUserAsync(context.User.Id, x => x.Experience += context.Message.Content.Length * 40);
         }
 
         /// <summary>
@@ -292,7 +291,7 @@ namespace MopsBot
 
         public static string GetCommandHelpImage(string command)
         {
-            return $"http://37.221.195.236/mops_example_usage/{command.ToLower()}.PNG?rand={StaticBase.ran.Next(0, 999999999)}".Replace(" ", "%20");
+            return $"{Program.Config["ServerAddress"]}/mops_example_usage/{command.ToLower()}.PNG?rand={StaticBase.ran.Next(0, 999999999)}".Replace(" ", "%20");
         }
 
         /// <summary>
