@@ -169,7 +169,7 @@ namespace MopsBot.Data.Entities
 
             if(MessageGraph != null){
                 InitPlot();
-                e.WithThumbnailUrl(MessageGraph.DrawPlot());
+                e.WithImageUrl(MessageGraph.DrawPlot());
             }
 
             return e.Build();
