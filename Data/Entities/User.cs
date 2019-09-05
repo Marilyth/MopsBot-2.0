@@ -71,6 +71,8 @@ namespace MopsBot.Data.Entities
             
             if(MessageGraph == null){
                 MessageGraph = new DatePlot(Id + "MessageGraph", "Date", "Letters sent", "dd-MMM", false);
+                MessageGraph.AddValue("Value", 0, DateTime.Today.AddDays(-1));
+                MessageGraph.AddValue("Value", 0, DateTime.Today.AddMilliseconds(-1));
                 MessageGraph.AddValue("Value", value, DateTime.Today);
             }
 
