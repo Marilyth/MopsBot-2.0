@@ -252,11 +252,13 @@ namespace MopsBot.Module
                 {
                     var toCheck = StaticBase.ChannelJanitors.Keys;
                     var toPrune = toCheck.Select(x => Tuple.Create(x, Program.Client.GetChannel(x) == null));
-                    if(!testing){
-                        foreach(var channel in toPrune.Where(x => x.Item2).Select(x => x.Item1).ToList()){
+                    if (!testing)
+                    {
+                        foreach (var channel in toPrune.Where(x => x.Item2).Select(x => x.Item1).ToList())
+                        {
                             bool worked = StaticBase.ChannelJanitors.TryGetValue(channel, out ChannelJanitor janitor);
-                            if(worked){
-                                MopsBot.Data.Entities.ChannelJanitor.RemoveFromDBAsync
+                            if (worked)
+                            {
                                 await ChannelJanitor.RemoveFromDBAsync(janitor);
                                 StaticBase.ChannelJanitors.Remove(channel);
                             }
@@ -369,6 +371,34 @@ namespace MopsBot.Module
                     }
                 }
             }
+
+            [Command("Prune")]
+            [RequireBotManage]
+            [Hide]
+            public async Task Prune(bool testing = true)
+            {
+                using (Context.Channel.EnterTypingState())
+                {
+                    var toCheck = StaticBase.WelcomeMessages.Keys;
+                    var toPrune = toCheck.Select(x => Tuple.Create(x, Program.Client.GetGuild(x) == null));
+                    if (!testing)
+                    {
+                        foreach (var guild in toPrune.Where(x => x.Item2).Select(x => x.Item1).ToList())
+                        {
+                            bool worked = StaticBase.WelcomeMessages.TryGetValue(guild, out MopsBot.Data.Entities.WelcomeMessage message);
+                            if (worked)
+                            {
+                                await message.RemoveWebhookAsync();
+
+                                StaticBase.WelcomeMessages.Remove(guild);
+                                await Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").DeleteOneAsync(x => x.GuildId == guild);
+                            }
+                        }
+                    }
+                    await ReplyAsync($"Pruned {toPrune.Where(x => x.Item2).Count()} objects");
+                }
+            }
+
         }
 
         [Command("CreateCommand")]
@@ -483,7 +513,7 @@ namespace MopsBot.Module
                     await (await ReplyAsync("[ProcessBotMessage]" + commandName)).DeleteAsync();
                 }
 
-                if(!reply.Equals(string.Empty))
+                if (!reply.Equals(string.Empty))
                     await ReplyAsync(reply);
             }
         }
@@ -563,12 +593,15 @@ namespace MopsBot.Module
                         moduleInformation += "\n";
 
                         moduleInformation += string.Join(", ", module.Submodules.Select(x => $"[{x.Name}\\*]({CommandHandler.GetCommandHelpImage(x.Name)})"));
-                        var modulesections = moduleInformation.Length/1024 + 1;
-                        if(modulesections > 1){
+                        var modulesections = moduleInformation.Length / 1024 + 1;
+                        if (modulesections > 1)
+                        {
                             var segments = moduleInformation.Split(", ");
                             var submoduleInformation = "";
-                            foreach(var segment in segments){
-                                if(submoduleInformation.Length + segment.Length > 1024){
+                            foreach (var segment in segments)
+                            {
+                                if (submoduleInformation.Length + segment.Length > 1024)
+                                {
                                     submoduleInformation = string.Concat(submoduleInformation.SkipLast(2));
                                     e.AddField($"**{module.Name}**", submoduleInformation);
                                     submoduleInformation = "";
@@ -577,7 +610,8 @@ namespace MopsBot.Module
                             }
                             e.AddField($"**{module.Name}**", submoduleInformation);
                         }
-                        else{
+                        else
+                        {
                             e.AddField($"**{module.Name}**", moduleInformation);
                         }
                     }
