@@ -254,7 +254,7 @@ namespace MopsBot.Module
                     var toPrune = toCheck.Select(x => Tuple.Create(x, Program.Client.GetChannel(x) == null));
                     if(!testing){
                         foreach(var channel in toPrune.Where(x => x.Item2).Select(x => x.Item1)){
-                            bool worked = StaticBase.ChannelJanitors.TryGetValue(Context.Channel.Id, out ChannelJanitor janitor);
+                            bool worked = StaticBase.ChannelJanitors.TryGetValue(channel, out ChannelJanitor janitor);
                             if(worked){
                                 await ChannelJanitor.RemoveFromDBAsync(janitor);
                                 StaticBase.ChannelJanitors.Remove(channel);
