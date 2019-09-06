@@ -120,6 +120,7 @@ namespace MopsBot
                         Task.Run(() => tracker.Value.PostInitialisation());
 
                     Program.MopsLog(new LogMessage(LogSeverity.Info, "Tracker init", $"Initialising {trackerType.ToString()}"));
+                    Task.Delay(5000).Wait();
                 }
 
                 init = true;
