@@ -257,7 +257,7 @@ namespace MopsBot.Module
                             bool worked = StaticBase.ChannelJanitors.TryGetValue(Context.Channel.Id, out ChannelJanitor janitor);
                             if(worked){
                                 await ChannelJanitor.RemoveFromDBAsync(janitor);
-                                StaticBase.ChannelJanitors.Remove(Context.Channel.Id);
+                                StaticBase.ChannelJanitors.Remove(channel);
                             }
                         }
                     }
