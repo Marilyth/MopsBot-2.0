@@ -242,6 +242,28 @@ namespace MopsBot.Module
                     }
                 }
             }
+
+            [Command("Prune")]
+            [RequireBotManage]
+            [Hide]
+            public async Task Prune(bool testing = true)
+            {
+                using (Context.Channel.EnterTypingState())
+                {
+                    var toCheck = StaticBase.ChannelJanitors.Keys;
+                    var toPrune = toCheck.Select(x => Tuple.Create(x, Program.Client.GetChannel(x) == null));
+                    if(!testing){
+                        foreach(var channel in toPrune.Where(x => x.Item2).Select(x => x.Item1)){
+                            bool worked = StaticBase.ChannelJanitors.TryGetValue(Context.Channel.Id, out ChannelJanitor janitor);
+                            if(worked){
+                                await ChannelJanitor.RemoveFromDBAsync(janitor);
+                                StaticBase.ChannelJanitors.Remove(Context.Channel.Id);
+                            }
+                        }
+                    }
+                    await ReplyAsync($"Pruned {toPrune.Where(x => x.Item2).Count()} objects");
+                }
+            }
         }
 
         [Group("WelcomeMessage")]
