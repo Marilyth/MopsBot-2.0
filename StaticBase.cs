@@ -67,9 +67,13 @@ namespace MopsBot
                 Task.Run(() =>
                 {
                     WelcomeMessages = Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").FindSync(x => true).ToEnumerable().ToDictionary(x => x.GuildId);
+                    Task.Delay(5000).Wait();
                     ChannelJanitors = MopsBot.Data.Entities.ChannelJanitor.GetJanitors().Result;
+                    Task.Delay(5000).Wait();
                     ReactGiveaways = new ReactionGiveaway();
+                    Task.Delay(5000).Wait();
                     ReactRoleJoin = new ReactionRoleJoin();
+                    Task.Delay(5000).Wait();
                     Poll = new ReactionPoll();
                 });
 
@@ -85,16 +89,16 @@ namespace MopsBot
                 //WoWTracker.WoWClient = new SharprWowApi.WowClient(Region.EU, Locale.en_GB, Program.Config["WoWKey"]);
 
                 Trackers = new Dictionary<BaseTracker.TrackerType, Data.TrackerWrapper>();
-                Trackers[BaseTracker.TrackerType.Osu] = new TrackerHandler<OsuTracker>();
-                Trackers[BaseTracker.TrackerType.Overwatch] = new TrackerHandler<OverwatchTracker>();
-                Trackers[BaseTracker.TrackerType.Twitch] = new TrackerHandler<TwitchTracker>();
-                Trackers[BaseTracker.TrackerType.TwitchGroup] = new TrackerHandler<TwitchGroupTracker>();
-                Trackers[BaseTracker.TrackerType.TwitchClip] = new TrackerHandler<TwitchClipTracker>();
                 Trackers[BaseTracker.TrackerType.Twitter] = new TrackerHandler<TwitterTracker>();
                 Trackers[BaseTracker.TrackerType.Youtube] = new TrackerHandler<YoutubeTracker>();
+                Trackers[BaseTracker.TrackerType.Twitch] = new TrackerHandler<TwitchTracker>();
                 Trackers[BaseTracker.TrackerType.YoutubeLive] = new TrackerHandler<YoutubeLiveTracker>();
                 Trackers[BaseTracker.TrackerType.Reddit] = new TrackerHandler<RedditTracker>();
                 Trackers[BaseTracker.TrackerType.JSON] = new TrackerHandler<JSONTracker>();
+                Trackers[BaseTracker.TrackerType.Osu] = new TrackerHandler<OsuTracker>();
+                Trackers[BaseTracker.TrackerType.Overwatch] = new TrackerHandler<OverwatchTracker>();
+                Trackers[BaseTracker.TrackerType.TwitchGroup] = new TrackerHandler<TwitchGroupTracker>();
+                Trackers[BaseTracker.TrackerType.TwitchClip] = new TrackerHandler<TwitchClipTracker>();
                 //Trackers[BaseTracker.TrackerType.WoW] = new TrackerHandler<WoWTracker>();
                 //Trackers[ITracker.TrackerType.WoWGuild] = new TrackerHandler<WoWGuildTracker>();
                 Trackers[BaseTracker.TrackerType.OSRS] = new TrackerHandler<OSRSTracker>();
@@ -120,7 +124,7 @@ namespace MopsBot
                         Task.Run(() => tracker.Value.PostInitialisation());
 
                     Program.MopsLog(new LogMessage(LogSeverity.Info, "Tracker init", $"Initialising {trackerType.ToString()}"));
-                    Task.Delay(5000).Wait();
+                    Task.Delay((int)(60000 / Trackers.Count)).Wait();
                 }
 
                 init = true;
