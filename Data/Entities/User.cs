@@ -169,6 +169,7 @@ namespace MopsBot.Data.Entities
 
             if(MessageGraph != null){
                 InitPlot();
+                MessageGraph.AddValue("Value", MessageGraph.PlotDataPoints.Last().Value.Value, DateTime.Now, false, false);
                 e.WithImageUrl(MessageGraph.DrawPlot());
             }
 
