@@ -253,9 +253,10 @@ namespace MopsBot.Module
                     var toCheck = StaticBase.ChannelJanitors.Keys;
                     var toPrune = toCheck.Select(x => Tuple.Create(x, Program.Client.GetChannel(x) == null));
                     if(!testing){
-                        foreach(var channel in toPrune.Where(x => x.Item2).Select(x => x.Item1)){
+                        foreach(var channel in toPrune.Where(x => x.Item2).Select(x => x.Item1).ToList()){
                             bool worked = StaticBase.ChannelJanitors.TryGetValue(channel, out ChannelJanitor janitor);
                             if(worked){
+                                MopsBot.Data.Entities.ChannelJanitor.RemoveFromDBAsync
                                 await ChannelJanitor.RemoveFromDBAsync(janitor);
                                 StaticBase.ChannelJanitors.Remove(channel);
                             }
