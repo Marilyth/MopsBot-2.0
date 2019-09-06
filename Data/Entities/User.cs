@@ -169,7 +169,14 @@ namespace MopsBot.Data.Entities
 
             if(MessageGraph != null){
                 InitPlot();
-                MessageGraph.AddValue("Value", MessageGraph.PlotDataPoints.Last().Value.Value, DateTime.Now, false, false);
+                if(MessageGraph.PlotDataPoints.Last().Value.Key < OxyPlot.Axes.DateTimeAxis.ToDouble(DateTime.Today)){
+                    MessageGraph.AddValue("Value", MessageGraph.PlotDataPoints.Last().Value.Key, OxyPlot.Axes.DateTimeAxis.ToDateTime(MessageGraph.PlotDataPoints.Last().Value.Key).AddDays(1).AddMilliseconds(-1), false, false);
+                    MessageGraph.AddValue("Value", 0, OxyPlot.Axes.DateTimeAxis.ToDateTime(MessageGraph.PlotDataPoints.Last().Value.Key).AddDays(1), false, false);
+                    MessageGraph.AddValue("Value", 0, DateTime.Now, false, false);
+                }
+                else
+                    MessageGraph.AddValue("Value", MessageGraph.PlotDataPoints.Last().Value.Value, DateTime.Now, false, false);
+                    
                 e.WithImageUrl(MessageGraph.DrawPlot());
             }
 
