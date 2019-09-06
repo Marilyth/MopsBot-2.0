@@ -81,7 +81,7 @@ namespace MopsBot
                 var prefix = await GetGuildPrefixAsync(id);
 
                 //Add experience the size of the message length
-                if(!message.Author.IsBot && (DateTime.Now - System.Diagnostics.Process.GetCurrentProcess().StartTime).Minutes >= 2){
+                if((DateTime.Now - System.Diagnostics.Process.GetCurrentProcess().StartTime).Minutes >= 2){
                     await MopsBot.Data.Entities.User.ModifyUserAsync(message.Author.Id, x => {
                         x.Experience += message.Content.Length;
                         x.AddGraphValue(message.Content.Length);
