@@ -192,7 +192,7 @@ namespace MopsBot.Data.Tracker
                         TPInbox pastInfo = PastInformation.delivery;
                         TPInbox currentInfo = await GetTPInbox(APIKey);
                         if(currentInfo.items.Count != pastInfo.items.Count || currentInfo.coins != pastInfo.coins){
-                            foreach(var channel in ChannelConfig.Where(x => (bool)x.Value[TRACKTPSELLS])){
+                            foreach(var channel in ChannelConfig.Where(x => (bool)x.Value[TRACKTPDELIVERY])){
                                 await OnMajorChangeTracked(channel.Key, CreateTPInboxEmbed(pastInfo, currentInfo));
                             }
 
