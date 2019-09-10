@@ -600,7 +600,7 @@ namespace MopsBot.Module
                             var submoduleInformation = "";
                             foreach (var segment in segments)
                             {
-                                if (submoduleInformation.Length + segment.Length > 1024)
+                                if (submoduleInformation.Length + segment.Length > 1000)
                                 {
                                     submoduleInformation = string.Concat(submoduleInformation.SkipLast(2));
                                     e.AddField($"**{module.Name}**", submoduleInformation);
