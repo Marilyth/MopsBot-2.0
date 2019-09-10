@@ -255,7 +255,7 @@ namespace MopsBot.Data.Tracker
             return embed.Build();
         }
 
-        public static Embed CreateTPInboxEmbed(TPInbox inboxBefore, TPInbox inboxAfter, string CharacterName = "")
+        private Embed CreateTPInboxEmbed(TPInbox inboxBefore, TPInbox inboxAfter)
         {
             var embed = new EmbedBuilder();
             embed.WithColor(222, 39, 0);
@@ -274,7 +274,7 @@ namespace MopsBot.Data.Tracker
             return embed.Build();
         }
 
-        public static async Task<Embed> CreateTPBuyEmbed(TPTransaction buy, string CharacterName = "")
+        private async Task<Embed> CreateTPBuyEmbed(TPTransaction buy)
         {
             var embed = new EmbedBuilder();
             embed.WithColor(222, 39, 0);
@@ -294,7 +294,7 @@ namespace MopsBot.Data.Tracker
             return embed.Build();
         }
 
-        public static async Task<Embed> CreateTPSellEmbed(TPTransaction sell, string CharacterName = "")
+        private async Task<Embed> CreateTPSellEmbed(TPTransaction sell)
         {
             var embed = new EmbedBuilder();
             embed.WithColor(222, 39, 0);
@@ -335,26 +335,7 @@ namespace MopsBot.Data.Tracker
             return embed.Build();
         }
 
-        public static async Task<Embed> CreateWealthEmbed(Wallet wealthBefore, Wallet wealthAfter, string CharacterName = "")
-        {
-            var embed = new EmbedBuilder();
-            embed.WithColor(222, 39, 0);
-            embed.WithTitle(CharacterName + "s wealth changed").WithCurrentTimestamp();
-
-            bool loss = wealthAfter.value < wealthBefore.value;
-            var currency = ToIngameCurrency(wealthBefore.value);
-            var currencyAfter = ToIngameCurrency(wealthAfter.value);
-            var difference = ToIngameCurrency(!loss ? wealthAfter.value - wealthBefore.value : wealthBefore.value - wealthAfter.value);
-            embed.AddField("Money", $"{currencyAfter.gold}{Gold} {currencyAfter.silver}{Silver} {currencyAfter.copper}{Copper}\n{(loss ? $"-" : "+")} {difference.gold}{Gold} {difference.silver}{Silver} {difference.copper}{Copper}", true);
-            embed.WithFooter(x => {
-                                   x.Text = "GW2Tracker"; 
-                                   x.IconUrl="https://1001019.v1.pressablecdn.com/wp-content/uploads/2012/08/GW2-Logo.jpg";
-                            });
-
-            return embed.Build();
-        }
-
-        public async static Task<Embed> CreateAchievementEmbed(List<Achievement> newAchievements, string CharacterName = "")
+        private async Task<Embed> CreateAchievementEmbed(List<Achievement> newAchievements)
         {
             var embed = new EmbedBuilder();
             embed.WithColor(222, 39, 0);
