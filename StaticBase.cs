@@ -97,6 +97,7 @@ namespace MopsBot
                 Trackers[BaseTracker.TrackerType.JSON] = new TrackerHandler<JSONTracker>();
                 Trackers[BaseTracker.TrackerType.Osu] = new TrackerHandler<OsuTracker>();
                 Trackers[BaseTracker.TrackerType.Overwatch] = new TrackerHandler<OverwatchTracker>();
+                Trackers[BaseTracker.TrackerType.GW2] = new TrackerHandler<GW2Tracker>();
                 Trackers[BaseTracker.TrackerType.TwitchGroup] = new TrackerHandler<TwitchGroupTracker>();
                 Trackers[BaseTracker.TrackerType.TwitchClip] = new TrackerHandler<TwitchClipTracker>();
                 //Trackers[BaseTracker.TrackerType.WoW] = new TrackerHandler<WoWTracker>();

@@ -737,6 +737,76 @@ namespace MopsBot.Module
             }
         }
 
+        [Group("GW2")]
+        [Hide]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
+        public class GW2 : InteractiveBase
+        {
+            [Command("Track", RunMode = RunMode.Async)]
+            [Summary("Keeps track of the specified GW2 player, in the Channel you are calling this command right now.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
+            public async Task trackOW(string APIKey, [Remainder]string gwUser)
+            {
+                using (Context.Channel.EnterTypingState())
+                {
+                    await Trackers[BaseTracker.TrackerType.GW2].AddTrackerAsync(APIKey + "|||" + gwUser, Context.Channel.Id);
+
+                    await ReplyAsync("Keeping track of " + gwUser + "'s stats, from now on!");
+                }
+            }
+
+            [Command("UnTrack")]
+            [Summary("Stops keeping track of the specified GW2 player, in the Channel you are calling this command right now.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task unTrackOW([Remainder]BaseTracker gwUser)
+            {
+                if (await Trackers[BaseTracker.TrackerType.GW2].TryRemoveTrackerAsync(gwUser.Name, Context.Channel.Id))
+                    await ReplyAsync("Stopped keeping track of " + gwUser.Name + "'s stats!");
+            }
+
+            [Command("GetStats")]
+            [Summary("Returns an embed representing the stats of the specified GW2 player")]
+            public async Task GetStats(string APIKey, [Remainder]string gwUser)
+            {
+                await ReplyAsync("Stats fetched:", false, Data.Tracker.GW2Tracker.CreateLevelEmbed(Data.Tracker.GW2Tracker.GetCharacterEndpoint(gwUser, APIKey).Result));
+            }
+
+            [Command("GetTrackers", RunMode = RunMode.Async)]
+            [Summary("Returns the players that are tracked in the current channel.")]
+            public async Task getTrackers()
+            {
+                await ReplyAsync("Following players are currently being tracked:");
+                await MopsBot.Data.Interactive.MopsPaginator.CreatePagedMessage(Context.Channel.Id, StaticBase.Trackers[BaseTracker.TrackerType.GW2].GetTrackersEmbed(Context.Channel.Id, true));
+            }
+
+            [Command("SetNotification")]
+            [Summary("Sets the notification text that is used each time a players' stats changed.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task SetNotification(BaseTracker gwUser, [Remainder]string notification = "")
+            {
+                gwUser.ChannelConfig[Context.Channel.Id]["Notification"] = notification;
+                await StaticBase.Trackers[BaseTracker.TrackerType.GW2].UpdateDBAsync(gwUser);
+                await ReplyAsync($"Changed notification for `{gwUser.Name}` to `{notification}`");
+            }
+
+            [Command("ShowConfig")]
+            [Hide]
+            [Summary("Shows all the settings for this tracker, and their values")]
+            public async Task ShowConfig([Remainder]BaseTracker tracker)
+            {
+                await ReplyAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```");
+            }
+
+            [Command("ChangeConfig", RunMode = RunMode.Async)]
+            [Summary("Edit the Configuration for the tracker")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task ChangeConfig([Remainder]BaseTracker gwUser)
+            {
+                await ModifyConfig(this, gwUser, TrackerType.GW2);
+            }
+        }
+
         [Group("JSON")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public class JSON : InteractiveBase
