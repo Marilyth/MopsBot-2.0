@@ -81,8 +81,8 @@ namespace MopsBot.Data.Tracker
                     if(PastInformation.character == null){
                         PastInformation.character = await GetCharacterEndpoint(CharacterName, APIKey);
                         LevelGraph = new DatePlot($"{CharacterName.Replace(" ", "")}Level", "Date", "Level", "dd-MMM", false, true);
-                        LevelGraph.AddValueSeperate("Level", PastInformation.character.level);
-                        LevelGraph.AddValueSeperate("M-Level", PastInformation.character.masteryLevel);
+                        LevelGraph.AddValueSeperate("Level", PastInformation.character.level, relative: false);
+                        LevelGraph.AddValueSeperate("M-Level", PastInformation.character.masteryLevel, relative: false);
                         await StaticBase.Trackers[TrackerType.GW2].UpdateDBAsync(this);
                     }
 
@@ -91,10 +91,10 @@ namespace MopsBot.Data.Tracker
                         Character currentInfo = await GetCharacterEndpoint(CharacterName, APIKey);
 
                         if(currentInfo.level != pastInfo.level || currentInfo.masteryLevel != pastInfo.masteryLevel){
-                            LevelGraph.AddValueSeperate("Level", pastInfo.level);
-                            LevelGraph.AddValueSeperate("M-Level", pastInfo.masteryLevel);
-                            LevelGraph.AddValueSeperate("Level", currentInfo.level);
-                            LevelGraph.AddValueSeperate("M-Level", currentInfo.masteryLevel);
+                            LevelGraph.AddValueSeperate("Level", pastInfo.level, relative: false);
+                            LevelGraph.AddValueSeperate("M-Level", pastInfo.masteryLevel, relative: false);
+                            LevelGraph.AddValueSeperate("Level", currentInfo.level, relative: false);
+                            LevelGraph.AddValueSeperate("M-Level", currentInfo.masteryLevel, relative: false);
                             foreach(var channel in ChannelConfig.Where(x => (bool)x.Value[TRACKLEVEL])){
                                 await OnMajorChangeTracked(channel.Key, createLevelEmbed(pastInfo, currentInfo));
                             }
@@ -113,7 +113,7 @@ namespace MopsBot.Data.Tracker
                     if(PastInformation.wallet == null){
                         PastInformation.wallet = (await GetWealth(APIKey)).FirstOrDefault();
                         MoneyGraph = new DatePlot($"{CharacterName.Replace(" ", "")}Gold", "Date", "Gold", "dd-MMM", false);
-                        MoneyGraph.AddValue("Gold", PastInformation.wallet.value);
+                        MoneyGraph.AddValue("Gold", PastInformation.wallet.value, relative: false);
                         await StaticBase.Trackers[TrackerType.GW2].UpdateDBAsync(this);
                     }
 
@@ -122,8 +122,8 @@ namespace MopsBot.Data.Tracker
                         Wallet currentInfo = (await GetWealth(APIKey)).FirstOrDefault();
 
                         if(currentInfo.value != pastInfo.value){
-                            MoneyGraph.AddValue("Gold", pastInfo.value);
-                            MoneyGraph.AddValue("Gold", currentInfo.value);
+                            MoneyGraph.AddValue("Gold", pastInfo.value, relative: false);
+                            MoneyGraph.AddValue("Gold", currentInfo.value, relative: false);
                             foreach(var channel in ChannelConfig.Where(x => (bool)x.Value[TRACKWEALTH])){
                                 await OnMajorChangeTracked(channel.Key, createWealthEmbed(pastInfo, currentInfo));
                             }
