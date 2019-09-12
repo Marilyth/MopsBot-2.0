@@ -354,19 +354,27 @@ namespace MopsBot.Data.Tracker
 
         public static async Task<Character> GetCharacterEndpoint(string CharacterName, string APIKey){
             var character = await FetchJSONDataAsync<Character>($"https://api.guildwars2.com/v2/characters/{CharacterName}?access_token={APIKey}");
-            character.masteryLevel = (await GetMasteries(CharacterName, APIKey)).Sum(x => {
-                    int level = 0;
-                    for(int i = 1; i <= x.level + 1; i++){
-                        level += i;
-                    }
-                    return level;
-                });
+            var masteries = await GetMasteries(CharacterName, APIKey);
+            var masteryInfo = await GetMasteryInfos(masteries.Select(x => x.id).ToArray());
+            var masteryCompleted = masteries.Select(x => (id: x.id, level: x.level, info: masteryInfo.First(y => y.id == x.id)));
+            character.masteryLevel = 0;
+            foreach(var mastery in masteryCompleted){
+                var unlocked = mastery.info.levels.Take(mastery.level + 1);
+                foreach(var level in unlocked){
+                    character.masteryLevel += level.point_cost;
+                }
+            }
+            
 
             return character;
         }
 
         public static async Task<List<Masteries>> GetMasteries(string CharacterName, string APIKey){
             return await FetchJSONDataAsync<List<Masteries>>($"https://api.guildwars2.com/v2/account/masteries?access_token={APIKey}");
+        }
+
+        public static async Task<List<MasteryInfo>> GetMasteryInfos(params int[] ids){
+            return await FetchJSONDataAsync<List<MasteryInfo>>($"https://api.guildwars2.com/v2/masteries?ids={string.Join(",", ids)}");
         }
 
         public static async Task<List<Achievement>> GetCompletedAchievements(string APIKey){
