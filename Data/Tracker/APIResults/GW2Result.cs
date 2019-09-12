@@ -182,6 +182,27 @@ namespace MopsBot.Data.Tracker.APIResults.GW2
         public List<Bag> bags { get; set; }
     }
 
+    public class Level
+    {
+        public string name { get; set; }
+        public string description { get; set; }
+        public string instruction { get; set; }
+        public string icon { get; set; }
+        public int point_cost { get; set; }
+        public int exp_cost { get; set; }
+    }
+
+    public class MasteryInfo
+    {
+        public int id { get; set; }
+        public string name { get; set; }
+        public string requirement { get; set; }
+        public int order { get; set; }
+        public string background { get; set; }
+        public string region { get; set; }
+        public List<Level> levels { get; set; }
+    }
+
     public class TPTransaction
     {
         public object id { get; set; }
