@@ -91,7 +91,7 @@ namespace MopsBot.Data.Tracker
 
             var config = ChannelConfig[channelId];
             config[SHOWEMBED] = true;
-            config[SHOWCHAT] = true;
+            config[SHOWCHAT] = false;
             config[SHOWVOD] = true;
             config[THUMBNAIL] = false;
             config[GAMECHANGE] = true;
@@ -429,6 +429,10 @@ namespace MopsBot.Data.Tracker
         public override string TrackerUrl()
         {
             return "https://www.twitch.tv/" + Name;
+        }
+
+        public override async Task UpdateTracker(){
+            await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
         }
 
         public override Dictionary<string, object> GetParameters(ulong guildId)
