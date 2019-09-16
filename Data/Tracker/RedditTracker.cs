@@ -157,5 +157,9 @@ namespace MopsBot.Data.Tracker
         public override string TrackerUrl(){
             return "https://www.reddit.com/r/" + Name.Split(" ").First();
         }
+
+        public override async Task UpdateTracker(){
+            await StaticBase.Trackers[TrackerType.Reddit].UpdateDBAsync(this);
+        }
     }
 }

@@ -196,6 +196,10 @@ namespace MopsBot.Data.Tracker
             return $"https://www.twitch.tv/{Name}/clips";
         }
 
+        public override async Task UpdateTracker(){
+            await StaticBase.Trackers[TrackerType.TwitchClip].UpdateDBAsync(this);
+        }
+
         public override Dictionary<string, object> GetParameters(ulong guildId)
         {
             var parentParameters = base.GetParameters(guildId);

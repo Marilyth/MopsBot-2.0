@@ -380,5 +380,9 @@ namespace MopsBot.Data.Tracker
         {
             return "https://playoverwatch.com/en-us/career/pc/eu/" + Name;
         }
+
+        public override async Task UpdateTracker(){
+            await StaticBase.Trackers[TrackerType.Overwatch].UpdateDBAsync(this);
+        }
     }
 }

@@ -236,5 +236,9 @@ namespace MopsBot.Data.Tracker
         {
             return $"https://steamcommunity.com/profiles/{SteamId}";
         }
+
+        public override async Task UpdateTracker(){
+            await StaticBase.Trackers[TrackerType.Steam].UpdateDBAsync(this);
+        }
     }
 }

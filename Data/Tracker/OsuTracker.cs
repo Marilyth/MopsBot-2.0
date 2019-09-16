@@ -245,6 +245,10 @@ namespace MopsBot.Data.Tracker
             return 0;
         }
 
+        public override async Task UpdateTracker(){
+            await StaticBase.Trackers[TrackerType.Osu].UpdateDBAsync(this);
+        }
+
         [Flags]
         public enum Mods
         {

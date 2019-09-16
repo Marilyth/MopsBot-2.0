@@ -557,6 +557,10 @@ namespace MopsBot.Data.Tracker
             if (STREAM.FollowingUserIds.Keys.Count > 0) STREAM.StartStreamMatchingAllConditionsAsync();
         }
 
+        public override async Task UpdateTracker(){
+            await StaticBase.Trackers[TrackerType.Twitter].UpdateDBAsync(this);
+        }
+
         public override Dictionary<string, object> GetParameters(ulong guildId)
         {
             var parentParameters = base.GetParameters(guildId);

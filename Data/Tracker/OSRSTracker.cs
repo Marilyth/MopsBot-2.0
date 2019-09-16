@@ -242,6 +242,10 @@ namespace MopsBot.Data.Tracker
             return e.Build();
         }
 
+        public override async Task UpdateTracker(){
+            await StaticBase.Trackers[TrackerType.OSRS].UpdateDBAsync(this);
+        }
+
 
         private enum StatNames
         {

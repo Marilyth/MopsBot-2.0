@@ -155,6 +155,10 @@ namespace MopsBot.Data.Tracker
             return e.Build();
         }
 
+        public override async Task UpdateTracker(){
+            await StaticBase.Trackers[TrackerType.HTML].UpdateDBAsync(this);
+        }
+
         public override Dictionary<string, object> GetParameters(ulong guildId){
             var parameters = base.GetParameters(guildId);
             (parameters["Parameters"] as Dictionary<string, object>)["Regex"] = "";

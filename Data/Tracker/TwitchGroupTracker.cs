@@ -132,5 +132,9 @@ namespace MopsBot.Data.Tracker
 
             return builderList.First().Build();
         }
+
+        public override async Task UpdateTracker(){
+            await StaticBase.Trackers[TrackerType.TwitchGroup].UpdateDBAsync(this);
+        }
     }
 }

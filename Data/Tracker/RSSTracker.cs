@@ -205,6 +205,10 @@ namespace MopsBot.Data.Tracker
             return Name;
         }
 
+        public override async Task UpdateTracker(){
+            await StaticBase.Trackers[TrackerType.RSS].UpdateDBAsync(this);
+        }
+
         public new struct ContentScope
         {
             public string Id;

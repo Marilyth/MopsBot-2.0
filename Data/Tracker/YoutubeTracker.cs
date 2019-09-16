@@ -164,5 +164,9 @@ namespace MopsBot.Data.Tracker
         public override string TrackerUrl(){
             return "https://www.youtube.com/channel/" + Name;
         }
+
+        public override async Task UpdateTracker(){
+            await StaticBase.Trackers[TrackerType.Youtube].UpdateDBAsync(this);
+        }
     }
 }
