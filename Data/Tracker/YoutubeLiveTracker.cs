@@ -127,6 +127,18 @@ namespace MopsBot.Data.Tracker
             return null;
         }
 
+        public static async Task<string> scrapeLivestreamId(string channelId){
+            var html = await MopsBot.Module.Information.GetURLAsync($"https://www.youtube.com/channel/{channelId}/videos");
+            var videoSegment = html.Split(">Jetzt live</span>").FirstOrDefault();
+            if(videoSegment == null || html.Length == videoSegment.Length){
+                return null;
+            } else {
+                videoSegment = videoSegment.Split("/watch?v=").LastOrDefault();
+                var videoId = videoSegment.Split("\"").FirstOrDefault();
+                return videoId;
+            }
+        }
+
         private async Task<LiveVideoItem> fetchLiveVideoContent()
         {
             var tmpResult = await FetchJSONDataAsync<LiveVideo>($"https://www.googleapis.com/youtube/v3/videos?part=snippet%2C+liveStreamingDetails&id={VideoId}&key={Program.Config["YoutubeLive"]}");
@@ -152,7 +164,7 @@ namespace MopsBot.Data.Tracker
             {
                 if (VideoId == null)
                 {
-                    VideoId = await fetchLivestreamId();
+                    VideoId = await scrapeLivestreamId(Name);
 
                     //Not live
                     if (VideoId == null)
@@ -257,6 +269,10 @@ namespace MopsBot.Data.Tracker
                 foreach (ulong channel in ChannelConfig.Keys.ToList())
                     await OnMajorChangeTracked(channel, createEmbed());
             }
+        }
+
+        public override async Task UpdateTracker(){
+            await StaticBase.Trackers[TrackerType.YoutubeLive].UpdateDBAsync(this);
         }
 
         public override Dictionary<string, object> GetParameters(ulong guildId)
