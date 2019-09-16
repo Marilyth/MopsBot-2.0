@@ -83,17 +83,6 @@ namespace MopsBot.Data.Tracker
             } else {
                 SetTimer(900000);
             }
-
-            foreach (var channelMessage in ToUpdate ?? new Dictionary<ulong, ulong>())
-            {
-                try
-                {
-                    await setReaction((IUserMessage)((ITextChannel)Program.Client.GetChannel(channelMessage.Key)).GetMessageAsync(channelMessage.Value).Result);
-                }
-                catch
-                {
-                }
-            }
         }
 
         public async override void PostChannelAdded(ulong channelId)
@@ -123,12 +112,6 @@ namespace MopsBot.Data.Tracker
             }
             if (save)
                 await StaticBase.Trackers[TrackerType.YoutubeLive].UpdateDBAsync(this);
-        }
-
-        public async override Task setReaction(IUserMessage message)
-        {
-            await Program.ReactionHandler.AddHandler(message, new Emoji("🖌"), recolour);
-            await Program.ReactionHandler.AddHandler(message, new Emoji("🔄"), switchThumbnail);
         }
 
         private async Task<string> fetchLivestreamId()
@@ -251,7 +234,6 @@ namespace MopsBot.Data.Tracker
             e.Title = liveStatus.snippet.title;
             e.Url = $"https://www.youtube.com/watch?v={VideoId}";
             e.WithCurrentTimestamp();
-            e.Description = "**For people with manage channel permission**:\n🖌: Change chart colour\n🔄: Switch thumbnail and chart position";
 
             EmbedAuthorBuilder author = new EmbedAuthorBuilder();
             author.Name = liveStatus.snippet.channelTitle;
@@ -293,29 +275,6 @@ namespace MopsBot.Data.Tracker
                 }
 
             return e.Build();
-        }
-
-        private async Task recolour(ReactionHandlerContext context)
-        {
-            if (((IGuildUser)await context.Reaction.Channel.GetUserAsync(context.Reaction.UserId)).GetPermissions((IGuildChannel)context.Channel).ManageChannel)
-            {
-                ViewerGraph.Recolour();
-
-                foreach (ulong channel in ChannelConfig.Keys.ToList())
-                    await OnMajorChangeTracked(channel, await createEmbed());
-            }
-        }
-
-        private async Task switchThumbnail(ReactionHandlerContext context)
-        {
-            if (((IGuildUser)await context.Reaction.Channel.GetUserAsync(context.Reaction.UserId)).GetPermissions((IGuildChannel)context.Channel).ManageChannel)
-            {
-                ChannelConfig[context.Channel.Id][THUMBNAIL] = !(bool)ChannelConfig[context.Channel.Id][THUMBNAIL];
-                await StaticBase.Trackers[TrackerType.YoutubeLive].UpdateDBAsync(this);
-
-                foreach (ulong channel in ChannelConfig.Keys.ToList())
-                    await OnMajorChangeTracked(channel, await createEmbed());
-            }
         }
 
         public override async Task UpdateTracker(){

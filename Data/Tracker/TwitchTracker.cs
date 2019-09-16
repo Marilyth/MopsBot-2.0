@@ -109,30 +109,6 @@ namespace MopsBot.Data.Tracker
 
             if (ViewerGraph != null)
                 ViewerGraph.InitPlot();
-
-            foreach (var channelMessage in ToUpdate)
-            {
-                try
-                {
-                    await setReaction((IUserMessage)((ITextChannel)Program.Client.GetChannel(channelMessage.Key)).GetMessageAsync(channelMessage.Value).Result);
-                }
-                catch
-                {
-                    // if(Program.Client.GetChannel(channelMessage.Key)==null){
-                    //     StaticBase.Trackers["twitch"].TryRemoveTracker(Name, channelMessage.Key);
-                    //     Console.WriteLine("\n" + $"remove tracker for {Name} in channel: {channelMessage.Key}");  
-                    // }
-                    //
-                    // the Tracker Should be removed on the first Event Call
-                }
-            }
-        }
-
-        public async override Task setReaction(IUserMessage message)
-        {
-            //await message.RemoveAllReactionsAsync();
-            await Program.ReactionHandler.AddHandler(message, new Emoji("🖌"), recolour);
-            await Program.ReactionHandler.AddHandler(message, new Emoji("🔄"), switchThumbnail);
         }
 
         protected async override void CheckForChange_Elapsed(object stateinfo)
@@ -390,26 +366,6 @@ namespace MopsBot.Data.Tracker
             //e.AddField("Viewers", StreamerStatus.stream.viewers, true);
 
             return e.Build();
-        }
-
-        private async Task recolour(ReactionHandlerContext context)
-        {
-            if (((IGuildUser)await context.Reaction.Channel.GetUserAsync(context.Reaction.UserId)).GetPermissions((IGuildChannel)context.Channel).ManageChannel)
-            {
-                ViewerGraph.Recolour();
-
-                await OnMajorChangeTracked(context.Channel.Id, createEmbed((bool)ChannelConfig[context.Channel.Id][THUMBNAIL]));
-            }
-        }
-
-        private async Task switchThumbnail(ReactionHandlerContext context)
-        {
-            if (((IGuildUser)await context.Reaction.Channel.GetUserAsync(context.Reaction.UserId)).GetPermissions((IGuildChannel)context.Channel).ManageChannel)
-            {
-                await ModifyAsync(x => x.ChannelConfig[context.Channel.Id][THUMBNAIL] = !(bool)x.ChannelConfig[context.Channel.Id][THUMBNAIL]);
-
-                await OnMajorChangeTracked(context.Channel.Id, createEmbed((bool)ChannelConfig[context.Channel.Id][THUMBNAIL]));
-            }
         }
 
         public async Task ModifyAsync(Action<TwitchTracker> action)
