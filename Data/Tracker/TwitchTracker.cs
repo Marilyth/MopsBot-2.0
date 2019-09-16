@@ -357,15 +357,15 @@ namespace MopsBot.Data.Tracker
                     if(chat.comments.Count >= 5) comments = chat.comments.Take(5).ToList();
                     else comments = chat.comments.Concat(comments.Take(Math.Min(comments.Count, 5 - chat.comments.Count))).ToList();
 
-                    string chatPreview = "```yaml\n";
+                    string chatPreview = "```asciidoc\n";
                     for (int i = comments.Count - 1; i >= 0; i--)
                     {
                         if (comments[i].message.body.Length > 100)
-                            chatPreview += comments[i].commenter.display_name + ": " + string.Join("", comments[i].message.body.Take(100)) + " [...]\n";
+                            chatPreview += comments[i].commenter.display_name + ":: " + string.Join("", comments[i].message.body.Take(100)) + " [...]\n";
                         else
-                            chatPreview += comments[i].commenter.display_name + ": " + comments[i].message.body + "\n";
+                            chatPreview += comments[i].commenter.display_name + ":: " + comments[i].message.body + "\n";
                     }
-                    if(chatPreview.Equals("```yaml\n")) chatPreview += "Could not fetch chat messages.\nFollowers/Subs only, or empty?";
+                    if(chatPreview.Equals("```asciidoc\n")) chatPreview += "Could not fetch chat messages.\nFollowers/Subs only, or empty?";
                     chatPreview += "```";
 
                     e.AddField("Chat Preview", chatPreview);
