@@ -589,10 +589,10 @@ namespace MopsBot.Module
                     if (!module.IsSubmodule)
                     {
                         string moduleInformation = "";
-                        moduleInformation += string.Join(", ", module.Commands.Where(x => !x.Preconditions.OfType<HideAttribute>().Any()).Select(x => $"[{x.Name}]({CommandHandler.GetCommandHelpImage(x.Name)})"));
+                        moduleInformation += string.Join(", ", module.Commands.Where(x => !x.Preconditions.Any(y => y is HideAttribute)).Select(x => $"[{x.Name}]({CommandHandler.GetCommandHelpImage(x.Name)})"));
                         moduleInformation += "\n";
 
-                        moduleInformation += string.Join(", ", module.Submodules.Select(x => $"[{x.Name}\\*]({CommandHandler.GetCommandHelpImage(x.Name)})"));
+                        moduleInformation += string.Join(", ", module.Submodules.Where(x => !x.Preconditions.Any(y => y is HideAttribute)).Select(x => $"[{x.Name}\\*]({CommandHandler.GetCommandHelpImage(x.Name)})"));
                         var modulesections = moduleInformation.Length / 1024 + 1;
                         if (modulesections > 1)
                         {
