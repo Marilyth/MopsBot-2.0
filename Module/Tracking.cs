@@ -807,6 +807,78 @@ namespace MopsBot.Module
             }
         }
 
+        [Group("Chess")]
+        [Hide]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
+        public class Chess : InteractiveBase
+        {
+            [Command("Track", RunMode = RunMode.Async)]
+            [Summary("Keeps track of the specified Lichess player, in the Channel you are calling this command right now.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
+            public async Task track([Remainder]string player)
+            {
+                using (Context.Channel.EnterTypingState())
+                {
+                    player = player.ToLower();
+                    await Trackers[BaseTracker.TrackerType.Chess].AddTrackerAsync(player, Context.Channel.Id);
+
+                    await ReplyAsync("Keeping track of " + player + "'s games, from now on!");
+                }
+            }
+
+            [Command("UnTrack")]
+            [Summary("Stops keeping track of the specified player, in the Channel you are calling this command right now.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task unTrackOW([Remainder]BaseTracker player)
+            {
+                if (await Trackers[BaseTracker.TrackerType.Chess].TryRemoveTrackerAsync(player.Name, Context.Channel.Id))
+                    await ReplyAsync("Stopped keeping track of " + player.Name + "'s games!");
+            }
+
+            [Command("GetTrackers", RunMode = RunMode.Async)]
+            [Summary("Returns the players that are tracked in the current channel.")]
+            public async Task getTrackers()
+            {
+                await ReplyAsync("Following players are currently being tracked:");
+                await MopsBot.Data.Interactive.MopsPaginator.CreatePagedMessage(Context.Channel.Id, StaticBase.Trackers[BaseTracker.TrackerType.Chess].GetTrackersEmbed(Context.Channel.Id, true));
+            }
+
+            [Command("SetNotification")]
+            [Summary("Sets the notification text that is used each time a player played a game.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task SetNotification(BaseTracker player, [Remainder]string notification = "")
+            {
+                player.ChannelConfig[Context.Channel.Id]["Notification"] = notification;
+                await StaticBase.Trackers[BaseTracker.TrackerType.Chess].UpdateDBAsync(player);
+                await ReplyAsync($"Changed notification for `{player.Name}` to `{notification}`");
+            }
+
+            [Command("GetGame")]
+            [Hide]
+            public async Task GetGame([Remainder]BaseTracker player){
+                var chessPlayer = player as LichessTracker;
+                var game = await chessPlayer.fetchGamePGN();
+                await ReplyAsync(embed: await chessPlayer.createGameEmbed(game.pgn, game.moves));
+            }
+
+            [Command("ShowConfig")]
+            [Hide]
+            [Summary("Shows all the settings for this tracker, and their values")]
+            public async Task ShowConfig([Remainder]BaseTracker tracker)
+            {
+                await ReplyAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```");
+            }
+
+            [Command("ChangeConfig", RunMode = RunMode.Async)]
+            [Summary("Edit the Configuration for the tracker")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task ChangeConfig([Remainder]BaseTracker player)
+            {
+                await ModifyConfig(this, player, TrackerType.Chess);
+            }
+        }
+
         [Group("JSON")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public class JSON : InteractiveBase

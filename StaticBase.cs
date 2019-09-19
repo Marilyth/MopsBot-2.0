@@ -97,7 +97,6 @@ namespace MopsBot
                 Trackers[BaseTracker.TrackerType.JSON] = new TrackerHandler<JSONTracker>();
                 Trackers[BaseTracker.TrackerType.Osu] = new TrackerHandler<OsuTracker>();
                 Trackers[BaseTracker.TrackerType.Overwatch] = new TrackerHandler<OverwatchTracker>();
-                Trackers[BaseTracker.TrackerType.GW2] = new TrackerHandler<GW2Tracker>();
                 Trackers[BaseTracker.TrackerType.TwitchGroup] = new TrackerHandler<TwitchGroupTracker>();
                 Trackers[BaseTracker.TrackerType.TwitchClip] = new TrackerHandler<TwitchClipTracker>();
                 //Trackers[BaseTracker.TrackerType.WoW] = new TrackerHandler<WoWTracker>();
@@ -106,6 +105,8 @@ namespace MopsBot
                 Trackers[BaseTracker.TrackerType.HTML] = new TrackerHandler<HTMLTracker>();
                 Trackers[BaseTracker.TrackerType.RSS] = new TrackerHandler<RSSTracker>();
                 Trackers[BaseTracker.TrackerType.Steam] = new TrackerHandler<SteamTracker>();
+                Trackers[BaseTracker.TrackerType.GW2] = new TrackerHandler<GW2Tracker>();
+                Trackers[BaseTracker.TrackerType.Chess] = new TrackerHandler<LichessTracker>();
                 //Trackers[BaseTracker.TrackerType.Tibia] = new TrackerHandler<JSONTracker>();
                 //Trackers[BaseTracker.TrackerType.TwitterRealtime] = new TrackerHandler<TwitterTracker>();
 
@@ -217,6 +218,13 @@ namespace MopsBot
                     try
                     {
                         BaseTracker.TrackerType type = (BaseTracker.TrackerType)status++;
+
+                        //Skip everything after GW2, as this is hidden
+                        if(type.ToString().Equals("GW2")){
+                            status = Enum.GetNames(typeof(BaseTracker.TrackerType)).Length;
+                            continue;
+                        }
+
                         var trackerCount = Trackers[type].GetTrackers().Count;
                         await Program.Client.SetActivityAsync(new Game($"{trackerCount} {type.ToString()} Trackers", ActivityType.Watching));
                         await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", "Heartbeat. I am still alive :)"));
