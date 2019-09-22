@@ -97,7 +97,7 @@ namespace MopsBot
                 Trackers[BaseTracker.TrackerType.JSON] = new TrackerHandler<JSONTracker>();
                 Trackers[BaseTracker.TrackerType.Osu] = new TrackerHandler<OsuTracker>();
                 Trackers[BaseTracker.TrackerType.Overwatch] = new TrackerHandler<OverwatchTracker>();
-                Trackers[BaseTracker.TrackerType.TwitchGroup] = new TrackerHandler<TwitchGroupTracker>();
+                //Trackers[BaseTracker.TrackerType.TwitchGroup] = new TrackerHandler<TwitchGroupTracker>();
                 Trackers[BaseTracker.TrackerType.TwitchClip] = new TrackerHandler<TwitchClipTracker>();
                 //Trackers[BaseTracker.TrackerType.WoW] = new TrackerHandler<WoWTracker>();
                 //Trackers[ITracker.TrackerType.WoWGuild] = new TrackerHandler<WoWGuildTracker>();
@@ -116,10 +116,10 @@ namespace MopsBot
                     if(tracker.Key == BaseTracker.TrackerType.Twitch){
                         Task.Run(() => {
                                 tracker.Value.PostInitialisation();
-                                Trackers[BaseTracker.TrackerType.TwitchGroup].PostInitialisation();
-                                TwitchGuilds = Database.GetCollection<Data.Entities.TwitchGuild>("TwitchGuilds").FindSync(x => true).ToEnumerable().ToDictionary(x => x.DiscordId);
-                                TwitchUsers = Database.GetCollection<Data.Entities.TwitchUser>("TwitchUsers").FindSync(x => true).ToEnumerable().ToDictionary(x => x.GuildPlusDiscordId);
-                                foreach(var user in TwitchUsers) user.Value.PostInitialisation();
+                                //Trackers[BaseTracker.TrackerType.TwitchGroup].PostInitialisation();
+                                //TwitchGuilds = Database.GetCollection<Data.Entities.TwitchGuild>("TwitchGuilds").FindSync(x => true).ToEnumerable().ToDictionary(x => x.DiscordId);
+                                //TwitchUsers = Database.GetCollection<Data.Entities.TwitchUser>("TwitchUsers").FindSync(x => true).ToEnumerable().ToDictionary(x => x.GuildPlusDiscordId);
+                                //foreach(var user in TwitchUsers) user.Value.PostInitialisation();
                         });
                     }
                     else if(tracker.Key != BaseTracker.TrackerType.TwitchGroup)
