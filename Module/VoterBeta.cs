@@ -53,7 +53,7 @@ namespace MopsBot.Module
             public async Task getTrackers()
             {
                 await ReplyAsync("Following Youtubers are currently being tracked:");
-                await MopsBot.Data.Interactive.MopsPaginator.CreatePagedMessage(Context.Channel.Id, StaticBase.Trackers[BaseTracker.TrackerType.YoutubeLive].GetTrackersEmbed(Context.Channel.Id));
+                await MopsBot.Data.Interactive.MopsPaginator.CreatePagedMessage(Context.Channel.Id, StaticBase.Trackers[BaseTracker.TrackerType.YoutubeLive].GetTrackersEmbed(Context.Channel.Id, true));
             }
 
             [Command("SetNotification")]
