@@ -374,7 +374,10 @@ namespace MopsBot.Data.Tracker
         }
 
         public static async Task<List<MasteryInfo>> GetMasteryInfos(params int[] ids){
-            return await FetchJSONDataAsync<List<MasteryInfo>>($"https://api.guildwars2.com/v2/masteries?ids={string.Join(",", ids)}");
+            if(ids.Length > 0)
+                return await FetchJSONDataAsync<List<MasteryInfo>>($"https://api.guildwars2.com/v2/masteries?ids={string.Join(",", ids)}");
+            else
+                return new List<MasteryInfo>();
         }
 
         public static async Task<List<Achievement>> GetCompletedAchievements(string APIKey){
