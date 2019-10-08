@@ -135,7 +135,6 @@ namespace MopsBot.Data
                     await RemoveFromDBAsync(trackers[name]);
                     trackers[name].Dispose();
                     trackers.Remove(name);
-                    //SaveJson();
                     await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Removed a {typeof(T).FullName} for {name}\nChannel: {channelId}; Last channel left."));
                 }
 

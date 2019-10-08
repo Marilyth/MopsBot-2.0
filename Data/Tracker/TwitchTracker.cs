@@ -367,7 +367,7 @@ namespace MopsBot.Data.Tracker
             await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
         }
 
-        public new void Dispose()
+        public override void Dispose()
         {
             base.Dispose(true);
             GC.SuppressFinalize(this);
