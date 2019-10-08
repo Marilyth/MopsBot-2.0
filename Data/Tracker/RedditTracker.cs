@@ -29,32 +29,6 @@ namespace MopsBot.Data.Tracker
         {
         }
 
-        public RedditTracker(Dictionary<string, string> args) : base(){
-            base.SetBaseValues(args, true);
-
-            //Check if Name ist valid
-            try{
-                var test = new RedditTracker(Name);
-                test.Dispose();
-                lastCheck = test.lastCheck;
-                SetTimer();
-            } catch (Exception e){
-                this.Dispose();
-                throw e;
-            }
-
-            if(StaticBase.Trackers[TrackerType.Reddit].GetTrackers().ContainsKey(Name)){
-                this.Dispose();
-
-                args["Id"] = Name;
-                var curTracker = StaticBase.Trackers[TrackerType.Reddit].GetTrackers()[Name];
-                curTracker.ChannelConfig[ulong.Parse(args["Channel"].Split(":")[1])]["Notification"] = args["Notification"];
-                StaticBase.Trackers[TrackerType.Reddit].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", args}}).Wait();
-
-                throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
-            }
-        }
-
         public RedditTracker(string name) : base()
         {
             lastCheck = (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;

@@ -29,42 +29,6 @@ namespace MopsBot.Data.Tracker
             AllPP.Add("m=3", 0);
         }
 
-        public OsuTracker(Dictionary<string, string> args) : base()
-        {
-            base.SetBaseValues(args, true);
-
-            //Check if Name ist valid
-            try
-            {
-                new OsuTracker(Name).Dispose();
-            }
-            catch (Exception e)
-            {
-                this.Dispose();
-                throw e;
-            }
-
-            AllPP = new Dictionary<string, double>();
-            AllPP.Add("m=0", 0);
-            AllPP.Add("m=1", 0);
-            AllPP.Add("m=2", 0);
-            AllPP.Add("m=3", 0);
-            ChannelConfig[ulong.Parse(args["Channel"].Split(":")[1])][PPTHRESHOLD] = double.Parse(args["PPThreshold"]);
-            SetTimer();
-
-            if (StaticBase.Trackers[TrackerType.Osu].GetTrackers().ContainsKey(Name))
-            {
-                this.Dispose();
-
-                args["Id"] = Name;
-                var curTracker = StaticBase.Trackers[TrackerType.Osu].GetTrackers()[Name];
-                curTracker.ChannelConfig[ulong.Parse(args["Channel"].Split(":")[1])]["Notification"] = args["Notification"];
-                StaticBase.Trackers[TrackerType.Osu].UpdateContent(new Dictionary<string, Dictionary<string, string>> { { "NewValue", args }, { "OldValue", args } }).Wait();
-
-                throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
-            }
-        }
-
         public OsuTracker(string name) : base()
         {
             Name = name;
@@ -292,40 +256,6 @@ namespace MopsBot.Data.Tracker
         public override string TrackerUrl()
         {
             return "https://osu.ppy.sh/u/" + Name;
-        }
-
-        public override Dictionary<string, object> GetParameters(ulong guildId)
-        {
-            var parentParameters = base.GetParameters(guildId);
-            (parentParameters["Parameters"] as Dictionary<string, object>)["PPThreshold"] = "0,1";
-            return parentParameters;
-        }
-
-        public override object GetAsScope(ulong channelId)
-        {
-            return new ContentScope()
-            {
-                Id = this.Name,
-                _Name = this.Name,
-                Notification = (string)this.ChannelConfig[channelId]["Notification"],
-                Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId,
-                PPThreshold = (double)this.ChannelConfig[channelId][PPTHRESHOLD]
-            };
-        }
-
-        public override void Update(Dictionary<string, Dictionary<string, string>> args)
-        {
-            base.Update(args);
-            //PPThreshold = double.Parse(args["NewValue"]["PPThreshold"]);
-        }
-
-        public new struct ContentScope
-        {
-            public string Id;
-            public string _Name;
-            public string Notification;
-            public string Channel;
-            public double PPThreshold;
         }
     }
 }

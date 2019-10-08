@@ -6,6 +6,7 @@ using MopsBot.Data.Entities;
 using System.Threading.Tasks;
 using System.IO;
 using System;
+using Discord;
 
 namespace MopsBot.Api.Controllers
 {
@@ -34,12 +35,16 @@ namespace MopsBot.Api.Controllers
             string body = new StreamReader(Request.Body).ReadToEnd();
             var headers = Request.Headers;
             
-            Console.WriteLine("Received a webhook message: " + body);
+            await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Received a webhook message\n" + body));
             var update = JsonConvert.DeserializeObject<dynamic>(body);
-            string name = update["data"][0]["user_name"].ToString().ToLower();
+            try{
+                string name = update["data"][0]["user_name"].ToString().ToLower();
 
-            MopsBot.Data.Tracker.TwitchTracker tracker = StaticBase.Trackers[Data.Tracker.BaseTracker.TrackerType.Twitch].GetTrackers()[name] as MopsBot.Data.Tracker.TwitchTracker;
-            await tracker.checkStreamerInfo();
+                MopsBot.Data.Tracker.TwitchTracker tracker = StaticBase.Trackers[Data.Tracker.BaseTracker.TrackerType.Twitch].GetTrackers()[name] as MopsBot.Data.Tracker.TwitchTracker;
+                await tracker.checkStreamerInfo();
+            } catch(Exception e) {
+                await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $" error by Twitch Webhook, someone went offline, probably.", e));
+            }
             
             return new OkResult();
         }

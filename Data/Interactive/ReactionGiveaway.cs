@@ -17,7 +17,7 @@ using MongoDB.Driver;
 
 namespace MopsBot.Data.Interactive
 {
-    public class ReactionGiveaway : IAPIHandler
+    public class ReactionGiveaway
     {
 
         //Key: Channel ID, Value: (Key: Message ID, Value: User IDs)

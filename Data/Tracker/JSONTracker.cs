@@ -26,39 +26,6 @@ namespace MopsBot.Data.Tracker
         {
         }
 
-        public JSONTracker(Dictionary<string, string> args) : base()
-        {
-            base.SetBaseValues(args);
-            ToTrack = args["Locations"].Split(null).ToList();
-            Name = args["_Name"] + "|||" + String.Join(",", ToTrack);
-
-            //Check if Name ist valid
-            try
-            {
-                var test = new JSONTracker(Name);
-                PastInformation = test.PastInformation;
-                test.Dispose();
-                SetTimer();
-            }
-            catch (Exception e)
-            {
-                this.Dispose();
-                throw e;
-            }
-
-            if (StaticBase.Trackers[TrackerType.JSON].GetTrackers().ContainsKey(Name))
-            {
-                this.Dispose();
-
-                args["Id"] = Name;
-                var curTracker = StaticBase.Trackers[TrackerType.JSON].GetTrackers()[Name];
-                curTracker.ChannelConfig[ulong.Parse(args["Channel"].Split(":")[1])]["Notification"] = args["Notification"];
-                StaticBase.Trackers[TrackerType.JSON].UpdateContent(new Dictionary<string, Dictionary<string, string>> { { "NewValue", args }, { "OldValue", args } }).Wait();
-
-                throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
-            }
-        }
-
         public JSONTracker(string name) : base()
         {
             //name = name.Replace(" ", string.Empty);
@@ -275,37 +242,6 @@ namespace MopsBot.Data.Tracker
 
         public override async Task UpdateTracker(){
             await StaticBase.Trackers[TrackerType.JSON].UpdateDBAsync(this);
-        }
-
-        public override Dictionary<string, object> GetParameters(ulong guildId){
-            var parameters = base.GetParameters(guildId);
-            (parameters["Parameters"] as Dictionary<string, object>)["Locations"] = "";
-            return parameters;
-        }
-
-        public override void Update(Dictionary<string, Dictionary<string, string>> args){
-            base.Update(args);
-            ToTrack = args["NewValue"]["Locations"].Split(null).ToList();
-            Name = args["NewValue"]["_Name"] + String.Join(",", ToTrack);
-        }
-
-        public override object GetAsScope(ulong channelId){
-            return new ContentScope(){
-                Id = this.Name,
-                _Name = this.Name.Split("|||")[0],
-                Locations = String.Join("\n", this.ToTrack),
-                Notification = (string)this.ChannelConfig[channelId]["Notification"],
-                Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId
-            };
-        }
-
-        public new struct ContentScope
-        {
-            public string Id;
-            public string _Name;
-            public string Locations;
-            public string Notification;
-            public string Channel;
         }
     }
 }

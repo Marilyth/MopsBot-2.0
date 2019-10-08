@@ -38,35 +38,6 @@ namespace MopsBot.Data.Tracker
         {
         }
 
-        public TwitchTracker(Dictionary<string, string> args) : base()
-        {
-            base.SetBaseValues(args, true);
-
-            //Check if Name ist valid
-            try
-            {
-                new TwitchTracker(Name).Dispose();
-                SetTimer();
-            }
-            catch (Exception e)
-            {
-                this.Dispose();
-                throw e;
-            }
-
-            if (StaticBase.Trackers[TrackerType.Twitch].GetTrackers().ContainsKey(Name))
-            {
-                this.Dispose();
-
-                args["Id"] = Name;
-                var curTracker = StaticBase.Trackers[TrackerType.Twitch].GetTrackers()[Name];
-                curTracker.ChannelConfig[ulong.Parse(args["Channel"].Split(":")[1])]["Notification"] = args["Notification"];
-                StaticBase.Trackers[TrackerType.Twitch].UpdateContent(new Dictionary<string, Dictionary<string, string>> { { "NewValue", args }, { "OldValue", args } }).Wait();
-
-                throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
-            }
-        }
-
         public TwitchTracker(string streamerName) : base()
         {
             Name = streamerName;
@@ -111,15 +82,16 @@ namespace MopsBot.Data.Tracker
                 ViewerGraph.InitPlot();
 
             await SubscribeWebhookAsync();
+            await SubscribeWebhookAsync(false);
         }
 
-        public async Task<string> SubscribeWebhookAsync()
+        public async Task<string> SubscribeWebhookAsync(bool subscribe = true)
         {
             var url = "https://api.twitch.tv/helix/webhooks/hub" +
                       $"?hub.topic=https://api.twitch.tv/helix/streams?user_id={TwitchId}" +
                       "&hub.lease_seconds=864000" +
                       "&hub.callback=http://37.221.195.236:5000/api/webhook/twitch" +
-                      "&hub.mode=subscribe";
+                      $"&hub.mode={(subscribe ? "subscribe" : "unsubscribe")}";
 
             var test = await MopsBot.Module.Information.PostURLAsync(url, headers:
                 KeyValuePair.Create("Authorization", "Bearer " + Program.Config["TwitchToken"])
@@ -402,6 +374,7 @@ namespace MopsBot.Data.Tracker
             GC.SuppressFinalize(this);
             ViewerGraph?.Dispose();
             ViewerGraph = null;
+            SubscribeWebhookAsync(false).Wait();
         }
 
         public override string TrackerUrl()
@@ -412,40 +385,6 @@ namespace MopsBot.Data.Tracker
         public override async Task UpdateTracker()
         {
             await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
-        }
-
-        public override Dictionary<string, object> GetParameters(ulong guildId)
-        {
-            var parentParameters = base.GetParameters(guildId);
-            (parentParameters["Parameters"] as Dictionary<string, object>)["IsThumbnailLarge"] = new bool[] { true, false };
-            return parentParameters;
-        }
-
-        public override object GetAsScope(ulong channelId)
-        {
-            return new ContentScope()
-            {
-                Id = this.Name,
-                _Name = this.Name,
-                Notification = (string)this.ChannelConfig[channelId]["Notification"],
-                Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId,
-                IsThumbnailLarge = (bool)this.ChannelConfig[((SocketGuildChannel)Program.Client.GetChannel(channelId)).Guild.Id][THUMBNAIL]
-            };
-        }
-
-        public override void Update(Dictionary<string, Dictionary<string, string>> args)
-        {
-            base.Update(args);
-            //isThumbnailLarge = bool.Parse(args["NewValue"]["IsThumbnailLarge"]);
-        }
-
-        public new struct ContentScope
-        {
-            public string Id;
-            public string _Name;
-            public string Notification;
-            public string Channel;
-            public bool IsThumbnailLarge;
         }
     }
 }

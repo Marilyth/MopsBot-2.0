@@ -27,32 +27,6 @@ namespace MopsBot.Data.Tracker
         {
         }
 
-        public HTMLTracker(Dictionary<string, string> args) : base(){
-            base.SetBaseValues(args);
-            Name = args["_Name"] + "|||" + args["Regex"];
-            Regex = args["Regex"];
-
-            //Check if Name ist valid
-            try{
-                new HTMLTracker(Name).Dispose();
-                SetTimer();
-            } catch (Exception e){
-                this.Dispose();
-                throw e;
-            }
-
-            if(StaticBase.Trackers[TrackerType.HTML].GetTrackers().ContainsKey(args["_Name"] + "|||" + args["Regex"])){
-                this.Dispose();
-
-                args["Id"] = Name;
-                var curTracker = StaticBase.Trackers[TrackerType.HTML].GetTrackers()[Name];
-                curTracker.ChannelConfig[ulong.Parse(args["Channel"].Split(":")[1])]["Notification"] = args["Notification"];
-                StaticBase.Trackers[TrackerType.HTML].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", args}}).Wait();
-
-                throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
-            }
-        }
-
         public HTMLTracker(string name) : base()
         {
             Name = name;
@@ -157,37 +131,6 @@ namespace MopsBot.Data.Tracker
 
         public override async Task UpdateTracker(){
             await StaticBase.Trackers[TrackerType.HTML].UpdateDBAsync(this);
-        }
-
-        public override Dictionary<string, object> GetParameters(ulong guildId){
-            var parameters = base.GetParameters(guildId);
-            (parameters["Parameters"] as Dictionary<string, object>)["Regex"] = "";
-            return parameters;
-        }
-
-        public override void Update(Dictionary<string, Dictionary<string, string>> args){
-            base.Update(args);
-            Regex = args["NewValue"]["Regex"];
-            Name = args["NewValue"]["_Name"] + Regex;
-        }
-
-        public override object GetAsScope(ulong channelId){
-            return new ContentScope(){
-                Id = this.Name,
-                _Name = this.Name.Split("|||")[0],
-                Regex = this.Regex,
-                Notification = (string)this.ChannelConfig[channelId]["Notification"],
-                Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId
-            };
-        }
-
-        public new struct ContentScope
-        {
-            public string Id;
-            public string _Name;
-            public string Regex;
-            public string Notification;
-            public string Channel;
         }
     }
 }

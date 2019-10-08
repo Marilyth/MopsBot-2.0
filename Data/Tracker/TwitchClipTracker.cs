@@ -26,32 +26,6 @@ namespace MopsBot.Data.Tracker
         {
         }
 
-        public TwitchClipTracker(Dictionary<string, string> args) : base(){
-            ViewThreshold = uint.Parse(args["ViewThreshold"]);
-            base.SetBaseValues(args, true);
-
-            //Check if Name ist valid
-            try{
-                new TwitchClipTracker(Name).Dispose();
-                TrackedClips = new Dictionary<DateTime, KeyValuePair<int, double>>();
-                SetTimer();
-            } catch (Exception e){
-                this.Dispose();
-                throw e;
-            }
-
-            if(StaticBase.Trackers[TrackerType.TwitchClip].GetTrackers().ContainsKey(Name)){
-                this.Dispose();
-
-                args["Id"] = Name;
-                var curTracker = StaticBase.Trackers[TrackerType.TwitchClip].GetTrackers()[Name];
-                curTracker.ChannelConfig[ulong.Parse(args["Channel"].Split(":")[1])]["Notification"] = args["Notification"];
-                StaticBase.Trackers[TrackerType.TwitchClip].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", args}}).Wait();
-
-                throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
-            }
-        }
-
         public TwitchClipTracker(string streamerName) : base()
         {
             Name = streamerName;
@@ -198,37 +172,6 @@ namespace MopsBot.Data.Tracker
 
         public override async Task UpdateTracker(){
             await StaticBase.Trackers[TrackerType.TwitchClip].UpdateDBAsync(this);
-        }
-
-        public override Dictionary<string, object> GetParameters(ulong guildId)
-        {
-            var parentParameters = base.GetParameters(guildId);
-            (parentParameters["Parameters"] as Dictionary<string, object>)["ViewThreshold"] = 1;
-            return parentParameters;
-        }
-
-        public override object GetAsScope(ulong channelId){
-            return new ContentScope(){
-                Id = this.Name,
-                _Name = this.Name,
-                Notification = (string)this.ChannelConfig[channelId]["Notification"],
-                Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId,
-                ViewThreshold = this.ViewThreshold
-            };
-        }
-
-        public override void Update(Dictionary<string, Dictionary<string, string>> args){
-            base.Update(args);
-            ViewThreshold = uint.Parse(args["NewValue"]["ViewThreshold"]);
-        }
-
-        public new struct ContentScope
-        {
-            public string Id;
-            public string _Name;
-            public string Notification;
-            public string Channel;
-            public uint ViewThreshold;
         }
     }
 }
