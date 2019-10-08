@@ -115,7 +115,7 @@ namespace MopsBot.Data.Tracker
 
         public async Task<string> SubscribeWebhookAsync(){
             var url = "https://api.twitch.tv/helix/webhooks/hub" +
-                      $"?hub.topic=https://api.twitch.tv/helix/users/follows?first=1&to_id={TwitchId}" +//$"?hub.topic=https://api.twitch.tv/helix/streams?user_id={TwitchId}" +
+                      $"?hub.topic=https://api.twitch.tv/helix/streams?user_id={TwitchId}" +
                       "&hub.lease_seconds=864000" +
                       "&hub.callback=http://37.221.195.236:5000/api/webhook/twitch" +
                       "&hub.mode=subscribe";
