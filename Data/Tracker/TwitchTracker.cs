@@ -95,20 +95,25 @@ namespace MopsBot.Data.Tracker
 
         public async Task<string> SubscribeWebhookAsync(bool subscribe = true)
         {
-            var url = "https://api.twitch.tv/helix/webhooks/hub" +
-                      $"?hub.topic=https://api.twitch.tv/helix/streams?user_id={TwitchId}" +
-                      "&hub.lease_seconds=64800" +
-                      "&hub.callback=http://37.221.195.236:5000/api/webhook/twitch" +
-                      $"&hub.mode={(subscribe ? "subscribe" : "unsubscribe")}";
+            try{
+                var url = "https://api.twitch.tv/helix/webhooks/hub" +
+                          $"?hub.topic=https://api.twitch.tv/helix/streams?user_id={TwitchId}" +
+                          "&hub.lease_seconds=64800" +
+                          "&hub.callback=http://37.221.195.236:5000/api/webhook/twitch" +
+                          $"&hub.mode={(subscribe ? "subscribe" : "unsubscribe")}";
 
-            var test = await MopsBot.Module.Information.PostURLAsync(url, headers:
-                KeyValuePair.Create("Authorization", "Bearer " + Program.Config["TwitchToken"])
-            );
+                var test = await MopsBot.Module.Information.PostURLAsync(url, headers:
+                    KeyValuePair.Create("Authorization", "Bearer " + Program.Config["TwitchToken"])
+                );
 
-            WebhookExpire = DateTime.Now.AddHours(18);
-            await UpdateTracker();
+                WebhookExpire = DateTime.Now.AddHours(18);
+                await UpdateTracker();
 
-            return test;
+                return test;
+            } catch(Exception e){
+                await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $" error by {Name}", e));
+                return "Failed";
+            }
         }
 
         protected async override void CheckForChange_Elapsed(object stateinfo)
