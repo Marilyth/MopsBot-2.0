@@ -85,12 +85,6 @@ namespace MopsBot.Data.Tracker
             if((WebhookExpire - DateTime.Now).TotalMinutes < 10){
                 await SubscribeWebhookAsync();
             }
-            else
-                Task.Run(() => {
-                    var toWait = (int)(WebhookExpire - DateTime.Now).TotalMilliseconds;
-                    Task.Delay(toWait).Wait();
-                    SubscribeWebhookAsync().Wait();
-                });
         }
 
         public async Task<string> SubscribeWebhookAsync(bool subscribe = true)
@@ -120,6 +114,10 @@ namespace MopsBot.Data.Tracker
         {
             try
             {
+                if((WebhookExpire - DateTime.Now).TotalMinutes < 10){
+                    await SubscribeWebhookAsync();
+                }
+                
                 await checkStreamerInfo();
             }
             catch (Exception e)
