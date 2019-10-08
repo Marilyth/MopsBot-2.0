@@ -34,10 +34,14 @@ namespace MopsBot.Api.Controllers
             string body = new StreamReader(Request.Body).ReadToEnd();
             var headers = Request.Headers;
             
-            Console.WriteLine("Received a webhook message: " + Request.Body);
-            var update = JsonConvert.DeserializeObject<Dictionary<string, object>>(body);
+            Console.WriteLine("Received a webhook message: " + body);
+            var update = JsonConvert.DeserializeObject<dynamic>(body);
+            string name = update["data"][0]["user_name"].ToString().ToLower();
+
+            MopsBot.Data.Tracker.TwitchTracker tracker = StaticBase.Trackers[Data.Tracker.BaseTracker.TrackerType.Twitch].GetTrackers()[name] as MopsBot.Data.Tracker.TwitchTracker;
+            await tracker.checkStreamerInfo();
             
-            return new OkObjectResult("Yay");
+            return new OkResult();
         }
     }
 }

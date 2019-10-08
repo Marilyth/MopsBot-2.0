@@ -113,7 +113,8 @@ namespace MopsBot.Data.Tracker
             await SubscribeWebhookAsync();
         }
 
-        public async Task<string> SubscribeWebhookAsync(){
+        public async Task<string> SubscribeWebhookAsync()
+        {
             var url = "https://api.twitch.tv/helix/webhooks/hub" +
                       $"?hub.topic=https://api.twitch.tv/helix/streams?user_id={TwitchId}" +
                       "&hub.lease_seconds=864000" +
@@ -131,8 +132,19 @@ namespace MopsBot.Data.Tracker
         {
             try
             {
-                StreamerStatus = await streamerInformation();
+                await checkStreamerInfo();
+            }
+            catch (Exception e)
+            {
+                await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $" error by {Name}", e));
+            }
+        }
 
+        public async Task checkStreamerInfo()
+        {
+            try
+            {
+                StreamerStatus = await streamerInformation();
                 Boolean isStreaming = StreamerStatus.stream.channel != null;
 
                 if (IsOnline != isStreaming)
@@ -291,7 +303,7 @@ namespace MopsBot.Data.Tracker
                 next = tmpResult._next;
                 result.comments = result.comments.Concat(tmpResult.comments).ToList();
             }
-            if(result.comments == null) result.comments = new List<Comment>();
+            if (result.comments == null) result.comments = new List<Comment>();
             else result.comments.Reverse();
             return result;
         }
@@ -340,7 +352,7 @@ namespace MopsBot.Data.Tracker
                     var streamDuration = DateTime.UtcNow - OxyPlot.Axes.DateTimeAxis.ToDateTime(ViewerGraph.PlotDataPoints[0].Value.Key);
                     var chat = GetVodChat(ulong.Parse(VodUrl.Split("/").Last()), (uint)streamDuration.TotalSeconds - 10).Result;
 
-                    if(chat.comments.Count >= 5) comments = chat.comments.Take(5).ToList();
+                    if (chat.comments.Count >= 5) comments = chat.comments.Take(5).ToList();
                     else comments = chat.comments.Concat(comments.Take(Math.Min(comments.Count, 5 - chat.comments.Count))).ToList();
 
                     string chatPreview = "```asciidoc\n";
@@ -351,7 +363,7 @@ namespace MopsBot.Data.Tracker
                         else
                             chatPreview += comments[i].commenter.display_name + ":: " + comments[i].message.body + "\n";
                     }
-                    if(chatPreview.Equals("```asciidoc\n")) chatPreview += "Could not fetch chat messages.\nFollowers/Subs only, or empty?";
+                    if (chatPreview.Equals("```asciidoc\n")) chatPreview += "Could not fetch chat messages.\nFollowers/Subs only, or empty?";
                     chatPreview += "```";
 
                     e.AddField("Chat Preview", chatPreview);
@@ -397,7 +409,8 @@ namespace MopsBot.Data.Tracker
             return "https://www.twitch.tv/" + Name;
         }
 
-        public override async Task UpdateTracker(){
+        public override async Task UpdateTracker()
+        {
             await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
         }
 
