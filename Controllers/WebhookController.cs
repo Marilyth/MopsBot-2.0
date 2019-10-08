@@ -20,7 +20,7 @@ namespace MopsBot.Api.Controllers
         public async Task<IActionResult> ReplyChallenge()
         {
             Dictionary<string, string[]> parameters = Request.Query.ToDictionary(x => x.Key, x => x.Value.ToArray());
-            Console.WriteLine("Received a message: " + Request.Body + "\n\n" + String.Join("\n", Request.Headers.Select(x => x.Key + ": " + x.Value)));
+            Console.WriteLine("Received a challenge, responding with " + parameters["hub.challenge"]);
             return new OkObjectResult(parameters["hub.challenge"]);
         }
 
