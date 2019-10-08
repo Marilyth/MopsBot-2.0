@@ -82,12 +82,12 @@ namespace MopsBot.Data.Tracker
             if (ViewerGraph != null)
                 ViewerGraph.InitPlot();
 
-            if((DateTime.Now - WebhookExpire).Minutes < 10){
+            if((WebhookExpire - DateTime.Now).Minutes < 10){
                 await SubscribeWebhookAsync();
             }
             else
                 Task.Run(() => {
-                    var toWait = (int)(DateTime.Now - WebhookExpire).TotalMilliseconds;
+                    var toWait = (int)(WebhookExpire - WebhookExpire).TotalMilliseconds;
                     Task.Delay(toWait).Wait();
                     SubscribeWebhookAsync().Wait();
                 });
@@ -107,7 +107,7 @@ namespace MopsBot.Data.Tracker
 
             WebhookExpire = DateTime.Now.AddHours(18);
             await UpdateTracker();
-            
+
             return test;
         }
 
