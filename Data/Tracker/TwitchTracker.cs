@@ -87,7 +87,7 @@ namespace MopsBot.Data.Tracker
             }
             else
                 Task.Run(() => {
-                    var toWait = (int)(WebhookExpire - WebhookExpire).TotalMilliseconds;
+                    var toWait = (int)(WebhookExpire - DateTime.Now).TotalMilliseconds;
                     Task.Delay(toWait).Wait();
                     SubscribeWebhookAsync().Wait();
                 });
