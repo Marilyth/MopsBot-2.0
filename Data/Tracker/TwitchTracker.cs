@@ -82,7 +82,6 @@ namespace MopsBot.Data.Tracker
                 ViewerGraph.InitPlot();
 
             await SubscribeWebhookAsync();
-            await SubscribeWebhookAsync(false);
         }
 
         public async Task<string> SubscribeWebhookAsync(bool subscribe = true)
