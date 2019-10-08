@@ -108,9 +108,14 @@ namespace MopsBot.Module
             return null;
         }
 
-        public static async Task<string> PostURLAsync(string URL, params KeyValuePair<string, string>[] headers)
+        public static async Task<string> PostURLAsync(string URL, string body = "", params KeyValuePair<string, string>[] headers)
         {
-            using (var response = await StaticBase.HttpClient.PostAsync(URL, new FormUrlEncodedContent(headers)))
+            HttpRequestMessage test = new HttpRequestMessage(HttpMethod.Post, URL);
+            test.Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");
+            foreach(var header in headers)
+                test.Headers.TryAddWithoutValidation(header.Key, header.Value);
+
+            using (var response = await StaticBase.HttpClient.SendAsync(test))
             {
                 try
                 {

@@ -198,7 +198,7 @@ namespace MopsBot.Data.Tracker
                 if (!isStreaming)
                 {
                     VideoId = null;
-                    SetTimer(900000);
+                    SetTimer(600000);
                     ViewerGraph.Dispose();
                     ViewerGraph = null;
 

@@ -75,7 +75,7 @@ namespace MopsBot.Data.Tracker
             //Check if person exists by forcing Exceptions if not.
             try
             {
-                ulong Id = GetIdFromUsername(streamerName).Result;
+                TwitchId = GetIdFromUsername(streamerName).Result;
                 SetTimer();
             }
             catch (Exception e)
@@ -109,18 +109,28 @@ namespace MopsBot.Data.Tracker
 
             if (ViewerGraph != null)
                 ViewerGraph.InitPlot();
+
+            await SubscribeWebhookAsync();
+        }
+
+        public async Task<string> SubscribeWebhookAsync(){
+            var url = "https://api.twitch.tv/helix/webhooks/hub" +
+                      $"?hub.topic=https://api.twitch.tv/helix/streams?user_id={TwitchId}" +
+                      "&hub.lease_seconds=864000" +
+                      "&hub.callback=http://37.221.195.236:5000/api/webhook/twitch" +
+                      "&hub.mode=subscribe";
+
+            var test = await MopsBot.Module.Information.PostURLAsync(url, headers:
+                KeyValuePair.Create("Authorization", "Bearer " + Program.Config["TwitchToken"])
+            );
+
+            return test;
         }
 
         protected async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
             {
-                if (TwitchId == 0)
-                {
-                    TwitchId = await GetIdFromUsername(Name);
-                    await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
-                }
-
                 StreamerStatus = await streamerInformation();
 
                 Boolean isStreaming = StreamerStatus.stream.channel != null;
