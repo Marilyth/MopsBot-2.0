@@ -89,7 +89,7 @@ namespace MopsBot.Data.Tracker
         {
             var url = "https://api.twitch.tv/helix/webhooks/hub" +
                       $"?hub.topic=https://api.twitch.tv/helix/streams?user_id={TwitchId}" +
-                      "&hub.lease_seconds=864000" +
+                      "&hub.lease_seconds=64800" +
                       "&hub.callback=http://37.221.195.236:5000/api/webhook/twitch" +
                       $"&hub.mode={(subscribe ? "subscribe" : "unsubscribe")}";
 
