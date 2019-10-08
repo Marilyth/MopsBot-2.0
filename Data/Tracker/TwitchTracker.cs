@@ -32,6 +32,7 @@ namespace MopsBot.Data.Tracker
         public bool IsHosting;
         public int TimeoutCount;
         public ulong TwitchId;
+        public DateTime WebhookExpire = DateTime.Now;
         public static readonly string GAMECHANGE = "NotifyOnGameChange", HOST = "NotifyOnHost", ONLINE = "NotifyOnOnline", OFFLINE = "NotifyOnOffline", SHOWEMBED = "ShowEmbed", SHOWCHAT = "ShowChat", SHOWVOD = "ShowVod", THUMBNAIL = "LargeThumbnail", SENDPDF = "SendGraphPDFAfterOffline";
 
         public TwitchTracker() : base()
@@ -81,7 +82,15 @@ namespace MopsBot.Data.Tracker
             if (ViewerGraph != null)
                 ViewerGraph.InitPlot();
 
-            await SubscribeWebhookAsync();
+            if((DateTime.Now - WebhookExpire).Minutes < 10){
+                await SubscribeWebhookAsync();
+            }
+            else
+                Task.Run(() => {
+                    var toWait = (int)(DateTime.Now - WebhookExpire).TotalMilliseconds;
+                    Task.Delay(toWait).Wait();
+                    SubscribeWebhookAsync().Wait();
+                });
         }
 
         public async Task<string> SubscribeWebhookAsync(bool subscribe = true)
@@ -96,6 +105,9 @@ namespace MopsBot.Data.Tracker
                 KeyValuePair.Create("Authorization", "Bearer " + Program.Config["TwitchToken"])
             );
 
+            WebhookExpire = DateTime.Now.AddHours(18);
+            await UpdateTracker();
+            
             return test;
         }
 
