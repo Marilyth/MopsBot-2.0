@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+/*using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 using MopsBot.Data.Entities;
@@ -173,4 +173,4 @@ namespace MopsBot.Api.Controllers
             return JsonConvert.DeserializeObject<dynamic>(response)["id"];
         }
     }
-}
+}*/

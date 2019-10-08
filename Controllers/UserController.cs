@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+/*using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 using Newtonsoft.Json;
@@ -34,7 +34,7 @@ namespace MopsBot.Api.Controllers
                 return NotFound();
             }
             return new ObjectResult(item);
-        }*/
+        }
 
         [HttpGet("guilds/{id}", Name = "GetUserGuilds")]
         public async Task<IActionResult> GetGuilds(ulong id)
@@ -48,4 +48,4 @@ namespace MopsBot.Api.Controllers
             return new ObjectResult(JsonConvert.SerializeObject(infoDict, Formatting.Indented));
         }
     }
-}
+}*/
