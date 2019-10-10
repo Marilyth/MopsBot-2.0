@@ -41,7 +41,7 @@ namespace MopsBot.Api.Controllers
                 string name = update["data"][0]["user_name"].ToString().ToLower();
 
                 MopsBot.Data.Tracker.TwitchTracker tracker = StaticBase.Trackers[Data.Tracker.BaseTracker.TrackerType.Twitch].GetTrackers()[name] as MopsBot.Data.Tracker.TwitchTracker;
-                await tracker.checkStreamerInfo();
+                await tracker.CheckStreamerInfoAsync();
             } catch(Exception e) {
                 await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $" error by Twitch Webhook, someone went offline, probably.", e));
             }

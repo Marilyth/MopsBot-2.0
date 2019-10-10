@@ -118,7 +118,7 @@ namespace MopsBot.Data.Tracker
                     await SubscribeWebhookAsync();
                 }
                 
-                await checkStreamerInfo();
+                await CheckStreamerInfoAsync();
             }
             catch (Exception e)
             {
@@ -126,7 +126,7 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public async Task checkStreamerInfo()
+        public async Task CheckStreamerInfoAsync()
         {
             try
             {
