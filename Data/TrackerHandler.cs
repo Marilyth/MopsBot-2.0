@@ -14,7 +14,7 @@ using MongoDB.Driver;
 
 namespace MopsBot.Data
 {
-    public abstract class TrackerWrapper : MopsBot.Api.IAPIHandler
+    public abstract class TrackerWrapper
     {
         public abstract Task UpdateDBAsync(BaseTracker tracker);
         public abstract Task RemoveFromDBAsync(BaseTracker tracker);
@@ -30,10 +30,6 @@ namespace MopsBot.Data
         public abstract BaseTracker GetTracker(ulong channelID, string name);
         public abstract Type GetTrackerType();
         public abstract void PostInitialisation();
-        public abstract Task AddContent(Dictionary<string, string> args);
-        public abstract Task UpdateContent(Dictionary<string, Dictionary<string, string>> args);
-        public abstract Task RemoveContent(Dictionary<string, string> args);
-        public abstract Dictionary<string, object> GetContent(ulong userId, ulong guildId);
     }
 
     /// <summary>
@@ -139,7 +135,6 @@ namespace MopsBot.Data
                     await RemoveFromDBAsync(trackers[name]);
                     trackers[name].Dispose();
                     trackers.Remove(name);
-                    //SaveJson();
                     await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Removed a {typeof(T).FullName} for {name}\nChannel: {channelId}; Last channel left."));
                 }
 
@@ -256,48 +251,6 @@ namespace MopsBot.Data
         public override Type GetTrackerType()
         {
             return typeof(T);
-        }
-
-        //IAPIHandler implementation
-        public async override Task AddContent(Dictionary<string, string> args)
-        {
-            T tmp = (T)Activator.CreateInstance(typeof(T), new object[] { args });
-            trackers[tmp.Name] = tmp;
-            tmp.OnMajorEventFired += OnMajorEvent;
-            tmp.OnMinorEventFired += OnMinorEvent;
-            await InsertToDBAsync(tmp);
-        }
-
-        public async override Task UpdateContent(Dictionary<string, Dictionary<string, string>> args)
-        {
-            trackers[args["OldValue"]["Id"]].Update(args);
-            await UpdateDBAsync(trackers[args["OldValue"]["Id"]]);
-        }
-
-        public async override Task RemoveContent(Dictionary<string, string> args)
-        {
-            await TryRemoveTrackerAsync(args["Id"], ulong.Parse(args["Channel"].Split(":")[1]));
-        }
-
-        public override Dictionary<string, object> GetContent(ulong userId, ulong guildId)
-        {
-            var tmp = ((T)Activator.CreateInstance(typeof(T)));
-            var parameters = tmp.GetParameters(guildId);
-            tmp.Dispose();
-
-            List<ulong> channels = ((string[])((Dictionary<string, object>)parameters["Parameters"])["Channel"]).Select(x => ulong.Parse((x.Split(":")[1]))).ToList();
-            var rawTrackers = trackers.Values.Where(x => x.ChannelConfig.Any(y => channels.Contains(y.Key)));
-
-            parameters["Content"] = new List<object>();
-            foreach (var tracker in rawTrackers)
-            {
-                foreach (var channel in tracker.ChannelConfig.Keys.Where(x => channels.Contains(x)))
-                {
-                    (parameters["Content"] as List<object>).Add(tracker.GetAsScope(channel));
-                }
-            }
-
-            return parameters;
         }
 
 

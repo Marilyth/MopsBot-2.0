@@ -25,38 +25,6 @@ namespace MopsBot.Data.Tracker
         {
         }
 
-        public RSSTracker(Dictionary<string, string> args) : base()
-        {
-            base.SetBaseValues(args, true);
-
-            //Check if Name ist valid
-            try
-            {
-                var test = new RSSTracker(Name);
-                test.Dispose();
-                LastFeed = test.LastFeed;
-                LastTitle = test.LastTitle;
-                SetTimer();
-            }
-            catch (Exception e)
-            {
-                this.Dispose();
-                throw e;
-            }
-
-            if (StaticBase.Trackers[TrackerType.RSS].GetTrackers().ContainsKey(Name))
-            {
-                this.Dispose();
-
-                args["Id"] = Name;
-                var curTracker = StaticBase.Trackers[TrackerType.RSS].GetTrackers()[Name];
-                curTracker.ChannelConfig[ulong.Parse(args["Channel"].Split(":")[1])]["Notification"] = args["Notification"];
-                StaticBase.Trackers[TrackerType.RSS].UpdateContent(new Dictionary<string, Dictionary<string, string>> { { "NewValue", args }, { "OldValue", args } }).Wait();
-
-                throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
-            }
-        }
-
         public RSSTracker(string url) : base()
         {
             Name = url;

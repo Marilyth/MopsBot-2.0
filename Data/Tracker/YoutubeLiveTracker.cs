@@ -30,31 +30,6 @@ namespace MopsBot.Data.Tracker
         {
         }
 
-        public YoutubeLiveTracker(Dictionary<string, string> args) : base(){
-            ChannelConfig[ulong.Parse(args["Channel"].Split(":")[1])][THUMBNAIL] = bool.Parse(args["IsThumbnailLarge"]);
-            base.SetBaseValues(args, true);
-
-            //Check if Name ist valid
-            try{
-                new YoutubeLiveTracker(Name).Dispose();
-                SetTimer();
-            } catch (Exception e){
-                this.Dispose();
-                throw e;
-            }
-
-            if(StaticBase.Trackers[TrackerType.YoutubeLive].GetTrackers().ContainsKey(Name)){
-                this.Dispose();
-
-                args["Id"] = Name;
-                var curTracker = StaticBase.Trackers[TrackerType.YoutubeLive].GetTrackers()[Name];
-                curTracker.ChannelConfig[ulong.Parse(args["Channel"].Split(":")[1])]["Notification"] = args["Notification"];
-                StaticBase.Trackers[TrackerType.YoutubeLive].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", args}}).Wait();
-
-                throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
-            }
-        }
-
         public YoutubeLiveTracker(string channelId) : base()
         {
             Name = channelId;
@@ -198,7 +173,7 @@ namespace MopsBot.Data.Tracker
                 if (!isStreaming)
                 {
                     VideoId = null;
-                    SetTimer(900000);
+                    SetTimer(600000);
                     ViewerGraph.Dispose();
                     ViewerGraph = null;
 
@@ -279,37 +254,6 @@ namespace MopsBot.Data.Tracker
 
         public override async Task UpdateTracker(){
             await StaticBase.Trackers[TrackerType.YoutubeLive].UpdateDBAsync(this);
-        }
-
-        public override Dictionary<string, object> GetParameters(ulong guildId)
-        {
-            var parentParameters = base.GetParameters(guildId);
-            (parentParameters["Parameters"] as Dictionary<string, object>)["IsThumbnailLarge"] = new bool[]{true, false};
-            return parentParameters;
-        }
-
-        public override void Update(Dictionary<string, Dictionary<string, string>> args){
-            base.Update(args);
-            //IsThumbnailLarge = bool.Parse(args["NewValue"]["IsThumbnailLarge"]);
-        }
-
-        public override object GetAsScope(ulong channelId){
-            return new ContentScope(){
-                Id = this.Name,
-                _Name = this.Name,
-                Notification = (string)this.ChannelConfig[channelId]["Notification"],
-                Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId,
-                IsThumbnailLarge = (bool)this.ChannelConfig[channelId][THUMBNAIL]
-            };
-        }
-
-        public new struct ContentScope
-        {
-            public string Id;
-            public string _Name;
-            public string Notification;
-            public string Channel;
-            public bool IsThumbnailLarge;
         }
 
         public override string TrackerUrl()

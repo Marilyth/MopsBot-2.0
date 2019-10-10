@@ -32,39 +32,11 @@ namespace MopsBot.Data.Tracker
         public bool IsHosting;
         public int TimeoutCount;
         public ulong TwitchId;
+        public DateTime WebhookExpire = DateTime.Now;
         public static readonly string GAMECHANGE = "NotifyOnGameChange", HOST = "NotifyOnHost", ONLINE = "NotifyOnOnline", OFFLINE = "NotifyOnOffline", SHOWEMBED = "ShowEmbed", SHOWCHAT = "ShowChat", SHOWVOD = "ShowVod", THUMBNAIL = "LargeThumbnail", SENDPDF = "SendGraphPDFAfterOffline";
 
         public TwitchTracker() : base()
         {
-        }
-
-        public TwitchTracker(Dictionary<string, string> args) : base()
-        {
-            base.SetBaseValues(args, true);
-
-            //Check if Name ist valid
-            try
-            {
-                new TwitchTracker(Name).Dispose();
-                SetTimer();
-            }
-            catch (Exception e)
-            {
-                this.Dispose();
-                throw e;
-            }
-
-            if (StaticBase.Trackers[TrackerType.Twitch].GetTrackers().ContainsKey(Name))
-            {
-                this.Dispose();
-
-                args["Id"] = Name;
-                var curTracker = StaticBase.Trackers[TrackerType.Twitch].GetTrackers()[Name];
-                curTracker.ChannelConfig[ulong.Parse(args["Channel"].Split(":")[1])]["Notification"] = args["Notification"];
-                StaticBase.Trackers[TrackerType.Twitch].UpdateContent(new Dictionary<string, Dictionary<string, string>> { { "NewValue", args }, { "OldValue", args } }).Wait();
-
-                throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
-            }
         }
 
         public TwitchTracker(string streamerName) : base()
@@ -75,7 +47,7 @@ namespace MopsBot.Data.Tracker
             //Check if person exists by forcing Exceptions if not.
             try
             {
-                ulong Id = GetIdFromUsername(streamerName).Result;
+                TwitchId = GetIdFromUsername(streamerName).Result;
                 SetTimer();
             }
             catch (Exception e)
@@ -109,20 +81,56 @@ namespace MopsBot.Data.Tracker
 
             if (ViewerGraph != null)
                 ViewerGraph.InitPlot();
+
+            if((WebhookExpire - DateTime.Now).TotalMinutes < 10){
+                await SubscribeWebhookAsync();
+            }
+        }
+
+        public async Task<string> SubscribeWebhookAsync(bool subscribe = true)
+        {
+            try{
+                var url = "https://api.twitch.tv/helix/webhooks/hub" +
+                          $"?hub.topic=https://api.twitch.tv/helix/streams?user_id={TwitchId}" +
+                          "&hub.lease_seconds=64800" +
+                          "&hub.callback=http://37.221.195.236:5000/api/webhook/twitch" +
+                          $"&hub.mode={(subscribe ? "subscribe" : "unsubscribe")}";
+
+                var test = await MopsBot.Module.Information.PostURLAsync(url, headers:
+                    KeyValuePair.Create("Authorization", "Bearer " + Program.Config["TwitchToken"])
+                );
+
+                WebhookExpire = DateTime.Now.AddHours(18);
+                await UpdateTracker();
+
+                return test;
+            } catch(Exception e){
+                await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $" error by {Name}", e));
+                return "Failed";
+            }
         }
 
         protected async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
             {
-                if (TwitchId == 0)
-                {
-                    TwitchId = await GetIdFromUsername(Name);
-                    await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
+                if((WebhookExpire - DateTime.Now).TotalMinutes < 10){
+                    await SubscribeWebhookAsync();
                 }
+                
+                await CheckStreamerInfoAsync();
+            }
+            catch (Exception e)
+            {
+                await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $" error by {Name}", e));
+            }
+        }
 
+        public async Task CheckStreamerInfoAsync()
+        {
+            try
+            {
                 StreamerStatus = await streamerInformation();
-
                 Boolean isStreaming = StreamerStatus.stream.channel != null;
 
                 if (IsOnline != isStreaming)
@@ -281,7 +289,7 @@ namespace MopsBot.Data.Tracker
                 next = tmpResult._next;
                 result.comments = result.comments.Concat(tmpResult.comments).ToList();
             }
-            if(result.comments == null) result.comments = new List<Comment>();
+            if (result.comments == null) result.comments = new List<Comment>();
             else result.comments.Reverse();
             return result;
         }
@@ -330,7 +338,7 @@ namespace MopsBot.Data.Tracker
                     var streamDuration = DateTime.UtcNow - OxyPlot.Axes.DateTimeAxis.ToDateTime(ViewerGraph.PlotDataPoints[0].Value.Key);
                     var chat = GetVodChat(ulong.Parse(VodUrl.Split("/").Last()), (uint)streamDuration.TotalSeconds - 10).Result;
 
-                    if(chat.comments.Count >= 5) comments = chat.comments.Take(5).ToList();
+                    if (chat.comments.Count >= 5) comments = chat.comments.Take(5).ToList();
                     else comments = chat.comments.Concat(comments.Take(Math.Min(comments.Count, 5 - chat.comments.Count))).ToList();
 
                     string chatPreview = "```asciidoc\n";
@@ -341,7 +349,7 @@ namespace MopsBot.Data.Tracker
                         else
                             chatPreview += comments[i].commenter.display_name + ":: " + comments[i].message.body + "\n";
                     }
-                    if(chatPreview.Equals("```asciidoc\n")) chatPreview += "Could not fetch chat messages.\nFollowers/Subs only, or empty?";
+                    if (chatPreview.Equals("```asciidoc\n")) chatPreview += "Could not fetch chat messages.\nFollowers/Subs only, or empty?";
                     chatPreview += "```";
 
                     e.AddField("Chat Preview", chatPreview);
@@ -374,12 +382,13 @@ namespace MopsBot.Data.Tracker
             await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
         }
 
-        public new void Dispose()
+        public override void Dispose()
         {
             base.Dispose(true);
             GC.SuppressFinalize(this);
             ViewerGraph?.Dispose();
             ViewerGraph = null;
+            SubscribeWebhookAsync(false).Wait();
         }
 
         public override string TrackerUrl()
@@ -387,42 +396,9 @@ namespace MopsBot.Data.Tracker
             return "https://www.twitch.tv/" + Name;
         }
 
-        public override async Task UpdateTracker(){
+        public override async Task UpdateTracker()
+        {
             await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
-        }
-
-        public override Dictionary<string, object> GetParameters(ulong guildId)
-        {
-            var parentParameters = base.GetParameters(guildId);
-            (parentParameters["Parameters"] as Dictionary<string, object>)["IsThumbnailLarge"] = new bool[] { true, false };
-            return parentParameters;
-        }
-
-        public override object GetAsScope(ulong channelId)
-        {
-            return new ContentScope()
-            {
-                Id = this.Name,
-                _Name = this.Name,
-                Notification = (string)this.ChannelConfig[channelId]["Notification"],
-                Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId,
-                IsThumbnailLarge = (bool)this.ChannelConfig[((SocketGuildChannel)Program.Client.GetChannel(channelId)).Guild.Id][THUMBNAIL]
-            };
-        }
-
-        public override void Update(Dictionary<string, Dictionary<string, string>> args)
-        {
-            base.Update(args);
-            //isThumbnailLarge = bool.Parse(args["NewValue"]["IsThumbnailLarge"]);
-        }
-
-        public new struct ContentScope
-        {
-            public string Id;
-            public string _Name;
-            public string Notification;
-            public string Channel;
-            public bool IsThumbnailLarge;
         }
     }
 }

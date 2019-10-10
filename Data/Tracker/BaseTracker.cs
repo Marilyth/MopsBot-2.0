@@ -18,7 +18,7 @@ using System.ServiceModel.Syndication;
 namespace MopsBot.Data.Tracker
 {
     [BsonIgnoreExtraElements]
-    public abstract class BaseTracker : MopsBot.Api.BaseAPIContent, IDisposable
+    public abstract class BaseTracker : IDisposable
     {
         //Avoid ratelimit by placing a gap between all trackers.
         public static int ExistingTrackers = 0;
@@ -144,40 +144,6 @@ namespace MopsBot.Data.Tracker
             }
 
             disposed = true;
-        }
-
-        public override Dictionary<string, object> GetParameters(ulong guildId)
-        {
-            string[] channels = Program.Client.GetGuild(guildId).TextChannels.Select(x => $"#{x.Name}:{x.Id}").ToArray();
-
-            return new Dictionary<string, object>(){
-                {"Parameters", new Dictionary<string, object>(){
-                                {"_Name", ""},
-                                {"Notification", "New content!"},
-                                {"Channel", channels}}},
-                {"Permissions", GuildPermission.ManageChannels}
-            };
-        }
-
-        public override object GetAsScope(ulong channelId)
-        {
-            return new ContentScope()
-            {
-                Id = this.Name,
-                _Name = this.Name,
-                Notification = (string)this.ChannelConfig[channelId]["Notification"],
-                Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId
-            };
-        }
-
-        public override void Update(Dictionary<string, Dictionary<string, string>> args)
-        {
-            if (args["NewValue"].ContainsKey("Notification")) SetBaseValues(args["NewValue"]);
-
-            var newChannelId = ulong.Parse(args["NewValue"]["Channel"].Split(":")[1]);
-            var oldChannelId = ulong.Parse(args["OldValue"]["Channel"].Split(":")[1]);
-            if (newChannelId != oldChannelId)
-                ChannelConfig.Remove(oldChannelId);
         }
 
         public void SetBaseValues(Dictionary<string, string> args, bool setName = false)
