@@ -94,6 +94,7 @@ namespace MopsBot.Module
             [RequireBotPermission(ChannelPermission.AddReactions)]
             [RequireBotPermission(ChannelPermission.ManageMessages)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
+            [RequireUserVotepoints(2)]
             public async Task trackStreamer(string streamerName, [Remainder]string notificationMessage = "Stream went live!")
             {
                 using (Context.Channel.EnterTypingState())
