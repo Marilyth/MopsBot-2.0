@@ -263,8 +263,8 @@ namespace MopsBot.Data.Tracker
             footer.Text = "Mixer";
             e.Footer = footer;
 
-            e.ThumbnailUrl = largeThumbnail ? ViewerGraph.DrawPlot() : $"{StreamerStatus.thumbnail.url}?rand={StaticBase.ran.Next(0, 99999999)}";
-            e.ImageUrl = largeThumbnail ? $"{StreamerStatus.thumbnail.url}?rand={StaticBase.ran.Next(0, 99999999)}" : ViewerGraph.DrawPlot();
+            e.ThumbnailUrl = largeThumbnail ? ViewerGraph.DrawPlot() : $"https://thumbs.mixer.com/channel/{MixerId}.small.jpg?rand={StaticBase.ran.Next(0, 99999999)}";
+            e.ImageUrl = largeThumbnail ? $"https://thumbs.mixer.com/channel/{MixerId}.small.jpg?rand={StaticBase.ran.Next(0, 99999999)}" : ViewerGraph.DrawPlot();
 
             return e.Build();
         }
