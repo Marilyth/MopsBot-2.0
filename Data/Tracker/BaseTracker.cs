@@ -22,7 +22,7 @@ namespace MopsBot.Data.Tracker
     {
         //Avoid ratelimit by placing a gap between all trackers.
         public static int ExistingTrackers = 0;
-        public enum TrackerType { Twitch, TwitchGroup, TwitchClip, Twitter, Youtube, YoutubeLive, Reddit, Steam, Osu, Overwatch, OSRS /*Tibia,*/, JSON, HTML, RSS, GW2, Chess };
+        public enum TrackerType { Twitch, TwitchGroup, TwitchClip, Mixer, Twitter, Youtube, YoutubeLive, Reddit, Steam, Osu, Overwatch, OSRS /*Tibia,*/, JSON, HTML, RSS, GW2, Chess };
         private bool disposed = false;
         private SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
         protected System.Threading.Timer checkForChange;

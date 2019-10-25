@@ -48,5 +48,25 @@ namespace MopsBot.Api.Controllers
             
             return new OkResult();
         }
+
+        [HttpPost("mixer")]
+        public async Task<IActionResult> MixerWebhookReceived()
+        {
+            string body = new StreamReader(Request.Body).ReadToEnd();
+            var headers = Request.Headers;
+            
+            await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Received a mixer webhook message\n" + body));
+            var update = JsonConvert.DeserializeObject<dynamic>(body);
+            try{
+                string name = update["data"][0]["user_name"].ToString().ToLower();
+
+                MopsBot.Data.Tracker.TwitchTracker tracker = StaticBase.Trackers[Data.Tracker.BaseTracker.TrackerType.Twitch].GetTrackers()[name] as MopsBot.Data.Tracker.TwitchTracker;
+                await tracker.CheckStreamerInfoAsync();
+            } catch(Exception e) {
+                await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $" error by Mixer Webhook.", e));
+            }
+            
+            return new OkResult();
+        }
     }
 }
