@@ -281,7 +281,7 @@ namespace MopsBot.Data.Tracker
             GC.SuppressFinalize(this);
             ViewerGraph?.Dispose();
             ViewerGraph = null;
-            SubscribeWebhookAsync(false).Wait();
+            //SubscribeWebhookAsync(false).Wait();
         }
 
         public override string TrackerUrl()
