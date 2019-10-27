@@ -159,7 +159,7 @@ namespace MopsBot.Data.Tracker
                         ViewerGraph = new DatePlot(Name + "Mixer", "Time since start", "Viewers");
                         IsOnline = true;
                         CurGame = StreamerStatus.type?.name ?? "Nothing";
-                        ViewerGraph.AddValue(CurGame, 0, (await GetBroadcastStartTime()).AddHours(-2));
+                        ViewerGraph.AddValue(CurGame, 0, (await GetBroadcastStartTime()).AddHours(-1));
 
                         if (OnLive != null) await OnLive.Invoke(this);
                         foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][ONLINE]).ToList())
