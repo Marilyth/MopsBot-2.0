@@ -18,7 +18,7 @@ namespace MopsBot
         private static readonly TimeSpan _timeout = TimeSpan.FromSeconds(30);
 
         // Should we attempt to reset the client? Set this to false if your client is still locking up.
-        private static readonly bool _attemptReset = false;
+        private static readonly bool _attemptReset = true;
 
         // Change log levels if desired:
         private static readonly LogSeverity _debug = LogSeverity.Debug;
