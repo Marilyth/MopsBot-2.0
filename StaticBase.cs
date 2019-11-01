@@ -115,8 +115,8 @@ namespace MopsBot
                 {
                     var trackerType = tracker.Key;
                     if(tracker.Key == BaseTracker.TrackerType.Twitch){
+                        Task.Run(() => TwitchTracker.ObtainTwitchToken());
                         Task.Run(() => {
-                                Program.Config["TwitchToken"] = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(MopsBot.Module.Information.PostURLAsync($"https://id.twitch.tv/oauth2/token?client_id={Program.Config["Twitch"]}&client_secret={Program.Config["TwitchSecret"]}&grant_type=client_credentials").Result)["access_token"].ToString();
                                 tracker.Value.PostInitialisation();
                                 Trackers[BaseTracker.TrackerType.TwitchGroup].PostInitialisation();
                                 TwitchGuilds = Database.GetCollection<Data.Entities.TwitchGuild>("TwitchGuilds").FindSync(x => true).ToEnumerable().ToDictionary(x => x.DiscordId);

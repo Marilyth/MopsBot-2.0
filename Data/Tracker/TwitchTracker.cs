@@ -82,29 +82,37 @@ namespace MopsBot.Data.Tracker
             if (ViewerGraph != null)
                 ViewerGraph.InitPlot();
 
-            if((WebhookExpire - DateTime.Now).TotalMinutes < 10){
+            if ((WebhookExpire - DateTime.Now).TotalMinutes < 10)
+            {
                 await SubscribeWebhookAsync();
             }
         }
 
         public async Task<string> SubscribeWebhookAsync(bool subscribe = true)
         {
-            try{
-                var url = "https://api.twitch.tv/helix/webhooks/hub" +
-                          $"?hub.topic=https://api.twitch.tv/helix/streams?user_id={TwitchId}" +
-                          "&hub.lease_seconds=64800" +
-                          $"&hub.callback={Program.Config["ServerAddress"]}:5000/api/webhook/twitch" +
-                          $"&hub.mode={(subscribe ? "subscribe" : "unsubscribe")}";
+            try
+            {
+                if (Program.Config.ContainsKey("TwitchToken") && !Program.Config["TwitchToken"].Equals(""))
+                {
+                    var url = "https://api.twitch.tv/helix/webhooks/hub" +
+                              $"?hub.topic=https://api.twitch.tv/helix/streams?user_id={TwitchId}" +
+                              "&hub.lease_seconds=64800" +
+                              $"&hub.callback={Program.Config["ServerAddress"]}:5000/api/webhook/twitch" +
+                              $"&hub.mode={(subscribe ? "subscribe" : "unsubscribe")}";
 
-                var test = await MopsBot.Module.Information.PostURLAsync(url, headers:
-                    KeyValuePair.Create("Authorization", "Bearer " + Program.Config["TwitchToken"])
-                );
+                    var test = await MopsBot.Module.Information.PostURLAsync(url, headers:
+                        KeyValuePair.Create("Authorization", "Bearer " + Program.Config["TwitchToken"])
+                    );
 
-                WebhookExpire = DateTime.Now.AddHours(18);
-                await UpdateTracker();
+                    WebhookExpire = DateTime.Now.AddHours(18);
+                    await UpdateTracker();
 
-                return test;
-            } catch(Exception e){
+                    return test;
+                }
+                return "Failed";
+            }
+            catch (Exception e)
+            {
                 await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $" error by {Name}", e));
                 return "Failed";
             }
@@ -114,10 +122,11 @@ namespace MopsBot.Data.Tracker
         {
             try
             {
-                if((WebhookExpire - DateTime.Now).TotalMinutes < 10){
+                if ((WebhookExpire - DateTime.Now).TotalMinutes < 10)
+                {
                     await SubscribeWebhookAsync();
                 }
-                
+
                 await CheckStreamerInfoAsync();
             }
             catch (Exception e)
@@ -380,6 +389,23 @@ namespace MopsBot.Data.Tracker
         {
             action(this);
             await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
+        }
+
+        public static async Task ObtainTwitchToken()
+        {
+            while (!Program.Config.ContainsKey("TwitchToken") || Program.Config["TwitchToken"].Equals(""))
+            {
+                try
+                {
+                    Program.Config["TwitchToken"] = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(MopsBot.Module.Information.PostURLAsync($"https://id.twitch.tv/oauth2/token?client_id={Program.Config["Twitch"]}&client_secret={Program.Config["TwitchSecret"]}&grant_type=client_credentials").Result)["access_token"].ToString();
+                    Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Getting token succeeded."));
+                }
+                catch (Exception)
+                {
+                    Program.MopsLog(new LogMessage(LogSeverity.Critical, "", $"Getting token has failed. Trying again in 30 seconds."));
+                }
+                await Task.Delay(30000);
+            }
         }
 
         public override void Dispose()
