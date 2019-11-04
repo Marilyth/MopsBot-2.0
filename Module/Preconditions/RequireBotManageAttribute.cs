@@ -22,7 +22,7 @@ namespace MopsBot.Module.Preconditions{
         }
 
         public override string ToString(){
-            return $"Requires user to be a bot dev";
+            return $"Requires user to be a bot dev.";
         }
     }
 }

@@ -263,7 +263,7 @@ namespace MopsBot
                     }
                     else
                     {
-                        preconditions += prec;
+                        preconditions += prec + "\n";
                     }
                 }
 

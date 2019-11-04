@@ -29,6 +29,7 @@ namespace MopsBot.Module
             [Summary("Keeps track of the specified TwitterUser, in the Channel you are calling this command in.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
+            [TrackerLimit(30, TrackerType.Twitter)]
             public async Task trackTwitter(string twitterUser, [Remainder]string tweetNotification = "~Tweet Tweet~")
             {
                 twitterUser = twitterUser.ToLower().Replace("@", "");
@@ -224,6 +225,7 @@ namespace MopsBot.Module
             [Summary("Keeps track of the specified Youtuber, in the Channel you are calling this command in.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
+            [TrackerLimit(30, TrackerType.Youtube)]
             public async Task trackYoutube(string channelID, [Remainder]string notificationMessage = "New Video")
             {
                 using (Context.Channel.EnterTypingState())
@@ -289,6 +291,7 @@ namespace MopsBot.Module
             [RequireBotPermission(ChannelPermission.AddReactions)]
             [RequireBotPermission(ChannelPermission.ManageMessages)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
+            [TrackerLimit(50, TrackerType.Twitch)]
             public async Task trackStreamer(string streamerName, [Remainder]string notificationMessage = "Stream went live!")
             {
                 using (Context.Channel.EnterTypingState())
@@ -523,6 +526,7 @@ namespace MopsBot.Module
             [Summary("Keeps track of the specified streamer's top clips every 30 minutes, in the Channel you are calling this command in.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
+            [TrackerLimit(50, TrackerType.TwitchClip)]
             public async Task trackClips(string streamerName, [Remainder]string notificationMessage = "New trending clip found!")
             {
                 using (Context.Channel.EnterTypingState())
@@ -1177,6 +1181,7 @@ namespace MopsBot.Module
             [Summary("Keeps track of the specified RSS feed url")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
+            [TrackerLimit(40, TrackerType.RSS)]
             public async Task TrackRSS(string url, string notification = "")
             {
                 using (Context.Channel.EnterTypingState())
