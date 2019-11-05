@@ -141,6 +141,7 @@ namespace MopsBot.Data.Tracker
             {
                 StreamerStatus = await streamerInformation();
                 Boolean isStreaming = StreamerStatus.stream.channel != null;
+                SetTimer(3600000, StaticBase.ran.Next(5000, 3600000));
 
                 if (IsOnline != isStreaming)
                 {
@@ -169,7 +170,7 @@ namespace MopsBot.Data.Tracker
                             foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][OFFLINE]).ToList())
                                 await OnMinorChangeTracked(channel, $"{Name} went Offline!");
 
-                            SetTimer(600000, 600000);
+                            SetTimer(3600000, 3600000);
 
                         }
                         else if (!IsHosting)
@@ -198,7 +199,7 @@ namespace MopsBot.Data.Tracker
                         foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][ONLINE]).ToList())
                             await OnMinorChangeTracked(channel, (string)ChannelConfig[channel]["Notification"]);
 
-                        SetTimer(60000, 60000);
+                        SetTimer(120000, 120000);
                     }
                     await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
                 }
