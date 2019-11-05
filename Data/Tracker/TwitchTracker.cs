@@ -143,7 +143,7 @@ namespace MopsBot.Data.Tracker
                 StreamerStatus = await streamerInformation();
                 Boolean isStreaming = StreamerStatus.stream.channel != null;
                 
-                if(!timerChanged && (WebhookExpire - DateTime.Now).TotalMinutes >= 60){
+                if(!timerChanged && !IsOnline && (WebhookExpire - DateTime.Now).TotalMinutes >= 60){
                     SetTimer(3600000, StaticBase.ran.Next(5000, 3600000));
                     timerChanged = true;
                 }
