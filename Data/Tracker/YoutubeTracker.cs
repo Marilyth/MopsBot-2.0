@@ -100,6 +100,7 @@ namespace MopsBot.Data.Tracker
                     {
                         await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"Error loading playlist caches, repeating", e));
                         i -= 50;
+                        await Task.Delay(5000);
                         continue;
                     }
 
@@ -150,6 +151,7 @@ namespace MopsBot.Data.Tracker
                 {
                     await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"Error loading channel caches, repeating", e));
                     i -= 50;
+                    await Task.Delay(5000);
                     continue;
                 }
 
