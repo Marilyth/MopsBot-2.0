@@ -47,11 +47,11 @@ namespace MopsBot.Data.Tracker
 
         private async Task<Video[]> fetchPlaylist(int count)
         {
-            var tmpResult = await FetchJSONDataAsync<Playlist>($"https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults={Math.Min(50, count)}&playlistId={uploadPlaylistId}&key={Program.Config["Youtube"]}");
+            var tmpResult = await FetchJSONDataAsync<Playlist>($"https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId={uploadPlaylistId}&key={Program.Config["Youtube"]}");
 
             switchKeys();
-
-            return tmpResult.items.OrderBy(x => x.snippet.publishedAt).ToArray();
+            var orderedResult = tmpResult.items.OrderBy(x => x.snippet.publishedAt);
+            return orderedResult.TakeLast(count).ToArray();
         }
 
         private async Task<int> fetchPlaylistCount()
