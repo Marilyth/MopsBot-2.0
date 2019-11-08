@@ -130,7 +130,7 @@ namespace MopsBot.Data.Tracker
                 switchKeys();
                 Task.Run(() => fetchPlaylistCountBatch().Wait());
                 await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Loaded {channelCache.Count} channel caches"));
-                await Task.Delay((60000/trackerList.Count) * 40);
+                await Task.Delay((600000/trackerList.Count) * 40);
             }
         }
 
