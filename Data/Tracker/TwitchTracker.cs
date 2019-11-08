@@ -92,7 +92,7 @@ namespace MopsBot.Data.Tracker
         {
             try
             {
-                /*if (Program.Config.ContainsKey("TwitchToken") && !Program.Config["TwitchToken"].Equals(""))
+                if (Program.Config.ContainsKey("TwitchToken") && !Program.Config["TwitchToken"].Equals(""))
                 {
                     var url = "https://api.twitch.tv/helix/webhooks/hub" +
                               $"?hub.topic=https://api.twitch.tv/helix/streams?user_id={TwitchId}" +
@@ -108,7 +108,7 @@ namespace MopsBot.Data.Tracker
                     await UpdateTracker();
 
                     return test;
-                }*/
+                }
                 return "Failed";
             }
             catch (Exception e)
