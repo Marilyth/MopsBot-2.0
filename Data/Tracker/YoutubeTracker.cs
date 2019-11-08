@@ -19,6 +19,7 @@ namespace MopsBot.Data.Tracker
     public class YoutubeTracker : BaseTracker
     {
         public string LastTime;
+        public int UploadCount = -1;
         private string channelThumbnailUrl, uploadPlaylistId;
 
         public YoutubeTracker() : base()
@@ -52,55 +53,158 @@ namespace MopsBot.Data.Tracker
             var lastStringDateTime = XmlConvert.ToString(lastDateTime.AddSeconds(1), XmlDateTimeSerializationMode.Utc);
             var tmpResult = await FetchJSONDataAsync<Playlist>($"https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId={uploadPlaylistId}&key={Program.Config["Youtube"]}");
 
-            var tmp = Program.Config["Youtube"];
-            Program.Config["Youtube"] = Program.Config["Youtube2"];
-            Program.Config["Youtube2"] = tmp;
+            switchKeys();
 
             return tmpResult.items.Where(x => x.snippet.publishedAt > lastDateTime).OrderByDescending(x => x.snippet.publishedAt).ToArray();
         }
 
+        private async Task<int> fetchPlaylistCount()
+        {
+            if (!playlistCountCache.TryGetValue(uploadPlaylistId, out int count))
+            {
+                var tmpResult = await FetchJSONDataAsync<PlaylistCounts>($"https://www.googleapis.com/youtube/v3/playlists?part=contentDetails&id={uploadPlaylistId}&key={Program.Config["Youtube"]}");
+                switchKeys();
+
+                count = tmpResult.items.FirstOrDefault()?.contentDetails?.itemCount ?? 0;
+                playlistCountCache[uploadPlaylistId] = count;
+                await Program.MopsLog(new LogMessage(LogSeverity.Warning, "", "Had to load playlist count, current count: " + playlistCountCache.Count));
+            }
+            return count;
+        }
+
+        private static Dictionary<string, int> playlistCountCache = new Dictionary<string, int>();
+        private static bool loading = false;
+        private async static Task fetchPlaylistCountBatch()
+        {
+            if (!loading)
+                loading = true;
+            else
+                return;
+
+            while (true)
+            {
+                var allTrackers = StaticBase.Trackers[TrackerType.Youtube].GetTrackers().Select(x => x.Value).ToList();
+                await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Loading playlist caches"));
+                for (int i = 0; i < allTrackers.Count; i += 50)
+                {
+                    try
+                    {
+                        string currentBatch = string.Join(",", allTrackers.Skip(i).Take(50).Select(x => (x as YoutubeTracker).uploadPlaylistId));
+                        var tmpResult = await FetchJSONDataAsync<PlaylistCounts>($"https://www.googleapis.com/youtube/v3/playlists?part=contentDetails&maxResults=50&id={currentBatch}&key={Program.Config["Youtube"]}");
+                        foreach (var playlist in tmpResult.items)
+                        {
+                            playlistCountCache[playlist.id] = playlist.contentDetails.itemCount;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"Error loading playlist caches, repeating", e));
+                        i -= 50;
+                        await Task.Delay(5000);
+                        continue;
+                    }
+
+                    await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Loaded {playlistCountCache.Count} playlist caches"));
+                    //Be a bit faster than Timer to make cache available before request
+                    await Task.Delay((600000 / allTrackers.Count) * 45);
+                    switchKeys();
+                }
+            }
+        }
+
         private async Task<ChannelItem> fetchChannel()
         {
-            var tmpResult = await FetchJSONDataAsync<Channel>($"https://www.googleapis.com/youtube/v3/channels?part=contentDetails,snippet&id={Name}&key={Program.Config["Youtube"]}");
-            
-            var tmp = Program.Config["Youtube"];
-            Program.Config["Youtube"] = Program.Config["Youtube2"];
-            Program.Config["Youtube2"] = tmp;
+            if (!channelCache.TryGetValue(Name, out ChannelItem channel))
+            {
+                var tmpResult = await FetchJSONDataAsync<Channel>($"https://www.googleapis.com/youtube/v3/channels?part=contentDetails,snippet&id={Name}&key={Program.Config["Youtube"]}");
 
-            return tmpResult.items.First();
+                switchKeys();
+
+                channel = tmpResult.items.First();
+                channelCache[Name] = channel;
+                await Program.MopsLog(new LogMessage(LogSeverity.Warning, "", "Had to load channel cache, current count: " + channelCache.Count));
+            }
+            return channel;
+        }
+
+        private static Dictionary<string, ChannelItem> channelCache = new Dictionary<string, ChannelItem>();
+        public async static Task fetchChannelsBatch()
+        {
+            var trackerDict = StaticBase.Trackers[TrackerType.Youtube].GetTrackers();
+            var trackerList = StaticBase.Trackers[TrackerType.Youtube].GetTrackers().Select(x => x.Value).ToList();
+            await Program.MopsLog(new LogMessage(LogSeverity.Info, "", "Loading channel caches"));
+
+            for (int i = 0; i < trackerList.Count; i += 50)
+            {
+                try
+                {
+                    string currentBatch = string.Join(",", trackerList.Skip(i).Take(50).Select(x => x.Name));
+                    var tmpResult = await FetchJSONDataAsync<Channel>($"https://www.googleapis.com/youtube/v3/channels?part=contentDetails,snippet&maxResults=50&id={currentBatch}&key={Program.Config["Youtube"]}");
+                    foreach (var channel in tmpResult.items)
+                    {
+                        channelCache[channel.id] = channel;
+                        (trackerDict[channel.id] as YoutubeTracker).uploadPlaylistId = channel.contentDetails.relatedPlaylists.uploads;
+                        (trackerDict[channel.id] as YoutubeTracker).channelThumbnailUrl = channel.snippet.thumbnails.medium.url;
+                    }
+                }
+                catch (Exception e)
+                {
+                    await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"Error loading channel caches, repeating", e));
+                    i -= 50;
+                    await Task.Delay(5000);
+                    continue;
+                }
+
+                switchKeys();
+                Task.Run(() => fetchPlaylistCountBatch().Wait());
+                await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Loaded {channelCache.Count} channel caches"));
+                await Task.Delay((600000 / trackerList.Count) * 40);
+            }
         }
 
         protected async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
             {
-                if(uploadPlaylistId == null){
-                    ChannelItem channel = await fetchChannel();
-
-                    uploadPlaylistId = channel.contentDetails.relatedPlaylists.uploads;
-                    channelThumbnailUrl = channel.snippet.thumbnails.medium.url;
+                int repetition = 0;
+                while (!channelCache.ContainsKey(Name) || !playlistCountCache.ContainsKey(uploadPlaylistId))
+                {
+                    if(repetition == 10) return;
+                    await Task.Delay(5000);
+                    repetition++;
                 }
 
+                var count = playlistCountCache[uploadPlaylistId];
 
-                var newVideos = await fetchPlaylist();
-
-                foreach (Video video in newVideos)
+                if (UploadCount == -1)
                 {
-                    foreach (ulong channel in ChannelConfig.Keys.ToList())
+                    UploadCount = count;
+                    await UpdateTracker();
+                }
+
+                if (count > UploadCount)
+                {
+                    var newVideos = await fetchPlaylist();
+
+                    foreach (Video video in newVideos)
                     {
-                        await OnMajorChangeTracked(channel, await createEmbed(video), (string)ChannelConfig[channel]["Notification"]);
+                        foreach (ulong channel in ChannelConfig.Keys.ToList())
+                        {
+                            await OnMajorChangeTracked(channel, await createEmbed(video), (string)ChannelConfig[channel]["Notification"]);
+                        }
                     }
-                }
 
-                if (newVideos.Length > 0)
-                {
-                    LastTime = XmlConvert.ToString(newVideos[0].snippet.publishedAt, XmlDateTimeSerializationMode.Utc);
-                    await StaticBase.Trackers[TrackerType.Youtube].UpdateDBAsync(this);
+                    UploadCount = count;
+                    if (newVideos.Length > 0)
+                    {
+                        LastTime = XmlConvert.ToString(newVideos[0].snippet.publishedAt, XmlDateTimeSerializationMode.Utc);
+                        await UpdateTracker();
+                    }
                 }
             }
             catch (Exception e)
             {
-                if(!e.Message.Contains("Sequence contains no elements"))
+                if (!e.Message.Contains("Sequence contains no elements"))
                     await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $" error by {Name}", e));
                 else
                     await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Found no videos by {Name}"));
@@ -133,12 +237,21 @@ namespace MopsBot.Data.Tracker
             return e.Build();
         }
 
-        public override string TrackerUrl(){
+        public override string TrackerUrl()
+        {
             return "https://www.youtube.com/channel/" + Name;
         }
 
-        public override async Task UpdateTracker(){
+        public override async Task UpdateTracker()
+        {
             await StaticBase.Trackers[TrackerType.Youtube].UpdateDBAsync(this);
+        }
+
+        private static void switchKeys()
+        {
+            var tmp = Program.Config["Youtube"];
+            Program.Config["Youtube"] = Program.Config["Youtube2"];
+            Program.Config["Youtube2"] = tmp;
         }
     }
 }
