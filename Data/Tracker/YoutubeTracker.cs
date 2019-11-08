@@ -169,7 +169,6 @@ namespace MopsBot.Data.Tracker
                 {
                     if(repetition == 10) return;
                     await Task.Delay(5000);
-                    SetTimer(delay: 600000);
                     repetition++;
                 }
 
