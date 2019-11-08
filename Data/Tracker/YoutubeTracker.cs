@@ -18,7 +18,6 @@ namespace MopsBot.Data.Tracker
     [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
     public class YoutubeTracker : BaseTracker
     {
-        public string LastTime;
         public int UploadCount = -1;
         private string channelThumbnailUrl, uploadPlaylistId;
 
@@ -29,7 +28,6 @@ namespace MopsBot.Data.Tracker
         public YoutubeTracker(string channelId) : base()
         {
             Name = channelId;
-            LastTime = XmlConvert.ToString(DateTime.Now, XmlDateTimeSerializationMode.Utc);
 
             //Check if person exists by forcing Exceptions if not.
             try
@@ -47,15 +45,13 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        private async Task<Video[]> fetchPlaylist()
+        private async Task<Video[]> fetchPlaylist(int count)
         {
-            var lastDateTime = DateTime.Parse(LastTime).ToUniversalTime();
-            var lastStringDateTime = XmlConvert.ToString(lastDateTime.AddSeconds(1), XmlDateTimeSerializationMode.Utc);
-            var tmpResult = await FetchJSONDataAsync<Playlist>($"https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId={uploadPlaylistId}&key={Program.Config["Youtube"]}");
+            var tmpResult = await FetchJSONDataAsync<Playlist>($"https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults={Math.Min(50, count)}&playlistId={uploadPlaylistId}&key={Program.Config["Youtube"]}");
 
             switchKeys();
 
-            return tmpResult.items.Where(x => x.snippet.publishedAt > lastDateTime).OrderByDescending(x => x.snippet.publishedAt).ToArray();
+            return tmpResult.items.OrderBy(x => x.snippet.publishedAt).ToArray();
         }
 
         private async Task<int> fetchPlaylistCount()
@@ -169,7 +165,10 @@ namespace MopsBot.Data.Tracker
                 int repetition = 0;
                 while (!channelCache.ContainsKey(Name) || !playlistCountCache.ContainsKey(uploadPlaylistId))
                 {
-                    if(repetition == 10) return;
+                    if(repetition == 10){
+                        await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"Error for {Name}, cache was not loaded after 10 attemps."));
+                        return;
+                    }
                     await Task.Delay(5000);
                     repetition++;
                 }
@@ -184,7 +183,7 @@ namespace MopsBot.Data.Tracker
 
                 if (count > UploadCount)
                 {
-                    var newVideos = await fetchPlaylist();
+                    var newVideos = await fetchPlaylist(count - UploadCount);
 
                     foreach (Video video in newVideos)
                     {
@@ -195,11 +194,7 @@ namespace MopsBot.Data.Tracker
                     }
 
                     UploadCount = count;
-                    if (newVideos.Length > 0)
-                    {
-                        LastTime = XmlConvert.ToString(newVideos[0].snippet.publishedAt, XmlDateTimeSerializationMode.Utc);
-                        await UpdateTracker();
-                    }
+                    await UpdateTracker();
                 }
             }
             catch (Exception e)
