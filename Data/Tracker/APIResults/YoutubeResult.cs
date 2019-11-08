@@ -12,6 +12,28 @@ namespace MopsBot.Data.Tracker.APIResults.Youtube
         public int resultsPerPage { get; set; }
     }
 
+    public class ContentDetailsPlaylist
+    {
+        public int itemCount { get; set; }
+    }
+
+    public class Playlists
+    {
+        public string kind { get; set; }
+        public string etag { get; set; }
+        public string id { get; set; }
+        public ContentDetailsPlaylist contentDetails { get; set; }
+    }
+
+    public class PlaylistCounts
+    {
+        public string kind { get; set; }
+        public string etag { get; set; }
+        public string nextPageToken { get; set; }
+        public PageInfo pageInfo { get; set; }
+        public List<Playlists> items { get; set; }
+    }
+
     public class RelatedPlaylists
     {
         public string likes { get; set; }
@@ -179,51 +201,51 @@ namespace MopsBot.Data.Tracker.APIResults.Youtube
         public List<LiveVideoItem> items { get; set; }
     }
 
-public class TextMessageDetails
-{
-    public string messageText { get; set; }
-}
+    public class TextMessageDetails
+    {
+        public string messageText { get; set; }
+    }
 
-public class Snippet
-{
-    public string type { get; set; }
-    public string liveChatId { get; set; }
-    public string authorChannelId { get; set; }
-    public DateTime publishedAt { get; set; }
-    public bool hasDisplayContent { get; set; }
-    public string displayMessage { get; set; }
-    public TextMessageDetails textMessageDetails { get; set; }
-}
+    public class Snippet
+    {
+        public string type { get; set; }
+        public string liveChatId { get; set; }
+        public string authorChannelId { get; set; }
+        public DateTime publishedAt { get; set; }
+        public bool hasDisplayContent { get; set; }
+        public string displayMessage { get; set; }
+        public TextMessageDetails textMessageDetails { get; set; }
+    }
 
-public class AuthorDetails
-{
-    public string channelId { get; set; }
-    public string channelUrl { get; set; }
-    public string displayName { get; set; }
-    public string profileImageUrl { get; set; }
-    public bool isVerified { get; set; }
-    public bool isChatOwner { get; set; }
-    public bool isChatSponsor { get; set; }
-    public bool isChatModerator { get; set; }
-}
+    public class AuthorDetails
+    {
+        public string channelId { get; set; }
+        public string channelUrl { get; set; }
+        public string displayName { get; set; }
+        public string profileImageUrl { get; set; }
+        public bool isVerified { get; set; }
+        public bool isChatOwner { get; set; }
+        public bool isChatSponsor { get; set; }
+        public bool isChatModerator { get; set; }
+    }
 
-public class Message
-{
-    public string kind { get; set; }
-    public string etag { get; set; }
-    public string id { get; set; }
-    public Snippet snippet { get; set; }
-    public AuthorDetails authorDetails { get; set; }
-}
+    public class Message
+    {
+        public string kind { get; set; }
+        public string etag { get; set; }
+        public string id { get; set; }
+        public Snippet snippet { get; set; }
+        public AuthorDetails authorDetails { get; set; }
+    }
 
-public class ChatMessages
-{
-    public string kind { get; set; }
-    public string etag { get; set; }
-    public string nextPageToken { get; set; }
-    public int pollingIntervalMillis { get; set; }
-    public PageInfo pageInfo { get; set; }
-    public List<Message> items { get; set; }
-}
+    public class ChatMessages
+    {
+        public string kind { get; set; }
+        public string etag { get; set; }
+        public string nextPageToken { get; set; }
+        public int pollingIntervalMillis { get; set; }
+        public PageInfo pageInfo { get; set; }
+        public List<Message> items { get; set; }
+    }
 
 }
