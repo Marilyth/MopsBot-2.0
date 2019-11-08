@@ -148,7 +148,7 @@ namespace MopsBot.Data.Tracker
                 }
                 catch (Exception e)
                 {
-                    await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"Error loading playlist caches, repeating", e));
+                    await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"Error loading channel caches, repeating", e));
                     i -= 50;
                     continue;
                 }
