@@ -91,7 +91,7 @@ namespace MopsBot.Data.Tracker
 
                     await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Loaded {playlistCountCache.Count} playlist caches"));
                     //Be a bit faster than Timer to make cache available before request
-                    await Task.Delay((60000/allTrackers.Count) * 48);
+                    await Task.Delay((600000/allTrackers.Count) * 45);
                     switchKeys();
                 }
             }
