@@ -110,11 +110,11 @@ namespace MopsBot.Data.Tracker
 
             try
             {
-                e.ThumbnailUrl = !redditPost.thumbnail.Equals("self") && !redditPost.thumbnail.Equals("default") ? redditPost.thumbnail : null;
+                e.ImageUrl = !redditPost.thumbnail.Equals("self") && !redditPost.thumbnail.Equals("default") ? redditPost.thumbnail : null;
             }
             catch (Exception)
             {
-                e.ThumbnailUrl = null;
+                e.ImageUrl = null;
             }
 
             e.AddField("Score", redditPost.score, true);
