@@ -62,7 +62,7 @@ namespace MopsBot.Data.Tracker
             config[TRACKTPDELIVERY] = false;
             config[TRACKWEALTH] = false;
 
-            await StaticBase.Trackers[TrackerType.GW2].UpdateDBAsync(this);
+            await UpdateTracker();
         }
 
         public async override void PostInitialisation(object info = null)
@@ -83,7 +83,7 @@ namespace MopsBot.Data.Tracker
                         LevelGraph = new DatePlot($"{CharacterName.Replace(" ", "")}Level", "Date", "Level", "dd-MMM", false, true);
                         LevelGraph.AddValueSeperate("Level", PastInformation.character.level, relative: false);
                         LevelGraph.AddValueSeperate("M-Level", PastInformation.character.masteryLevel, relative: false);
-                        await StaticBase.Trackers[TrackerType.GW2].UpdateDBAsync(this);
+                        await UpdateTracker();
                     }
 
                     else{
@@ -100,7 +100,7 @@ namespace MopsBot.Data.Tracker
                             }
 
                             PastInformation.character = currentInfo;
-                            await StaticBase.Trackers[TrackerType.GW2].UpdateDBAsync(this);
+                            await UpdateTracker();
                         }
                     }
                 }
@@ -114,7 +114,7 @@ namespace MopsBot.Data.Tracker
                         PastInformation.wallet = (await GetWealth(APIKey)).FirstOrDefault();
                         MoneyGraph = new DatePlot($"{CharacterName.Replace(" ", "")}Gold", "Date", "Gold", "dd-MMM", false);
                         MoneyGraph.AddValue("Gold", PastInformation.wallet.value, relative: false);
-                        await StaticBase.Trackers[TrackerType.GW2].UpdateDBAsync(this);
+                        await UpdateTracker();
                     }
 
                     else{
@@ -129,7 +129,7 @@ namespace MopsBot.Data.Tracker
                             }
 
                             PastInformation.wallet = currentInfo;
-                            await StaticBase.Trackers[TrackerType.GW2].UpdateDBAsync(this);
+                            await UpdateTracker();
                         }
                     }
                 }
@@ -137,7 +137,7 @@ namespace MopsBot.Data.Tracker
                 if(ChannelConfig.Any(x => (bool)x.Value[TRACKTPBUYS])){
                     if(PastInformation.buy == null){
                         PastInformation.buy = (await GetTPBuys(APIKey)).FirstOrDefault();
-                        await StaticBase.Trackers[TrackerType.GW2].UpdateDBAsync(this);
+                        await UpdateTracker();
                     }
 
                     else{
@@ -153,7 +153,7 @@ namespace MopsBot.Data.Tracker
 
                         if(currentInfo.Count > 0){
                             PastInformation.buy = currentInfo.LastOrDefault();
-                            await StaticBase.Trackers[TrackerType.GW2].UpdateDBAsync(this);
+                            await UpdateTracker();
                         }
                     }
                 }
@@ -161,7 +161,7 @@ namespace MopsBot.Data.Tracker
                 if(ChannelConfig.Any(x => (bool)x.Value[TRACKTPSELLS])){
                     if(PastInformation.sell == null){
                         PastInformation.sell = (await GetTPSells(APIKey)).FirstOrDefault();
-                        await StaticBase.Trackers[TrackerType.GW2].UpdateDBAsync(this);
+                        await UpdateTracker();
                     }
 
                     else{
@@ -177,7 +177,7 @@ namespace MopsBot.Data.Tracker
 
                         if(currentInfo.Count > 0){
                             PastInformation.sell = currentInfo.LastOrDefault();
-                            await StaticBase.Trackers[TrackerType.GW2].UpdateDBAsync(this);
+                            await UpdateTracker();
                         }
                     }
                 }
@@ -185,7 +185,7 @@ namespace MopsBot.Data.Tracker
                 if(ChannelConfig.Any(x => (bool)x.Value[TRACKTPDELIVERY])){
                     if(PastInformation.delivery == null){
                         PastInformation.delivery = await GetTPInbox(APIKey);
-                        await StaticBase.Trackers[TrackerType.GW2].UpdateDBAsync(this);
+                        await UpdateTracker();
                     }
 
                     else{
@@ -197,7 +197,7 @@ namespace MopsBot.Data.Tracker
                             }
 
                             PastInformation.delivery = currentInfo;
-                            await StaticBase.Trackers[TrackerType.GW2].UpdateDBAsync(this);
+                            await UpdateTracker();
                         }
                     }
                 }
@@ -425,6 +425,10 @@ namespace MopsBot.Data.Tracker
             }
 
             return itemText + "```";
+        }
+
+        public override async Task UpdateTracker(){
+            await StaticBase.Trackers[TrackerType.GW2].UpdateDBAsync(this);
         }
     }
 

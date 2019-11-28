@@ -66,7 +66,7 @@ namespace MopsBot.Data.Tracker
                 {
                     if(LastFeed != null) LastFeed = feedItems.Last().PublishDate.UtcDateTime;
                     else LastTitle = feedItems.Last().Title?.Text;
-                    await StaticBase.Trackers[TrackerType.RSS].UpdateDBAsync(this);
+                    await UpdateTracker();
                 }
 
                 foreach (var newFeed in feedItems)

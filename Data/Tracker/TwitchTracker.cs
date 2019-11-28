@@ -72,7 +72,7 @@ namespace MopsBot.Data.Tracker
             config[ONLINE] = true;
             config[SENDPDF] = false;
 
-            await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
+            await UpdateTracker();
         }
 
         public async override void PostInitialisation(object info = null)
@@ -206,7 +206,7 @@ namespace MopsBot.Data.Tracker
 
                         SetTimer(120000, 120000);
                     }
-                    await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
+                    await UpdateTracker();
                 }
                 else
                     TimeoutCount = 0;
@@ -250,7 +250,7 @@ namespace MopsBot.Data.Tracker
                 }
             }
             if (save)
-                await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
+                await UpdateTracker();
         }
 
         private async Task<TwitchResult> streamerInformation()
@@ -394,7 +394,7 @@ namespace MopsBot.Data.Tracker
         public async Task ModifyAsync(Action<TwitchTracker> action)
         {
             action(this);
-            await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
+            await UpdateTracker();
         }
 
         public static async Task ObtainTwitchToken()

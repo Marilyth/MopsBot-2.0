@@ -124,7 +124,7 @@ namespace MopsBot.Data.Tracker
                 await OnMinorEventFired(channelID, this, notificationText);
         }
 
-        public virtual async Task UpdateTracker(){}
+        abstract public Task UpdateTracker();
 
         public virtual void Dispose()
         {

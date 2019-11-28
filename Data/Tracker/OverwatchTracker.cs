@@ -84,7 +84,7 @@ namespace MopsBot.Data.Tracker
                 {
                     StatGraph = new DatePlot(Name, "Date", "Level", "dd-MMM", false);
                     StatGraph.AddValue("Level", await OverallStats.GetLevelAsync(Name), relative: false);
-                    await StaticBase.Trackers[TrackerType.Overwatch].UpdateDBAsync(this);
+                    await UpdateTracker();
                 }
 
                 if (information == null)
@@ -107,7 +107,7 @@ namespace MopsBot.Data.Tracker
                     }
 
                     information = newInformation;
-                    await StaticBase.Trackers[TrackerType.Overwatch].UpdateDBAsync(this);
+                    await UpdateTracker();
                 }
             }
             catch (Exception e)

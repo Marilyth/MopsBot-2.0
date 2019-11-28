@@ -71,7 +71,7 @@ namespace MopsBot.Data.Tracker
             config[ONLINE] = true;
             config[SHOWCHAT] = false;
 
-            await StaticBase.Trackers[TrackerType.YoutubeLive].UpdateDBAsync(this);
+            await UpdateTracker();
         }
 
         public override async void Conversion(object obj = null)
@@ -86,7 +86,7 @@ namespace MopsBot.Data.Tracker
                 }
             }
             if (save)
-                await StaticBase.Trackers[TrackerType.YoutubeLive].UpdateDBAsync(this);
+                await UpdateTracker();
         }
 
         private async Task<string> fetchLivestreamId()
@@ -193,7 +193,7 @@ namespace MopsBot.Data.Tracker
                         await OnMajorChangeTracked(channel, await createEmbed((bool)ChannelConfig[channel][THUMBNAIL], (bool)ChannelConfig[channel][SHOWCHAT]));
                 }
 
-                await StaticBase.Trackers[TrackerType.YoutubeLive].UpdateDBAsync(this);
+                await UpdateTracker();
             }
             catch (Exception e)
             {

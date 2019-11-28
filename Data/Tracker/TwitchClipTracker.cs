@@ -50,7 +50,7 @@ namespace MopsBot.Data.Tracker
             base.PostChannelAdded(channelId);
             ChannelConfig[channelId][VIEWTHRESHOLD] = ViewThreshold;
 
-            await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
+            await UpdateTracker();
         }
 
         protected async override void CheckForChange_Elapsed(object stateinfo)
@@ -62,7 +62,7 @@ namespace MopsBot.Data.Tracker
                 {
                     if (datetime.AddMinutes(30) <= DateTime.UtcNow){
                         TrackedClips.Remove(datetime);
-                        await StaticBase.Trackers[TrackerType.TwitchClip].UpdateDBAsync(this);
+                        await UpdateTracker();
                     }
                 }
 
@@ -121,7 +121,7 @@ namespace MopsBot.Data.Tracker
                             clips.clips.Add(clip);
                         }
                         
-                        await StaticBase.Trackers[TrackerType.TwitchClip].UpdateDBAsync(this);
+                        await UpdateTracker();
                     }
                     if (!tmpResult._cursor.Equals(""))
                     {

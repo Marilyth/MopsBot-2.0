@@ -57,7 +57,7 @@ namespace MopsBot.Data.Tracker
             base.PostChannelAdded(channelId);
             ChannelConfig[channelId][PPTHRESHOLD] = 0.1;
 
-            await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
+            await UpdateTracker();
         }
 
         protected async override void CheckForChange_Elapsed(object stateinfo)
@@ -79,7 +79,7 @@ namespace MopsBot.Data.Tracker
                             if (scoreInformation == null)
                             {
                                 AllPP[pp.Key] = double.Parse(userInformation.pp_raw ?? "0", CultureInfo.InvariantCulture);
-                                await StaticBase.Trackers[TrackerType.Osu].UpdateDBAsync(this);
+                                await UpdateTracker();
                                 return;
                             }
                             await OnMajorChangeTracked(channel.Key, createEmbed(userInformation, beatmapInformation, await fetchScore(scoreInformation.beatmap_id, pp.Key),
@@ -89,7 +89,7 @@ namespace MopsBot.Data.Tracker
                         if (pp.Value != double.Parse(userInformation.pp_raw ?? "0", CultureInfo.InvariantCulture))
                         {
                             AllPP[pp.Key] = double.Parse(userInformation.pp_raw ?? "0", CultureInfo.InvariantCulture);
-                            await StaticBase.Trackers[TrackerType.Osu].UpdateDBAsync(this);
+                            await UpdateTracker();
                         }
                     }
                 }

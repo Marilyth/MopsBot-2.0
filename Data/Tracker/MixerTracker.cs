@@ -272,7 +272,7 @@ namespace MopsBot.Data.Tracker
         public async Task ModifyAsync(Action<MixerTracker> action)
         {
             action(this);
-            await StaticBase.Trackers[TrackerType.Mixer].UpdateDBAsync(this);
+            await UpdateTracker();
         }
 
         public override void Dispose()

@@ -50,7 +50,7 @@ namespace MopsBot.Data.Tracker
             ChannelConfig[channelId][GAMECONFIG] = true;
             ChannelConfig[channelId][ACHIEVEMENTCONFIG] = true;
 
-            await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
+            await UpdateTracker();
         }
 
         protected async override void CheckForChange_Elapsed(object sender)
@@ -64,7 +64,7 @@ namespace MopsBot.Data.Tracker
                     CompleteAchievementsCache = null;
                     CurrentGame = summary.gameid;
                     if (CurrentGame == null) LastCheck = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                    await StaticBase.Trackers[TrackerType.Steam].UpdateDBAsync(this);
+                    await UpdateTracker();
                     foreach (var channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][GAMECONFIG]))
                     {
                         await OnMinorChangeTracked(channel, summary.personaname + $" is now playing **{summary.gameextrainfo ?? "Nothing"}**");
@@ -108,7 +108,7 @@ namespace MopsBot.Data.Tracker
                     }
                 }
                 if (setLastCheck) LastCheck = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                await StaticBase.Trackers[TrackerType.Steam].UpdateDBAsync(this);
+                await UpdateTracker();
             }
         }
 
