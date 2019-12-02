@@ -38,25 +38,29 @@ namespace MopsBot.Data.Entities
 
         public async Task PostInitialisation()
         {
-            StaticBase.TwitchGuilds[GuildId].AddUser(this);
-            await CreateSilentTrackerAsync(TwitchName, StaticBase.TwitchGuilds[GuildId].notifyChannel);
-            tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTracker(StaticBase.TwitchGuilds[GuildId].notifyChannel, TwitchName) as TwitchTracker;
-
-            if (tracker.IsOnline)
+            if (Program.Client.GetChannel(StaticBase.TwitchGuilds[GuildId].notifyChannel) != null)
             {
-                await WentLive();
-            }
+                StaticBase.TwitchGuilds[GuildId].AddUser(this);
+                await CreateSilentTrackerAsync(TwitchName, StaticBase.TwitchGuilds[GuildId].notifyChannel);
+                tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTracker(StaticBase.TwitchGuilds[GuildId].notifyChannel, TwitchName) as TwitchTracker;
 
-            tracker.OnHosting += Hosting;
-            tracker.OnLive += WentLive;
-            tracker.OnOffline += WentOffline;
+                if (tracker.IsOnline)
+                {
+                    await WentLive();
+                }
+
+                tracker.OnHosting += Hosting;
+                tracker.OnLive += WentLive;
+                tracker.OnOffline += WentOffline;
+            }
         }
 
         public static async Task CreateSilentTrackerAsync(string name, ulong channelId)
         {
             await StaticBase.Trackers[BaseTracker.TrackerType.Twitch].AddTrackerAsync(name.ToLower(), channelId);
             var tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTracker(channelId, name.ToLower()) as TwitchTracker;
-            await tracker.ModifyAsync(x => {
+            await tracker.ModifyAsync(x =>
+            {
                 x.ChannelConfig[channelId][TwitchTracker.HOST] = false;
                 x.ChannelConfig[channelId][TwitchTracker.GAMECHANGE] = false;
                 x.ChannelConfig[channelId][TwitchTracker.ONLINE] = false;
