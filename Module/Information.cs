@@ -17,7 +17,7 @@ namespace MopsBot.Module
 {
     public class Information : ModuleBase
     {
-        private static int FailedRequests = 0, SucceededRequests = 0;
+        public static int FailedRequests = 0, SucceededRequests = 0;
 
         [Command("HowLong")]
         [Summary("Returns the date you joined the Guild")]
@@ -177,14 +177,6 @@ namespace MopsBot.Module
                 else
                     await Program.MopsLog(new LogMessage(LogSeverity.Debug, "", $"Osu API messed up again: {URL}"));
                 throw e;
-            }
-        }
-
-        private static async Task resetRequests(){
-            while(true){
-                FailedRequests = 0;
-                SucceededRequests = 0;
-                await Task.Delay(30000);
             }
         }
     }
