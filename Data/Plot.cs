@@ -370,8 +370,8 @@ namespace MopsBot.Data
             viewerChart.LegendFontSize = 24;
             viewerChart.LegendPosition = LegendPosition.BottomCenter;
             viewerChart.LegendBorder = OxyColor.FromRgb(125, 125, 155);
-            viewerChart.LegendBackground = OxyColor.FromArgb(100, 255, 255, 255);
-            viewerChart.LegendTextColor = OxyColor.FromRgb(0, 0, 0);
+            viewerChart.LegendBackground = OxyColor.FromArgb(200, 46, 49, 54);
+            viewerChart.LegendTextColor = OxyColor.FromRgb(175, 175, 175);
 
             areaSeries = new List<OxyPlot.Series.AreaSeries>();
             /*foreach (var plotPoint in PlotPoints)
