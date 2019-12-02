@@ -163,7 +163,6 @@ namespace MopsBot
         public static async Task UpdateServerCount()
         {
             await Program.Client.SetActivityAsync(new Game($"{Program.Client.Guilds.Count} servers", ActivityType.Watching));
-            await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", "Heartbeat. I am still alive :)"));
             
             try
             {
