@@ -66,7 +66,7 @@ namespace MopsBot.Data.Tracker
                     }
                 }
 
-                foreach (Clip clip in clips.clips)
+                foreach (Clip clip in clips?.clips ?? new List<Clip>())
                 {
                     var embed = createEmbed(clip);
                     foreach (ulong channel in ChannelConfig.Keys.ToList())
