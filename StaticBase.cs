@@ -233,10 +233,6 @@ namespace MopsBot
 
                         var trackerCount = Trackers[type].GetTrackers().Count;
                         await Program.Client.SetActivityAsync(new Game($"{trackerCount} {type.ToString()} Trackers", ActivityType.Watching));
-                        await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", "Heartbeat. I am still alive :)"));
-                        await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Ratio: {MopsBot.Module.Information.FailedRequests} failed vs {MopsBot.Module.Information.SucceededRequests} succeeded"));
-                        MopsBot.Module.Information.FailedRequests = 0;
-                        MopsBot.Module.Information.SucceededRequests = 0;
                     }
                     catch
                     {
@@ -246,6 +242,12 @@ namespace MopsBot
                         try{
                             await UpdateServerCount();
                         } catch {}
+                    }
+                    finally{
+                        await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", "Heartbeat. I am still alive :)"));
+                        await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Ratio: {MopsBot.Module.Information.FailedRequests} failed vs {MopsBot.Module.Information.SucceededRequests} succeeded requests"));
+                        MopsBot.Module.Information.FailedRequests = 0;
+                        MopsBot.Module.Information.SucceededRequests = 0;
                     }
                     await Task.Delay(30000);
                 }
