@@ -243,8 +243,7 @@ namespace MopsBot
                         } catch {}
                     }
                     finally{
-                        await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", "Heartbeat. I am still alive :)"));
-                        await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Ratio: {MopsBot.Module.Information.FailedRequests} failed vs {MopsBot.Module.Information.SucceededRequests} succeeded requests"));
+                        await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Heartbeat. I am still alive :)\nRatio: {MopsBot.Module.Information.FailedRequests} failed vs {MopsBot.Module.Information.SucceededRequests} succeeded requests"));
                         MopsBot.Module.Information.FailedRequests = 0;
                         MopsBot.Module.Information.SucceededRequests = 0;
                     }
