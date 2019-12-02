@@ -104,8 +104,10 @@ namespace MopsBot.Data.Tracker
                         KeyValuePair.Create("Authorization", "Bearer " + Program.Config["TwitchToken"])
                     );
 
-                    WebhookExpire = DateTime.Now.AddHours(18);
-                    await UpdateTracker();
+                    if(subscribe){
+                        WebhookExpire = DateTime.Now.AddHours(18);
+                        await UpdateTracker();
+                    }
 
                     return test;
                 }
