@@ -113,7 +113,7 @@ namespace MopsBot.Module
         {
             if(FailedRequests >= 10 && SucceededRequests / FailedRequests < 1){
                 await Program.MopsLog(new LogMessage(LogSeverity.Warning, "HttpRequests", $"More Failed requests {FailedRequests} than succeeded ones {SucceededRequests}. Waiting"));
-                return "";
+                //return "";
             }
 
             HttpRequestMessage test = new HttpRequestMessage(HttpMethod.Post, URL);
@@ -142,7 +142,7 @@ namespace MopsBot.Module
         {
             if(FailedRequests >= 10 && SucceededRequests / FailedRequests < 1){
                 await Program.MopsLog(new LogMessage(LogSeverity.Warning, "HttpRequests", $"More Failed requests {FailedRequests} than succeeded ones {SucceededRequests}. Waiting"));
-                return "";
+                //return "";
             }
 
             try
