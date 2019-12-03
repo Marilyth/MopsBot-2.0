@@ -89,10 +89,10 @@ namespace MopsBot
                 //WoWTracker.WoWClient = new SharprWowApi.WowClient(Region.EU, Locale.en_GB, Program.Config["WoWKey"]);
 
                 Trackers = new Dictionary<BaseTracker.TrackerType, Data.TrackerWrapper>();
-                //Trackers[BaseTracker.TrackerType.Twitter] = new TrackerHandler<TwitterTracker>();
-                //Trackers[BaseTracker.TrackerType.Youtube] = new TrackerHandler<YoutubeTracker>();
-                //Trackers[BaseTracker.TrackerType.Twitch] = new TrackerHandler<TwitchTracker>();
-                //Trackers[BaseTracker.TrackerType.YoutubeLive] = new TrackerHandler<YoutubeLiveTracker>();
+                Trackers[BaseTracker.TrackerType.Twitter] = new TrackerHandler<TwitterTracker>();
+                Trackers[BaseTracker.TrackerType.Youtube] = new TrackerHandler<YoutubeTracker>();
+                Trackers[BaseTracker.TrackerType.Twitch] = new TrackerHandler<TwitchTracker>();
+                Trackers[BaseTracker.TrackerType.YoutubeLive] = new TrackerHandler<YoutubeLiveTracker>();
                 Trackers[BaseTracker.TrackerType.Mixer] = new TrackerHandler<MixerTracker>();
                 Trackers[BaseTracker.TrackerType.Reddit] = new TrackerHandler<RedditTracker>();
                 Trackers[BaseTracker.TrackerType.JSON] = new TrackerHandler<JSONTracker>();
