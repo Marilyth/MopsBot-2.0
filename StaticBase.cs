@@ -104,7 +104,7 @@ namespace MopsBot
                 //Trackers[ITracker.TrackerType.WoWGuild] = new TrackerHandler<WoWGuildTracker>();
                 Trackers[BaseTracker.TrackerType.OSRS] = new TrackerHandler<OSRSTracker>();
                 Trackers[BaseTracker.TrackerType.HTML] = new TrackerHandler<HTMLTracker>();
-                Trackers[BaseTracker.TrackerType.RSS] = new TrackerHandler<RSSTracker>();
+                //Trackers[BaseTracker.TrackerType.RSS] = new TrackerHandler<RSSTracker>();
                 Trackers[BaseTracker.TrackerType.Steam] = new TrackerHandler<SteamTracker>();
                 Trackers[BaseTracker.TrackerType.GW2] = new TrackerHandler<GW2Tracker>();
                 Trackers[BaseTracker.TrackerType.Chess] = new TrackerHandler<LichessTracker>();
