@@ -50,6 +50,11 @@ namespace MopsBot.Data.Tracker
             }
         }
 
+        public override void PostInitialisation(object info = null)
+        {
+            SetTimer(1800000);
+        }
+
         protected async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
