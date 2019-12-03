@@ -51,14 +51,14 @@ namespace MopsBot.Data
 
             if (collection.Count > 0)
             {
-                int gap = 600000 / collection.Count;
+                int gap = 60000 / collection.Count;
 
                 for (int i = trackers.Count - 1; i >= 0; i--)
                 {
                     try
                     {
                         var cur = trackers[trackers.Keys.ElementAt(i)];
-                        cur.SetTimer(600000, gap * (i + 1) + 20000);
+                        cur.SetTimer(60000, gap * (i + 1) + 20000);
                         bool save = cur.ChannelConfig.Count == 0;
                         cur.Conversion(trackers.Count - i);
                         cur.PostInitialisation(trackers.Count - i);
