@@ -124,7 +124,7 @@ namespace MopsBot.Data.Tracker
         {
             try
             {
-                if ((WebhookExpire - DateTime.Now).TotalMinutes < 10)
+                if ((WebhookExpire - DateTime.Now).TotalMinutes < 60)
                 {
                     await SubscribeWebhookAsync();
                 }
