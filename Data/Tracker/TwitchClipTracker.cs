@@ -58,7 +58,7 @@ namespace MopsBot.Data.Tracker
             bool save = false;
             foreach (var channel in ChannelConfig.Keys.ToList())
             {
-                if (ViewThreshold > (int)ChannelConfig[channel][VIEWTHRESHOLD])
+                if (ViewThreshold > (uint)ChannelConfig[channel][VIEWTHRESHOLD])
                 {
                     ChannelConfig[channel][VIEWTHRESHOLD] = ViewThreshold;
                     save = true;
@@ -86,7 +86,7 @@ namespace MopsBot.Data.Tracker
                     var embed = createEmbed(clip);
                     foreach (ulong channel in ChannelConfig.Keys.ToList())
                     {
-                        if(clip.views >= (int)ChannelConfig[channel][VIEWTHRESHOLD])
+                        if(clip.views >= (uint)ChannelConfig[channel][VIEWTHRESHOLD])
                             await OnMajorChangeTracked(channel, embed, (string)ChannelConfig[channel]["Notification"]);
                     }
                 }
