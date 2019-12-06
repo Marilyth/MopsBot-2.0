@@ -17,8 +17,6 @@ namespace MopsBot.Data.Tracker
     [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
     public class TwitchClipTracker : BaseTracker
     {
-        public uint ViewThreshold;
-        
         [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
         public Dictionary<DateTime, KeyValuePair<int, double>> TrackedClips;
         public static readonly string VIEWTHRESHOLD = "ViewerThreshold";
