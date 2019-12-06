@@ -53,6 +53,21 @@ namespace MopsBot.Data.Tracker
             await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
         }
 
+        public override async void Conversion(object obj = null)
+        {
+            bool save = false;
+            foreach (var channel in ChannelConfig.Keys.ToList())
+            {
+                if (ViewThreshold > (int)ChannelConfig[channel][VIEWTHRESHOLD])
+                {
+                    ChannelConfig[channel][VIEWTHRESHOLD] = ViewThreshold;
+                    save = true;
+                }
+            }
+            if (save)
+                await UpdateTracker();
+        }
+
         protected async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
@@ -71,7 +86,8 @@ namespace MopsBot.Data.Tracker
                     var embed = createEmbed(clip);
                     foreach (ulong channel in ChannelConfig.Keys.ToList())
                     {
-                        await OnMajorChangeTracked(channel, embed, (string)ChannelConfig[channel]["Notification"]);
+                        if(clip.views >= (int)ChannelConfig[channel][VIEWTHRESHOLD])
+                            await OnMajorChangeTracked(channel, embed, (string)ChannelConfig[channel]["Notification"]);
                     }
                 }
             }
@@ -100,7 +116,7 @@ namespace MopsBot.Data.Tracker
 
                 if (tmpResult.clips != null)
                 {
-                    foreach (var clip in tmpResult.clips.Where(p => !TrackedClips.ContainsKey(p.created_at) && p.created_at > DateTime.UtcNow.AddMinutes(-30) && p.views >= ViewThreshold))
+                    foreach (var clip in tmpResult.clips.Where(p => !TrackedClips.ContainsKey(p.created_at) && p.created_at > DateTime.UtcNow.AddMinutes(-30)))
                     {
                         if(clip.vod != null && !TrackedClips.Any(x => {
                                 double matchingDuration = 0;
