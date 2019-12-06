@@ -50,10 +50,16 @@ namespace MopsBot.Data.Tracker
             }
         }
 
+        public override void PostInitialisation(object info = null)
+        {
+            SetTimer(1800000);
+        }
+
         protected async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
             {
+                await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"{Name} RSS is getting checked."));
                 var feed = await getFeed();
                 List<SyndicationItem> feedItems;
                 if(LastFeed != null){
@@ -66,7 +72,7 @@ namespace MopsBot.Data.Tracker
                 {
                     if(LastFeed != null) LastFeed = feedItems.Last().PublishDate.UtcDateTime;
                     else LastTitle = feedItems.Last().Title?.Text;
-                    await StaticBase.Trackers[TrackerType.RSS].UpdateDBAsync(this);
+                    await UpdateTracker();
                 }
 
                 foreach (var newFeed in feedItems)

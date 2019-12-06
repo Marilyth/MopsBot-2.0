@@ -71,7 +71,7 @@ namespace MopsBot.Data.Tracker
                 }
             }
             if (save)
-                await StaticBase.Trackers[TrackerType.JSON].UpdateDBAsync(this);
+                await UpdateTracker();
         }
 
         public async override void PostChannelAdded(ulong channelId)
@@ -81,7 +81,7 @@ namespace MopsBot.Data.Tracker
             var config = ChannelConfig[channelId];
             config[INTERVAL] = 600000;
 
-            await StaticBase.Trackers[TrackerType.JSON].UpdateDBAsync(this);
+            await UpdateTracker();
         }
 
         public override bool IsConfigValid(Dictionary<string, object> config, out string reason){
@@ -126,7 +126,7 @@ namespace MopsBot.Data.Tracker
                     }
 
                     PastInformation = newInformation;
-                    await StaticBase.Trackers[TrackerType.JSON].UpdateDBAsync(this);
+                    await UpdateTracker();
                 }
             }
             catch (Exception e)

@@ -55,7 +55,7 @@ namespace MopsBot.Data.Tracker
             if (UserId == 0)
             {
                 UserId = Tweetinvi.User.GetUserFromScreenName(Name).Id;
-                StaticBase.Trackers[TrackerType.Twitter].UpdateDBAsync(this);
+                UpdateTracker();
             }
 
             addUser();
@@ -73,7 +73,7 @@ namespace MopsBot.Data.Tracker
             ChannelConfig[channelId][RETWEETNOTIFICATION] = ChannelConfig[channelId]["Notification"];
             ChannelConfig[channelId][REPLYNOTIFICATION] = ChannelConfig[channelId]["Notification"];
 
-            await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
+            await UpdateTracker();
         }
 
         protected async override void CheckForChange_Elapsed(object stateinfo)
@@ -130,7 +130,7 @@ namespace MopsBot.Data.Tracker
                     }
                 }
 
-                if (updateDB) await StaticBase.Trackers[TrackerType.Twitter].UpdateDBAsync(this);
+                if (updateDB) await UpdateTracker();
             }
             catch (Exception e)
             {
@@ -172,7 +172,7 @@ namespace MopsBot.Data.Tracker
             catch (Exception e)
             {
                 FailCount++;
-                StaticBase.Trackers[TrackerType.Twitter].UpdateDBAsync(this);
+                UpdateTracker();
                 return new ITweet[0];
             }
         }

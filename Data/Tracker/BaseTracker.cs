@@ -78,9 +78,11 @@ namespace MopsBot.Data.Tracker
         {
             try
             {
+                var content = await MopsBot.Module.Information.GetURLAsync(url, headers);
+                var stream = new MemoryStream(Encoding.UTF8.GetBytes(content));
                 var settings = new System.Xml.XmlReaderSettings();
                 settings.DtdProcessing = System.Xml.DtdProcessing.Parse;
-                using (var reader = System.Xml.XmlReader.Create(url, settings))
+                using (var reader = System.Xml.XmlReader.Create(stream, settings))
                 {
                     
                     SyndicationFeed feed = SyndicationFeed.Load(reader);
@@ -124,7 +126,7 @@ namespace MopsBot.Data.Tracker
                 await OnMinorEventFired(channelID, this, notificationText);
         }
 
-        public virtual async Task UpdateTracker(){}
+        abstract public Task UpdateTracker();
 
         public virtual void Dispose()
         {

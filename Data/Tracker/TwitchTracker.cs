@@ -72,7 +72,7 @@ namespace MopsBot.Data.Tracker
             config[ONLINE] = true;
             config[SENDPDF] = false;
 
-            await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
+            await UpdateTracker();
         }
 
         public async override void PostInitialisation(object info = null)
@@ -104,8 +104,10 @@ namespace MopsBot.Data.Tracker
                         KeyValuePair.Create("Authorization", "Bearer " + Program.Config["TwitchToken"])
                     );
 
-                    WebhookExpire = DateTime.Now.AddHours(18);
-                    await UpdateTracker();
+                    if(subscribe){
+                        WebhookExpire = DateTime.Now.AddHours(18);
+                        await UpdateTracker();
+                    }
 
                     return test;
                 }
@@ -122,7 +124,7 @@ namespace MopsBot.Data.Tracker
         {
             try
             {
-                if ((WebhookExpire - DateTime.Now).TotalMinutes < 10)
+                if ((WebhookExpire - DateTime.Now).TotalMinutes < 60)
                 {
                     await SubscribeWebhookAsync();
                 }
@@ -206,7 +208,7 @@ namespace MopsBot.Data.Tracker
 
                         SetTimer(120000, 120000);
                     }
-                    await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
+                    await UpdateTracker();
                 }
                 else
                     TimeoutCount = 0;
@@ -250,7 +252,7 @@ namespace MopsBot.Data.Tracker
                 }
             }
             if (save)
-                await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
+                await UpdateTracker();
         }
 
         private async Task<TwitchResult> streamerInformation()
@@ -394,7 +396,7 @@ namespace MopsBot.Data.Tracker
         public async Task ModifyAsync(Action<TwitchTracker> action)
         {
             action(this);
-            await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
+            await UpdateTracker();
         }
 
         public static async Task ObtainTwitchToken()

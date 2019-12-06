@@ -66,7 +66,7 @@ namespace MopsBot.Data.Tracker
 
                     if (oldMatch == null){
                         oldMatch = match;
-                        await StaticBase.Trackers[TrackerType.HTML].UpdateDBAsync(this);
+                        await UpdateTracker();
                     }
 
                     if((isNumeric = Double.TryParse(oldMatch, out double value)) && DataGraph == null){
@@ -85,7 +85,7 @@ namespace MopsBot.Data.Tracker
                             await OnMajorChangeTracked(channel, CreateChangeEmbed($"{oldMatch} -> {match}", isNumeric), (string)ChannelConfig[channel]["Notification"]);
                         
                         oldMatch = match;
-                        await StaticBase.Trackers[TrackerType.HTML].UpdateDBAsync(this);
+                        await UpdateTracker();
                     }
                 }
             }
