@@ -25,32 +25,6 @@ namespace MopsBot.Data.Tracker
         {
         }
 
-        public OSRSTracker(Dictionary<string, string> args) : base(){
-            base.SetBaseValues(args, true);
-
-            //Check if Name ist valid
-            try{
-                var test = new OSRSTracker(Name);
-                test.Dispose();
-                stats = test.stats;
-                SetTimer();
-            } catch (Exception e){
-                this.Dispose();
-                throw e;
-            }
-
-            if(StaticBase.Trackers[TrackerType.OSRS].GetTrackers().ContainsKey(Name)){
-                this.Dispose();
-
-                args["Id"] = Name;
-                var curTracker = StaticBase.Trackers[TrackerType.OSRS].GetTrackers()[Name];
-                curTracker.ChannelMessages[ulong.Parse(args["Channel"].Split(":")[1])] = args["Notification"];
-                StaticBase.Trackers[TrackerType.OSRS].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", args}}).Wait();
-
-                throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
-            }
-        }
-
         public OSRSTracker(string name) : base()
         {
             Name = name;
@@ -62,10 +36,10 @@ namespace MopsBot.Data.Tracker
                 stats = checkExists;
                 SetTimer();
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 Dispose();
-                throw new Exception($"Player `{name}` could not be found on OSRS!\nPerhaps none of their skills are in the top 2 million?");
+                throw new Exception($"Player `{name}` could not be found on OSRS!\nPerhaps none of their skills are in the top 2 million?", e);
             }
         }
 
@@ -91,8 +65,8 @@ namespace MopsBot.Data.Tracker
                 }
 
                 if (changedStats.Count > 0)
-                    foreach (var channel in ChannelMessages.Keys.ToList())
-                        await OnMajorChangeTracked(channel, CreateChangeEmbed(changedStats), ChannelMessages[channel]);
+                    foreach (var channel in ChannelConfig.Keys.ToList())
+                        await OnMajorChangeTracked(channel, CreateChangeEmbed(changedStats), (string)ChannelConfig[channel]["Notification"]);
 
                 stats = newStats;
             }
@@ -240,6 +214,10 @@ namespace MopsBot.Data.Tracker
             e.Footer = footer;
 
             return e.Build();
+        }
+
+        public override async Task UpdateTracker(){
+            await StaticBase.Trackers[TrackerType.OSRS].UpdateDBAsync(this);
         }
 
 

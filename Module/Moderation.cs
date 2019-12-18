@@ -14,11 +14,14 @@ using MopsBot.Data.Tracker;
 using MongoDB.Driver;
 using static MopsBot.StaticBase;
 using Discord.Addons.Interactive;
+using MopsBot.Data.Entities;
 
 namespace MopsBot.Module
 {
     public class Moderation : ModuleBase
     {
+        public static Dictionary<ulong, ulong> CustomCaller = new Dictionary<ulong, ulong>();
+
         [Group("Role")]
         [RequireBotPermission(ChannelPermission.ManageRoles)]
         [RequireBotPermission(ChannelPermission.SendMessages)]
@@ -44,6 +47,22 @@ namespace MopsBot.Module
                             await StaticBase.ReactRoleJoin.AddInvite((ITextChannel)Context.Channel, role);
                     else
                         await ReplyAsync($"**Error**: Role `{role.Name}` could either not be found, or was beyond Mops' permissions.");
+                }
+            }
+
+            [Command("Prune")]
+            [RequireBotManage]
+            [Hide]
+            public async Task Prune(bool testing = true)
+            {
+                using (Context.Channel.EnterTypingState())
+                {
+                    var pruned = await StaticBase.ReactRoleJoin.TryPruneAsync(testing);
+                    var result = $"{"Channel",-20}{"Message"}\n{string.Join("\n", pruned.Select(x => $"{x.Key,-20}{x.Value,-20}"))}";
+                    if (result.Length < 2048)
+                        await ReplyAsync($"```{result}```");
+                    else
+                        await ReplyAsync($"Pruned {pruned.Count} objects");
                 }
             }
         }
@@ -79,6 +98,22 @@ namespace MopsBot.Module
                 var infoEmbed = new EmbedBuilder().WithDescription(String.Join("\n", StaticBase.Poll.Polls[Context.Channel.Id].Select(x => $"[{x.Question}](https://discordapp.com/channels/{Context.Guild.Id}/{Context.Channel.Id}/{x.MessageID})")));
                 await ReplyAsync(embed: infoEmbed.Build());
             }
+
+            [Command("Prune")]
+            [RequireBotManage]
+            [Hide]
+            public async Task Prune(bool testing = true)
+            {
+                using (Context.Channel.EnterTypingState())
+                {
+                    var pruned = await StaticBase.Poll.TryPruneAsync(testing);
+                    var result = $"{"Channel",-20}{"Message"}\n{string.Join("\n", pruned.Select(x => $"{x.Key,-20}{x.Value,-20}"))}";
+                    if (result.Length < 2048)
+                        await ReplyAsync($"```{result}```");
+                    else
+                        await ReplyAsync($"Pruned {pruned.Count} objects");
+                }
+            }
         }
 
         [Group("Giveaway")]
@@ -111,6 +146,22 @@ namespace MopsBot.Module
                     await ReplyAsync(embed: infoEmbed.Build());
                 }
             }
+
+            [Command("Prune")]
+            [RequireBotManage]
+            [Hide]
+            public async Task Prune(bool testing = true)
+            {
+                using (Context.Channel.EnterTypingState())
+                {
+                    var pruned = await StaticBase.ReactGiveaways.TryPruneAsync(testing);
+                    var result = $"{"Channel",-20}{"Message"}\n{string.Join("\n", pruned.Select(x => $"{x.Key,-20}{x.Value,-20}"))}";
+                    if (result.Length < 2048)
+                        await ReplyAsync($"```{result}```");
+                    else
+                        await ReplyAsync($"Pruned {pruned.Count} objects");
+                }
+            }
         }
 
         [Command("SetPrefix", RunMode = RunMode.Async)]
@@ -131,6 +182,90 @@ namespace MopsBot.Module
                 await InsertOrUpdatePrefixAsync(Context.Guild.Id, prefix);
 
                 await ReplyAsync($"Changed prefix from `{oldPrefix}` to `{prefix}`");
+            }
+        }
+
+        [Group("Janitor")]
+        public class Janitor : ModuleBase
+        {
+            [Command("Set")]
+            [Alias("AutoRemove")]
+            [Summary("Adds a janitor service, which removes messages older than `messageDuration`\nOnly checks the past 100 messages")]
+            [RequireBotPermission(ChannelPermission.ManageMessages)]
+            [RequireUserPermission(ChannelPermission.ManageMessages)]
+            public async Task SetJanitor([Remainder]TimeSpan messageDuration)
+            {
+                if (messageDuration < TimeSpan.FromMinutes(1))
+                {
+                    await ReplyAsync("Duration must be at least 1 minute long!");
+                    return;
+                }
+
+                using (Context.Channel.EnterTypingState())
+                {
+                    if (!StaticBase.ChannelJanitors.ContainsKey(Context.Channel.Id))
+                    {
+                        var janitor = new ChannelJanitor(Context.Channel.Id, messageDuration);
+                        await ChannelJanitor.InsertToDBAsync(janitor);
+                        StaticBase.ChannelJanitors.Add(Context.Channel.Id, janitor);
+
+                        await ReplyAsync($"Added janitor with timespan: {messageDuration.ToString(@"d\d\ h\h\ m\m\ s\s")}\n**This will only check the most recent 100 messages starting from now!**");
+                    }
+                    else
+                    {
+                        var janitor = StaticBase.ChannelJanitors[Context.Channel.Id];
+                        janitor.MessageDuration = messageDuration;
+                        janitor.NextCheck = DateTime.UtcNow.AddMinutes(1);
+                        await janitor.SetTimer();
+                        await ReplyAsync($"Replaced janitor timespan: {messageDuration.ToString(@"d\d\ h\h\ m\m\ s\s")}");
+                    }
+                }
+            }
+            [Command("Remove")]
+            [Summary("Stops the janitor service in this channel")]
+            [RequireUserPermission(ChannelPermission.ManageMessages)]
+            public async Task RemoveJanitor()
+            {
+                using (Context.Channel.EnterTypingState())
+                {
+                    bool worked = StaticBase.ChannelJanitors.TryGetValue(Context.Channel.Id, out ChannelJanitor janitor);
+
+                    if (worked)
+                    {
+                        await ChannelJanitor.RemoveFromDBAsync(janitor);
+                        StaticBase.ChannelJanitors.Remove(Context.Channel.Id);
+                        await ReplyAsync("Removed janitor for this channel.");
+                    }
+                    else
+                    {
+                        await ReplyAsync("Could not find a janitor service for this channel.");
+                    }
+                }
+            }
+
+            [Command("Prune")]
+            [RequireBotManage]
+            [Hide]
+            public async Task Prune(bool testing = true)
+            {
+                using (Context.Channel.EnterTypingState())
+                {
+                    var toCheck = StaticBase.ChannelJanitors.Keys;
+                    var toPrune = toCheck.Select(x => Tuple.Create(x, Program.Client.GetChannel(x) == null));
+                    if (!testing)
+                    {
+                        foreach (var channel in toPrune.Where(x => x.Item2).Select(x => x.Item1).ToList())
+                        {
+                            bool worked = StaticBase.ChannelJanitors.TryGetValue(channel, out ChannelJanitor janitor);
+                            if (worked)
+                            {
+                                await ChannelJanitor.RemoveFromDBAsync(janitor);
+                                StaticBase.ChannelJanitors.Remove(channel);
+                            }
+                        }
+                    }
+                    await ReplyAsync($"Pruned {toPrune.Where(x => x.Item2).Count()} objects");
+                }
             }
         }
 
@@ -236,23 +371,58 @@ namespace MopsBot.Module
                     }
                 }
             }
+
+            [Command("Prune")]
+            [RequireBotManage]
+            [Hide]
+            public async Task Prune(bool testing = true)
+            {
+                using (Context.Channel.EnterTypingState())
+                {
+                    var toCheck = StaticBase.WelcomeMessages.Keys;
+                    var toPrune = toCheck.Select(x => Tuple.Create(x, Program.Client.GetGuild(x) == null));
+                    if (!testing)
+                    {
+                        foreach (var guild in toPrune.Where(x => x.Item2).Select(x => x.Item1).ToList())
+                        {
+                            bool worked = StaticBase.WelcomeMessages.TryGetValue(guild, out MopsBot.Data.Entities.WelcomeMessage message);
+                            if (worked)
+                            {
+                                await message.RemoveWebhookAsync();
+
+                                StaticBase.WelcomeMessages.Remove(guild);
+                                await Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").DeleteOneAsync(x => x.GuildId == guild);
+                            }
+                        }
+                    }
+                    await ReplyAsync($"Pruned {toPrune.Where(x => x.Item2).Count()} objects");
+                }
+            }
+
         }
 
         [Command("CreateCommand")]
         [Summary("Allows you to create a simple response command.\n" +
                  "Name of user: {User.Username}\n" +
-                 "Mention of user: {User.Mention}")]
+                 "Mention of user: {User.Mention}\n" +
+                 "User parameters: {User.Parameters}\n" +
+                 "Wrap another command (cannot be custom): {Command:CommandName Parameters}\n")]
         [RequireUserPermission(ChannelPermission.ManageChannels)]
         public async Task CreateCommand(string command, [Remainder] string responseText)
         {
-            if (!StaticBase.CustomCommands.ContainsKey(Context.Guild.Id))
+            if (responseText.Split("{Command:").Length <= 2)
             {
-                StaticBase.CustomCommands.Add(Context.Guild.Id, new Data.Entities.CustomCommands(Context.Guild.Id));
+                if (!StaticBase.CustomCommands.ContainsKey(Context.Guild.Id))
+                {
+                    StaticBase.CustomCommands.Add(Context.Guild.Id, new Data.Entities.CustomCommands(Context.Guild.Id));
+                }
+
+                await StaticBase.CustomCommands[Context.Guild.Id].AddCommandAsync(command, responseText);
+
+                await ReplyAsync($"Command **{command}** has been created.");
             }
-
-            await StaticBase.CustomCommands[Context.Guild.Id].AddCommandAsync(command, responseText);
-
-            await ReplyAsync($"Command **{command}** has been created.");
+            else
+                await ReplyAsync("A command can only wrap a maximum of 1 other command!\nThis is for the safety of Mops.");
         }
 
         [Command("RemoveCommand")]
@@ -285,10 +455,66 @@ namespace MopsBot.Module
         {
             using (Context.Channel.EnterTypingState())
             {
-                var reply = StaticBase.CustomCommands[Context.Guild.Id].Commands[command];
+                if (command.Contains("{Command:"))
+                {
+                    await ReplyAsync("Command arguments were probably an injection. Stopping execution.");
+                    return;
+                }
+
+                var commandParams = command.Split(" ");
+                var commandName = commandParams.First();
+                var commandArgs = commandParams.Skip(1);
+
+                var reply = StaticBase.CustomCommands[Context.Guild.Id].Commands[commandName];
+
+                //Replace regular code
                 reply = reply.Replace("{User.Username}", $"{Context.User.Username}")
-                             .Replace("{User.Mention}", $"{Context.User.Mention}");
-                await ReplyAsync(reply);
+                             .Replace("{User.Mention}", $"{Context.User.Mention}")
+                             .Replace("{User.Parameters}", string.Join(" ", commandArgs));
+                var paramRequests = reply.Split("{User.Parameters:");
+                foreach (var param in paramRequests)
+                {
+                    var paramNumber = param.Split("}").First();
+                    string toInsert = "";
+                    if (paramNumber.Contains(":"))
+                    {
+                        var range = paramNumber.Split(":");
+                        if (!int.TryParse(range.First(), out int from)) from = 0;
+                        if (!int.TryParse(range.Last(), out int to)) to = commandArgs.Count();
+                        toInsert = string.Join(" ", commandArgs.Skip(from).Take(to - from + 1));
+                    }
+                    reply = reply.Replace("{User.Parameters:" + paramNumber + "}", toInsert);
+                }
+
+                //Replace URL code
+                reply = reply.Replace("%7BUser.Username%7D", $"{Context.User.Username.Replace(" ", "%20")}")
+                             .Replace("%7BUser.Mention%7D", $"{Context.User.Mention.Replace(" ", "%20")}")
+                             .Replace("%7BUser.Parameters%7D", string.Join(" ", commandArgs).Replace(" ", "%20"));
+                paramRequests = reply.Split("%7BUser.Parameters:");
+                foreach (var param in paramRequests)
+                {
+                    var paramNumber = param.Split("%7D").First();
+                    string toInsert = "";
+                    if (paramNumber.Contains(":"))
+                    {
+                        var range = paramNumber.Split(":");
+                        if (!int.TryParse(range.First(), out int from)) from = 0;
+                        if (!int.TryParse(range.Last(), out int to)) to = commandArgs.Count();
+                        toInsert = string.Join(" ", commandArgs.Skip(from).Take(to - from + 1));
+                    }
+                    reply = reply.Replace("%7BUser.Parameters:" + paramNumber + "%7D", toInsert.Replace(" ", "%20"));
+                }
+
+                if (reply.Contains("{Command:"))
+                {
+                    CustomCaller[Context.Channel.Id] = Context.User.Id;
+                    commandName = reply.Split("{Command:").Last().Split("}").First();
+                    reply = reply.Replace("{Command:" + commandName + "}", "");
+                    await (await ReplyAsync("[ProcessBotMessage]" + commandName)).DeleteAsync();
+                }
+
+                if (!reply.Equals(string.Empty))
+                    await ReplyAsync(reply);
             }
         }
 
@@ -320,29 +546,22 @@ namespace MopsBot.Module
         {
             using (Context.Channel.EnterTypingState())
             {
-                try
-                {
-                    var imports = Microsoft.CodeAnalysis.Scripting.ScriptOptions.Default.WithReferences(typeof(MopsBot.Program).Assembly, typeof(Discord.Attachment).Assembly).WithImports("MopsBot", "Discord");
-                    var preCompilationTime = DateTime.Now.Ticks / 10000;
-                    var script = CSharpScript.Create(expression, globalsType: typeof(MopsBot.Module.Moderation)).WithOptions(imports);
-                    script.Compile();
-                    var preExecutionTime = DateTime.Now.Ticks / 10000;
-                    var result = await script.RunAsync(this);
-                    var postExecutionTime = DateTime.Now.Ticks / 10000;
+                var imports = Microsoft.CodeAnalysis.Scripting.ScriptOptions.Default.WithReferences(typeof(MopsBot.Program).Assembly, typeof(Discord.Attachment).Assembly).WithImports("MopsBot", "Discord");
+                var preCompilationTime = DateTime.Now.Ticks / 10000;
+                var script = CSharpScript.Create(expression, globalsType: typeof(MopsBot.Module.Moderation)).WithOptions(imports);
+                script.Compile();
+                var preExecutionTime = DateTime.Now.Ticks / 10000;
+                var result = await script.RunAsync(this);
+                var postExecutionTime = DateTime.Now.Ticks / 10000;
 
-                    var embed = new EmbedBuilder();
-                    embed.Author = new EmbedAuthorBuilder().WithName(Context.User.Username).WithIconUrl(Context.User.GetAvatarUrl());
-                    embed.WithDescription($"```csharp\n{expression}```").WithTitle("Evaluation of code");
-                    embed.AddField("Compilation time", $"{preExecutionTime - preCompilationTime}ms", true);
-                    embed.AddField("Execution time", $"{postExecutionTime - preExecutionTime}ms", true);
-                    embed.AddField("Return value", result.ReturnValue?.ToString() ?? "`null or void`");
+                var embed = new EmbedBuilder();
+                embed.Author = new EmbedAuthorBuilder().WithName(Context.User.Username).WithIconUrl(Context.User.GetAvatarUrl());
+                embed.WithDescription($"```csharp\n{expression}```").WithTitle("Evaluation of code");
+                embed.AddField("Compilation time", $"{preExecutionTime - preCompilationTime}ms", true);
+                embed.AddField("Execution time", $"{postExecutionTime - preExecutionTime}ms", true);
+                embed.AddField("Return value", result.ReturnValue?.ToString() ?? "`null or void`");
 
-                    await ReplyAsync("", embed: embed.Build());
-                }
-                catch (Exception e)
-                {
-                    await ReplyAsync("**Error:** " + e.Message);
-                }
+                await ReplyAsync("", embed: embed.Build());
             }
         }
 
@@ -370,12 +589,31 @@ namespace MopsBot.Module
                     if (!module.IsSubmodule)
                     {
                         string moduleInformation = "";
-                        moduleInformation += string.Join(", ", module.Commands.Where(x => !x.Preconditions.OfType<HideAttribute>().Any()).Select(x => $"[{x.Name}]({CommandHandler.GetCommandHelpImage(x.Name)})"));
+                        moduleInformation += string.Join(", ", module.Commands.Where(x => !x.Preconditions.Any(y => y is HideAttribute)).Select(x => $"[{x.Name}]({CommandHandler.GetCommandHelpImage(x.Name)})"));
                         moduleInformation += "\n";
 
-                        moduleInformation += string.Join(", ", module.Submodules.Select(x => $"[{x.Name}\\*]({CommandHandler.GetCommandHelpImage(x.Name)})"));
-
-                        e.AddField($"**{module.Name}**", moduleInformation);
+                        moduleInformation += string.Join(", ", module.Submodules.Where(x => !x.Preconditions.Any(y => y is HideAttribute)).Select(x => $"[{x.Name}\\*]({CommandHandler.GetCommandHelpImage(x.Name)})"));
+                        var modulesections = moduleInformation.Length / 1024 + 1;
+                        if (modulesections > 1)
+                        {
+                            var segments = moduleInformation.Split(", ");
+                            var submoduleInformation = "";
+                            foreach (var segment in segments)
+                            {
+                                if (submoduleInformation.Length + segment.Length > 1000)
+                                {
+                                    submoduleInformation = string.Concat(submoduleInformation.SkipLast(2));
+                                    e.AddField($"**{module.Name}**", submoduleInformation);
+                                    submoduleInformation = "";
+                                }
+                                submoduleInformation += segment + ", ";
+                            }
+                            e.AddField($"**{module.Name}**", submoduleInformation);
+                        }
+                        else
+                        {
+                            e.AddField($"**{module.Name}**", moduleInformation);
+                        }
                     }
                 }
 

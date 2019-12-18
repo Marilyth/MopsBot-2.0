@@ -17,10 +17,12 @@ namespace MopsBot.Module.TypeReader
         {
             var command = context.Message.Content;
             var prefix = await StaticBase.GetGuildPrefixAsync(context.Guild.Id);
+            if(!command.StartsWith(prefix))
+                prefix = Program.Client.CurrentUser.Mention;
             var module = command.Remove(0, prefix.Length).Split(" ").First(x => x.Length > 0);
             var worked = Enum.TryParse<TrackerType>(module, true, out TrackerType type);
             
-            if(!new List<TrackerType>{TrackerType.HTML, TrackerType.JSON, TrackerType.Overwatch, TrackerType.RSS, TrackerType.Youtube, TrackerType.YoutubeLive}.Any(x => x == type))
+            if(!new List<TrackerType>{TrackerType.HTML, TrackerType.JSON, TrackerType.Overwatch, TrackerType.RSS, TrackerType.Youtube, TrackerType.YoutubeLive, TrackerType.GW2}.Any(x => x == type))
                 input = input.ToLower();
 
             var result = StaticBase.Trackers[type].GetTracker(context.Channel.Id, input);
@@ -28,8 +30,8 @@ namespace MopsBot.Module.TypeReader
             if (result != null)
                 return TypeReaderResult.FromSuccess(result);
 
-            await context.Channel.SendMessageAsync(embed: StaticBase.Trackers[type].GetTrackersEmbed(context.Channel.Id));
-            return TypeReaderResult.FromError(CommandError.ParseFailed, $"Could not find a {module}-tracker for {input}.");
+            await MopsBot.Data.Interactive.MopsPaginator.CreatePagedMessage(context.Channel.Id, StaticBase.Trackers[type].GetTrackersEmbed(context.Channel.Id, true));
+            return TypeReaderResult.FromError(CommandError.ParseFailed, $"Could not find a {module}-tracker for {input} in this channel.");
         }
     }
 }

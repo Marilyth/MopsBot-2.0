@@ -23,36 +23,11 @@ namespace MopsBot.Data.Tracker
         public string VideoId, IconUrl;
         private string channelThumbnailUrl;
         public DatePlot ViewerGraph;
-        public bool IsThumbnailLarge;
         private LiveVideoItem liveStatus;
+        public static readonly string SHOWEMBED = "ShowEmbed", THUMBNAIL = "LargeThumbnail", OFFLINE = "NotifyOnOffline", ONLINE = "NotifyOnOnline", SHOWCHAT = "ShowChat";
 
         public YoutubeLiveTracker() : base()
         {
-        }
-
-        public YoutubeLiveTracker(Dictionary<string, string> args) : base(){
-            IsThumbnailLarge = bool.Parse(args["IsThumbnailLarge"]);
-            base.SetBaseValues(args, true);
-
-            //Check if Name ist valid
-            try{
-                new YoutubeLiveTracker(Name).Dispose();
-                SetTimer();
-            } catch (Exception e){
-                this.Dispose();
-                throw e;
-            }
-
-            if(StaticBase.Trackers[TrackerType.YoutubeLive].GetTrackers().ContainsKey(Name)){
-                this.Dispose();
-
-                args["Id"] = Name;
-                var curTracker = StaticBase.Trackers[TrackerType.YoutubeLive].GetTrackers()[Name];
-                curTracker.ChannelMessages[ulong.Parse(args["Channel"].Split(":")[1])] = args["Notification"];
-                StaticBase.Trackers[TrackerType.YoutubeLive].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", args}}).Wait();
-
-                throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
-            }
         }
 
         public YoutubeLiveTracker(string channelId) : base()
@@ -66,10 +41,10 @@ namespace MopsBot.Data.Tracker
                 Name = checkExists.id;
                 SetTimer();
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 Dispose();
-                throw new Exception($"Channel {TrackerUrl()} could not be found on Youtube!\nPerhaps you used the channel-name instead?");
+                throw new Exception($"Channel {TrackerUrl()} could not be found on Youtube!\nPerhaps you used the channel-name instead?", e);
             }
         }
 
@@ -78,25 +53,40 @@ namespace MopsBot.Data.Tracker
             if(ViewerGraph != null)
                 ViewerGraph.InitPlot();
 
-            if(VideoId != null)
-                SetTimer(60000, 60000);
-
-            foreach (var channelMessage in ToUpdate ?? new Dictionary<ulong, ulong>())
-            {
-                try
-                {
-                    await setReaction((IUserMessage)((ITextChannel)Program.Client.GetChannel(channelMessage.Key)).GetMessageAsync(channelMessage.Value).Result);
-                }
-                catch
-                {
-                }
+            if(VideoId != null){
+                SetTimer(60000);
+            } else {
+                SetTimer(900000);
             }
         }
 
-        public async override Task setReaction(IUserMessage message)
+        public async override void PostChannelAdded(ulong channelId)
         {
-            await Program.ReactionHandler.AddHandler(message, new Emoji("🖌"), recolour);
-            await Program.ReactionHandler.AddHandler(message, new Emoji("🔄"), switchThumbnail);
+            base.PostChannelAdded(channelId);
+            
+            var config = ChannelConfig[channelId];
+            config[SHOWEMBED] = true;
+            config[THUMBNAIL] = false;
+            config[OFFLINE] = true;
+            config[ONLINE] = true;
+            config[SHOWCHAT] = false;
+
+            await UpdateTracker();
+        }
+
+        public override async void Conversion(object obj = null)
+        {
+            bool save = false;
+            foreach (var channel in ChannelConfig.Keys.ToList())
+            {
+                if (!ChannelConfig[channel].ContainsKey(SHOWCHAT))
+                {
+                    ChannelConfig[channel][SHOWCHAT] = false;
+                    save = true;
+                }
+            }
+            if (save)
+                await UpdateTracker();
         }
 
         private async Task<string> fetchLivestreamId()
@@ -109,6 +99,18 @@ namespace MopsBot.Data.Tracker
             }
 
             return null;
+        }
+
+        public static async Task<string> scrapeLivestreamId(string channelId){
+            var html = await MopsBot.Module.Information.GetURLAsync($"https://www.youtube.com/channel/{channelId}/videos");
+            var videoSegment = html.Split(">Jetzt live</span>").FirstOrDefault();
+            if(videoSegment == null || html.Length == videoSegment.Length){
+                return null;
+            } else {
+                videoSegment = videoSegment.Split("/watch?v=").LastOrDefault();
+                var videoId = videoSegment.Split("\"").FirstOrDefault();
+                return videoId;
+            }
         }
 
         private async Task<LiveVideoItem> fetchLiveVideoContent()
@@ -130,13 +132,19 @@ namespace MopsBot.Data.Tracker
             return tmpResult.items.First();
         }
 
+        private async Task<List<Message>> fetchChat(){
+            if(liveStatus.liveStreamingDetails.activeLiveChatId == null) return new List<Message>();
+            var tmpResult = await FetchJSONDataAsync<ChatMessages>($"https://www.googleapis.com/youtube/v3/liveChat/messages?liveChatId={liveStatus.liveStreamingDetails.activeLiveChatId}&part=snippet,authorDetails&key={Program.Config["YoutubeLive"]}");
+            return tmpResult.items;
+        }
+
         protected async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
             {
                 if (VideoId == null)
                 {
-                    VideoId = await fetchLivestreamId();
+                    VideoId = await scrapeLivestreamId(Name);
 
                     //Not live
                     if (VideoId == null)
@@ -146,9 +154,11 @@ namespace MopsBot.Data.Tracker
                     else
                     {
                         ViewerGraph = new DatePlot(Name, "Time since start", "Viewers");
+                        liveStatus = await fetchLiveVideoContent();
+                        ViewerGraph.AddValue("Viewers", 0, liveStatus.liveStreamingDetails.actualStartTime);
 
-                        foreach (ulong channel in ChannelMessages.Keys.ToList())
-                            await OnMinorChangeTracked(channel, ChannelMessages[channel]);
+                        foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][ONLINE]).ToList())
+                            await OnMinorChangeTracked(channel, (string)ChannelConfig[channel]["Notification"]);
                         
                         SetTimer(60000, 60000);
 
@@ -158,12 +168,12 @@ namespace MopsBot.Data.Tracker
 
                 liveStatus = await fetchLiveVideoContent();
 
-                bool isStreaming = liveStatus.snippet.liveBroadcastContent.Equals("live");
+                bool isStreaming = liveStatus?.snippet?.liveBroadcastContent?.Equals("live") ?? false;
 
                 if (!isStreaming)
                 {
                     VideoId = null;
-                    SetTimer();
+                    SetTimer(600000);
                     ViewerGraph.Dispose();
                     ViewerGraph = null;
 
@@ -172,18 +182,18 @@ namespace MopsBot.Data.Tracker
 
                     ToUpdate = new Dictionary<ulong, ulong>();
 
-                    foreach (ulong channel in ChannelMessages.Keys.ToList())
+                    foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][OFFLINE]).ToList())
                         await OnMinorChangeTracked(channel, $"{liveStatus.snippet.channelTitle} went Offline!");
                 }
                 else
                 {
                     ViewerGraph.AddValue("Viewers", double.Parse(liveStatus.liveStreamingDetails.concurrentViewers));
 
-                    foreach (ulong channel in ChannelMessages.Keys.ToList())
-                        await OnMajorChangeTracked(channel, createEmbed());
+                    foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][SHOWEMBED]).ToList())
+                        await OnMajorChangeTracked(channel, await createEmbed((bool)ChannelConfig[channel][THUMBNAIL], (bool)ChannelConfig[channel][SHOWCHAT]));
                 }
 
-                await StaticBase.Trackers[TrackerType.YoutubeLive].UpdateDBAsync(this);
+                await UpdateTracker();
             }
             catch (Exception e)
             {
@@ -191,7 +201,7 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public Embed createEmbed()
+        public async Task<Embed> createEmbed(bool largeThumbnail = false, bool showChat = false)
         {
             ViewerGraph.SetMaximumLine();
             EmbedBuilder e = new EmbedBuilder();
@@ -199,7 +209,6 @@ namespace MopsBot.Data.Tracker
             e.Title = liveStatus.snippet.title;
             e.Url = $"https://www.youtube.com/watch?v={VideoId}";
             e.WithCurrentTimestamp();
-            e.Description = "**For people with manage channel permission**:\n🖌: Change chart colour\n🔄: Switch thumbnail and chart position";
 
             EmbedAuthorBuilder author = new EmbedAuthorBuilder();
             author.Name = liveStatus.snippet.channelTitle;
@@ -212,66 +221,39 @@ namespace MopsBot.Data.Tracker
             footer.Text = "Youtube-Live";
             e.Footer = footer;
 
-            e.ThumbnailUrl = IsThumbnailLarge ? ViewerGraph.DrawPlot() : $"{liveStatus.snippet.thumbnails.medium.url}?rand={StaticBase.ran.Next(0, 99999999)}";
-            e.ImageUrl = IsThumbnailLarge ? $"{liveStatus.snippet.thumbnails.maxres?.url ?? liveStatus.snippet.thumbnails.medium.url}?rand={StaticBase.ran.Next(0, 99999999)}" : ViewerGraph.DrawPlot();
+            e.ThumbnailUrl = largeThumbnail ? ViewerGraph.DrawPlot() : $"{liveStatus.snippet.thumbnails.medium.url}?rand={StaticBase.ran.Next(0, 99999999)}";
+            e.ImageUrl = largeThumbnail ? $"{liveStatus.snippet.thumbnails.maxres?.url ?? liveStatus.snippet.thumbnails.medium.url}?rand={StaticBase.ran.Next(0, 99999999)}" : ViewerGraph.DrawPlot();
 
             e.AddField("Viewers", liveStatus.liveStreamingDetails.concurrentViewers, true);
+            var liveTime = DateTime.UtcNow - liveStatus.liveStreamingDetails.actualStartTime;
+            e.AddField("Runtime", (int)liveTime.TotalHours + "h " + liveTime.ToString(@"mm\m"), true);
+
+            if (showChat)
+                {
+                    var chat = await fetchChat();
+                    chat.Reverse();
+
+                    if(chat.Count > 5) chat = chat.Take(5).ToList();
+
+                    string chatPreview = "```asciidoc\n";
+                    for (int i = chat.Count - 1; i >= 0; i--)
+                    {
+                        if (chat[i].snippet.displayMessage.Length > 100)
+                            chatPreview += chat[i].authorDetails.displayName + ":: " + string.Join("", chat[i].snippet.displayMessage.Take(100)) + " [...]\n";
+                        else
+                            chatPreview += chat[i].authorDetails.displayName + ":: " + chat[i].snippet.displayMessage + "\n";
+                    }
+                    if(chatPreview.Equals("```asciidoc\n")) chatPreview += "Could not fetch chat messages. Is it empty or private?";
+                    chatPreview += "```";
+
+                    e.AddField("Chat Preview", chatPreview);
+                }
 
             return e.Build();
         }
 
-        private async Task recolour(ReactionHandlerContext context)
-        {
-            if (((IGuildUser)await context.Reaction.Channel.GetUserAsync(context.Reaction.UserId)).GetPermissions((IGuildChannel)context.Channel).ManageChannel)
-            {
-                ViewerGraph.Recolour();
-
-                foreach (ulong channel in ChannelMessages.Keys.ToList())
-                    await OnMajorChangeTracked(channel, createEmbed());
-            }
-        }
-
-        private async Task switchThumbnail(ReactionHandlerContext context)
-        {
-            if (((IGuildUser)await context.Reaction.Channel.GetUserAsync(context.Reaction.UserId)).GetPermissions((IGuildChannel)context.Channel).ManageChannel)
-            {
-                IsThumbnailLarge = !IsThumbnailLarge;
-                await StaticBase.Trackers[TrackerType.Twitch].UpdateDBAsync(this);
-
-                foreach (ulong channel in ChannelMessages.Keys.ToList())
-                    await OnMajorChangeTracked(channel, createEmbed());
-            }
-        }
-
-        public override Dictionary<string, object> GetParameters(ulong guildId)
-        {
-            var parentParameters = base.GetParameters(guildId);
-            (parentParameters["Parameters"] as Dictionary<string, object>)["IsThumbnailLarge"] = new bool[]{true, false};
-            return parentParameters;
-        }
-
-        public override void Update(Dictionary<string, Dictionary<string, string>> args){
-            base.Update(args);
-            IsThumbnailLarge = bool.Parse(args["NewValue"]["IsThumbnailLarge"]);
-        }
-
-        public override object GetAsScope(ulong channelId){
-            return new ContentScope(){
-                Id = this.Name,
-                _Name = this.Name,
-                Notification = this.ChannelMessages[channelId],
-                Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId,
-                IsThumbnailLarge = this.IsThumbnailLarge
-            };
-        }
-
-        public new struct ContentScope
-        {
-            public string Id;
-            public string _Name;
-            public string Notification;
-            public string Channel;
-            public bool IsThumbnailLarge;
+        public override async Task UpdateTracker(){
+            await StaticBase.Trackers[TrackerType.YoutubeLive].UpdateDBAsync(this);
         }
 
         public override string TrackerUrl()

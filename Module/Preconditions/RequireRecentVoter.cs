@@ -75,7 +75,7 @@ namespace MopsBot.Module.Preconditions
         }
 
         public override string ToString(){
-            return $"Can be used {invokes}x within {period}\nOr infinite usage if voted in the past {votePeriod}\n";
+            return $"Can be used {invokes}x within {period}\nOr infinite usage if voted in the past {votePeriod}";
         }
     }
 

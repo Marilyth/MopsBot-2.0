@@ -11,5 +11,9 @@ namespace MopsBot.Module.Preconditions{
         {
             return PreconditionResult.FromSuccess();
         }
+
+        public override string ToString(){
+            return $"Hidden command";
+        }
     }
 }

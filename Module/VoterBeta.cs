@@ -19,7 +19,7 @@ namespace MopsBot.Module
     {
         [Group("YoutubeLive")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public class YoutubeLive : ModuleBase
+        public class YoutubeLive : InteractiveBase
         {
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified Youtubers livestreams, in the Channel you are calling this command in.")]
@@ -33,17 +33,9 @@ namespace MopsBot.Module
             {
                 using (Context.Channel.EnterTypingState())
                 {
-                    try
-                    {
-                        await Trackers[BaseTracker.TrackerType.YoutubeLive].AddTrackerAsync(channelID, Context.Channel.Id, notificationMessage);
+                    await Trackers[BaseTracker.TrackerType.YoutubeLive].AddTrackerAsync(channelID, Context.Channel.Id, notificationMessage);
 
-                        await ReplyAsync("Keeping track of " + channelID + "'s streams, from now on!");
-
-                    }
-                    catch (Exception e)
-                    {
-                        await ReplyAsync("**Error**: " + e.InnerException.Message);
-                    }
+                    await ReplyAsync("Keeping track of " + channelID + "'s streams, from now on!");
                 }
             }
 
@@ -60,7 +52,8 @@ namespace MopsBot.Module
             [Summary("Returns the Youtubers that are tracked in the current channel.")]
             public async Task getTrackers()
             {
-                await ReplyAsync("Following Youtubers are currently being tracked:", embed: StaticBase.Trackers[BaseTracker.TrackerType.YoutubeLive].GetTrackersEmbed(Context.Channel.Id));
+                await ReplyAsync("Following Youtubers are currently being tracked:");
+                await MopsBot.Data.Interactive.MopsPaginator.CreatePagedMessage(Context.Channel.Id, StaticBase.Trackers[BaseTracker.TrackerType.YoutubeLive].GetTrackersEmbed(Context.Channel.Id, true));
             }
 
             [Command("SetNotification")]
@@ -68,63 +61,92 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task SetNotification(BaseTracker channelID, [Remainder]string notification = "")
             {
-                channelID.ChannelMessages[Context.Channel.Id] = notification;
+                channelID.ChannelConfig[Context.Channel.Id]["Notification"] = notification;
+                await StaticBase.Trackers[BaseTracker.TrackerType.YoutubeLive].UpdateDBAsync(channelID);
                 await ReplyAsync($"Changed notification for `{channelID.Name}` to `{notification}`");
+            }
+
+            [Command("ShowConfig")]
+            [Hide]
+            [Summary("Shows all the settings for this tracker, and their values")]
+            public async Task ShowConfig(BaseTracker tracker)
+            {
+                await ReplyAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```");
+            }
+
+            [Command("ChangeConfig", RunMode = RunMode.Async)]
+            [Summary("Edit the Configuration for the tracker")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task ChangeConfig(BaseTracker ChannelID)
+            {
+                await Tracking.ModifyConfig(this, ChannelID, BaseTracker.TrackerType.YoutubeLive);
             }
         }
 
-        [Group("Steam")]
+        [Group("Mixer")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public class Steam : ModuleBase
+        public class Mixer : InteractiveBase
         {
             [Command("Track", RunMode = RunMode.Async)]
-            [Summary("Keeps track of the specified steam user, in the Channel you are calling this command in.\nWill notify on game changes and achievements.")]
+            [Summary("Keeps track of the specified Streamer, in the Channel you are calling this command in.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [RequireBotPermission(ChannelPermission.ReadMessageHistory)]
+            [RequireBotPermission(ChannelPermission.AddReactions)]
+            [RequireBotPermission(ChannelPermission.ManageMessages)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
             [RequireUserVotepoints(2)]
-            public async Task Track([Remainder]string SteamNameOrId)
+            public async Task trackStreamer(string streamerName, [Remainder]string notificationMessage = "Stream went live!")
             {
                 using (Context.Channel.EnterTypingState())
                 {
-                    try
-                    {
-                        SteamNameOrId = SteamNameOrId.ToLower();
-                        await Trackers[BaseTracker.TrackerType.Steam].AddTrackerAsync(SteamNameOrId, Context.Channel.Id);
-                        var worked = long.TryParse(SteamNameOrId, out long test);
+                    streamerName = streamerName.ToLower();
+                    await Trackers[BaseTracker.TrackerType.Mixer].AddTrackerAsync(streamerName, Context.Channel.Id, notificationMessage);
 
-                        await ReplyAsync("Keeping track of " + SteamNameOrId + $"'s Achievements and playing status from now on.");
-                        if (!worked) await ReplyAsync($"Make sure this is you: https://steamcommunity.com/id/{SteamNameOrId}\nOtherwise use your steamid instead of steam name");
-                    }
-                    catch (Exception e)
-                    {
-                        await ReplyAsync("**Error**: " + e.InnerException.Message);
-                    }
+                    await ReplyAsync("Keeping track of " + streamerName + "'s streams, from now on!");
                 }
             }
 
             [Command("UnTrack")]
-            [Summary("Stops keeping track of the specified Steam user, in the Channel you are calling this command in.")]
+            [Summary("Stops tracking the specified streamer.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task unTrackOsu([Remainder]BaseTracker SteamNameOrId)
+            public async Task unTrackStreamer(BaseTracker streamerName)
             {
-                if (await Trackers[BaseTracker.TrackerType.Steam].TryRemoveTrackerAsync(SteamNameOrId.Name, Context.Channel.Id))
-                    await ReplyAsync("Stopped keeping track of " + SteamNameOrId.Name + "'s Steam data!");
+                if (await Trackers[BaseTracker.TrackerType.Mixer].TryRemoveTrackerAsync(streamerName.Name, Context.Channel.Id))
+                    await ReplyAsync("Stopped keeping track of " + streamerName.Name + "'s streams!");
             }
 
-            [Command("GetTrackers")]
-            [Summary("Returns the Steam users that are tracked in the current channel.")]
+            [Command("GetTrackers", RunMode = RunMode.Async)]
+            [Summary("Returns the streamers that are tracked in the current channel.")]
             public async Task getTrackers()
             {
-                await ReplyAsync("Following Steam users are currently being tracked:", embed: StaticBase.Trackers[BaseTracker.TrackerType.Steam].GetTrackersEmbed(Context.Channel.Id));
+                await ReplyAsync("Following streamers are currently being tracked:");
+                await MopsBot.Data.Interactive.MopsPaginator.CreatePagedMessage(Context.Channel.Id, StaticBase.Trackers[BaseTracker.TrackerType.Mixer].GetTrackersEmbed(Context.Channel.Id, true));
             }
 
             [Command("SetNotification")]
-            [Summary("Sets the notification text that is used each time a new achievement was achieved.")]
+            [Summary("Sets the notification text that is used each time a streamer goes live.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(BaseTracker SteamNameOrId, [Remainder]string notification)
+            public async Task SetNotification(BaseTracker streamer, [Remainder]string notification = "")
             {
-                SteamNameOrId.ChannelMessages[Context.Channel.Id] = notification;
-                await ReplyAsync($"Changed notification for `{SteamNameOrId.Name}` to `{notification}`");
+                streamer.ChannelConfig[Context.Channel.Id]["Notification"] = notification;
+                await StaticBase.Trackers[BaseTracker.TrackerType.Mixer].UpdateDBAsync(streamer);
+                await ReplyAsync($"Changed notification for `{streamer.Name}` to `{notification}`");
+            }
+
+            [Command("ShowConfig")]
+            [Hide]
+            [Summary("Shows all the settings for this tracker, and their values")]
+            public async Task ShowConfig(BaseTracker tracker)
+            {
+                await ReplyAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```");
+            }
+
+            [Command("ChangeConfig", RunMode = RunMode.Async)]
+            [Summary("Edit the Configuration for the tracker")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task ChangeConfig(BaseTracker streamerName)
+            {
+                await Tracking.ModifyConfig(this, streamerName, BaseTracker.TrackerType.Mixer);
             }
         }
     }

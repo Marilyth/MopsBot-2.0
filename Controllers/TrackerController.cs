@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+/*using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 using MopsBot.Data.Entities;
@@ -6,6 +6,7 @@ using MopsBot.Data;
 using MopsBot.Data.Tracker;
 using Newtonsoft.Json;
 using System;
+using System.IO;
 
 namespace MopsBot.Api.Controllers
 {
@@ -13,6 +14,7 @@ namespace MopsBot.Api.Controllers
     public class TrackerController : Controller
     {
         public static List<string> Parameters = new List<string>(){"Name", "Notification", "Channel"};
+        public static Dictionary<string, BaseTracker> Configs = new Dictionary<string, BaseTracker>();
 
         public TrackerController()
         {
@@ -32,14 +34,38 @@ namespace MopsBot.Api.Controllers
             IEnumerable<IContent> allResults = new List<IContent>();
 
             allResults = StaticBase.Trackers.First(x => parameters["type"].Any(y => y.Equals(x.Key.ToString())))
-                        .Value.GetTrackers().Where(x => channels.Any(y => x.Value.ChannelMessages.ContainsKey(y)))
+                        .Value.GetTrackers().Where(x => channels.Any(y => x.Value.ChannelConfig.ContainsKey(y)))
                         .Select(x => new IContent(){Name=x.Value.Name, 
-                                                    Channel=x.Value.ChannelMessages.First(y => channels.ToList().Contains(y.Key)).Key,
-                                                    Notification=x.Value.ChannelMessages.First(y => channels.ToList().Contains(y.Key)).Value});
+                                                    Channel=x.Value.ChannelConfig.First(y => channels.ToList().Contains(y.Key)).Key,
+                                                    Notification=(string)x.Value.ChannelConfig.First(y => channels.ToList().Contains(y.Key)).Value["Notification"]});
             
             ParameterPair<IEnumerable<IContent>> result = new ParameterPair<IEnumerable<IContent>>(Parameters, allResults);
 
             return new ObjectResult(JsonConvert.SerializeObject(result, Formatting.Indented));
+        }
+
+        [HttpGet("config/{key}")]
+        public IActionResult GetTrackerConfig(string key){
+            return new ObjectResult(JsonConvert.SerializeObject(Configs[key].ChannelConfig[ulong.Parse(key.Split("-").First())]));
+        }
+
+        [HttpPost("config")]
+        public IActionResult UpdateTrackerConfig(){
+            string body = new StreamReader(Request.Body).ReadToEnd();
+            var key = Request.Headers["key"].ToString();
+            var tracker = Configs[key];
+            ulong channel = ulong.Parse(key.Split("-").First());
+
+            
+            var update = JsonConvert.DeserializeObject<Dictionary<string, object>>(body);
+            if(!tracker.IsConfigValid(update, out string reason)){
+                return new ObjectResult("ERROR:\n" + reason);
+            } else {
+                tracker.ChannelConfig[channel] = update;
+                tracker.UpdateTracker().Wait();
+                
+                return new ObjectResult("Changed config successfully.");
+            }
         }
 
         /*[HttpGet("add/{token}/{channel}/{type}/{name}/{notification}")]
@@ -47,7 +73,7 @@ namespace MopsBot.Api.Controllers
         {
             if (token.Equals(Program.Config["MopsAPI"]))
             {
-                Response.Headers.Add("Access-Control-Allow-Origin", "http://5.45.104.29");
+                Response.Headers.Add("Access-Control-Allow-Origin", $"{Program.Config["ServerAddress"]}");
                 try
                 {
                     StaticBase.Trackers[type].AddTrackerAsync(name, channel, notification);
@@ -66,7 +92,7 @@ namespace MopsBot.Api.Controllers
         {
             if (token.Equals(Program.Config["MopsAPI"]))
             {
-                Response.Headers.Add("Access-Control-Allow-Origin", "http://5.45.104.29");
+                Response.Headers.Add("Access-Control-Allow-Origin", $"{Program.Config["ServerAddress"]}");
                 try
                 {
                     var result = StaticBase.Trackers[type].TryRemoveTrackerAsync(name, channel);
@@ -78,7 +104,7 @@ namespace MopsBot.Api.Controllers
                 }
             }
             return new ObjectResult("Wrong token");
-        }*/
+        }
     }
 
     public class IContent{
@@ -95,4 +121,4 @@ namespace MopsBot.Api.Controllers
             Parameters = parameters;
         }
     }
-}
+}*/

@@ -27,32 +27,6 @@ namespace MopsBot.Data.Tracker
         {
         }
 
-        public HTMLTracker(Dictionary<string, string> args) : base(){
-            base.SetBaseValues(args);
-            Name = args["_Name"] + "|||" + args["Regex"];
-            Regex = args["Regex"];
-
-            //Check if Name ist valid
-            try{
-                new HTMLTracker(Name).Dispose();
-                SetTimer();
-            } catch (Exception e){
-                this.Dispose();
-                throw e;
-            }
-
-            if(StaticBase.Trackers[TrackerType.HTML].GetTrackers().ContainsKey(args["_Name"] + "|||" + args["Regex"])){
-                this.Dispose();
-
-                args["Id"] = Name;
-                var curTracker = StaticBase.Trackers[TrackerType.HTML].GetTrackers()[Name];
-                curTracker.ChannelMessages[ulong.Parse(args["Channel"].Split(":")[1])] = args["Notification"];
-                StaticBase.Trackers[TrackerType.HTML].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", args}}).Wait();
-
-                throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
-            }
-        }
-
         public HTMLTracker(string name) : base()
         {
             Name = name;
@@ -67,10 +41,10 @@ namespace MopsBot.Data.Tracker
 
                 SetTimer();
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 Dispose();
-                throw new Exception($"Expression `{name}` yielded no result!");
+                throw new Exception($"Expression `{name}` yielded no result!", e);
             }
         }
 
@@ -92,7 +66,7 @@ namespace MopsBot.Data.Tracker
 
                     if (oldMatch == null){
                         oldMatch = match;
-                        await StaticBase.Trackers[TrackerType.HTML].UpdateDBAsync(this);
+                        await UpdateTracker();
                     }
 
                     if((isNumeric = Double.TryParse(oldMatch, out double value)) && DataGraph == null){
@@ -107,11 +81,11 @@ namespace MopsBot.Data.Tracker
                             if(success) DataGraph.AddValue("Value", value, relative: false);
                         }
 
-                        foreach (var channel in ChannelMessages.Keys.ToList())
-                            await OnMajorChangeTracked(channel, CreateChangeEmbed($"{oldMatch} -> {match}", isNumeric), ChannelMessages[channel]);
+                        foreach (var channel in ChannelConfig.Keys.ToList())
+                            await OnMajorChangeTracked(channel, CreateChangeEmbed($"{oldMatch} -> {match}", isNumeric), (string)ChannelConfig[channel]["Notification"]);
                         
                         oldMatch = match;
-                        await StaticBase.Trackers[TrackerType.HTML].UpdateDBAsync(this);
+                        await UpdateTracker();
                     }
                 }
             }
@@ -155,35 +129,8 @@ namespace MopsBot.Data.Tracker
             return e.Build();
         }
 
-        public override Dictionary<string, object> GetParameters(ulong guildId){
-            var parameters = base.GetParameters(guildId);
-            (parameters["Parameters"] as Dictionary<string, object>)["Regex"] = "";
-            return parameters;
-        }
-
-        public override void Update(Dictionary<string, Dictionary<string, string>> args){
-            base.Update(args);
-            Regex = args["NewValue"]["Regex"];
-            Name = args["NewValue"]["_Name"] + Regex;
-        }
-
-        public override object GetAsScope(ulong channelId){
-            return new ContentScope(){
-                Id = this.Name,
-                _Name = this.Name.Split("|||")[0],
-                Regex = this.Regex,
-                Notification = this.ChannelMessages[channelId],
-                Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId
-            };
-        }
-
-        public new struct ContentScope
-        {
-            public string Id;
-            public string _Name;
-            public string Regex;
-            public string Notification;
-            public string Channel;
+        public override async Task UpdateTracker(){
+            await StaticBase.Trackers[TrackerType.HTML].UpdateDBAsync(this);
         }
     }
 }

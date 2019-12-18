@@ -29,32 +29,6 @@ namespace MopsBot.Data.Tracker
         {
         }
 
-        public RedditTracker(Dictionary<string, string> args) : base(){
-            base.SetBaseValues(args, true);
-
-            //Check if Name ist valid
-            try{
-                var test = new RedditTracker(Name);
-                test.Dispose();
-                lastCheck = test.lastCheck;
-                SetTimer();
-            } catch (Exception e){
-                this.Dispose();
-                throw e;
-            }
-
-            if(StaticBase.Trackers[TrackerType.Reddit].GetTrackers().ContainsKey(Name)){
-                this.Dispose();
-
-                args["Id"] = Name;
-                var curTracker = StaticBase.Trackers[TrackerType.Reddit].GetTrackers()[Name];
-                curTracker.ChannelMessages[ulong.Parse(args["Channel"].Split(":")[1])] = args["Notification"];
-                StaticBase.Trackers[TrackerType.Reddit].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", args}}).Wait();
-
-                throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
-            }
-        }
-
         public RedditTracker(string name) : base()
         {
             lastCheck = (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
@@ -67,11 +41,11 @@ namespace MopsBot.Data.Tracker
                     throw new Exception("");
                 SetTimer();
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 Dispose();
                 throw new Exception($"No results were found for Subreddit {TrackerUrl()}" +
-                                    $"{(Name.Split(" ").Length > 1 ? $" with restriction(s) `{Name.Split(" ")[1]}`." : ".")}");
+                                    $"{(Name.Split(" ").Length > 1 ? $" with restriction(s) `{Name.Split(" ")[1]}`." : ".")}", e);
             }
         }
 
@@ -89,13 +63,13 @@ namespace MopsBot.Data.Tracker
                 if (newPosts.Length > 0)
                 {
                     lastCheck = newPosts.Max(x => x.data.created_utc);
-                    await StaticBase.Trackers[TrackerType.Reddit].UpdateDBAsync(this);
+                    await UpdateTracker();
 
                     newPosts = newPosts.Reverse().ToArray();
                     foreach (var post in newPosts)
-                        foreach (ulong channel in ChannelMessages.Keys.ToList())
+                        foreach (ulong channel in ChannelConfig.Keys.ToList())
                         {
-                            await OnMajorChangeTracked(channel, await createEmbed(post.data), "");
+                            await OnMajorChangeTracked(channel, await createEmbed(post.data), (string)ChannelConfig[channel]["Notification"]);
                         }
                 }
             }
@@ -136,11 +110,11 @@ namespace MopsBot.Data.Tracker
 
             try
             {
-                e.ThumbnailUrl = !redditPost.thumbnail.Equals("self") && !redditPost.thumbnail.Equals("default") ? redditPost.thumbnail : null;
+                e.ImageUrl = !redditPost.thumbnail.Equals("self") && !redditPost.thumbnail.Equals("default") ? redditPost.thumbnail : null;
             }
             catch (Exception)
             {
-                e.ThumbnailUrl = null;
+                e.ImageUrl = null;
             }
 
             e.AddField("Score", redditPost.score, true);
@@ -156,6 +130,10 @@ namespace MopsBot.Data.Tracker
 
         public override string TrackerUrl(){
             return "https://www.reddit.com/r/" + Name.Split(" ").First();
+        }
+
+        public override async Task UpdateTracker(){
+            await StaticBase.Trackers[TrackerType.Reddit].UpdateDBAsync(this);
         }
     }
 }

@@ -25,14 +25,7 @@ namespace MopsBot.Module
                 using (Context.Channel.EnterTypingState())
                 {
                     var message = await ReplyAsync("Generating fight.");
-                    try
-                    {
-                        new Data.Interactive.Fight(Context.User.Id, enemy, message);
-                    }
-                    catch (ArgumentException e)
-                    {
-                        await ReplyAsync(e.Message);
-                    }
+                    new Data.Interactive.Fight(Context.User.Id, enemy, message);
                 }
             }
 

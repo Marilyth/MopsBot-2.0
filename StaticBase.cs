@@ -13,6 +13,7 @@ using MopsBot.Data;
 using MopsBot.Data.Tracker;
 using MopsBot.Data.Interactive;
 using Tweetinvi;
+using Tweetinvi.Logic;
 using MongoDB.Driver;
 using MongoDB.Bson.Serialization.Options;
 using MongoDB.Bson.Serialization.Attributes;
@@ -42,6 +43,7 @@ namespace MopsBot
         public static Dictionary<BaseTracker.TrackerType, TrackerWrapper> Trackers;
         public static Dictionary<ulong, MopsBot.Data.Entities.TwitchUser> TwitchUsers;
         public static Dictionary<ulong, MopsBot.Data.Entities.TwitchGuild> TwitchGuilds;
+        public static Dictionary<ulong, MopsBot.Data.Entities.ChannelJanitor> ChannelJanitors;
 
         public static bool init = false;
 
@@ -56,14 +58,22 @@ namespace MopsBot
                 ServicePointManager.ServerCertificateValidationCallback = (object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) => { return true; };
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
                 HttpClient.DefaultRequestHeaders.ConnectionClose = true;
+                HttpClient.Timeout = TimeSpan.FromSeconds(10);
+                ServicePointManager.DefaultConnectionLimit = 100;
+                ServicePointManager.MaxServicePointIdleTime = 10000;
                 MopsBot.Data.Entities.UserEvent.UserVoted += UserVoted;
                 Task.Run(() => new MopsBot.Data.Entities.UserEvent().CheckUsersVotedLoop());
 
                 Task.Run(() =>
                 {
                     WelcomeMessages = Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").FindSync(x => true).ToEnumerable().ToDictionary(x => x.GuildId);
+                    Task.Delay(5000).Wait();
+                    ChannelJanitors = MopsBot.Data.Entities.ChannelJanitor.GetJanitors().Result;
+                    Task.Delay(5000).Wait();
                     ReactGiveaways = new ReactionGiveaway();
+                    Task.Delay(5000).Wait();
                     ReactRoleJoin = new ReactionRoleJoin();
+                    Task.Delay(5000).Wait();
                     Poll = new ReactionPoll();
                 });
 
@@ -74,25 +84,30 @@ namespace MopsBot
                 Tweetinvi.ExceptionHandler.SwallowWebExceptions = false;
                 Tweetinvi.RateLimit.RateLimitTrackerMode = RateLimitTrackerMode.TrackOnly;
                 TweetinviEvents.QueryBeforeExecute += Data.Tracker.TwitterTracker.QueryBeforeExecute;
+                Tweetinvi.Logic.JsonConverters.JsonPropertyConverterRepository.JsonConverters.Remove(typeof(Tweetinvi.Models.Language));
+                Tweetinvi.Logic.JsonConverters.JsonPropertyConverterRepository.JsonConverters.Add(typeof(Tweetinvi.Models.Language), new CustomJsonLanguageConverter());
                 //WoWTracker.WoWClient = new SharprWowApi.WowClient(Region.EU, Locale.en_GB, Program.Config["WoWKey"]);
 
                 Trackers = new Dictionary<BaseTracker.TrackerType, Data.TrackerWrapper>();
-                Trackers[BaseTracker.TrackerType.Osu] = new TrackerHandler<OsuTracker>();
-                Trackers[BaseTracker.TrackerType.Overwatch] = new TrackerHandler<OverwatchTracker>();
-                Trackers[BaseTracker.TrackerType.Twitch] = new TrackerHandler<TwitchTracker>();
-                Trackers[BaseTracker.TrackerType.TwitchGroup] = new TrackerHandler<TwitchGroupTracker>();
-                Trackers[BaseTracker.TrackerType.TwitchClip] = new TrackerHandler<TwitchClipTracker>();
                 Trackers[BaseTracker.TrackerType.Twitter] = new TrackerHandler<TwitterTracker>();
                 Trackers[BaseTracker.TrackerType.Youtube] = new TrackerHandler<YoutubeTracker>();
+                Trackers[BaseTracker.TrackerType.Twitch] = new TrackerHandler<TwitchTracker>();
                 Trackers[BaseTracker.TrackerType.YoutubeLive] = new TrackerHandler<YoutubeLiveTracker>();
+                Trackers[BaseTracker.TrackerType.Mixer] = new TrackerHandler<MixerTracker>();
                 Trackers[BaseTracker.TrackerType.Reddit] = new TrackerHandler<RedditTracker>();
                 Trackers[BaseTracker.TrackerType.JSON] = new TrackerHandler<JSONTracker>();
+                Trackers[BaseTracker.TrackerType.Osu] = new TrackerHandler<OsuTracker>();
+                Trackers[BaseTracker.TrackerType.Overwatch] = new TrackerHandler<OverwatchTracker>();
+                Trackers[BaseTracker.TrackerType.TwitchGroup] = new TrackerHandler<TwitchGroupTracker>();
+                Trackers[BaseTracker.TrackerType.TwitchClip] = new TrackerHandler<TwitchClipTracker>();
                 //Trackers[BaseTracker.TrackerType.WoW] = new TrackerHandler<WoWTracker>();
                 //Trackers[ITracker.TrackerType.WoWGuild] = new TrackerHandler<WoWGuildTracker>();
                 Trackers[BaseTracker.TrackerType.OSRS] = new TrackerHandler<OSRSTracker>();
                 Trackers[BaseTracker.TrackerType.HTML] = new TrackerHandler<HTMLTracker>();
                 Trackers[BaseTracker.TrackerType.RSS] = new TrackerHandler<RSSTracker>();
                 Trackers[BaseTracker.TrackerType.Steam] = new TrackerHandler<SteamTracker>();
+                Trackers[BaseTracker.TrackerType.GW2] = new TrackerHandler<GW2Tracker>();
+                Trackers[BaseTracker.TrackerType.Chess] = new TrackerHandler<LichessTracker>();
                 //Trackers[BaseTracker.TrackerType.Tibia] = new TrackerHandler<JSONTracker>();
                 //Trackers[BaseTracker.TrackerType.TwitterRealtime] = new TrackerHandler<TwitterTracker>();
 
@@ -100,6 +115,7 @@ namespace MopsBot
                 {
                     var trackerType = tracker.Key;
                     if(tracker.Key == BaseTracker.TrackerType.Twitch){
+                        Task.Run(() => TwitchTracker.ObtainTwitchToken());
                         Task.Run(() => {
                                 tracker.Value.PostInitialisation();
                                 Trackers[BaseTracker.TrackerType.TwitchGroup].PostInitialisation();
@@ -108,8 +124,15 @@ namespace MopsBot
                                 foreach(var user in TwitchUsers) user.Value.PostInitialisation();
                         });
                     }
+                    else if(tracker.Key == BaseTracker.TrackerType.Youtube){
+                        Task.Run(() => {tracker.Value.PostInitialisation();
+                                        YoutubeTracker.fetchChannelsBatch().Wait();});
+                    }
                     else if(tracker.Key != BaseTracker.TrackerType.TwitchGroup)
                         Task.Run(() => tracker.Value.PostInitialisation());
+
+                    Program.MopsLog(new LogMessage(LogSeverity.Info, "Tracker init", $"Initialising {trackerType.ToString()}"));
+                    Task.Delay((int)(60000 / Trackers.Count)).Wait();
                 }
 
                 init = true;
@@ -140,6 +163,7 @@ namespace MopsBot
         public static async Task UpdateServerCount()
         {
             await Program.Client.SetActivityAsync(new Game($"{Program.Client.Guilds.Count} servers", ActivityType.Watching));
+            
             try
             {
                 if (Program.Client.CurrentUser.Id == 305398845389406209)
@@ -185,8 +209,13 @@ namespace MopsBot
         {
             if (!init)
             {
-                await Program.Client.SetActivityAsync(new Game("Currently Restarting!", ActivityType.Playing));
-                await Task.Delay(60000);
+                try{
+                    await Program.Client.SetActivityAsync(new Game("Currently Restarting!", ActivityType.Playing));
+                    await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", "Heartbeat. I was born :)"));
+                    await Task.Delay(30000);
+                    await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", "Heartbeat. I am still alive :)"));
+                    await Task.Delay(30000);
+                } catch {}
 
                 int status = Enum.GetNames(typeof(BaseTracker.TrackerType)).Length;
                 while (true)
@@ -194,6 +223,13 @@ namespace MopsBot
                     try
                     {
                         BaseTracker.TrackerType type = (BaseTracker.TrackerType)status++;
+
+                        //Skip everything after GW2, as this is hidden
+                        if(type.ToString().Equals("GW2")){
+                            status = Enum.GetNames(typeof(BaseTracker.TrackerType)).Length;
+                            continue;
+                        }
+
                         var trackerCount = Trackers[type].GetTrackers().Count;
                         await Program.Client.SetActivityAsync(new Game($"{trackerCount} {type.ToString()} Trackers", ActivityType.Watching));
                     }
@@ -202,12 +238,27 @@ namespace MopsBot
                         //Trackers were not initialised yet, or status exceeded trackertypes
                         //Show servers instead
                         status = 0;
-                        await UpdateServerCount();
+                        try{
+                            await UpdateServerCount();
+                        } catch {}
                     }
-
+                    finally{
+                        await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Heartbeat. I am still alive :)\nRatio: {MopsBot.Module.Information.FailedRequests} failed vs {MopsBot.Module.Information.SucceededRequests} succeeded requests"));
+                        MopsBot.Module.Information.FailedRequests = 0;
+                        MopsBot.Module.Information.SucceededRequests = 0;
+                    }
                     await Task.Delay(30000);
                 }
             }
+        }
+    }
+    public class CustomJsonLanguageConverter : Tweetinvi.Logic.JsonConverters.JsonLanguageConverter
+    {
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, Newtonsoft.Json.JsonSerializer serializer)
+        {
+            return reader.Value != null 
+                ? base.ReadJson(reader, objectType, existingValue, serializer) 
+                : Tweetinvi.Models.Language.English;
         }
     }
 }

@@ -25,16 +25,16 @@ namespace MopsBot.Data.Interactive
         {
             //using (StreamReader read = new StreamReader(new FileStream($"mopsdata//ReactionRoleJoin.json", FileMode.OpenOrCreate)))
             //{
-                try
-                {
-                    //RoleInvites = JsonConvert.DeserializeObject<Dictionary<ulong, HashSet<ulong>>>(read.ReadToEnd());
-                    //StaticBase.Database.GetCollection<MongoKVP<ulong, HashSet<ulong>>>("ReactionRoleJoin").InsertMany(Entities.MongoKVP<ulong, HashSet<ulong>>.DictToMongoKVP(RoleInvites));
-                    RoleInvites = new Dictionary<ulong, HashSet<ulong>>(StaticBase.Database.GetCollection<MongoKVP<ulong, HashSet<ulong>>>("ReactionRoleJoin").FindSync(x => true).ToList().Select(x => (KeyValuePair<ulong, HashSet<ulong>>)x));
-                }
-                catch (Exception e)
-                {
-                    Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"", e)).Wait();
-                }
+            try
+            {
+                //RoleInvites = JsonConvert.DeserializeObject<Dictionary<ulong, HashSet<ulong>>>(read.ReadToEnd());
+                //StaticBase.Database.GetCollection<MongoKVP<ulong, HashSet<ulong>>>("ReactionRoleJoin").InsertMany(Entities.MongoKVP<ulong, HashSet<ulong>>.DictToMongoKVP(RoleInvites));
+                RoleInvites = new Dictionary<ulong, HashSet<ulong>>(StaticBase.Database.GetCollection<MongoKVP<ulong, HashSet<ulong>>>("ReactionRoleJoin").FindSync(x => true).ToList().Select(x => (KeyValuePair<ulong, HashSet<ulong>>)x));
+            }
+            catch (Exception e)
+            {
+                Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"", e)).Wait();
+            }
             //}
 
             if (RoleInvites == null)
@@ -89,15 +89,18 @@ namespace MopsBot.Data.Interactive
             }
         }
 
-        public async Task InsertIntoDBAsync(ulong key){
+        public async Task InsertIntoDBAsync(ulong key)
+        {
             await StaticBase.Database.GetCollection<MongoKVP<ulong, HashSet<ulong>>>(this.GetType().Name).InsertOneAsync(MongoKVP<ulong, HashSet<ulong>>.KVPToMongoKVP(new KeyValuePair<ulong, HashSet<ulong>>(key, RoleInvites[key])));
         }
 
-        public async Task UpdateDBAsync(ulong key){
+        public async Task UpdateDBAsync(ulong key)
+        {
             await StaticBase.Database.GetCollection<MongoKVP<ulong, HashSet<ulong>>>(this.GetType().Name).ReplaceOneAsync(x => x.Key == key, MongoKVP<ulong, HashSet<ulong>>.KVPToMongoKVP(new KeyValuePair<ulong, HashSet<ulong>>(key, RoleInvites[key])));
         }
 
-        public async Task RemoveFromDBAsync(ulong key){
+        public async Task RemoveFromDBAsync(ulong key)
+        {
             await StaticBase.Database.GetCollection<MongoKVP<ulong, HashSet<ulong>>>(this.GetType().Name).DeleteOneAsync(x => x.Key == key);
         }
 
@@ -120,7 +123,8 @@ namespace MopsBot.Data.Interactive
 
             await Program.ReactionHandler.AddHandlers(message, join, leave, delete);
 
-            if (RoleInvites.ContainsKey(channel.Id)){
+            if (RoleInvites.ContainsKey(channel.Id))
+            {
                 RoleInvites[channel.Id].Add(message.Id);
                 await UpdateDBAsync(channel.Id);
             }
@@ -148,7 +152,8 @@ namespace MopsBot.Data.Interactive
             await Program.ReactionHandler.AddHandler(message, new Emoji("✅"), LeaveRole, true);
             await Program.ReactionHandler.AddHandler(message, new Emoji("🗑"), DeleteInvite);
 
-            if (RoleInvites.ContainsKey(channel.Id)){
+            if (RoleInvites.ContainsKey(channel.Id))
+            {
                 RoleInvites[channel.Id].Add(message.Id);
                 await UpdateDBAsync(channel.Id);
             }
@@ -170,7 +175,8 @@ namespace MopsBot.Data.Interactive
             var roleId = ulong.Parse(message.Embeds.First().Title.Split(new string[] { ":" }, StringSplitOptions.None).Last());
             var role = ((ITextChannel)message.Channel).Guild.GetRole(roleId);
             var user = await ((ITextChannel)message.Channel).Guild.GetUserAsync(userId);
-            if(!user.RoleIds.Contains(roleId)){
+            if (!user.RoleIds.Contains(roleId))
+            {
                 await user.AddRoleAsync(role);
                 await updateMessage(message, (SocketRole)role);
             }
@@ -186,7 +192,8 @@ namespace MopsBot.Data.Interactive
             var roleId = ulong.Parse(message.Embeds.First().Title.Split(new string[] { ":" }, StringSplitOptions.None).Last());
             var role = ((ITextChannel)message.Channel).Guild.GetRole(roleId);
             var user = await ((ITextChannel)message.Channel).Guild.GetUserAsync(userId);
-            if(user.RoleIds.Contains(roleId)){
+            if (user.RoleIds.Contains(roleId))
+            {
                 await user.RemoveRoleAsync(role);
                 await updateMessage(message, (SocketRole)role);
             }
@@ -204,11 +211,13 @@ namespace MopsBot.Data.Interactive
             {
                 await Program.ReactionHandler.ClearHandler(message);
 
-                if (RoleInvites[message.Channel.Id].Count > 1){
+                if (RoleInvites[message.Channel.Id].Count > 1)
+                {
                     RoleInvites[message.Channel.Id].Remove(message.Id);
                     await UpdateDBAsync(message.Channel.Id);
                 }
-                else{
+                else
+                {
                     RoleInvites.Remove(message.Channel.Id);
                     await RemoveFromDBAsync(message.Channel.Id);
                 }
@@ -251,6 +260,41 @@ namespace MopsBot.Data.Interactive
             {
                 x.Embed = e.Build();
             });
+        }
+
+        public async Task<List<KeyValuePair<ulong, ulong>>> TryPruneAsync(bool testing = true)
+        {
+            var pruneList = new List<KeyValuePair<ulong, ulong>>();
+
+            foreach (var channel in RoleInvites.ToList())
+            {
+                foreach (var message in channel.Value.ToList())
+                {
+                    var curChannel = (ITextChannel)Program.Client.GetChannel(channel.Key);
+                    if (curChannel != null)
+                    {
+                        var curMessage = curChannel.GetMessageAsync(message);
+                        if (curMessage != null) continue;
+                    }
+
+                    pruneList.Add(KeyValuePair.Create<ulong, ulong>(channel.Key, message));
+                    if (!testing)
+                    {
+                        if (RoleInvites[channel.Key].Count > 1)
+                        {
+                            RoleInvites[channel.Key].Remove(message);
+                            await UpdateDBAsync(channel.Key);
+                        }
+                        else
+                        {
+                            RoleInvites.Remove(channel.Key);
+                            await RemoveFromDBAsync(channel.Key);
+                        }
+                    }
+                }
+            }
+
+            return pruneList;
         }
     }
 }

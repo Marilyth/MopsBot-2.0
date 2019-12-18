@@ -13,8 +13,6 @@ using Microsoft.Win32.SafeHandles;
 using MongoDB.Bson.Serialization.Options;
 using MongoDB.Bson.Serialization.Attributes;
 using MopsBot.Data.Entities;
-using TwitchLib;
-using TwitchLib.Api;
 
 namespace MopsBot.Data.Tracker
 {
@@ -41,13 +39,19 @@ namespace MopsBot.Data.Tracker
         {
             if (RankChannels == null) RankChannels = new Dictionary<ulong, ulong>();
             FetchTrackers();
-            SetTimer(60000);
+            if(trackers.Count != 0) 
+                SetTimer(60000);
         }
 
         public void FetchTrackers()
         {
-            var guildTrackers = StaticBase.Trackers[TrackerType.Twitch].GetGuildTrackers(ulong.Parse(Name)).Select(x => x as TwitchTracker).ToList();
-            trackers = guildTrackers;
+            try{
+                var guildTrackers = StaticBase.Trackers[TrackerType.Twitch].GetGuildTrackers(ulong.Parse(Name)).Select(x => x as TwitchTracker).ToList();
+                trackers = guildTrackers;
+            } catch {
+                var guildTrackers = new List<TwitchTracker>();
+                trackers = guildTrackers;
+            }
         }
 
         protected async override void CheckForChange_Elapsed(object stateinfo)
@@ -68,19 +72,19 @@ namespace MopsBot.Data.Tracker
                     viewers = viewers.OrderByDescending(x => x.Value.Item2).ToList();
                 }
 
-                foreach (var channel in ChannelMessages)
+                foreach (var channel in ChannelConfig)
                 {
                     if (RankChannels.ContainsKey(channel.Key))
                     {
                         var rankUsers = StaticBase.TwitchGuilds[ulong.Parse(Name)].GetUsers(RankChannels[channel.Key]);
                         var role = (Program.Client.GetChannel(channel.Key) as SocketTextChannel).Guild.GetRole(RankChannels[channel.Key]);
                         var embed = createEmbed(viewers.Where(x => rankUsers.Any(y => y.TwitchName.ToLower().Equals(x.Key.ToLower()))).ToList(), role.Name);
-                        await OnMajorChangeTracked(channel.Key, embed, channel.Value);
+                        await OnMajorChangeTracked(channel.Key, embed, (string)channel.Value["Notification"]);
                     }
                     else
                     {
                         var embed = createEmbed(viewers);
-                        await OnMajorChangeTracked(channel.Key, embed, channel.Value);
+                        await OnMajorChangeTracked(channel.Key, embed, (string)channel.Value["Notification"]);
                     }
                 }
             }
@@ -127,6 +131,10 @@ namespace MopsBot.Data.Tracker
             }
 
             return builderList.First().Build();
+        }
+
+        public override async Task UpdateTracker(){
+            await StaticBase.Trackers[TrackerType.TwitchGroup].UpdateDBAsync(this);
         }
     }
 }

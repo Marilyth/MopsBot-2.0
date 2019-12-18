@@ -17,46 +17,17 @@ namespace MopsBot.Data.Tracker
     [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
     public class TwitchClipTracker : BaseTracker
     {
-        public uint ViewThreshold;
-        
         [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
         public Dictionary<DateTime, KeyValuePair<int, double>> TrackedClips;
+        public static readonly string VIEWTHRESHOLD = "ViewerThreshold";
         public TwitchClipTracker() : base()
         {
-        }
-
-        public TwitchClipTracker(Dictionary<string, string> args) : base(){
-            ViewThreshold = uint.Parse(args["ViewThreshold"]);
-            base.SetBaseValues(args, true);
-
-            //Check if Name ist valid
-            try{
-                new TwitchClipTracker(Name).Dispose();
-                TrackedClips = new Dictionary<DateTime, KeyValuePair<int, double>>();
-                ChannelMessages = new Dictionary<ulong, string>();
-                SetTimer();
-            } catch (Exception e){
-                this.Dispose();
-                throw e;
-            }
-
-            if(StaticBase.Trackers[TrackerType.TwitchClip].GetTrackers().ContainsKey(Name)){
-                this.Dispose();
-
-                args["Id"] = Name;
-                var curTracker = StaticBase.Trackers[TrackerType.TwitchClip].GetTrackers()[Name];
-                curTracker.ChannelMessages[ulong.Parse(args["Channel"].Split(":")[1])] = args["Notification"];
-                StaticBase.Trackers[TrackerType.TwitchClip].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", args}}).Wait();
-
-                throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
-            }
         }
 
         public TwitchClipTracker(string streamerName) : base()
         {
             Name = streamerName;
             TrackedClips = new Dictionary<DateTime, KeyValuePair<int, double>>();
-            ChannelMessages = new Dictionary<ulong, string>();
             ViewThreshold = 2;
 
             try
@@ -65,11 +36,34 @@ namespace MopsBot.Data.Tracker
                 var test = checkExists.broadcaster_language;
                 SetTimer();
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 Dispose();
-                throw new Exception($"Streamer {TrackerUrl()} could not be found on Twitch!");
+                throw new Exception($"Streamer {TrackerUrl()} could not be found on Twitch!", e);
             }
+        }
+
+        public async override void PostChannelAdded(ulong channelId)
+        {
+            base.PostChannelAdded(channelId);
+            ChannelConfig[channelId][VIEWTHRESHOLD] = ViewThreshold;
+
+            await UpdateTracker();
+        }
+
+        public override async void Conversion(object obj = null)
+        {
+            bool save = false;
+            foreach (var channel in ChannelConfig.Keys.ToList())
+            {
+                if (ViewThreshold > (uint)ChannelConfig[channel][VIEWTHRESHOLD])
+                {
+                    ChannelConfig[channel][VIEWTHRESHOLD] = ViewThreshold;
+                    save = true;
+                }
+            }
+            if (save)
+                await UpdateTracker();
         }
 
         protected async override void CheckForChange_Elapsed(object stateinfo)
@@ -81,16 +75,17 @@ namespace MopsBot.Data.Tracker
                 {
                     if (datetime.AddMinutes(30) <= DateTime.UtcNow){
                         TrackedClips.Remove(datetime);
-                        await StaticBase.Trackers[TrackerType.TwitchClip].UpdateDBAsync(this);
+                        await UpdateTracker();
                     }
                 }
 
-                foreach (Clip clip in clips.clips)
+                foreach (Clip clip in clips?.clips ?? new List<Clip>())
                 {
                     var embed = createEmbed(clip);
-                    foreach (ulong channel in ChannelMessages.Keys.ToList())
+                    foreach (ulong channel in ChannelConfig.Keys.ToList())
                     {
-                        await OnMajorChangeTracked(channel, embed, ChannelMessages[channel]);
+                        if(clip.views >= (uint)ChannelConfig[channel][VIEWTHRESHOLD])
+                            await OnMajorChangeTracked(channel, embed, (string)ChannelConfig[channel]["Notification"]);
                     }
                 }
             }
@@ -119,7 +114,7 @@ namespace MopsBot.Data.Tracker
 
                 if (tmpResult.clips != null)
                 {
-                    foreach (var clip in tmpResult.clips.Where(p => !TrackedClips.ContainsKey(p.created_at) && p.created_at > DateTime.UtcNow.AddMinutes(-30) && p.views >= ViewThreshold))
+                    foreach (var clip in tmpResult.clips.Where(p => !TrackedClips.ContainsKey(p.created_at) && p.created_at > DateTime.UtcNow.AddMinutes(-30)))
                     {
                         if(clip.vod != null && !TrackedClips.Any(x => {
                                 double matchingDuration = 0;
@@ -140,7 +135,7 @@ namespace MopsBot.Data.Tracker
                             clips.clips.Add(clip);
                         }
                         
-                        await StaticBase.Trackers[TrackerType.TwitchClip].UpdateDBAsync(this);
+                        await UpdateTracker();
                     }
                     if (!tmpResult._cursor.Equals(""))
                     {
@@ -189,35 +184,8 @@ namespace MopsBot.Data.Tracker
             return $"https://www.twitch.tv/{Name}/clips";
         }
 
-        public override Dictionary<string, object> GetParameters(ulong guildId)
-        {
-            var parentParameters = base.GetParameters(guildId);
-            (parentParameters["Parameters"] as Dictionary<string, object>)["ViewThreshold"] = 1;
-            return parentParameters;
-        }
-
-        public override object GetAsScope(ulong channelId){
-            return new ContentScope(){
-                Id = this.Name,
-                _Name = this.Name,
-                Notification = this.ChannelMessages[channelId],
-                Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId,
-                ViewThreshold = this.ViewThreshold
-            };
-        }
-
-        public override void Update(Dictionary<string, Dictionary<string, string>> args){
-            base.Update(args);
-            ViewThreshold = uint.Parse(args["NewValue"]["ViewThreshold"]);
-        }
-
-        public new struct ContentScope
-        {
-            public string Id;
-            public string _Name;
-            public string Notification;
-            public string Channel;
-            public uint ViewThreshold;
+        public override async Task UpdateTracker(){
+            await StaticBase.Trackers[TrackerType.TwitchClip].UpdateDBAsync(this);
         }
     }
 }

@@ -20,49 +20,17 @@ namespace MopsBot.Data.Tracker
         public Dictionary<string, string> PastInformation;
         public List<string> ToTrack;
         public DatePlot DataGraph;
+        public static readonly string INTERVAL = "IntervalInMs";
 
         public JSONTracker() : base()
         {
-        }
-
-        public JSONTracker(Dictionary<string, string> args) : base()
-        {
-            base.SetBaseValues(args);
-            ToTrack = args["Locations"].Split(null).ToList();
-            Name = args["_Name"] + "|||" + String.Join(",", ToTrack);
-
-            //Check if Name ist valid
-            try
-            {
-                var test = new JSONTracker(Name);
-                PastInformation = test.PastInformation;
-                test.Dispose();
-                SetTimer();
-            }
-            catch (Exception e)
-            {
-                this.Dispose();
-                throw e;
-            }
-
-            if (StaticBase.Trackers[TrackerType.JSON].GetTrackers().ContainsKey(Name))
-            {
-                this.Dispose();
-
-                args["Id"] = Name;
-                var curTracker = StaticBase.Trackers[TrackerType.JSON].GetTrackers()[Name];
-                curTracker.ChannelMessages[ulong.Parse(args["Channel"].Split(":")[1])] = args["Notification"];
-                StaticBase.Trackers[TrackerType.JSON].UpdateContent(new Dictionary<string, Dictionary<string, string>> { { "NewValue", args }, { "OldValue", args } }).Wait();
-
-                throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
-            }
         }
 
         public JSONTracker(string name) : base()
         {
             //name = name.Replace(" ", string.Empty);
             Name = name;
-            ToTrack = name.Split("|||")[1].Replace(" ", string.Empty).Split(",").ToList();
+            ToTrack = name.Split("|||")[1].Split("\n").ToList();
 
             //Check if name yields proper results.
             try
@@ -74,8 +42,9 @@ namespace MopsBot.Data.Tracker
                         bool succeeded = double.TryParse(graphTest.Value, out double test);
 
                         if(succeeded){
+                            var chosenName = graphTest.Key.Contains("as:") ? graphTest.Key.Split(":").Last() : graphTest.Key;
                             if(DataGraph == null) DataGraph = new DatePlot("JSON" + Name.GetHashCode(), "Date", "Value", format: "dd-MMM", relativeTime: false, multipleLines: true);
-                            DataGraph.AddValueSeperate(graphTest.Key, test, relative:false);
+                            DataGraph.AddValueSeperate(chosenName, test, relative:false);
                         }
 
                         else throw new Exception("Graph value is not a number!");
@@ -83,17 +52,53 @@ namespace MopsBot.Data.Tracker
                 }
                 SetTimer();
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 Dispose();
-                throw new Exception($"{Name} could not be resolved, using the given paths.");
+                throw new Exception($"{Name} could not be resolved, using the given paths.", e);
             }
+        }
+
+        public override async void Conversion(object obj = null)
+        {
+            bool save = false;
+            foreach (var channel in ChannelConfig.Keys.ToList())
+            {
+                if (!ChannelConfig[channel].ContainsKey(INTERVAL))
+                {
+                    ChannelConfig[channel][INTERVAL] = 60000;
+                    save = true;
+                }
+            }
+            if (save)
+                await UpdateTracker();
+        }
+
+        public async override void PostChannelAdded(ulong channelId)
+        {
+            base.PostChannelAdded(channelId);
+
+            var config = ChannelConfig[channelId];
+            config[INTERVAL] = 600000;
+
+            await UpdateTracker();
+        }
+
+        public override bool IsConfigValid(Dictionary<string, object> config, out string reason){
+            reason = "";
+            if((int)config[INTERVAL] < 60000){
+                reason = "Interval can't be lower than 1 minute";
+                return false;
+            }
+            return true;
         }
 
         public async override void PostInitialisation(object info = null)
         {
             if (DataGraph != null)
                 DataGraph.InitPlot("Date", "Value", format: "dd-MMM", relative: false);
+
+            SetTimer((int)ChannelConfig.FirstOrDefault().Value[INTERVAL]);
         }
 
         protected async override void CheckForChange_Elapsed(object stateinfo)
@@ -109,18 +114,19 @@ namespace MopsBot.Data.Tracker
                     var graphMembers = newInformation.Where(x => x.Key.Contains("graph:"));
 
                     foreach(var graphValue in graphMembers){
+                        var name = graphValue.Key.Contains("as:") ? graphValue.Key.Split(":").Last() : graphValue.Key;
                         if(!graphValue.Equals(default(KeyValuePair<string,string>))){
-                            DataGraph.AddValueSeperate(graphValue.Key, double.Parse(PastInformation[graphValue.Key]), relative: false);
-                            DataGraph.AddValueSeperate(graphValue.Key, double.Parse(graphValue.Value), relative: false);
+                            DataGraph.AddValueSeperate(name, double.Parse(PastInformation[graphValue.Key]), relative: false);
+                            DataGraph.AddValueSeperate(name, double.Parse(graphValue.Value), relative: false);
                         }
                     }
 
-                    foreach (var channel in ChannelMessages.Keys.ToList()){
-                        await OnMajorChangeTracked(channel, DataGraph == null ? embed : createEmbed(newInformation, PastInformation, out changed), ChannelMessages[channel]);
+                    foreach (var channel in ChannelConfig.Keys.ToList()){
+                        await OnMajorChangeTracked(channel, DataGraph == null ? embed : createEmbed(newInformation, PastInformation, out changed), (string)ChannelConfig[channel]["Notification"]);
                     }
 
                     PastInformation = newInformation;
-                    await StaticBase.Trackers[TrackerType.JSON].UpdateDBAsync(this);
+                    await UpdateTracker();
                 }
             }
             catch (Exception e)
@@ -131,7 +137,11 @@ namespace MopsBot.Data.Tracker
 
         private async Task<Dictionary<string, string>> getResults()
         {
-            var json = await FetchJSONDataAsync<dynamic>(TrackerUrl());
+            return await GetResults(TrackerUrl(), ToTrack.ToArray());
+        }
+
+        public static async Task<Dictionary<string, string>> GetResults(string JSONUrl, string[] ToTrack){
+            var json = await FetchJSONDataAsync<dynamic>(JSONUrl);
             var result = new Dictionary<string, string>();
 
             foreach(string cur in ToTrack){
@@ -140,14 +150,56 @@ namespace MopsBot.Data.Tracker
                 if(curMod.Contains("always:")) curMod = curMod.Replace("always:", string.Empty);
                 string[] keywords = curMod.Split("->");
                 var tmpJson = json;
-
+                bool summarize = false;
+                bool find = false;
                 foreach(string keyword in keywords){
+                    if(keyword.StartsWith("as:")) break;
                     int.TryParse(keyword, out int index);
-                    if(index > 0) tmpJson = tmpJson[index - 1];
-                    else tmpJson = tmpJson[keyword];
+                    if(summarize){
+                        result[cur] = "";
+                        foreach(var element in tmpJson){
+                            if(index > 0) result[cur] += element[index - 1].ToString() + ", ";
+                            else result[cur] += element[keyword].ToString() + ", ";
+                        }
+                        if(result[cur].Equals(string.Empty)) result[cur] = "No values";
+                        break;
+                    }
+                    else if(find){
+                        find = false;
+                        var tmpKeywords = keyword.Split("=");
+                        int.TryParse(tmpKeywords[0], out int i);
+                        foreach(var element in tmpJson){
+                            if(i > 0){
+                                if(element[i].ToString().Equals(tmpKeywords[1])){
+                                    tmpJson = element;
+                                    break;
+                                }
+                            }
+                            else{
+                                if(element[tmpKeywords[0]].ToString().Equals(tmpKeywords[1])){
+                                    tmpJson = element;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    else{
+                        if(index > 0) tmpJson = tmpJson[index - 1];
+                        else if(!keyword.StartsWith("all") && !keyword.StartsWith("find")) tmpJson = tmpJson[keyword];
+                        else if(keyword.StartsWith("all")) summarize = true;
+                        else find = true;
+                    }
                 }
-
-                result[cur] = tmpJson.ToString();
+                
+                if(summarize == false)
+                    result[cur] = tmpJson.ToString();
+                else if(keywords.Last().StartsWith("all") || keywords.Last().StartsWith("as:")){
+                    try{
+                        result[cur] = string.Join(", ", tmpJson);
+                    } catch {
+                        result[cur] = "No Value Found";
+                    }
+                }
             }
 
             return result;
@@ -165,19 +217,20 @@ namespace MopsBot.Data.Tracker
 
             changed = false;
             foreach(var kvp in newInformation){
-                string oldS = oldInformation[kvp.Key];
+                string oldS = oldInformation.ContainsKey(kvp.Key) ? oldInformation[kvp.Key] : "No Value Found";
                 string newS = kvp.Value;
+                var keyName = kvp.Key.Contains("as:") ? kvp.Key.Split(":").Last() : kvp.Key.Split("->").Last();
 
                 if(!newS.Equals(oldS)){
                     changed = true;
-                    embed.AddField(kvp.Key.Split("->").Last(), $"{oldS} -> {newS}", true);
+                    embed.AddField(keyName, $"{oldS} -> {newS}", true);
                 }
                 else if(kvp.Key.Contains("always:")){
-                    embed.AddField(kvp.Key.Split("->").Last(), newS, true);
+                    embed.AddField(keyName, newS, true);
                 }
             }
 
-            if(DataGraph != null) embed.ImageUrl = DataGraph.DrawPlot();
+            if(DataGraph != null && changed) embed.ImageUrl = DataGraph.DrawPlot();
 
             return embed.Build();
         }
@@ -187,35 +240,8 @@ namespace MopsBot.Data.Tracker
             return Name.Split("|||")[0];
         }
 
-        public override Dictionary<string, object> GetParameters(ulong guildId){
-            var parameters = base.GetParameters(guildId);
-            (parameters["Parameters"] as Dictionary<string, object>)["Locations"] = "";
-            return parameters;
-        }
-
-        public override void Update(Dictionary<string, Dictionary<string, string>> args){
-            base.Update(args);
-            ToTrack = args["NewValue"]["Locations"].Split(null).ToList();
-            Name = args["NewValue"]["_Name"] + String.Join(",", ToTrack);
-        }
-
-        public override object GetAsScope(ulong channelId){
-            return new ContentScope(){
-                Id = this.Name,
-                _Name = this.Name.Split("|||")[0],
-                Locations = String.Join("\n", this.ToTrack),
-                Notification = this.ChannelMessages[channelId],
-                Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId
-            };
-        }
-
-        public new struct ContentScope
-        {
-            public string Id;
-            public string _Name;
-            public string Locations;
-            public string Notification;
-            public string Channel;
+        public override async Task UpdateTracker(){
+            await StaticBase.Trackers[TrackerType.JSON].UpdateDBAsync(this);
         }
     }
 }

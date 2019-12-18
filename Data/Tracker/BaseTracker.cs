@@ -18,11 +18,11 @@ using System.ServiceModel.Syndication;
 namespace MopsBot.Data.Tracker
 {
     [BsonIgnoreExtraElements]
-    public abstract class BaseTracker : MopsBot.Api.BaseAPIContent, IDisposable
+    public abstract class BaseTracker : IDisposable
     {
         //Avoid ratelimit by placing a gap between all trackers.
         public static int ExistingTrackers = 0;
-        public enum TrackerType { Twitch, TwitchGroup, TwitchClip, Twitter, Osu, Overwatch, /*Tibia,*/ Youtube, YoutubeLive, Reddit, JSON, OSRS, HTML, RSS, Steam };
+        public enum TrackerType { Twitch, TwitchGroup, TwitchClip, Mixer, Twitter, Youtube, YoutubeLive, Reddit, Steam, Osu, Overwatch, OSRS /*Tibia,*/, JSON, HTML, RSS, GW2, Chess };
         private bool disposed = false;
         private SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
         protected System.Threading.Timer checkForChange;
@@ -31,7 +31,7 @@ namespace MopsBot.Data.Tracker
         public delegate Task MinorEventHandler(ulong channelID, BaseTracker self, string notificationText);
         public delegate Task MainEventHandler(ulong channelID, Embed embed, BaseTracker self, string notificationText = "");
         [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
-        public Dictionary<ulong, string> ChannelMessages;
+        public Dictionary<ulong, Dictionary<string, object>> ChannelConfig;
 
         [BsonId]
         public string Name;
@@ -39,16 +39,22 @@ namespace MopsBot.Data.Tracker
         public BaseTracker()
         {
             ExistingTrackers++;
-            ChannelMessages = new Dictionary<ulong, string>();
+            ChannelConfig = new Dictionary<ulong, Dictionary<string, object>>();
             checkForChange = new System.Threading.Timer(CheckForChange_Elapsed);
         }
 
-        public virtual void PostInitialisation(object info = null)
-        {
+        public virtual void PostInitialisation(object info = null){}
+
+        public virtual void Conversion(object info = null){}
+
+        public virtual void PostChannelAdded(ulong channelId){
+            ChannelConfig.Add(channelId, new Dictionary<string, object>());
+            ChannelConfig[channelId]["Notification"] = "";
         }
 
-        public virtual void PostChannelAdded(ulong channelId)
-        {
+        public virtual bool IsConfigValid(Dictionary<string, object> config, out string reason){
+            reason = "";
+            return true;
         }
 
         public void SetTimer(int interval = 600000, int delay = -1)
@@ -72,9 +78,11 @@ namespace MopsBot.Data.Tracker
         {
             try
             {
+                var content = await MopsBot.Module.Information.GetURLAsync(url, headers);
+                var stream = new MemoryStream(Encoding.UTF8.GetBytes(content));
                 var settings = new System.Xml.XmlReaderSettings();
                 settings.DtdProcessing = System.Xml.DtdProcessing.Parse;
-                using (var reader = System.Xml.XmlReader.Create(url, settings))
+                using (var reader = System.Xml.XmlReader.Create(stream, settings))
                 {
                     
                     SyndicationFeed feed = SyndicationFeed.Load(reader);
@@ -118,6 +126,8 @@ namespace MopsBot.Data.Tracker
                 await OnMinorEventFired(channelID, this, notificationText);
         }
 
+        abstract public Task UpdateTracker();
+
         public virtual void Dispose()
         {
             Dispose(true);
@@ -138,47 +148,13 @@ namespace MopsBot.Data.Tracker
             disposed = true;
         }
 
-        public override Dictionary<string, object> GetParameters(ulong guildId)
-        {
-            string[] channels = Program.Client.GetGuild(guildId).TextChannels.Select(x => $"#{x.Name}:{x.Id}").ToArray();
-
-            return new Dictionary<string, object>(){
-                {"Parameters", new Dictionary<string, object>(){
-                                {"_Name", ""},
-                                {"Notification", "New content!"},
-                                {"Channel", channels}}},
-                {"Permissions", GuildPermission.ManageChannels}
-            };
-        }
-
-        public override object GetAsScope(ulong channelId)
-        {
-            return new ContentScope()
-            {
-                Id = this.Name,
-                _Name = this.Name,
-                Notification = this.ChannelMessages[channelId],
-                Channel = "#" + ((SocketGuildChannel)Program.Client.GetChannel(channelId)).Name + ":" + channelId
-            };
-        }
-
-        public override void Update(Dictionary<string, Dictionary<string, string>> args)
-        {
-            if (args["NewValue"].ContainsKey("Notification")) SetBaseValues(args["NewValue"]);
-
-            var newChannelId = ulong.Parse(args["NewValue"]["Channel"].Split(":")[1]);
-            var oldChannelId = ulong.Parse(args["OldValue"]["Channel"].Split(":")[1]);
-            if (newChannelId != oldChannelId)
-                ChannelMessages.Remove(oldChannelId);
-        }
-
         public void SetBaseValues(Dictionary<string, string> args, bool setName = false)
         {
             try
             {
                 if (setName) Name = args["_Name"];
                 var newChannelId = ulong.Parse(args["Channel"].Split(":")[1]);
-                ChannelMessages[newChannelId] = args["Notification"];
+                ChannelConfig[newChannelId]["Notification"] = args["Notification"];
             }
             catch (Exception e)
             {
@@ -193,6 +169,19 @@ namespace MopsBot.Data.Tracker
             public string _Name;
             public string Notification;
             public string Channel;
+        }
+
+        public class Config{
+            [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
+            public Dictionary<string, object> Values = new Dictionary<string, object>();
+
+            public Config(){}
+
+            public Config(params KeyValuePair<string, object>[] values){
+                foreach(var value in values){
+                    Values.Add(value.Key, value.Value);
+                }
+            }
         }
     }
 }

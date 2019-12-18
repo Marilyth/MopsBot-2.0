@@ -17,13 +17,16 @@ namespace MopsBot.Module
 {
     public class Information : ModuleBase
     {
+        public static int FailedRequests = 0, SucceededRequests = 0;
 
         [Command("HowLong")]
         [Summary("Returns the date you joined the Guild")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public async Task howLong()
+        public async Task howLong([Remainder]SocketGuildUser user = null)
         {
-            await ReplyAsync(((SocketGuildUser)Context.User).JoinedAt.Value.Date.ToString("d"));
+            if (user == null)
+                user = (SocketGuildUser)Context.User;
+            await ReplyAsync(user.JoinedAt.Value.Date.ToString("d"));
         }
 
         [Command("Invite")]
@@ -49,20 +52,13 @@ namespace MopsBot.Module
         {
             using (Context.Channel.EnterTypingState())
             {
-                try
-                {
-                    string query = Task.Run(() => GetURLAsync($"http://api.wordnik.com:80/v4/word.json/{text}/definitions?limit=1&includeRelated=false&sourceDictionaries=all&useCanonical=true&includeTags=false&api_key={Program.Config["Wordnik"]}")).Result;
 
-                    dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
+                string query = Task.Run(() => GetURLAsync($"http://api.wordnik.com:80/v4/word.json/{text}/definitions?limit=1&includeRelated=false&sourceDictionaries=all&useCanonical=true&includeTags=false&api_key={Program.Config["Wordnik"]}")).Result;
 
-                    tempDict = tempDict[0];
-                    await ReplyAsync($"__**{tempDict["word"]}**__\n\n``{tempDict["text"]}``");
+                dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
 
-                }
-                catch (Exception e)
-                {
-                    await Program.MopsLog(new LogMessage(LogSeverity.Error,"", $"", e));
-                }
+                tempDict = tempDict[0];
+                await ReplyAsync($"__**{tempDict["word"]}**__\n\n``{tempDict["text"]}``");
             }
         }
 
@@ -74,17 +70,9 @@ namespace MopsBot.Module
         {
             using (Context.Channel.EnterTypingState())
             {
-                try
-                {
-                    string query = Task.Run(() => GetURLAsync($"https://translate.googleapis.com/translate_a/single?client=gtx&sl={srcLanguage}&tl={tgtLanguage}&dt=t&q={text}")).Result;
-                    dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
-                    await ReplyAsync(tempDict[0][0][0].ToString());
-                }
-                catch (Exception e)
-                {
-                    await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"", e));
-                    await ReplyAsync("Error happened");
-                }
+                string query = Task.Run(() => GetURLAsync($"https://translate.googleapis.com/translate_a/single?client=gtx&sl={srcLanguage}&tl={tgtLanguage}&dt=t&q={text}")).Result;
+                dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
+                await ReplyAsync(tempDict[0][0][0].ToString());
             }
         }
 
@@ -121,16 +109,29 @@ namespace MopsBot.Module
             return null;
         }
 
-        public static async Task<string> PostURLAsync(string URL, params KeyValuePair<string, string>[] headers)
+        public static async Task<string> PostURLAsync(string URL, string body = "", params KeyValuePair<string, string>[] headers)
         {
-            using (var response = await StaticBase.HttpClient.PostAsync(URL, new FormUrlEncodedContent(headers)))
+            if(FailedRequests >= 10 && SucceededRequests / FailedRequests < 1){
+                await Program.MopsLog(new LogMessage(LogSeverity.Warning, "HttpRequests", $"More Failed requests {FailedRequests} than succeeded ones {SucceededRequests}. Waiting"));
+                return "";
+            }
+
+            HttpRequestMessage test = new HttpRequestMessage(HttpMethod.Post, URL);
+            test.Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");
+            foreach(var header in headers)
+                test.Headers.TryAddWithoutValidation(header.Key, header.Value);
+
+            using (var response = await StaticBase.HttpClient.SendAsync(test))
             {
                 try
                 {
-                    return await response.Content.ReadAsStringAsync();
+                    string value = await response.Content.ReadAsStringAsync();
+                    SucceededRequests++;
+                    return value;
                 }
                 catch (Exception e)
                 {
+                    FailedRequests++;
                     await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"error for sending post request to {URL}", e.GetBaseException()));
                     throw e;
                 }
@@ -139,29 +140,45 @@ namespace MopsBot.Module
 
         public static async Task<string> GetURLAsync(string URL, params KeyValuePair<string, string>[] headers)
         {
-            using (var request = new HttpRequestMessage(HttpMethod.Get, URL))
+            if(FailedRequests >= 10 && SucceededRequests / FailedRequests < 1){
+                await Program.MopsLog(new LogMessage(LogSeverity.Warning, "HttpRequests", $"More Failed requests {FailedRequests} than succeeded ones {SucceededRequests}. Waiting"));
+                return "";
+            }
+
+            try
             {
-                try
+                using (var request = new HttpRequestMessage(HttpMethod.Get, URL))
                 {
-                    foreach(var kvp in headers)
+                    foreach (var kvp in headers)
                         request.Headers.TryAddWithoutValidation(kvp.Key, kvp.Value);
-                    var content = (await StaticBase.HttpClient.SendAsync(request)).Content;
-                    if(content?.Headers?.ContentType?.CharSet?.Contains("utf8") ?? false) 
-                        return System.Text.Encoding.UTF8.GetString(await content.ReadAsByteArrayAsync());
-                    else
-                        return await content.ReadAsStringAsync();
+                    using (var response = await StaticBase.HttpClient.SendAsync(request))
+                    {
+                        using (var content = response.Content)
+                        {
+                            string value = "";
+                            if (content?.Headers?.ContentType?.CharSet?.Contains("utf8") ?? false)
+                                value = System.Text.Encoding.UTF8.GetString(await content.ReadAsByteArrayAsync());
+                            else
+                                value = await content.ReadAsStringAsync();
+                            
+                            SucceededRequests++;
+                            return value;
+                        }
+                    }
                 }
-                catch (Exception e)
-                {
-                    if(!e.GetBaseException().Message.Contains("the remote party has closed the transport stream") && !e.GetBaseException().Message.Contains("The server returned an invalid or unrecognized response"))
-                        await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"error for sending request to {URL}", e.GetBaseException()));
-                    else if(e.GetBaseException().Message.Contains("the remote party has closed the transport stream"))
-                        await Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"Remote party closed the transport stream: {URL}."));
-                    else
-                        await Program.MopsLog(new LogMessage(LogSeverity.Debug, "", $"Osu API messed up again: {URL}"));
-                    throw e;
-                }
+            }
+            catch (Exception e)
+            {
+                FailedRequests++;
+                if (!e.GetBaseException().Message.Contains("the remote party has closed the transport stream") && !e.GetBaseException().Message.Contains("The server returned an invalid or unrecognized response"))
+                    await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"error for sending request to {URL}", e.GetBaseException()));
+                else if (e.GetBaseException().Message.Contains("the remote party has closed the transport stream"))
+                    await Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"Remote party closed the transport stream: {URL}."));
+                else
+                    await Program.MopsLog(new LogMessage(LogSeverity.Debug, "", $"Osu API messed up again: {URL}"));
+                throw e;
             }
         }
     }
 }
+

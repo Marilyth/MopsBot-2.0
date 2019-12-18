@@ -32,30 +32,6 @@ namespace MopsBot.Data.Tracker
         {
         }
 
-        public OverwatchTracker(Dictionary<string, string> args) : base(){
-            base.SetBaseValues(args, true);
-
-            //Check if Name ist valid
-            try{
-                new OverwatchTracker(Name).Dispose();
-                SetTimer();
-            } catch (Exception e){
-                this.Dispose();
-                throw e;
-            }
-
-            if(StaticBase.Trackers[TrackerType.Overwatch].GetTrackers().ContainsKey(Name)){
-                this.Dispose();
-
-                args["Id"] = Name;
-                var curTracker = StaticBase.Trackers[TrackerType.Overwatch].GetTrackers()[Name];
-                curTracker.ChannelMessages[ulong.Parse(args["Channel"].Split(":")[1])] = args["Notification"];
-                StaticBase.Trackers[TrackerType.Overwatch].UpdateContent(new Dictionary<string, Dictionary<string, string>>{{"NewValue", args}, {"OldValue", args}}).Wait();
-
-                throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
-            }
-        }
-
         public OverwatchTracker(string OWName) : base()
         {
             Name = OWName;
@@ -73,7 +49,7 @@ namespace MopsBot.Data.Tracker
                 catch (Exception e)
                 {
                     Dispose();
-                    throw new Exception($"Player {TrackerUrl()} could not be found on Overwatch!\nPerhaps the profile is private?");
+                    throw new Exception($"Player {TrackerUrl()} could not be found on Overwatch!\nPerhaps the profile is private?", e);
                 }
             }
         }
@@ -108,7 +84,7 @@ namespace MopsBot.Data.Tracker
                 {
                     StatGraph = new DatePlot(Name, "Date", "Level", "dd-MMM", false);
                     StatGraph.AddValue("Level", await OverallStats.GetLevelAsync(Name), relative: false);
-                    await StaticBase.Trackers[TrackerType.Overwatch].UpdateDBAsync(this);
+                    await UpdateTracker();
                 }
 
                 if (information == null)
@@ -125,13 +101,13 @@ namespace MopsBot.Data.Tracker
                     StatGraph.AddValue("Level", StatGraph.PlotDataPoints.Last().Value.Value, relative: false);
                     StatGraph.AddValue("Level", await OverallStats.GetLevelAsync(Name), relative: false);
 
-                    foreach (ulong channel in ChannelMessages.Keys.ToList())
+                    foreach (ulong channel in ChannelConfig.Keys.ToList())
                     {
-                        await OnMajorChangeTracked(channel, createEmbed(newInformation, changedStats, getSessionMostPlayed(information.getNotNull().heroes.playtime, newInformation.getNotNull().heroes.playtime)), ChannelMessages[channel]);
+                        await OnMajorChangeTracked(channel, createEmbed(newInformation, changedStats, getSessionMostPlayed(information.getNotNull().heroes.playtime, newInformation.getNotNull().heroes.playtime)), (string)ChannelConfig[channel]["Notification"]);
                     }
 
                     information = newInformation;
-                    await StaticBase.Trackers[TrackerType.Overwatch].UpdateDBAsync(this);
+                    await UpdateTracker();
                 }
             }
             catch (Exception e)
@@ -379,6 +355,10 @@ namespace MopsBot.Data.Tracker
         public override string TrackerUrl()
         {
             return "https://playoverwatch.com/en-us/career/pc/eu/" + Name;
+        }
+
+        public override async Task UpdateTracker(){
+            await StaticBase.Trackers[TrackerType.Overwatch].UpdateDBAsync(this);
         }
     }
 }

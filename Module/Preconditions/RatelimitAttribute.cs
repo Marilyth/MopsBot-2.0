@@ -115,7 +115,7 @@ namespace MopsBot.Module.Preconditions{
         }
 
         public override string ToString(){
-            return $"Can be used {_invokeLimit}x within {_invokeLimitPeriod}\n";
+            return $"Can be used {_invokeLimit}x within {_invokeLimitPeriod}";
         }
 
         public sealed class CommandTimeout

@@ -25,38 +25,6 @@ namespace MopsBot.Data.Tracker
         {
         }
 
-        public RSSTracker(Dictionary<string, string> args) : base()
-        {
-            base.SetBaseValues(args, true);
-
-            //Check if Name ist valid
-            try
-            {
-                var test = new RSSTracker(Name);
-                test.Dispose();
-                LastFeed = test.LastFeed;
-                LastTitle = test.LastTitle;
-                SetTimer();
-            }
-            catch (Exception e)
-            {
-                this.Dispose();
-                throw e;
-            }
-
-            if (StaticBase.Trackers[TrackerType.RSS].GetTrackers().ContainsKey(Name))
-            {
-                this.Dispose();
-
-                args["Id"] = Name;
-                var curTracker = StaticBase.Trackers[TrackerType.RSS].GetTrackers()[Name];
-                curTracker.ChannelMessages[ulong.Parse(args["Channel"].Split(":")[1])] = args["Notification"];
-                StaticBase.Trackers[TrackerType.RSS].UpdateContent(new Dictionary<string, Dictionary<string, string>> { { "NewValue", args }, { "OldValue", args } }).Wait();
-
-                throw new ArgumentException($"Tracker for {args["_Name"]} existed already, updated instead!");
-            }
-        }
-
         public RSSTracker(string url) : base()
         {
             Name = url;
@@ -78,14 +46,20 @@ namespace MopsBot.Data.Tracker
             catch (Exception e)
             {
                 Dispose();
-                throw new Exception($"The url did not provide any valid data!\nIs it an RSS feed?");
+                throw new Exception($"The url did not provide any valid data!\nIs it an RSS feed?", e);
             }
+        }
+
+        public override void PostInitialisation(object info = null)
+        {
+            SetTimer(1800000);
         }
 
         protected async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
             {
+                await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"{Name} RSS is getting checked."));
                 var feed = await getFeed();
                 List<SyndicationItem> feedItems;
                 if(LastFeed != null){
@@ -98,14 +72,14 @@ namespace MopsBot.Data.Tracker
                 {
                     if(LastFeed != null) LastFeed = feedItems.Last().PublishDate.UtcDateTime;
                     else LastTitle = feedItems.Last().Title?.Text;
-                    await StaticBase.Trackers[TrackerType.RSS].UpdateDBAsync(this);
+                    await UpdateTracker();
                 }
 
                 foreach (var newFeed in feedItems)
                 {
-                    foreach (ulong channel in ChannelMessages.Keys.ToList())
+                    foreach (ulong channel in ChannelConfig.Keys.ToList())
                     {
-                        await OnMajorChangeTracked(channel, createEmbed(newFeed, feed), ChannelMessages[channel]);
+                        await OnMajorChangeTracked(channel, createEmbed(newFeed, feed), (string)ChannelConfig[channel]["Notification"]);
                     }
                 }
 
@@ -121,7 +95,7 @@ namespace MopsBot.Data.Tracker
             return await FetchRSSData(Name);
         }
 
-        private Embed createEmbed(SyndicationItem feedItem, SyndicationFeed parent)
+        private static Embed createEmbed(SyndicationItem feedItem, SyndicationFeed parent)
         {
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(255, 255, 255);
@@ -146,7 +120,7 @@ namespace MopsBot.Data.Tracker
 
             e.ThumbnailUrl = parent.ImageUrl?.AbsoluteUri;
 
-            e.Description = (new string(HtmlToPlainText(feedItem.Summary?.Text ?? "", out string htmlImage).Take(Math.Min(2000, feedItem.Summary.Text.Length)).ToArray()));
+            e.Description = (new string(HtmlToPlainText(feedItem.Summary?.Text ?? "", out string htmlImage).Take(Math.Min(2000, feedItem.Summary?.Text?.Length ?? 0)).ToArray()));
             e.ImageUrl = !string.IsNullOrEmpty(htmlImage) ? htmlImage : feedItem.Links?.FirstOrDefault(x => isImageUrl(x.Uri?.AbsoluteUri ?? ""))?.Uri?.AbsoluteUri;
             if (e.Description.Length >= 2000) e.Description += " [...]";
 
@@ -194,6 +168,19 @@ namespace MopsBot.Data.Tracker
             text = stripFormattingRegex.Replace(text, string.Empty);
 
             return text;
+        }
+
+        public static async Task<Embed> GetFeed(string url){
+            var data = await FetchRSSData(url);
+            return createEmbed(data.Items.First(), data);
+        }
+
+        public override string TrackerUrl(){
+            return Name;
+        }
+
+        public override async Task UpdateTracker(){
+            await StaticBase.Trackers[TrackerType.RSS].UpdateDBAsync(this);
         }
 
         public new struct ContentScope

@@ -20,6 +20,7 @@ namespace MopsBot.Data.Tracker
     {
         public long SteamId, LastCheck;
         public string CurrentGame;
+        public static readonly string GAMECONFIG = "NotifyOnGameChange", ACHIEVEMENTCONFIG = "NotifyOnAchievement";
 
         public SteamTracker() : base()
         {
@@ -32,15 +33,24 @@ namespace MopsBot.Data.Tracker
             {
                 Name = name;
                 var success = long.TryParse(name, out SteamId);
-                if(!success) SteamId = GetUserSIDAsync(name).Result;
-                if(IsProfilePrivate().Result) throw new Exception();
+                if (!success) SteamId = GetUserSIDAsync(name).Result;
+                if (IsProfilePrivate().Result) throw new Exception();
                 LastCheck = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
                 SetTimer(600000);
             }
             catch (Exception e)
             {
-                throw new Exception($"Could not resolve {name}.\nMake sure your **Game Details** are public, then retry in about 10 minutes");
+                throw new Exception($"Could not resolve {name}.\nMake sure your **Game Details** are public, then retry in about 10 minutes", e);
             }
+        }
+
+        public async override void PostChannelAdded(ulong channelId)
+        {
+            base.PostChannelAdded(channelId);
+            ChannelConfig[channelId][GAMECONFIG] = true;
+            ChannelConfig[channelId][ACHIEVEMENTCONFIG] = true;
+
+            await UpdateTracker();
         }
 
         protected async override void CheckForChange_Elapsed(object sender)
@@ -51,12 +61,13 @@ namespace MopsBot.Data.Tracker
                 if (summary.gameid != CurrentGame)
                 {
                     await CheckForNewAchievements(null, CurrentGame, false);
+                    CompleteAchievementsCache = null;
                     CurrentGame = summary.gameid;
-                    if(CurrentGame == null) LastCheck = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                    await StaticBase.Trackers[TrackerType.Steam].UpdateDBAsync(this);
-                    foreach (var channel in ChannelMessages)
+                    if (CurrentGame == null) LastCheck = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                    await UpdateTracker();
+                    foreach (var channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][GAMECONFIG]))
                     {
-                        await OnMinorChangeTracked(channel.Key, summary.personaname + $" is now playing **{summary.gameextrainfo ?? "Nothing"}**");
+                        await OnMinorChangeTracked(channel, summary.personaname + $" is now playing **{summary.gameextrainfo ?? "Nothing"}**");
                     }
                 }
 
@@ -86,16 +97,18 @@ namespace MopsBot.Data.Tracker
             {
                 var achievements = await GetCompleteAchievements(gameId);
                 var achievedCount = achievements.Count(x => x.achieved == 1);
-                var newAchievements = achievements.TakeWhile(x => x.unlocktime > LastCheck);
+                var newAchievements = achievements.TakeWhile(x => x.unlocktime > LastCheck).OrderBy(x => x.unlocktime);
+                int curAchievementIndex = achievedCount - (newAchievements.Count() - 1);
                 foreach (var achievement in newAchievements)
                 {
-                    foreach (var channel in ChannelMessages)
+                    var embed = CreateAchievementEmbed(achievement, summary, achievements.Count, curAchievementIndex++);
+                    foreach (var channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][ACHIEVEMENTCONFIG]))
                     {
-                        await OnMajorChangeTracked(channel.Key, CreateAchievementEmbed(achievement, summary, achievements.Count, achievedCount), channel.Value);
+                        await OnMajorChangeTracked(channel, embed, (string)ChannelConfig[channel]["Notification"]);
                     }
                 }
                 if (setLastCheck) LastCheck = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                await StaticBase.Trackers[TrackerType.Steam].UpdateDBAsync(this);
+                await UpdateTracker();
             }
         }
 
@@ -118,7 +131,7 @@ namespace MopsBot.Data.Tracker
             footer.Text = "Steam";
             e.Footer = footer;
 
-            e.AddField($"{achievement.displayName}", achievement.description ?? "No description", true);
+            e.AddField($"{achievement.displayName}", String.IsNullOrEmpty(achievement.description) ? "No description" : achievement.description, true);
             e.AddField("Rarity", Math.Round(achievement.percent, 2) + "%", true);
             e.WithThumbnailUrl(achievement.icon);
             e.WithImageUrl($"https://steamcdn-a.akamaihd.net/steam/apps/{summary.gameid}/header.jpg");
@@ -126,39 +139,59 @@ namespace MopsBot.Data.Tracker
             return e.Build();
         }
 
+        public List<Achievement> CompleteAchievementsCache;
         public async Task<List<Achievement>> GetCompleteAchievements(string gameId)
         {
-            try{
-                var gAchievements = await GetGameAchievements(gameId);
-                var percAchievements = await GetGameAchievementPercentage(gameId);
+            try
+            {
+                var completeAchievements = CompleteAchievementsCache ?? new List<Achievement>();
                 var userAchievements = await GetUserAchievementsAsync(gameId);
-                var completeAchievements = new List<Achievement>();
 
-                foreach (var curAchievement in userAchievements)
+                if (CompleteAchievementsCache != null)
                 {
-                    var name = curAchievement.apiname;
-                    var percent = percAchievements.FirstOrDefault(x => x.name.Equals(name))?.percent ?? 0;
-                    var gAchievement = gAchievements.FirstOrDefault(x => x.name.Equals(name));
-
-                    completeAchievements.Add(new Achievement()
+                    foreach (var curAchievement in userAchievements.Where(x => x.unlocktime > LastCheck))
                     {
-                        achieved = curAchievement.achieved,
-                        apiname = curAchievement.apiname,
-                        unlocktime = curAchievement.unlocktime,
-                        percent = percent,
-                        description = gAchievement.description,
-                        defaultvalue = gAchievement.defaultvalue,
-                        displayName = gAchievement.displayName,
-                        icon = gAchievement.icon,
-                        icongray = gAchievement.icongray,
-                        name = gAchievement.name,
-                        hidden = gAchievement.hidden
-                    });
+                        var toChange = completeAchievements.First(x => x.apiname.Equals(curAchievement.apiname));
+                        toChange.achieved = curAchievement.achieved;
+                        toChange.unlocktime = curAchievement.unlocktime;
+                    }
                 }
 
+                else
+                {
+                    var gAchievements = await GetGameAchievements(gameId);
+                    var percAchievements = await GetGameAchievementPercentage(gameId);
+
+                    foreach (var curAchievement in userAchievements)
+                    {
+                        var name = curAchievement.apiname;
+                        var percent = percAchievements.FirstOrDefault(x => x.name.Equals(name))?.percent ?? 0;
+                        var gAchievement = gAchievements.FirstOrDefault(x => x.name.Equals(name));
+
+                        completeAchievements.Add(new Achievement()
+                        {
+                            achieved = curAchievement.achieved,
+                            apiname = curAchievement.apiname,
+                            unlocktime = curAchievement.unlocktime,
+                            percent = percent,
+                            description = gAchievement.description,
+                            defaultvalue = gAchievement.defaultvalue,
+                            displayName = gAchievement.displayName,
+                            icon = gAchievement.icon,
+                            icongray = gAchievement.icongray,
+                            name = gAchievement.name,
+                            hidden = gAchievement.hidden
+                        });
+                    }
+                }
+
+                CompleteAchievementsCache = completeAchievements;
                 return completeAchievements.OrderByDescending(x => x.unlocktime).ToList();
-            } catch(Exception e){
+            }
+            catch (Exception e)
+            {
                 //Game had no stats, probably
+                await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $" error by {Name}", e));
                 return new List<Achievement>();
             }
         }
@@ -168,7 +201,8 @@ namespace MopsBot.Data.Tracker
             return (await FetchJSONDataAsync<GameStats>($"http://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v2/?appid={gameId}&key={Program.Config["Steam"]}")).game.availableGameStats.achievements;
         }
 
-        public async Task<bool> IsProfilePrivate(){
+        public async Task<bool> IsProfilePrivate()
+        {
             var response = await MopsBot.Module.Information.GetURLAsync($"https://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v1/?steamid={SteamId}&appid=736260&key={Program.Config["Steam"]}");
             return response.Contains("Profile is not public");
         }
@@ -198,8 +232,13 @@ namespace MopsBot.Data.Tracker
             return long.Parse((await FetchJSONDataAsync<Vanity>($"https://api.steampowered.com/ISteamUser/ResolveVanityURL/v1/?vanityurl={username}&key={Program.Config["Steam"]}")).response.steamid);
         }
 
-        public override string TrackerUrl(){
+        public override string TrackerUrl()
+        {
             return $"https://steamcommunity.com/profiles/{SteamId}";
+        }
+
+        public override async Task UpdateTracker(){
+            await StaticBase.Trackers[TrackerType.Steam].UpdateDBAsync(this);
         }
     }
 }
