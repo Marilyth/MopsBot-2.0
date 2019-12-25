@@ -197,7 +197,7 @@ namespace MopsBot.Data.Interactive
 
                 for (int i = 0; i < winnerCount; i++)
                 {
-                    var index = Giveaways[message.Channel.Id][message.Id].Count > 1 ? StaticBase.ran.Next(1, Giveaways[message.Channel.Id][message.Id].Count) : 0;
+                    var index = StaticBase.ran.Next(0, Giveaways[message.Channel.Id][message.Id].Count);
 
                     ulong winnerId = Giveaways[message.Channel.Id][message.Id][index];
 
