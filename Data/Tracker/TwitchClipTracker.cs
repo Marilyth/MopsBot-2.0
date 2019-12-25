@@ -28,7 +28,6 @@ namespace MopsBot.Data.Tracker
         {
             Name = streamerName;
             TrackedClips = new Dictionary<DateTime, KeyValuePair<int, double>>();
-            ViewThreshold = 2;
 
             try
             {
@@ -46,26 +45,11 @@ namespace MopsBot.Data.Tracker
         public async override void PostChannelAdded(ulong channelId)
         {
             base.PostChannelAdded(channelId);
-            ChannelConfig[channelId][VIEWTHRESHOLD] = ViewThreshold;
+            ChannelConfig[channelId][VIEWTHRESHOLD] = 2;
 
             await UpdateTracker();
         }
-
-        public override async void Conversion(object obj = null)
-        {
-            bool save = false;
-            foreach (var channel in ChannelConfig.Keys.ToList())
-            {
-                if (ViewThreshold > (uint)ChannelConfig[channel][VIEWTHRESHOLD])
-                {
-                    ChannelConfig[channel][VIEWTHRESHOLD] = ViewThreshold;
-                    save = true;
-                }
-            }
-            if (save)
-                await UpdateTracker();
-        }
-
+        
         protected async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
