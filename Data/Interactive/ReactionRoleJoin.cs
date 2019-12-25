@@ -244,22 +244,29 @@ namespace MopsBot.Data.Interactive
             });
         }
 
+        bool updating = false;
         private async Task updateMessage(IUserMessage message, SocketRole role)
         {
-            var e = message.Embeds.First().ToEmbedBuilder();
-
-            e.Color = role.Color;
-            e.Title = e.Title.Contains("Einladung") ? $"{role.Name} Einladung :{role.Id}" : $"{role.Name} Role Invite :{role.Id}";
-            foreach (EmbedFieldBuilder field in e.Fields)
+            if (!updating)
             {
-                if (field.Name.Equals("Members in role") || field.Name.Equals("Mitgliederanzahl der Rolle"))
-                    field.Value = role.Members.Count();
+                updating = true;
+                await Task.Delay(10000);
+                var e = message.Embeds.First().ToEmbedBuilder();
+
+                e.Color = role.Color;
+                e.Title = e.Title.Contains("Einladung") ? $"{role.Name} Einladung :{role.Id}" : $"{role.Name} Role Invite :{role.Id}";
+                foreach (EmbedFieldBuilder field in e.Fields)
+                {
+                    if (field.Name.Equals("Members in role") || field.Name.Equals("Mitgliederanzahl der Rolle"))
+                        field.Value = role.Members.Count();
+                }
+
+                await message.ModifyAsync(x =>
+                {
+                    x.Embed = e.Build();
+                });
+                updating = false;
             }
-
-            await message.ModifyAsync(x =>
-            {
-                x.Embed = e.Build();
-            });
         }
 
         public async Task<List<KeyValuePair<ulong, ulong>>> TryPruneAsync(bool testing = true)

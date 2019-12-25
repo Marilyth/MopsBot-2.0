@@ -182,17 +182,24 @@ namespace MopsBot.Data.Interactive
             });
         }
 
+        bool updating = false;
         private async Task updateMessage(IUserMessage message, Poll poll)
         {
-            var e = message.Embeds.First().ToEmbedBuilder();
-
-            e.WithImageUrl(poll.GetChartURI());
-
-
-            await message.ModifyAsync(x =>
+            if (!updating)
             {
-                x.Embed = e.Build();
-            });
+                updating = true;
+                await Task.Delay(10000);
+                var e = message.Embeds.First().ToEmbedBuilder();
+
+                e.WithImageUrl(poll.GetChartURI());
+
+
+                await message.ModifyAsync(x =>
+                {
+                    x.Embed = e.Build();
+                });
+                updating = false;
+            }
         }
 
         public async Task<List<KeyValuePair<ulong, ulong>>> TryPruneAsync(bool testing = true)

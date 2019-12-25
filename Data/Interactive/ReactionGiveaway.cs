@@ -182,9 +182,9 @@ namespace MopsBot.Data.Interactive
         {
             if (userId.Equals(Giveaways[message.Channel.Id][message.Id].First()))
             {
-                await Program.ReactionHandler.ClearHandler(message);
                 var limit = message.Reactions[new Emoji("✅")].ReactionCount;
-                var participants = await message.GetReactionUsersAsync(new Emoji("✅"), limit).FlattenAsync();
+                var participants = message.GetReactionUsersAsync(new Emoji("✅"), limit).FlattenAsync().Result.Where(x => !x.IsBot);
+                await Program.ReactionHandler.ClearHandler(message);
 
                 int.TryParse(message.Embeds.First().Title.Split("x")[0], out int winnerCount);
                 string winnerDescription = "";
@@ -208,6 +208,9 @@ namespace MopsBot.Data.Interactive
                     Giveaways[message.Channel.Id][message.Id].RemoveAt(index);
                 }
 
+                if(string.IsNullOrEmpty(winnerDescription))
+                    winnerDescription = "No winners could be drawn.";
+                    
                 await message.Channel.SendMessageAsync(winnerDescription);
 
                 var embed = message.Embeds.First().ToEmbedBuilder().WithDescription(winnerDescription);
