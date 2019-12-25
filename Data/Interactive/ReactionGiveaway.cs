@@ -241,20 +241,21 @@ namespace MopsBot.Data.Interactive
                 e.Color = new Color(100, 100, 0);
 
                 var participants = message.GetReactionUsersAsync(new Emoji("✅"), message.Reactions[new Emoji("✅")].ReactionCount).FlattenAsync().Result.Where(x => !x.IsBot);
+                var participantsCount = participants.Count();
                 foreach (EmbedFieldBuilder field in e.Fields)
                 {
                     if (field.Name.Equals("Participants"))
-                        field.Value = Giveaways[message.Channel.Id][message.Id].Count - 1;
+                        field.Value = participantsCount;
                     else
                     {
                         int.TryParse(message.Embeds.First().Title.Split("x")[0], out int winnerCount);
 
                         if (winnerCount == 0) winnerCount = 1;
-                        if (winnerCount > participants.Count()) winnerCount = participants.Count();
+                        if (winnerCount > participantsCount) winnerCount = participantsCount;
 
                         double probability = 1;
-                        if (participants.Count() != 0)
-                            probability = (1.0 / participants.Count()) * winnerCount;
+                        if (participantsCount != 0)
+                            probability = (1.0 / participantsCount) * winnerCount;
 
                         field.Value = Math.Round(probability * 100, 2) + "%";
                     }
