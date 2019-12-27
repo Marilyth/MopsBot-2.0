@@ -236,6 +236,7 @@ namespace MopsBot.Data.Interactive
             {
                 updating = true;
                 await Task.Delay(10000);
+                updating = false;
                 var e = message.Embeds.First().ToEmbedBuilder();
 
                 e.Color = new Color(100, 100, 0);
@@ -265,7 +266,6 @@ namespace MopsBot.Data.Interactive
                 {
                     x.Embed = e.Build();
                 });
-                updating = false;
             }
         }
 

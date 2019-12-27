@@ -228,20 +228,26 @@ namespace MopsBot.Data.Interactive
 
         private async Task updateMessage(ReactionHandlerContext context, SocketRole role)
         {
-            var e = context.Message.Embeds.First().ToEmbedBuilder();
-
-            e.Color = role.Color;
-            e.Title = e.Title.Contains("Einladung") ? $"{role.Name} Einladung :{role.Id}" : $"{role.Name} Role Invite :{role.Id}";
-            foreach (EmbedFieldBuilder field in e.Fields)
+            if (!updating)
             {
-                if (field.Name.Equals("Members in role") || field.Name.Equals("Mitgliederanzahl der Rolle"))
-                    field.Value = role.Members.Count();
+                updating = true;
+                await Task.Delay(10000);
+                updating = false;
+                var e = context.Message.Embeds.First().ToEmbedBuilder();
+
+                e.Color = role.Color;
+                e.Title = e.Title.Contains("Einladung") ? $"{role.Name} Einladung :{role.Id}" : $"{role.Name} Role Invite :{role.Id}";
+                foreach (EmbedFieldBuilder field in e.Fields)
+                {
+                    if (field.Name.Equals("Members in role") || field.Name.Equals("Mitgliederanzahl der Rolle"))
+                        field.Value = role.Members.Count();
+                }
+
+                await context.Message.ModifyAsync(x =>
+                {
+                    x.Embed = e.Build();
+                });
             }
-
-            await context.Message.ModifyAsync(x =>
-            {
-                x.Embed = e.Build();
-            });
         }
 
         bool updating = false;
@@ -251,6 +257,7 @@ namespace MopsBot.Data.Interactive
             {
                 updating = true;
                 await Task.Delay(10000);
+                updating = false;
                 var e = message.Embeds.First().ToEmbedBuilder();
 
                 e.Color = role.Color;
@@ -265,7 +272,6 @@ namespace MopsBot.Data.Interactive
                 {
                     x.Embed = e.Build();
                 });
-                updating = false;
             }
         }
 

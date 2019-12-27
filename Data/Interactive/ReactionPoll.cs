@@ -189,6 +189,7 @@ namespace MopsBot.Data.Interactive
             {
                 updating = true;
                 await Task.Delay(10000);
+                updating = false;
                 var e = message.Embeds.First().ToEmbedBuilder();
 
                 e.WithImageUrl(poll.GetChartURI());
@@ -198,7 +199,6 @@ namespace MopsBot.Data.Interactive
                 {
                     x.Embed = e.Build();
                 });
-                updating = false;
             }
         }
 
