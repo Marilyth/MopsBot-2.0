@@ -190,22 +190,22 @@ namespace MopsBot.Data.Interactive
                 string winnerDescription = "";
 
                 //Remove any duplicates to race-conditions
-                Giveaways[message.Channel.Id][message.Id] = participants.ToHashSet().Select(x => x.Id).ToList();
+                var participantsDraw = participants.ToHashSet().Select(x => x.Id).ToList();
 
                 if (winnerCount <= 0) winnerCount = 1;
-                if (winnerCount > Giveaways[message.Channel.Id][message.Id].Count) winnerCount = Giveaways[message.Channel.Id][message.Id].Count;
+                if (winnerCount > participantsDraw.Count) winnerCount = participantsDraw.Count;
 
                 for (int i = 0; i < winnerCount; i++)
                 {
-                    var index = StaticBase.ran.Next(0, Giveaways[message.Channel.Id][message.Id].Count);
+                    var index = StaticBase.ran.Next(0, participantsDraw.Count);
 
-                    ulong winnerId = Giveaways[message.Channel.Id][message.Id][index];
+                    ulong winnerId = participantsDraw[index];
 
                     IUser winner = await message.Channel.GetUserAsync(winnerId);
                     winnerDescription += $"{winner.Mention} won the "
                                        + $"`{message.Embeds.First().Title}`\n";
 
-                    Giveaways[message.Channel.Id][message.Id].RemoveAt(index);
+                    participantsDraw.RemoveAt(index);
                 }
 
                 if(string.IsNullOrEmpty(winnerDescription))
