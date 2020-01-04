@@ -34,17 +34,14 @@ namespace MopsBot.Module
             [RequireBotPermission(ChannelPermission.ReadMessageHistory)]
             [RequireUserPermission(ChannelPermission.ManageRoles)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.ApplyPerChannel)]
-            public async Task createInvite(SocketRole role, bool isGerman = false)
+            public async Task createInvite(SocketRole role, [Remainder]string description = "DEFAULT")
             {
                 using (Context.Channel.EnterTypingState())
                 {
                     var highestRole = ((SocketGuildUser)await Context.Guild.GetCurrentUserAsync()).Roles.OrderByDescending(x => x.Position).First();
-
+                    if(description.Equals("DEFAULT")) description = "To join/leave the " + (role.IsMentionable ? role.Mention : $"**{role.Name}**") + " role, add/remove the ✅ Icon below this message!\n" + "If you can manage Roles, you may delete this invitation by pressing the 🗑 Icon";
                     if (role != null && role.Position < highestRole.Position)
-                        if (isGerman)
-                            await StaticBase.ReactRoleJoin.AddInviteGerman((ITextChannel)Context.Channel, role);
-                        else
-                            await StaticBase.ReactRoleJoin.AddInvite((ITextChannel)Context.Channel, role);
+                        await StaticBase.ReactRoleJoin.AddInvite((ITextChannel)Context.Channel, role, description);
                     else
                         await ReplyAsync($"**Error**: Role `{role.Name}` could either not be found, or was beyond Mops' permissions.");
                 }

@@ -182,14 +182,16 @@ namespace MopsBot.Data.Interactive
             });
         }
 
-        bool updating = false;
+        private Dictionary<ulong, bool> updating = new Dictionary<ulong, bool>();
         private async Task updateMessage(IUserMessage message, Poll poll)
         {
-            if (!updating)
+            if(!updating.ContainsKey(message.Id)) updating.Add(message.Id, false);
+
+            if (!updating[message.Id])
             {
-                updating = true;
+                updating[message.Id] = true;
                 await Task.Delay(10000);
-                updating = false;
+                updating[message.Id] = false;
                 var e = message.Embeds.First().ToEmbedBuilder();
 
                 e.WithImageUrl(poll.GetChartURI());

@@ -229,14 +229,16 @@ namespace MopsBot.Data.Interactive
             }
         }
 
-        private bool updating = false;
+        private Dictionary<ulong, bool> updating = new Dictionary<ulong, bool>();
         private async Task updateMessage(IUserMessage message)
         {
-            if (!updating)
+            if(!updating.ContainsKey(message.Id)) updating.Add(message.Id, false);
+
+            if (!updating[message.Id])
             {
-                updating = true;
+                updating[message.Id] = true;
                 await Task.Delay(10000);
-                updating = false;
+                updating[message.Id] = false;
                 var e = message.Embeds.First().ToEmbedBuilder();
 
                 e.Color = new Color(100, 100, 0);
