@@ -230,13 +230,20 @@ namespace MopsBot
 
             if (commandName != null)
             {
-                CommandInfo curCommand = commands.Commands.First(x => x.Name.ToLower().Equals(commandName) && (moduleNames.Length > 0 ? x.Module.Name.ToLower().Equals(moduleNames.LastOrDefault()) : true));
+                var matches = commands.Commands.Where(x => x.Name.ToLower().Equals(commandName) && (moduleNames.Length > 0 ? x.Module.Name.ToLower().Equals(moduleNames.LastOrDefault()) : true));
 
-                if (curCommand.Summary.Equals(""))
+                if(matches.Count() > 1){
+                    throw new Exception($"Multiple commands found, please specify between:\n```{String.Join("\n", matches.Select(x => CommandToString(x)))}```");
+                }
+
+                CommandInfo curCommand = matches.FirstOrDefault();
+
+                if (curCommand?.Summary.Equals("") ?? true)
                 {
                     throw new Exception("Command not found");
                 }
-                output += $"`{prefix}{string.Join(" ", moduleNames.Append(curCommand.Name))}";
+
+                output += $"`{prefix}{CommandToString(curCommand)}";
 
                 foreach (Discord.Commands.ParameterInfo p in curCommand.Parameters)
                 {
@@ -267,7 +274,7 @@ namespace MopsBot
                     }
                 }
 
-                e = createHelpEmbed($"{string.Join(" ", moduleNames.Append(curCommand.Name))}", output, curCommand.Summary, e, preconditions);
+                e = createHelpEmbed($"{CommandToString(curCommand)}", output, curCommand.Summary, e, preconditions);
                 // if(curCommand.Parameters.Any(x=> x.IsOptional)){
                 //     output +="\n\n**Default Values**:";
                 //     foreach(var p in curCommand.Parameters.Where(x=>x.IsOptional))
@@ -293,6 +300,17 @@ namespace MopsBot
                 e.AddField($"**{module.Name}**", moduleInformation);
             }
             return e;
+        }
+
+        public static string CommandToString(CommandInfo c){
+            string output = c.Name;
+            ModuleInfo module = c.Module;
+            while(module?.IsSubmodule ?? false){
+                output = module.Name + " " + output;
+                module = module.Parent;
+            }
+
+            return output;
         }
 
         public static string GetCommandHelpImage(string command)
