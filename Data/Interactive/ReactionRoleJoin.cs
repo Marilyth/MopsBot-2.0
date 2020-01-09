@@ -104,44 +104,11 @@ namespace MopsBot.Data.Interactive
             await StaticBase.Database.GetCollection<MongoKVP<ulong, HashSet<ulong>>>(this.GetType().Name).DeleteOneAsync(x => x.Key == key);
         }
 
-        public async Task AddInviteGerman(ITextChannel channel, SocketRole role)
-        {
-            EmbedBuilder e = new EmbedBuilder();
-            e.Title = role.Name + $" Einladung :{role.Id}";
-            e.Description = $"Um der Rolle " + (role.IsMentionable ? role.Mention : $"**{role.Name}**") + " beizutreten, oder sie zu verlassen, füge bitte das ✅ Icon unter dieser Nachricht hinzu, oder entferne es!\n" +
-                            "Falls du die Manage Role Permission besitzt, kannst du diese Einladung mit einem Druck auf den 🗑 Icon löschen.";
-            e.Color = role.Color;
-
-            var author = new EmbedAuthorBuilder();
-            e.AddField("Mitgliederanzahl der Rolle", role.Members.Count(), true);
-
-            var message = await channel.SendMessageAsync(embed: e.Build());
-
-            var join = new Tuple<IEmote, Func<ReactionHandlerContext, Task>, bool>(new Emoji("✅"), JoinRole, false);
-            var leave = new Tuple<IEmote, Func<ReactionHandlerContext, Task>, bool>(new Emoji("✅"), LeaveRole, true);
-            var delete = new Tuple<IEmote, Func<ReactionHandlerContext, Task>, bool>(new Emoji("🗑"), DeleteInvite, false);
-
-            await Program.ReactionHandler.AddHandlers(message, join, leave, delete);
-
-            if (RoleInvites.ContainsKey(channel.Id))
-            {
-                RoleInvites[channel.Id].Add(message.Id);
-                await UpdateDBAsync(channel.Id);
-            }
-            else
-            {
-                RoleInvites.Add(channel.Id, new HashSet<ulong>());
-                RoleInvites[channel.Id].Add(message.Id);
-                await InsertIntoDBAsync(channel.Id);
-            }
-        }
-
-        public async Task AddInvite(ITextChannel channel, SocketRole role)
+        public async Task AddInvite(ITextChannel channel, SocketRole role, string description)
         {
             EmbedBuilder e = new EmbedBuilder();
             e.Title = role.Name + $" Role Invite :{role.Id}";
-            e.Description = $"To join/leave the " + (role.IsMentionable ? role.Mention : $"**{role.Name}**") + " role, add/remove the ✅ Icon below this message!\n" +
-                            "If you can manage Roles, you may delete this invitation by pressing the 🗑 Icon.";
+            e.Description = description;
             e.Color = role.Color;
 
             var author = new EmbedAuthorBuilder();
@@ -226,38 +193,23 @@ namespace MopsBot.Data.Interactive
             }
         }
 
-        private async Task updateMessage(ReactionHandlerContext context, SocketRole role)
-        {
-            var e = context.Message.Embeds.First().ToEmbedBuilder();
-
-            e.Color = role.Color;
-            e.Title = e.Title.Contains("Einladung") ? $"{role.Name} Einladung :{role.Id}" : $"{role.Name} Role Invite :{role.Id}";
-            foreach (EmbedFieldBuilder field in e.Fields)
-            {
-                if (field.Name.Equals("Members in role") || field.Name.Equals("Mitgliederanzahl der Rolle"))
-                    field.Value = role.Members.Count();
-            }
-
-            await context.Message.ModifyAsync(x =>
-            {
-                x.Embed = e.Build();
-            });
-        }
-
-        bool updating = false;
+        private Dictionary<ulong, bool> updating = new Dictionary<ulong, bool>();
         private async Task updateMessage(IUserMessage message, SocketRole role)
         {
-            if (!updating)
+            if(!updating.ContainsKey(message.Id)) updating.Add(message.Id, false);
+
+            if (!updating[message.Id])
             {
-                updating = true;
+                updating[message.Id] = true;
                 await Task.Delay(10000);
+                updating[message.Id] = false;
                 var e = message.Embeds.First().ToEmbedBuilder();
 
                 e.Color = role.Color;
-                e.Title = e.Title.Contains("Einladung") ? $"{role.Name} Einladung :{role.Id}" : $"{role.Name} Role Invite :{role.Id}";
+                e.Title = $"{role.Name} Role Invite :{role.Id}";
                 foreach (EmbedFieldBuilder field in e.Fields)
                 {
-                    if (field.Name.Equals("Members in role") || field.Name.Equals("Mitgliederanzahl der Rolle"))
+                    if (field.Name.Equals("Members in role"))
                         field.Value = role.Members.Count();
                 }
 
@@ -265,7 +217,6 @@ namespace MopsBot.Data.Interactive
                 {
                     x.Embed = e.Build();
                 });
-                updating = false;
             }
         }
 

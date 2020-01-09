@@ -190,22 +190,22 @@ namespace MopsBot.Data.Interactive
                 string winnerDescription = "";
 
                 //Remove any duplicates to race-conditions
-                Giveaways[message.Channel.Id][message.Id] = participants.ToHashSet().Select(x => x.Id).ToList();
+                var participantsDraw = participants.ToHashSet().Select(x => x.Id).ToList();
 
                 if (winnerCount <= 0) winnerCount = 1;
-                if (winnerCount > Giveaways[message.Channel.Id][message.Id].Count) winnerCount = Giveaways[message.Channel.Id][message.Id].Count;
+                if (winnerCount > participantsDraw.Count) winnerCount = participantsDraw.Count;
 
                 for (int i = 0; i < winnerCount; i++)
                 {
-                    var index = StaticBase.ran.Next(0, Giveaways[message.Channel.Id][message.Id].Count);
+                    var index = StaticBase.ran.Next(0, participantsDraw.Count);
 
-                    ulong winnerId = Giveaways[message.Channel.Id][message.Id][index];
+                    ulong winnerId = participantsDraw[index];
 
                     IUser winner = await message.Channel.GetUserAsync(winnerId);
                     winnerDescription += $"{winner.Mention} won the "
                                        + $"`{message.Embeds.First().Title}`\n";
 
-                    Giveaways[message.Channel.Id][message.Id].RemoveAt(index);
+                    participantsDraw.RemoveAt(index);
                 }
 
                 if(string.IsNullOrEmpty(winnerDescription))
@@ -229,13 +229,16 @@ namespace MopsBot.Data.Interactive
             }
         }
 
-        private bool updating = false;
+        private Dictionary<ulong, bool> updating = new Dictionary<ulong, bool>();
         private async Task updateMessage(IUserMessage message)
         {
-            if (!updating)
+            if(!updating.ContainsKey(message.Id)) updating.Add(message.Id, false);
+
+            if (!updating[message.Id])
             {
-                updating = true;
+                updating[message.Id] = true;
                 await Task.Delay(10000);
+                updating[message.Id] = false;
                 var e = message.Embeds.First().ToEmbedBuilder();
 
                 e.Color = new Color(100, 100, 0);
@@ -265,7 +268,6 @@ namespace MopsBot.Data.Interactive
                 {
                     x.Embed = e.Build();
                 });
-                updating = false;
             }
         }
 

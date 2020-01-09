@@ -22,7 +22,7 @@ namespace MopsBot.Module.TypeReader
             var module = command.Remove(0, prefix.Length).Split(" ").First(x => x.Length > 0);
             var worked = Enum.TryParse<TrackerType>(module, true, out TrackerType type);
             
-            if(!new List<TrackerType>{TrackerType.HTML, TrackerType.JSON, TrackerType.Overwatch, TrackerType.RSS, TrackerType.Youtube, TrackerType.YoutubeLive, TrackerType.GW2}.Any(x => x == type))
+            if(!new List<TrackerType>{TrackerType.HTML, TrackerType.Reddit, TrackerType.JSON, TrackerType.Overwatch, TrackerType.RSS, TrackerType.Youtube, TrackerType.YoutubeLive, TrackerType.GW2}.Any(x => x == type))
                 input = input.ToLower();
 
             var result = StaticBase.Trackers[type].GetTracker(context.Channel.Id, input);
