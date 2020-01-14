@@ -46,7 +46,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task unTrackTwitter(BaseTracker twitterUser)
             {
-                if (await Trackers[BaseTracker.TrackerType.Twitter].TryRemoveTrackerAsync(twitterUser.Name, Context.Channel.Id))
+                if (await Trackers[BaseTracker.TrackerType.Twitter].TryRemoveTrackerAsync(twitterUser.Name, twitterUser.LastCalledChannelPerGuild[Context.Guild.Id]))
                     await ReplyAsync("Stopped keeping track of " + twitterUser.Name + "'s tweets!");
             }
 
@@ -63,7 +63,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task SetNotification(BaseTracker TwitterName, [Remainder]string notification = "")
             {
-                TwitterName.ChannelConfig[Context.Channel.Id]["Notification"] = notification;
+                TwitterName.GetLastCalledConfig(Context.Guild.Id)["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.Twitter].UpdateDBAsync(TwitterName);
                 await ReplyAsync($"Set notification for main tweets, for `{TwitterName.Name}`, to {notification}!");
             }
@@ -73,10 +73,11 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task SetNonMainNotification(BaseTracker TwitterName, [Remainder]string notification = "")
             {
-                TwitterName.ChannelConfig[Context.Channel.Id][TwitterTracker.REPLYNOTIFICATION] = notification;
-                TwitterName.ChannelConfig[Context.Channel.Id][TwitterTracker.RETWEETNOTIFICATION] = notification;
-                TwitterName.ChannelConfig[Context.Channel.Id][TwitterTracker.SHOWREPLIES] = true;
-                TwitterName.ChannelConfig[Context.Channel.Id][TwitterTracker.SHOWRETWEETS] = true;
+                var config = TwitterName.GetLastCalledConfig(Context.Guild.Id);
+                config[TwitterTracker.REPLYNOTIFICATION] = notification;
+                config[TwitterTracker.RETWEETNOTIFICATION] = notification;
+                config[TwitterTracker.SHOWREPLIES] = true;
+                config[TwitterTracker.SHOWRETWEETS] = true;
                 await StaticBase.Trackers[TrackerType.Twitter].UpdateDBAsync(TwitterName);
                 await ReplyAsync($"Set notification for retweets and replies, for `{TwitterName.Name}`, to {notification}!");
             }
@@ -86,8 +87,8 @@ namespace MopsBot.Module
             [Summary("Disables tracking for the retweets and replies of the specified Twitter account.")]
             public async Task DisableRetweets(BaseTracker TwitterName)
             {
-                TwitterName.ChannelConfig[Context.Channel.Id][TwitterTracker.SHOWREPLIES] = false;
-                TwitterName.ChannelConfig[Context.Channel.Id][TwitterTracker.SHOWRETWEETS] = false;
+                TwitterName.GetLastCalledConfig(Context.Guild.Id)[TwitterTracker.SHOWREPLIES] = false;
+                TwitterName.GetLastCalledConfig(Context.Guild.Id)[TwitterTracker.SHOWRETWEETS] = false;
                 await StaticBase.Trackers[TrackerType.Twitter].UpdateDBAsync(TwitterName);
                 await ReplyAsync($"Disabled retweets and replies for `{TwitterName.Name}`!\nTo reenable retweets and replies, please provide a notification via the `Twitter SetNonMainNotification` subcommand!");
             }
@@ -97,7 +98,7 @@ namespace MopsBot.Module
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig(BaseTracker tracker)
             {
-                await ReplyAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```");
+                await ReplyAsync($"```yaml\n{string.Join("\n", tracker.GetLastCalledConfig(Context.Guild.Id).Select(x => x.Key + ": " + x.Value))}```");
             }
 
             [Command("ChangeConfig", RunMode = RunMode.Async)]
@@ -106,6 +107,19 @@ namespace MopsBot.Module
             public async Task ChangeConfig(BaseTracker TwitterName)
             {
                 await ModifyConfig(this, TwitterName, TrackerType.Twitter);
+            }
+
+            [Command("ChangeChannel", RunMode = RunMode.Async)]
+            [Summary("Changes the channel of the specified tracker from #FromChannel to the current channel")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel){
+                var currentType = TrackerType.Twitter;
+
+                var tracker = StaticBase.Trackers[currentType].GetTracker(FromChannel.Id, BaseTracker.CapSensitive.Any(x => x == currentType) ? Name : Name.ToLower());
+                var currentConfig = tracker.ChannelConfig[FromChannel.Id];
+                tracker.ChannelConfig[Context.Channel.Id] = currentConfig;
+                await StaticBase.Trackers[currentType].TryRemoveTrackerAsync(tracker.Name, FromChannel.Id);
+                await ReplyAsync($"Successfully changed the channel of {tracker.Name} from {((ITextChannel)FromChannel).Mention} to {((ITextChannel)Context.Channel).Mention}");
             }
 
             [Command("Prune")]
@@ -162,7 +176,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task unTrackOsu([Remainder]BaseTracker OsuUser)
             {
-                if (await Trackers[BaseTracker.TrackerType.Osu].TryRemoveTrackerAsync(OsuUser.Name, Context.Channel.Id))
+                if (await Trackers[BaseTracker.TrackerType.Osu].TryRemoveTrackerAsync(OsuUser.Name, OsuUser.LastCalledChannelPerGuild[Context.Guild.Id]))
                     await ReplyAsync("Stopped keeping track of " + OsuUser.Name + "'s plays!");
             }
 
@@ -182,7 +196,7 @@ namespace MopsBot.Module
                 var tracker = osuUser as OsuTracker;
                 if (threshold > 0.1)
                 {
-                    tracker.ChannelConfig[Context.Channel.Id][OsuTracker.PPTHRESHOLD] = threshold;
+                    tracker.ChannelConfig[osuUser.LastCalledChannelPerGuild[Context.Guild.Id]][OsuTracker.PPTHRESHOLD] = threshold;
                     await StaticBase.Trackers[BaseTracker.TrackerType.Osu].UpdateDBAsync(tracker);
                     await ReplyAsync($"Changed threshold for `{osuUser}` to `{threshold}`");
                 }
@@ -195,7 +209,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task SetNotification(BaseTracker osuUser, [Remainder]string notification = "")
             {
-                osuUser.ChannelConfig[Context.Channel.Id]["Notification"] = notification;
+                osuUser.ChannelConfig[osuUser.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.Osu].UpdateDBAsync(osuUser);
                 await ReplyAsync($"Changed notification for `{osuUser.Name}` to `{notification}`");
             }
@@ -205,7 +219,7 @@ namespace MopsBot.Module
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig(BaseTracker tracker)
             {
-                await ReplyAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```");
+                await ReplyAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value))}```");
             }
 
             [Command("ChangeConfig", RunMode = RunMode.Async)]
@@ -214,6 +228,19 @@ namespace MopsBot.Module
             public async Task ChangeConfig(BaseTracker osuUser)
             {
                 await ModifyConfig(this, osuUser, TrackerType.Osu);
+            }
+
+            [Command("ChangeChannel", RunMode = RunMode.Async)]
+            [Summary("Changes the channel of the specified tracker from #FromChannel to the current channel")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel){
+                var currentType = TrackerType.Osu;
+
+                var tracker = StaticBase.Trackers[currentType].GetTracker(FromChannel.Id, BaseTracker.CapSensitive.Any(x => x == currentType) ? Name : Name.ToLower());
+                var currentConfig = tracker.ChannelConfig[FromChannel.Id];
+                tracker.ChannelConfig[Context.Channel.Id] = currentConfig;
+                await StaticBase.Trackers[currentType].TryRemoveTrackerAsync(tracker.Name, FromChannel.Id);
+                await ReplyAsync($"Successfully changed the channel of {tracker.Name} from {((ITextChannel)FromChannel).Mention} to {((ITextChannel)Context.Channel).Mention}");
             }
         }
 
@@ -241,7 +268,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task unTrackYoutube(BaseTracker channelID)
             {
-                if (await Trackers[BaseTracker.TrackerType.Youtube].TryRemoveTrackerAsync(channelID.Name, Context.Channel.Id))
+                if (await Trackers[BaseTracker.TrackerType.Youtube].TryRemoveTrackerAsync(channelID.Name, channelID.LastCalledChannelPerGuild[Context.Guild.Id]))
                     await ReplyAsync("Stopped keeping track of " + channelID.Name + "'s videos!");
             }
 
@@ -258,7 +285,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task SetNotification(BaseTracker channelID, [Remainder]string notification = "")
             {
-                channelID.ChannelConfig[Context.Channel.Id]["Notification"] = notification;
+                channelID.ChannelConfig[channelID.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.Youtube].UpdateDBAsync(channelID);
                 await ReplyAsync($"Changed notification for `{channelID.Name}` to `{notification}`");
             }
@@ -268,7 +295,7 @@ namespace MopsBot.Module
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig(BaseTracker tracker)
             {
-                await ReplyAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```");
+                await ReplyAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value))}```");
             }
 
             [Command("ChangeConfig", RunMode = RunMode.Async)]
@@ -277,6 +304,19 @@ namespace MopsBot.Module
             public async Task ChangeConfig(BaseTracker channelID)
             {
                 await ModifyConfig(this, channelID, TrackerType.Youtube);
+            }
+
+            [Command("ChangeChannel", RunMode = RunMode.Async)]
+            [Summary("Changes the channel of the specified tracker from #FromChannel to the current channel")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel){
+                var currentType = TrackerType.Youtube;
+
+                var tracker = StaticBase.Trackers[currentType].GetTracker(FromChannel.Id, BaseTracker.CapSensitive.Any(x => x == currentType) ? Name : Name.ToLower());
+                var currentConfig = tracker.ChannelConfig[FromChannel.Id];
+                tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[Context.Guild.Id]] = currentConfig;
+                await StaticBase.Trackers[currentType].TryRemoveTrackerAsync(tracker.Name, FromChannel.Id);
+                await ReplyAsync($"Successfully changed the channel of {tracker.Name} from {((ITextChannel)FromChannel).Mention} to {((ITextChannel)Context.Channel).Mention}");
             }
         }
 
@@ -308,7 +348,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task unTrackStreamer(BaseTracker streamerName)
             {
-                if (await Trackers[BaseTracker.TrackerType.Twitch].TryRemoveTrackerAsync(streamerName.Name, Context.Channel.Id))
+                if (await Trackers[BaseTracker.TrackerType.Twitch].TryRemoveTrackerAsync(streamerName.Name, streamerName.LastCalledChannelPerGuild[Context.Guild.Id]))
                     await ReplyAsync("Stopped keeping track of " + streamerName.Name + "'s streams!");
             }
 
@@ -325,7 +365,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task SetNotification(BaseTracker streamer, [Remainder]string notification = "")
             {
-                streamer.ChannelConfig[Context.Channel.Id]["Notification"] = notification;
+                streamer.ChannelConfig[streamer.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.Twitch].UpdateDBAsync(streamer);
                 await ReplyAsync($"Changed notification for `{streamer.Name}` to `{notification}`");
             }
@@ -335,7 +375,7 @@ namespace MopsBot.Module
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig(BaseTracker tracker)
             {
-                await ReplyAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```");
+                await ReplyAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value))}```");
             }
 
             [Command("ChangeConfig", RunMode = RunMode.Async)]
@@ -344,6 +384,19 @@ namespace MopsBot.Module
             public async Task ChangeConfig(BaseTracker streamerName)
             {
                 await ModifyConfig(this, streamerName, TrackerType.Twitch);
+            }
+
+            [Command("ChangeChannel", RunMode = RunMode.Async)]
+            [Summary("Changes the channel of the specified tracker from #FromChannel to the current channel")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel){
+                var currentType = TrackerType.Twitch;
+
+                var tracker = StaticBase.Trackers[currentType].GetTracker(FromChannel.Id, BaseTracker.CapSensitive.Any(x => x == currentType) ? Name : Name.ToLower());
+                var currentConfig = tracker.ChannelConfig[FromChannel.Id];
+                tracker.ChannelConfig[Context.Channel.Id] = currentConfig;
+                await StaticBase.Trackers[currentType].TryRemoveTrackerAsync(tracker.Name, FromChannel.Id);
+                await ReplyAsync($"Successfully changed the channel of {tracker.Name} from {((ITextChannel)FromChannel).Mention} to {((ITextChannel)Context.Channel).Mention}");
             }
 
             [Command("GroupTrackers")]
@@ -543,7 +596,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task unTrackStreamer(BaseTracker streamerName)
             {
-                if (await Trackers[BaseTracker.TrackerType.TwitchClip].TryRemoveTrackerAsync(streamerName.Name, Context.Channel.Id))
+                if (await Trackers[BaseTracker.TrackerType.TwitchClip].TryRemoveTrackerAsync(streamerName.Name, streamerName.LastCalledChannelPerGuild[Context.Guild.Id]))
                     await ReplyAsync("Stopped keeping track of " + streamerName.Name + "'s streams!");
             }
 
@@ -560,7 +613,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task SetNotification(BaseTracker streamer, [Remainder]string notification = "")
             {
-                streamer.ChannelConfig[Context.Channel.Id]["Notification"] = notification;
+                streamer.ChannelConfig[streamer.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.TwitchClip].UpdateDBAsync(streamer);
                 await ReplyAsync($"Changed notification for `{streamer.Name}` to `{notification}`");
             }
@@ -572,7 +625,7 @@ namespace MopsBot.Module
             {
                 var tracker = (TwitchClipTracker)streamer;
 
-                tracker.ChannelConfig[Context.Channel.Id][TwitchClipTracker.VIEWTHRESHOLD] = threshold;
+                tracker.ChannelConfig[streamer.LastCalledChannelPerGuild[Context.Guild.Id]][TwitchClipTracker.VIEWTHRESHOLD] = threshold;
                 await StaticBase.Trackers[BaseTracker.TrackerType.TwitchClip].UpdateDBAsync(tracker);
                 await ReplyAsync($"Will only notify about clips equal or above **{threshold}** views for `{streamer.Name}` now.");
             }
@@ -582,7 +635,7 @@ namespace MopsBot.Module
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig(BaseTracker tracker)
             {
-                await ReplyAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```");
+                await ReplyAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value))}```");
             }
 
             [Command("ChangeConfig", RunMode = RunMode.Async)]
@@ -591,6 +644,19 @@ namespace MopsBot.Module
             public async Task ChangeConfig(BaseTracker streamerName)
             {
                 await ModifyConfig(this, streamerName, TrackerType.TwitchClip);
+            }
+
+            [Command("ChangeChannel", RunMode = RunMode.Async)]
+            [Summary("Changes the channel of the specified tracker from #FromChannel to the current channel")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel){
+                var currentType = TrackerType.TwitchClip;
+
+                var tracker = StaticBase.Trackers[currentType].GetTracker(FromChannel.Id, BaseTracker.CapSensitive.Any(x => x == currentType) ? Name : Name.ToLower());
+                var currentConfig = tracker.ChannelConfig[FromChannel.Id];
+                tracker.ChannelConfig[Context.Channel.Id] = currentConfig;
+                await StaticBase.Trackers[currentType].TryRemoveTrackerAsync(tracker.Name, FromChannel.Id);
+                await ReplyAsync($"Successfully changed the channel of {tracker.Name} from {((ITextChannel)FromChannel).Mention} to {((ITextChannel)Context.Channel).Mention}");
             }
         }
 
@@ -616,9 +682,9 @@ namespace MopsBot.Module
             [Command("UnTrack")]
             [Summary("Stops tracking the specified Subreddit.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task unTrackSubreddit(string subreddit, string query = null)
+            public async Task unTrackSubreddit(BaseTracker subreddit)
             {
-                if (await Trackers[BaseTracker.TrackerType.Reddit].TryRemoveTrackerAsync(String.Join(" ", new string[] { subreddit, query }.Where(x => x != null)), Context.Channel.Id))
+                if (await Trackers[BaseTracker.TrackerType.Reddit].TryRemoveTrackerAsync(subreddit.Name, subreddit.LastCalledChannelPerGuild[Context.Guild.Id]))
                     await ReplyAsync("Stopped keeping track of " + subreddit + "'s posts!");
                 else
                 {
@@ -639,9 +705,9 @@ namespace MopsBot.Module
             [Command("SetNotification")]
             [Summary("Sets the notification text that is used each time a new post was found.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(string subreddit, string notification = "", string query = null)
+            public async Task SetNotification(BaseTracker subreddit, string notification = "")
             {
-                if (await StaticBase.Trackers[BaseTracker.TrackerType.Reddit].TrySetNotificationAsync(String.Join(" ", new string[] { subreddit, query }.Where(x => x != null)), Context.Channel.Id, notification))
+                if (await StaticBase.Trackers[BaseTracker.TrackerType.Reddit].TrySetNotificationAsync(subreddit.Name, subreddit.LastCalledChannelPerGuild[Context.Guild.Id], notification))
                 {
                     await ReplyAsync($"Changed notification for `{subreddit}` to `{notification}`");
                 }
@@ -658,7 +724,7 @@ namespace MopsBot.Module
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig(BaseTracker tracker)
             {
-                await ReplyAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```");
+                await ReplyAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value))}```");
             }
 
             [Command("ChangeConfig", RunMode = RunMode.Async)]
@@ -667,6 +733,19 @@ namespace MopsBot.Module
             public async Task ChangeConfig([Remainder]BaseTracker subreddit)
             {
                 await ModifyConfig(this, subreddit, TrackerType.Reddit);
+            }
+
+            [Command("ChangeChannel", RunMode = RunMode.Async)]
+            [Summary("Changes the channel of the specified tracker from #FromChannel to the current channel")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel){
+                var currentType = TrackerType.Reddit;
+
+                var tracker = StaticBase.Trackers[currentType].GetTracker(FromChannel.Id, BaseTracker.CapSensitive.Any(x => x == currentType) ? Name : Name.ToLower());
+                var currentConfig = tracker.ChannelConfig[FromChannel.Id];
+                tracker.ChannelConfig[Context.Channel.Id] = currentConfig;
+                await StaticBase.Trackers[currentType].TryRemoveTrackerAsync(tracker.Name, FromChannel.Id);
+                await ReplyAsync($"Successfully changed the channel of {tracker.Name} from {((ITextChannel)FromChannel).Mention} to {((ITextChannel)Context.Channel).Mention}");
             }
         }
 
@@ -694,7 +773,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task unTrackOW(BaseTracker owUser)
             {
-                if (await Trackers[BaseTracker.TrackerType.Overwatch].TryRemoveTrackerAsync(owUser.Name, Context.Channel.Id))
+                if (await Trackers[BaseTracker.TrackerType.Overwatch].TryRemoveTrackerAsync(owUser.Name, owUser.LastCalledChannelPerGuild[Context.Guild.Id]))
                     await ReplyAsync("Stopped keeping track of " + owUser.Name + "'s stats!");
             }
 
@@ -718,7 +797,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task SetNotification(BaseTracker owUser, [Remainder]string notification = "")
             {
-                owUser.ChannelConfig[Context.Channel.Id]["Notification"] = notification;
+                owUser.ChannelConfig[owUser.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.Overwatch].UpdateDBAsync(owUser);
                 await ReplyAsync($"Changed notification for `{owUser.Name}` to `{notification}`");
             }
@@ -728,7 +807,7 @@ namespace MopsBot.Module
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig(BaseTracker tracker)
             {
-                await ReplyAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```");
+                await ReplyAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value))}```");
             }
 
             [Command("ChangeConfig", RunMode = RunMode.Async)]
@@ -737,6 +816,19 @@ namespace MopsBot.Module
             public async Task ChangeConfig(BaseTracker owUser)
             {
                 await ModifyConfig(this, owUser, TrackerType.Overwatch);
+            }
+
+            [Command("ChangeChannel", RunMode = RunMode.Async)]
+            [Summary("Changes the channel of the specified tracker from #FromChannel to the current channel")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel){
+                var currentType = TrackerType.Overwatch;
+
+                var tracker = StaticBase.Trackers[currentType].GetTracker(FromChannel.Id, BaseTracker.CapSensitive.Any(x => x == currentType) ? Name : Name.ToLower());
+                var currentConfig = tracker.ChannelConfig[FromChannel.Id];
+                tracker.ChannelConfig[Context.Channel.Id] = currentConfig;
+                await StaticBase.Trackers[currentType].TryRemoveTrackerAsync(tracker.Name, FromChannel.Id);
+                await ReplyAsync($"Successfully changed the channel of {tracker.Name} from {((ITextChannel)FromChannel).Mention} to {((ITextChannel)Context.Channel).Mention}");
             }
         }
 
@@ -749,7 +841,7 @@ namespace MopsBot.Module
             [Summary("Keeps track of the specified GW2 player, in the Channel you are calling this command right now.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
-            public async Task trackOW(string APIKey, [Remainder]string gwUser)
+            public async Task trackGW(string APIKey, [Remainder]string gwUser)
             {
                 using (Context.Channel.EnterTypingState())
                 {
@@ -762,9 +854,9 @@ namespace MopsBot.Module
             [Command("UnTrack")]
             [Summary("Stops keeping track of the specified GW2 player, in the Channel you are calling this command right now.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task unTrackOW([Remainder]BaseTracker gwUser)
+            public async Task unTrackGW([Remainder]BaseTracker gwUser)
             {
-                if (await Trackers[BaseTracker.TrackerType.GW2].TryRemoveTrackerAsync(gwUser.Name, Context.Channel.Id))
+                if (await Trackers[BaseTracker.TrackerType.GW2].TryRemoveTrackerAsync(gwUser.Name, gwUser.LastCalledChannelPerGuild[Context.Guild.Id]))
                     await ReplyAsync("Stopped keeping track of " + gwUser.Name + "'s stats!");
             }
 
@@ -788,7 +880,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task SetNotification(BaseTracker gwUser, [Remainder]string notification = "")
             {
-                gwUser.ChannelConfig[Context.Channel.Id]["Notification"] = notification;
+                gwUser.ChannelConfig[gwUser.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.GW2].UpdateDBAsync(gwUser);
                 await ReplyAsync($"Changed notification for `{gwUser.Name}` to `{notification}`");
             }
@@ -798,7 +890,7 @@ namespace MopsBot.Module
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig([Remainder]BaseTracker tracker)
             {
-                await ReplyAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```");
+                await ReplyAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value))}```");
             }
 
             [Command("ChangeConfig", RunMode = RunMode.Async)]
@@ -807,6 +899,19 @@ namespace MopsBot.Module
             public async Task ChangeConfig([Remainder]BaseTracker gwUser)
             {
                 await ModifyConfig(this, gwUser, TrackerType.GW2);
+            }
+
+            [Command("ChangeChannel", RunMode = RunMode.Async)]
+            [Summary("Changes the channel of the specified tracker from #FromChannel to the current channel")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel){
+                var currentType = TrackerType.GW2;
+
+                var tracker = StaticBase.Trackers[currentType].GetTracker(FromChannel.Id, BaseTracker.CapSensitive.Any(x => x == currentType) ? Name : Name.ToLower());
+                var currentConfig = tracker.ChannelConfig[FromChannel.Id];
+                tracker.ChannelConfig[Context.Channel.Id] = currentConfig;
+                await StaticBase.Trackers[currentType].TryRemoveTrackerAsync(tracker.Name, FromChannel.Id);
+                await ReplyAsync($"Successfully changed the channel of {tracker.Name} from {((ITextChannel)FromChannel).Mention} to {((ITextChannel)Context.Channel).Mention}");
             }
         }
 
@@ -835,7 +940,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task unTrackOW([Remainder]BaseTracker player)
             {
-                if (await Trackers[BaseTracker.TrackerType.Chess].TryRemoveTrackerAsync(player.Name, Context.Channel.Id))
+                if (await Trackers[BaseTracker.TrackerType.Chess].TryRemoveTrackerAsync(player.Name, player.LastCalledChannelPerGuild[Context.Guild.Id]))
                     await ReplyAsync("Stopped keeping track of " + player.Name + "'s games!");
             }
 
@@ -852,7 +957,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task SetNotification(BaseTracker player, [Remainder]string notification = "")
             {
-                player.ChannelConfig[Context.Channel.Id]["Notification"] = notification;
+                player.ChannelConfig[player.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.Chess].UpdateDBAsync(player);
                 await ReplyAsync($"Changed notification for `{player.Name}` to `{notification}`");
             }
@@ -870,7 +975,7 @@ namespace MopsBot.Module
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig([Remainder]BaseTracker tracker)
             {
-                await ReplyAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```");
+                await ReplyAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value))}```");
             }
 
             [Command("ChangeConfig", RunMode = RunMode.Async)]
@@ -879,6 +984,19 @@ namespace MopsBot.Module
             public async Task ChangeConfig([Remainder]BaseTracker player)
             {
                 await ModifyConfig(this, player, TrackerType.Chess);
+            }
+
+            [Command("ChangeChannel", RunMode = RunMode.Async)]
+            [Summary("Changes the channel of the specified tracker from #FromChannel to the current channel")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel){
+                var currentType = TrackerType.Chess;
+
+                var tracker = StaticBase.Trackers[currentType].GetTracker(FromChannel.Id, BaseTracker.CapSensitive.Any(x => x == currentType) ? Name : Name.ToLower());
+                var currentConfig = tracker.ChannelConfig[FromChannel.Id];
+                tracker.ChannelConfig[Context.Channel.Id] = currentConfig;
+                await StaticBase.Trackers[currentType].TryRemoveTrackerAsync(tracker.Name, FromChannel.Id);
+                await ReplyAsync($"Successfully changed the channel of {tracker.Name} from {((ITextChannel)FromChannel).Mention} to {((ITextChannel)Context.Channel).Mention}");
             }
         }
 
@@ -906,7 +1024,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task unTrackNews([Remainder]BaseTracker JsonSource)
             {
-                if (await Trackers[BaseTracker.TrackerType.JSON].TryRemoveTrackerAsync(JsonSource.Name, Context.Channel.Id))
+                if (await Trackers[BaseTracker.TrackerType.JSON].TryRemoveTrackerAsync(JsonSource.Name, JsonSource.LastCalledChannelPerGuild[Context.Guild.Id]))
                     await ReplyAsync($"Stopped keeping track of {JsonSource.Name}");
             }
 
@@ -923,7 +1041,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task SetNotification(BaseTracker jsonSource, [Remainder]string notification = "")
             {
-                jsonSource.ChannelConfig[Context.Channel.Id]["Notification"] = notification;
+                jsonSource.ChannelConfig[jsonSource.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.JSON].UpdateDBAsync(jsonSource);
                 await ReplyAsync($"Changed notification for `{jsonSource.Name}` to `{notification}`");
             }
@@ -951,7 +1069,7 @@ namespace MopsBot.Module
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig(BaseTracker tracker)
             {
-                await ReplyAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```");
+                await ReplyAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value))}```");
             }
 
             [Command("ChangeConfig", RunMode = RunMode.Async)]
@@ -960,6 +1078,19 @@ namespace MopsBot.Module
             public async Task ChangeConfig([Remainder]BaseTracker jsonSource)
             {
                 await ModifyConfig(this, jsonSource, TrackerType.JSON);
+            }
+
+            [Command("ChangeChannel", RunMode = RunMode.Async)]
+            [Summary("Changes the channel of the specified tracker from #FromChannel to the current channel")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel){
+                var currentType = TrackerType.JSON;
+
+                var tracker = StaticBase.Trackers[currentType].GetTracker(FromChannel.Id, BaseTracker.CapSensitive.Any(x => x == currentType) ? Name : Name.ToLower());
+                var currentConfig = tracker.ChannelConfig[FromChannel.Id];
+                tracker.ChannelConfig[Context.Channel.Id] = currentConfig;
+                await StaticBase.Trackers[currentType].TryRemoveTrackerAsync(tracker.Name, FromChannel.Id);
+                await ReplyAsync($"Successfully changed the channel of {tracker.Name} from {((ITextChannel)FromChannel).Mention} to {((ITextChannel)Context.Channel).Mention}");
             }
         }
 
@@ -986,7 +1117,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task UnTrack([Remainder]BaseTracker name)
             {
-                if (await Trackers[BaseTracker.TrackerType.OSRS].TryRemoveTrackerAsync(name.Name, Context.Channel.Id))
+                if (await Trackers[BaseTracker.TrackerType.OSRS].TryRemoveTrackerAsync(name.Name, name.LastCalledChannelPerGuild[Context.Guild.Id]))
                     await ReplyAsync($"Stopped keeping track of {name.Name}!");
             }
 
@@ -1024,7 +1155,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task SetNotification(BaseTracker name, [Remainder]string notification = "")
             {
-                name.ChannelConfig[Context.Channel.Id]["Notification"] = notification;
+                name.ChannelConfig[name.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.OSRS].UpdateDBAsync(name);
                 await ReplyAsync($"Changed notification for `{name.Name}` to `{notification}`");
             }
@@ -1034,7 +1165,7 @@ namespace MopsBot.Module
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig(BaseTracker tracker)
             {
-                await ReplyAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```");
+                await ReplyAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value))}```");
             }
 
             [Command("ChangeConfig", RunMode = RunMode.Async)]
@@ -1043,6 +1174,19 @@ namespace MopsBot.Module
             public async Task ChangeConfig(BaseTracker name)
             {
                 await ModifyConfig(this, name, TrackerType.OSRS);
+            }
+
+            [Command("ChangeChannel", RunMode = RunMode.Async)]
+            [Summary("Changes the channel of the specified tracker from #FromChannel to the current channel")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel){
+                var currentType = TrackerType.OSRS;
+
+                var tracker = StaticBase.Trackers[currentType].GetTracker(FromChannel.Id, BaseTracker.CapSensitive.Any(x => x == currentType) ? Name : Name.ToLower());
+                var currentConfig = tracker.ChannelConfig[FromChannel.Id];
+                tracker.ChannelConfig[Context.Channel.Id] = currentConfig;
+                await StaticBase.Trackers[currentType].TryRemoveTrackerAsync(tracker.Name, FromChannel.Id);
+                await ReplyAsync($"Successfully changed the channel of {tracker.Name} from {((ITextChannel)FromChannel).Mention} to {((ITextChannel)Context.Channel).Mention}");
             }
         }
 
@@ -1163,14 +1307,6 @@ namespace MopsBot.Module
                         await ReplyAsync($"Set notification for result {page + 1} of paginator to `{notification}`!");
                 }
             }
-
-            [Command("ShowConfig")]
-            [Hide]
-            [Summary("Shows all the settings for this tracker, and their values")]
-            public async Task ShowConfig(BaseTracker tracker)
-            {
-                await ReplyAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```");
-            }
         }
 
         [Group("RSS")]
@@ -1197,7 +1333,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task UnTrackFeed(BaseTracker url)
             {
-                if (await Trackers[BaseTracker.TrackerType.RSS].TryRemoveTrackerAsync(url.Name, Context.Channel.Id))
+                if (await Trackers[BaseTracker.TrackerType.RSS].TryRemoveTrackerAsync(url.Name, url.LastCalledChannelPerGuild[Context.Guild.Id]))
                     await ReplyAsync("Stopped keeping track of " + url.Name + " 's feed!");
             }
 
@@ -1214,7 +1350,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task SetNotification(BaseTracker url, [Remainder]string notification = "")
             {
-                url.ChannelConfig[Context.Channel.Id]["Notification"] = notification;
+                url.ChannelConfig[url.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.RSS].UpdateDBAsync(url);
                 await ReplyAsync($"Changed notification for `{url.Name}` to `{notification}`");
             }
@@ -1233,7 +1369,7 @@ namespace MopsBot.Module
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig(BaseTracker tracker)
             {
-                await ReplyAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```");
+                await ReplyAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value))}```");
             }
 
             [Command("ChangeConfig", RunMode = RunMode.Async)]
@@ -1242,6 +1378,19 @@ namespace MopsBot.Module
             public async Task ChangeConfig(BaseTracker url)
             {
                 await ModifyConfig(this, url, TrackerType.RSS);
+            }
+
+            [Command("ChangeChannel", RunMode = RunMode.Async)]
+            [Summary("Changes the channel of the specified tracker from #FromChannel to the current channel")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel){
+                var currentType = TrackerType.RSS;
+
+                var tracker = StaticBase.Trackers[currentType].GetTracker(FromChannel.Id, BaseTracker.CapSensitive.Any(x => x == currentType) ? Name : Name.ToLower());
+                var currentConfig = tracker.ChannelConfig[FromChannel.Id];
+                tracker.ChannelConfig[Context.Channel.Id] = currentConfig;
+                await StaticBase.Trackers[currentType].TryRemoveTrackerAsync(tracker.Name, FromChannel.Id);
+                await ReplyAsync($"Successfully changed the channel of {tracker.Name} from {((ITextChannel)FromChannel).Mention} to {((ITextChannel)Context.Channel).Mention}");
             }
         }
 
@@ -1271,7 +1420,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task unTrackOsu([Remainder]BaseTracker SteamNameOrId)
             {
-                if (await Trackers[BaseTracker.TrackerType.Steam].TryRemoveTrackerAsync(SteamNameOrId.Name, Context.Channel.Id))
+                if (await Trackers[BaseTracker.TrackerType.Steam].TryRemoveTrackerAsync(SteamNameOrId.Name, SteamNameOrId.LastCalledChannelPerGuild[Context.Guild.Id]))
                     await ReplyAsync("Stopped keeping track of " + SteamNameOrId.Name + "'s Steam data!");
             }
 
@@ -1288,7 +1437,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task SetNotification(BaseTracker SteamNameOrId, [Remainder]string notification = "")
             {
-                SteamNameOrId.ChannelConfig[Context.Channel.Id]["Notification"] = notification;
+                SteamNameOrId.ChannelConfig[SteamNameOrId.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.Steam].UpdateDBAsync(SteamNameOrId);
                 await ReplyAsync($"Changed notification for `{SteamNameOrId.Name}` to `{notification}`");
             }
@@ -1298,7 +1447,7 @@ namespace MopsBot.Module
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig(BaseTracker tracker)
             {
-                await ReplyAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```");
+                await ReplyAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value))}```");
             }
 
             [Command("ChangeConfig", RunMode = RunMode.Async)]
@@ -1307,6 +1456,19 @@ namespace MopsBot.Module
             public async Task ChangeConfig(BaseTracker SteamNameOrId)
             {
                 await ModifyConfig(this, SteamNameOrId, TrackerType.Steam);
+            }
+
+            [Command("ChangeChannel", RunMode = RunMode.Async)]
+            [Summary("Changes the channel of the specified tracker from #FromChannel to the current channel")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel){
+                var currentType = TrackerType.Steam;
+
+                var tracker = StaticBase.Trackers[currentType].GetTracker(FromChannel.Id, BaseTracker.CapSensitive.Any(x => x == currentType) ? Name : Name.ToLower());
+                var currentConfig = tracker.ChannelConfig[FromChannel.Id];
+                tracker.ChannelConfig[Context.Channel.Id] = currentConfig;
+                await StaticBase.Trackers[currentType].TryRemoveTrackerAsync(tracker.Name, FromChannel.Id);
+                await ReplyAsync($"Successfully changed the channel of {tracker.Name} from {((ITextChannel)FromChannel).Mention} to {((ITextChannel)Context.Channel).Mention}");
             }
         }
 
@@ -1369,9 +1531,9 @@ namespace MopsBot.Module
 
         public static async Task ModifyConfig(InteractiveBase context, BaseTracker tracker, TrackerType trackerType)
         {
-            await context.Context.Channel.SendMessageAsync($"Current Config:\n```yaml\n{string.Join("\n", tracker.ChannelConfig[context.Context.Channel.Id].Select(x => x.Key + ": " + x.Value))}```\nPlease reply with one or more changed lines.");
+            await context.Context.Channel.SendMessageAsync($"Current Config:\n```yaml\n{string.Join("\n", tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[context.Context.Guild.Id]].Select(x => x.Key + ": " + x.Value))}```\nPlease reply with one or more changed lines.");
             var reply = await context.NextMessageAsync(new EnsureSourceUserCriterion(), TimeSpan.FromMinutes(5));
-            var settings = tracker.ChannelConfig[reply.Channel.Id].ToDictionary(x => x.Key, x => x.Value);
+            var settings = tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[context.Context.Guild.Id]].ToDictionary(x => x.Key, x => x.Value);
 
             if (reply != null)
             {
@@ -1408,9 +1570,9 @@ namespace MopsBot.Module
                     await reply.Channel.SendMessageAsync($"Updating failed due to:\n{reason}");
                 }
                 else{
-                    tracker.ChannelConfig[reply.Channel.Id] = settings;
+                    tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[context.Context.Guild.Id]] = settings;
                     await StaticBase.Trackers[trackerType].UpdateDBAsync(tracker);
-                    await reply.Channel.SendMessageAsync($"New Config:\n```yaml\n{string.Join("\n", tracker.ChannelConfig[reply.Channel.Id].Select(x => x.Key + ": " + x.Value))}```");
+                    await reply.Channel.SendMessageAsync($"New Config:\n```yaml\n{string.Join("\n", tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[context.Context.Guild.Id]].Select(x => x.Key + ": " + x.Value))}```");
                 }
             }
             else

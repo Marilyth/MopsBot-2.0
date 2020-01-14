@@ -198,7 +198,7 @@ namespace MopsBot
         }
 
         public static async Task<RestUser> GetUserAsync(ulong userId){
-            return await Program.RestClient.GetUserAsync(userId);
+            return await Program.Client.Rest.GetUserAsync(userId);
         }
 
         /// <summary>

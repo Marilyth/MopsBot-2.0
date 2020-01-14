@@ -23,6 +23,7 @@ namespace MopsBot.Data.Tracker
         //Avoid ratelimit by placing a gap between all trackers.
         public static int ExistingTrackers = 0;
         public enum TrackerType { Twitch, TwitchGroup, TwitchClip, Mixer, Twitter, Youtube, YoutubeLive, Reddit, Steam, Osu, Overwatch, OSRS /*Tibia,*/, JSON, HTML, RSS, GW2, Chess };
+        public static List<TrackerType> CapSensitive = new List<TrackerType>{TrackerType.HTML, TrackerType.Reddit, TrackerType.JSON, TrackerType.Overwatch, TrackerType.RSS, TrackerType.Youtube, TrackerType.YoutubeLive, TrackerType.GW2};
         private bool disposed = false;
         private SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
         protected System.Threading.Timer checkForChange;
@@ -32,6 +33,8 @@ namespace MopsBot.Data.Tracker
         public delegate Task MainEventHandler(ulong channelID, Embed embed, BaseTracker self, string notificationText = "");
         [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
         public Dictionary<ulong, Dictionary<string, object>> ChannelConfig;
+        [BsonIgnore]
+        public Dictionary<ulong, ulong> LastCalledChannelPerGuild;
 
         [BsonId]
         public string Name;
@@ -40,6 +43,7 @@ namespace MopsBot.Data.Tracker
         {
             ExistingTrackers++;
             ChannelConfig = new Dictionary<ulong, Dictionary<string, object>>();
+            LastCalledChannelPerGuild = new Dictionary<ulong, ulong>();
             checkForChange = new System.Threading.Timer(CheckForChange_Elapsed);
         }
 
@@ -127,6 +131,9 @@ namespace MopsBot.Data.Tracker
         }
 
         abstract public Task UpdateTracker();
+
+        public Dictionary<string, object> GetLastCalledConfig(ulong guildId) =>
+            ChannelConfig[LastCalledChannelPerGuild[guildId]];
 
         public virtual void Dispose()
         {

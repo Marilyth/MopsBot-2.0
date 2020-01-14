@@ -26,7 +26,7 @@ namespace MopsBot.Data
         public abstract Dictionary<string, Tracker.BaseTracker> GetTrackers();
         public abstract IEnumerable<BaseTracker> GetTrackers(ulong channelID);
         public abstract IEnumerable<BaseTracker> GetGuildTrackers(ulong guildId);
-        public abstract IEnumerable<Embed> GetTrackersEmbed(ulong channelID, bool searchServer = false);
+        public abstract IEnumerable<Embed> GetTrackersEmbed(ulong channelID, bool searchServer = false, string name = null);
         public abstract BaseTracker GetTracker(ulong channelID, string name);
         public abstract Type GetTrackerType();
         public abstract void PostInitialisation();
@@ -214,10 +214,13 @@ namespace MopsBot.Data
                 return false;
         }
 
-        public override IEnumerable<Embed> GetTrackersEmbed(ulong channelID, bool searchServer = false)
+        public override IEnumerable<Embed> GetTrackersEmbed(ulong channelID, bool searchServer = false, string name = null)
         {
             var guild = (Program.Client.GetChannel(channelID) as SocketGuildChannel).Guild;
+
             var foundTrackers = (searchServer ? GetGuildTrackers(guild.Id) : trackers.Where(x => x.Value.ChannelConfig.ContainsKey(channelID)).Select(x => x.Value));
+            if(name != null) foundTrackers = foundTrackers.Where(x => x.Name.Equals(name));
+
             var trackerStrings = foundTrackers.Select(x => x.TrackerUrl() != null ? $"[``{x.Name}``]({x.TrackerUrl()}) [{string.Join(" ", x.ChannelConfig.Keys.Where(y => guild.GetTextChannel(y) != null).Select(y => (Program.Client.GetChannel(y) as SocketTextChannel).Mention))}]\n" 
                                                                                   : $"``{x.Name}`` [{string.Join(" ", x.ChannelConfig.Keys.Where(y => guild.GetTextChannel(y) != null).Select(y => (Program.Client.GetChannel(y) as SocketTextChannel).Mention))}]\n");
             var embeds = new List<EmbedBuilder>(){new EmbedBuilder().WithTitle(typeof(T).Name).WithCurrentTimestamp().WithColor(Discord.Color.Blue)};
