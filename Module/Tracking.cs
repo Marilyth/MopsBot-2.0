@@ -314,7 +314,7 @@ namespace MopsBot.Module
 
                 var tracker = StaticBase.Trackers[currentType].GetTracker(FromChannel.Id, BaseTracker.CapSensitive.Any(x => x == currentType) ? Name : Name.ToLower());
                 var currentConfig = tracker.ChannelConfig[FromChannel.Id];
-                tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[Context.Guild.Id]] = currentConfig;
+                tracker.ChannelConfig[Context.Channel.Id] = currentConfig;
                 await StaticBase.Trackers[currentType].TryRemoveTrackerAsync(tracker.Name, FromChannel.Id);
                 await ReplyAsync($"Successfully changed the channel of {tracker.Name} from {((ITextChannel)FromChannel).Mention} to {((ITextChannel)Context.Channel).Mention}");
             }
