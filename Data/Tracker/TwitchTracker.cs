@@ -218,7 +218,7 @@ namespace MopsBot.Data.Tracker
                     if (VodUrl == null)
                         VodUrl = await GetVodAsync();
 
-                    if (CurGame.ToLower().CompareTo(StreamerStatus.stream.game) != 0)
+                    if (CurGame.ToLower().CompareTo(StreamerStatus.stream.game.ToLower()) != 0)
                     {
                         CurGame = StreamerStatus.stream.game;
                         //ViewerGraph.AddValue(CurGame, StreamerStatus.stream.viewers);
