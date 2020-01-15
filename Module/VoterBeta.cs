@@ -90,6 +90,14 @@ namespace MopsBot.Module
                 var currentType = TrackerType.YoutubeLive;
 
                 var tracker = StaticBase.Trackers[currentType].GetTracker(FromChannel.Id, BaseTracker.CapSensitive.Any(x => x == currentType) ? Name : Name.ToLower());
+                
+                if(tracker == null){
+                    await MopsBot.Data.Interactive.MopsPaginator.CreatePagedMessage(Context.Channel.Id, StaticBase.Trackers[currentType].GetTrackersEmbed(Context.Channel.Id, true));
+                    throw new Exception($"Could not find a {currentType.ToString()} Tracker called {Name} in {FromChannel.Name}");
+                } else if(FromChannel.Id.Equals(Context.Channel.Id)){
+                    throw new Exception($"The tracker is in your current channel already.");
+                }
+
                 var currentConfig = tracker.ChannelConfig[FromChannel.Id];
                 tracker.ChannelConfig[Context.Channel.Id] = currentConfig;
                 await StaticBase.Trackers[currentType].TryRemoveTrackerAsync(tracker.Name, FromChannel.Id);
@@ -170,6 +178,14 @@ namespace MopsBot.Module
                 var currentType = TrackerType.Mixer;
 
                 var tracker = StaticBase.Trackers[currentType].GetTracker(FromChannel.Id, BaseTracker.CapSensitive.Any(x => x == currentType) ? Name : Name.ToLower());
+                
+                if(tracker == null){
+                    await MopsBot.Data.Interactive.MopsPaginator.CreatePagedMessage(Context.Channel.Id, StaticBase.Trackers[currentType].GetTrackersEmbed(Context.Channel.Id, true));
+                    throw new Exception($"Could not find a {currentType.ToString()} Tracker called {Name} in {FromChannel.Name}");
+                } else if(FromChannel.Id.Equals(Context.Channel.Id)){
+                    throw new Exception($"The tracker is in your current channel already.");
+                }
+
                 var currentConfig = tracker.ChannelConfig[FromChannel.Id];
                 tracker.ChannelConfig[Context.Channel.Id] = currentConfig;
                 await StaticBase.Trackers[currentType].TryRemoveTrackerAsync(tracker.Name, FromChannel.Id);
