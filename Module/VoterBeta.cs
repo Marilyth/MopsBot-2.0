@@ -87,21 +87,7 @@ namespace MopsBot.Module
             [Summary("Changes the channel of the specified tracker from #FromChannel to the current channel")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel){
-                var currentType = TrackerType.YoutubeLive;
-
-                var tracker = StaticBase.Trackers[currentType].GetTracker(FromChannel.Id, BaseTracker.CapSensitive.Any(x => x == currentType) ? Name : Name.ToLower());
-                
-                if(tracker == null){
-                    await MopsBot.Data.Interactive.MopsPaginator.CreatePagedMessage(Context.Channel.Id, StaticBase.Trackers[currentType].GetTrackersEmbed(Context.Channel.Id, true));
-                    throw new Exception($"Could not find a {currentType.ToString()} Tracker called {Name} in {FromChannel.Name}");
-                } else if(FromChannel.Id.Equals(Context.Channel.Id)){
-                    throw new Exception($"The tracker is in your current channel already.");
-                }
-
-                var currentConfig = tracker.ChannelConfig[FromChannel.Id];
-                tracker.ChannelConfig[Context.Channel.Id] = currentConfig;
-                await StaticBase.Trackers[currentType].TryRemoveTrackerAsync(tracker.Name, FromChannel.Id);
-                await ReplyAsync($"Successfully changed the channel of {tracker.Name} from {((ITextChannel)FromChannel).Mention} to {((ITextChannel)Context.Channel).Mention}");
+                await Tracking.ChangeChannelAsync(Name, FromChannel, TrackerType.YoutubeLive, Context);
             }
         }
 
@@ -175,21 +161,7 @@ namespace MopsBot.Module
             [Summary("Changes the channel of the specified tracker from #FromChannel to the current channel")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel){
-                var currentType = TrackerType.Mixer;
-
-                var tracker = StaticBase.Trackers[currentType].GetTracker(FromChannel.Id, BaseTracker.CapSensitive.Any(x => x == currentType) ? Name : Name.ToLower());
-                
-                if(tracker == null){
-                    await MopsBot.Data.Interactive.MopsPaginator.CreatePagedMessage(Context.Channel.Id, StaticBase.Trackers[currentType].GetTrackersEmbed(Context.Channel.Id, true));
-                    throw new Exception($"Could not find a {currentType.ToString()} Tracker called {Name} in {FromChannel.Name}");
-                } else if(FromChannel.Id.Equals(Context.Channel.Id)){
-                    throw new Exception($"The tracker is in your current channel already.");
-                }
-
-                var currentConfig = tracker.ChannelConfig[FromChannel.Id];
-                tracker.ChannelConfig[Context.Channel.Id] = currentConfig;
-                await StaticBase.Trackers[currentType].TryRemoveTrackerAsync(tracker.Name, FromChannel.Id);
-                await ReplyAsync($"Successfully changed the channel of {tracker.Name} from {((ITextChannel)FromChannel).Mention} to {((ITextChannel)Context.Channel).Mention}");
+                await Tracking.ChangeChannelAsync(Name, FromChannel, TrackerType.Mixer, Context);
             }
         }
     }
