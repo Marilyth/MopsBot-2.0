@@ -39,7 +39,8 @@ namespace MopsBot.Module.TypeReader
                 return TypeReaderResult.FromError(CommandError.ParseFailed, $"Could not find a {module}-tracker for {input}.");
             }
 
-            var channelMatches = result.ChannelConfig.Keys.Where(x => context.Guild.GetChannelAsync((ulong)x) != null);
+            var guildChannels = (await context.Guild.GetTextChannelsAsync()).Select(x => x.Id);
+            var channelMatches = result.ChannelConfig.Keys.Where(x => guildChannels.Any(y => y.Equals(x)));
             if(channelMatches.Count() == 1){
                 result.LastCalledChannelPerGuild[context.Guild.Id] = channelMatches.First();
                 return TypeReaderResult.FromSuccess(result);
