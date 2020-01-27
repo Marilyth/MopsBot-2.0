@@ -79,6 +79,18 @@ namespace MopsBot.Data.Tracker
             }
         }
 
+        public static async Task<List<Embed>> checkReddit(string subreddit, string query=null, int limit=1){
+            var results = await FetchJSONDataAsync<RedditResult>($"https://www.reddit.com/r/{subreddit}/" +
+                                                                        $"{(query != null ? $"search.json?sort=new&restrict_sr=on&q={query}" : "new.json?restrict_sr=on")}" + $"&limit={limit}");
+
+            List<Embed> embeds = new List<Embed>();
+            foreach(var post in results.data.children){
+                embeds.Add(await createEmbed(post.data));
+            }
+
+            return embeds;
+        }
+
         private async Task<RedditResult> fetchPosts()
         {
             return await FetchJSONDataAsync<RedditResult>($"https://www.reddit.com/r/{Name.Split(" ")[0]}/" +
@@ -89,7 +101,7 @@ namespace MopsBot.Data.Tracker
         /// <param Name="RedditInformation">All fetched stats of the user </param>
         /// <param Name="changedStats">All changed stats of the user, together with a string presenting them </param>
         /// <param Name="mostPlayed">The most played Hero of the session, together with a string presenting them </param>
-        private async Task<Embed> createEmbed(Data2 redditPost)
+        private async static Task<Embed> createEmbed(Data2 redditPost)
         {
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(255, 49, 0);

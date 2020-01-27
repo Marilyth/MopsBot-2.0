@@ -694,6 +694,15 @@ namespace MopsBot.Module
                 }
             }
 
+            [Command("Check", RunMode = RunMode.Async)]
+            [Summary("Returns the newest `limit` entries using the `subreddit` and `query` provided.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task Check(int limit, string subreddit, [Remainder]string query=null)
+            {
+                var result = await RedditTracker.checkReddit(subreddit, query, limit);
+                await MopsBot.Data.Interactive.MopsPaginator.CreatePagedMessage(Context.Channel.Id, result);
+            }
+
             [Command("ShowConfig")]
             [Hide]
             [Summary("Shows all the settings for this tracker, and their values")]
