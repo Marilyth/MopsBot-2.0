@@ -105,7 +105,7 @@ namespace MopsBot.Module
                 switch (stat)
                 {
                     case User.Stats.Experience:
-                        toSort = x => x.Experience;
+                        toSort = x => x.CharactersSent;
                         break;
                     case User.Stats.Hug:
                         toSort = x => x.Hugged;

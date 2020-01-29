@@ -15,14 +15,13 @@ namespace MopsBot.Data.Entities
     [BsonIgnoreExtraElements]
     public class User
     {
-
         [BsonId]
         public ulong Id;
-        public int Money, Experience, Punched, Hugged, Kissed;
+        public int Money, Experience, CharactersSent, Punched, Hugged, Kissed;
         public int WeaponId;
         public List<int> Inventory;
         public DateTime LastTaCReminder = DateTime.MinValue;
-        public DatePlot MessageGraph;
+        public DatePlot ActivityGraph;
 
         private User(ulong pId)
         {
@@ -36,12 +35,12 @@ namespace MopsBot.Data.Entities
 
         public int CalcCurLevel()
         {
-            return (int)Math.Sqrt(Experience / 200.0);
+            return (int)Math.Sqrt(CharactersSent / 200.0);
         }
 
         public double CalcCurLevelDouble()
         {
-            return Math.Sqrt(Experience / 200.0);
+            return Math.Sqrt(CharactersSent / 200.0);
         }
 
         public bool IsTaCDue(){
@@ -69,35 +68,38 @@ namespace MopsBot.Data.Entities
         public void AddGraphValue(int value){
             double dateValue = OxyPlot.Axes.DateTimeAxis.ToDouble(DateTime.Today);
             
-            if(MessageGraph == null){
-                MessageGraph = new DatePlot(Id + "MessageGraph", "Date", "Characters sent", "dd-MMM", false);
-                MessageGraph.AddValue("Value", 0, DateTime.Today.AddDays(-1));
-                MessageGraph.AddValue("Value", 0, DateTime.Today.AddMilliseconds(-1));
-                MessageGraph.AddValue("Value", value, DateTime.Today);
+            if(ActivityGraph == null){
+                ActivityGraph = new DatePlot(Id + "ExperienceGraph", "Date", "Characters sent", "dd-MMM", false);
+                ActivityGraph.AddValue("Value", 0, DateTime.Today.AddDays(-1));
+                ActivityGraph.AddValue("Value", 0, DateTime.Today.AddMilliseconds(-1));
+                ActivityGraph.AddValue("Value", value, DateTime.Today);
             }
 
             else {
-                if(MessageGraph.PlotDataPoints.Last().Value.Key < dateValue){
+                if(ActivityGraph.PlotDataPoints.Last().Value.Key < dateValue){
+                    //Only show past year
+                    ActivityGraph.PlotDataPoints = ActivityGraph.PlotDataPoints.SkipWhile(x => (DateTime.Today - OxyPlot.Axes.DateTimeAxis.ToDateTime(x.Value.Key)).Days >= 365).ToList();
+
                     //Finalize block of the last date captured
-                    var endOfLastDay = OxyPlot.Axes.DateTimeAxis.ToDouble(OxyPlot.Axes.DateTimeAxis.ToDateTime(MessageGraph.PlotDataPoints.Last().Value.Key).AddDays(1).AddMilliseconds(-2));
-                    MessageGraph.PlotDataPoints.Add(new KeyValuePair<string, KeyValuePair<double, double>>("Value", new KeyValuePair<double, double>(endOfLastDay, MessageGraph.PlotDataPoints.Last().Value.Value)));
-                    MessageGraph.PlotDataPoints.Add(new KeyValuePair<string, KeyValuePair<double, double>>("Value", new KeyValuePair<double, double>(endOfLastDay, 0)));
+                    var endOfLastDay = OxyPlot.Axes.DateTimeAxis.ToDouble(OxyPlot.Axes.DateTimeAxis.ToDateTime(ActivityGraph.PlotDataPoints.Last().Value.Key).AddDays(1).AddMilliseconds(-2));
+                    ActivityGraph.PlotDataPoints.Add(new KeyValuePair<string, KeyValuePair<double, double>>("Value", new KeyValuePair<double, double>(endOfLastDay, ActivityGraph.PlotDataPoints.Last().Value.Value)));
+                    ActivityGraph.PlotDataPoints.Add(new KeyValuePair<string, KeyValuePair<double, double>>("Value", new KeyValuePair<double, double>(endOfLastDay, 0)));
                     
                     //Start new block for today
                     var startOfToday = OxyPlot.Axes.DateTimeAxis.ToDouble(DateTime.Today.AddMilliseconds(-1));
-                    MessageGraph.PlotDataPoints.Add(new KeyValuePair<string, KeyValuePair<double, double>>("Value", new KeyValuePair<double, double>(startOfToday, 0)));
-                    MessageGraph.PlotDataPoints.Add(new KeyValuePair<string, KeyValuePair<double, double>>("Value", new KeyValuePair<double, double>(dateValue, value)));
+                    ActivityGraph.PlotDataPoints.Add(new KeyValuePair<string, KeyValuePair<double, double>>("Value", new KeyValuePair<double, double>(startOfToday, 0)));
+                    ActivityGraph.PlotDataPoints.Add(new KeyValuePair<string, KeyValuePair<double, double>>("Value", new KeyValuePair<double, double>(dateValue, value)));
                 } else {
-                    MessageGraph.PlotDataPoints[MessageGraph.PlotDataPoints.Count - 1] = new KeyValuePair<string, KeyValuePair<double, double>>("Value", new KeyValuePair<double, double>(dateValue, MessageGraph.PlotDataPoints.Last().Value.Value + value));
+                    ActivityGraph.PlotDataPoints[ActivityGraph.PlotDataPoints.Count - 1] = new KeyValuePair<string, KeyValuePair<double, double>>("Value", new KeyValuePair<double, double>(dateValue, ActivityGraph.PlotDataPoints.Last().Value.Value + value));
                 }
             }
         }
 
         public void InitPlot(){
-            if(MessageGraph == null){
-                MessageGraph = new DatePlot(Id + "MessageGraph", "Date", "Characters sent", "dd-MMM", false);
+            if(ActivityGraph == null){
+                ActivityGraph = new DatePlot(Id + "ExperienceGraph", "Date", "Characters sent", "dd-MMM", false);
             } else {
-                MessageGraph.InitPlot("Date", "Characters sent", "dd-MMM", false);
+                ActivityGraph.InitPlot("Date", "Characters sent", "dd-MMM", false);
             }
         }
 
@@ -143,7 +145,7 @@ namespace MopsBot.Data.Entities
         private string DrawProgressBar()
         {
             int Level = CalcCurLevel();
-            double expCurrentHold = Experience - CalcExperience(Level);
+            double expCurrentHold = CharactersSent - CalcExperience(Level);
             string output = "", TempOutput = "";
             double diffExperience = CalcExperience(Level + 1) - CalcExperience(Level);
             for (int i = 0; i < Math.Floor(expCurrentHold / (diffExperience / 10)); i++)
@@ -163,21 +165,21 @@ namespace MopsBot.Data.Entities
             e.WithAuthor((await StaticBase.GetUserAsync(Id)).Username, (await StaticBase.GetUserAsync(Id)).GetAvatarUrl());
             e.WithCurrentTimestamp().WithColor(Discord.Color.Blue);
 
-            e.AddField("Level", $"{CalcCurLevel()} ({Experience}/{CalcExperience(CalcCurLevel() + 1)}xp)\n{DrawProgressBar()}", true);
+            e.AddField("Level", $"{CalcCurLevel()} ({CharactersSent}/{CalcExperience(CalcCurLevel() + 1)}xp)\n{DrawProgressBar()}", true);
             e.AddField("Interactions", $"**Kissed** {Kissed} times\n**Hugged** {Hugged} times\n**Punched** {Punched} times", true);
             e.AddField("Votepoints", Money, false);
 
-            if(MessageGraph != null){
+            if(ActivityGraph != null){
                 InitPlot();
-                if(MessageGraph.PlotDataPoints.Last().Value.Key < OxyPlot.Axes.DateTimeAxis.ToDouble(DateTime.Today)){
-                    MessageGraph.AddValue("Value", MessageGraph.PlotDataPoints.Last().Value.Value, OxyPlot.Axes.DateTimeAxis.ToDateTime(MessageGraph.PlotDataPoints.Last().Value.Key).AddDays(1).AddMilliseconds(-1), false, false);
-                    MessageGraph.AddValue("Value", 0, OxyPlot.Axes.DateTimeAxis.ToDateTime(MessageGraph.PlotDataPoints.Last().Value.Key).AddDays(1), false, false);
-                    MessageGraph.AddValue("Value", 0, DateTime.Now, false, false);
+                if(ActivityGraph.PlotDataPoints.Last().Value.Key < OxyPlot.Axes.DateTimeAxis.ToDouble(DateTime.Today)){
+                    ActivityGraph.AddValue("Value", ActivityGraph.PlotDataPoints.Last().Value.Value, OxyPlot.Axes.DateTimeAxis.ToDateTime(ActivityGraph.PlotDataPoints.Last().Value.Key).AddDays(1).AddMilliseconds(-1), false, false);
+                    ActivityGraph.AddValue("Value", 0, OxyPlot.Axes.DateTimeAxis.ToDateTime(ActivityGraph.PlotDataPoints.Last().Value.Key).AddDays(1), false, false);
+                    ActivityGraph.AddValue("Value", 0, DateTime.Now, false, false);
                 }
                 else
-                    MessageGraph.AddValue("Value", MessageGraph.PlotDataPoints.Last().Value.Value, DateTime.Now, false, false);
+                    ActivityGraph.AddValue("Value", ActivityGraph.PlotDataPoints.Last().Value.Value, DateTime.Now, false, false);
 
-                e.WithImageUrl(MessageGraph.DrawPlot());
+                e.WithImageUrl(ActivityGraph.DrawPlot());
             }
 
             return e.Build();
