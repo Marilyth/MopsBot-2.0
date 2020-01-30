@@ -193,7 +193,7 @@ namespace MopsBot.Data.Tracker
                 
                 if(summarize == false)
                     result[cur] = tmpJson.ToString();
-                else if(keywords.Last().StartsWith("all") || keywords.Last().StartsWith("as:")){
+                else if(keywords.Last().StartsWith("all") || (keywords[keywords.Count()-2].StartsWith("all") && keywords.Last().StartsWith("as:"))){
                     try{
                         result[cur] = string.Join(", ", tmpJson);
                     } catch {
