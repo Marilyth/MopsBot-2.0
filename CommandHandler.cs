@@ -69,6 +69,17 @@ namespace MopsBot
             {
                 // Don't handle the command if it is a system message
                 var message = parameterMessage as SocketUserMessage;
+
+                //Add experience the size of the message length
+                if(message.Channel is SocketGuildChannel channel && (!message.Author.IsBot || message.Author.Id == Program.Client.CurrentUser.Id)){
+                    if((DateTime.Now - System.Diagnostics.Process.GetCurrentProcess().StartTime).Minutes >= 2 && channel.Guild.MemberCount <= 10000){
+                        await MopsBot.Data.Entities.User.ModifyUserAsync(message.Author.Id, x => {
+                            x.CharactersSent += message.Content.Length;
+                            x.AddGraphValue(message.Content.Length);
+                        });
+                    }
+                }
+
                 if (message == null || (message.Author.IsBot && !message.Content.StartsWith("[ProcessBotMessage]"))) return;
 
                 // Mark where the prefix ends and the command begins
@@ -79,16 +90,6 @@ namespace MopsBot
                 if (message.Channel is Discord.IDMChannel) id = message.Channel.Id;
                 else id = ((SocketGuildChannel)message.Channel).Guild.Id;
                 var prefix = await GetGuildPrefixAsync(id);
-
-                //Add experience the size of the message length
-                if(message.Channel is SocketGuildChannel channel){
-                    if((DateTime.Now - System.Diagnostics.Process.GetCurrentProcess().StartTime).Minutes >= 2 && channel.Guild.MemberCount <= 10000){
-                        await MopsBot.Data.Entities.User.ModifyUserAsync(message.Author.Id, x => {
-                            x.CharactersSent += message.Content.Length;
-                            x.AddGraphValue(message.Content.Length);
-                        });
-                    }
-                }
 
                 // Determine if the message has a valid prefix, adjust argPos 
                 if (!message.Content.StartsWith("[ProcessBotMessage]") && !(message.HasMentionPrefix(client.CurrentUser, ref argPos) || message.HasStringPrefix(prefix, ref argPos) || message.HasCharPrefix('?', ref argPos))) return;
