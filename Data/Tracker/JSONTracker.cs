@@ -148,6 +148,7 @@ namespace MopsBot.Data.Tracker
                 string curMod = cur;
                 if(curMod.Contains("graph:")) curMod = curMod.Replace("graph:", string.Empty);
                 if(curMod.Contains("always:")) curMod = curMod.Replace("always:", string.Empty);
+                if(curMod.Contains("image:")) curMod = curMod.Replace("image:", string.Empty);
                 string[] keywords = curMod.Split("->");
                 var tmpJson = json;
                 bool summarize = false;
@@ -227,6 +228,10 @@ namespace MopsBot.Data.Tracker
                 }
                 else if(kvp.Key.Contains("always:")){
                     embed.AddField(keyName, newS, true);
+                }
+                
+                if(kvp.Key.Contains("image:")){
+                    embed.ThumbnailUrl = newS;
                 }
             }
 

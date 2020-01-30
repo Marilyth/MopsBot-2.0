@@ -1026,7 +1026,10 @@ namespace MopsBot.Module
                 foreach (var cur in result)
                 {
                     var resultName = cur.Key.Contains("as:") ? cur.Key.Split(":").Last() : cur.Key.Split("->").Last();
-                    embed.AddField(resultName, cur.Value);
+                    if(!cur.Key.Contains("image:"))
+                        embed.AddField(resultName, cur.Value);
+                    else
+                        embed.ThumbnailUrl = cur.Value;
                 }
                 await ReplyAsync(embed: embed.Build());
             }
