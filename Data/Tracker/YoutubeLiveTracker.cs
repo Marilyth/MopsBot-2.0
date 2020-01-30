@@ -54,7 +54,7 @@ namespace MopsBot.Data.Tracker
                 ViewerGraph.InitPlot();
 
             if(VideoId != null){
-                SetTimer(60000);
+                SetTimer(300000);
             } else {
                 SetTimer(900000);
             }
@@ -160,7 +160,7 @@ namespace MopsBot.Data.Tracker
                         foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][ONLINE]).ToList())
                             await OnMinorChangeTracked(channel, (string)ChannelConfig[channel]["Notification"]);
                         
-                        SetTimer(60000, 60000);
+                        SetTimer(300000, 300000);
 
                         IconUrl = (await fetchChannel()).snippet.thumbnails.medium.url;
                     }
@@ -173,7 +173,7 @@ namespace MopsBot.Data.Tracker
                 if (!isStreaming)
                 {
                     VideoId = null;
-                    SetTimer(600000);
+                    SetTimer(900000);
                     ViewerGraph.Dispose();
                     ViewerGraph = null;
 
