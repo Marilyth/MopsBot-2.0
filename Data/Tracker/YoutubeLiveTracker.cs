@@ -133,17 +133,18 @@ namespace MopsBot.Data.Tracker
         {
             while (true)
             {
-                var liveTrackers = StaticBase.Trackers[TrackerType.YoutubeLive].GetTrackers().Values.Where(x => ((YoutubeLiveTracker)x).VideoId != null).ToList();
+                var liveTrackers = StaticBase.Trackers[TrackerType.YoutubeLive].GetTrackers().Where(x => ((YoutubeLiveTracker)x.Value).VideoId != null).ToDictionary(x => x.Key, v => v.Value);
+                var liveTrackersList = liveTrackers.Values.ToList();
                 for (int i = 0; i < liveTrackers.Count; i += 50)
                 {
                     try
                     {
-                        var currentBatch = liveTrackers.Skip(i).Take(50).ToList();
+                        var currentBatch = liveTrackersList.Skip(i).Take(50).ToList();
                         var tmpResult = await FetchJSONDataAsync<LiveVideo>($"https://www.googleapis.com/youtube/v3/videos?part=snippet%2C+liveStreamingDetails&maxResults=50&id={String.Join(",", currentBatch.Select(x => (x as YoutubeLiveTracker).VideoId))}&key={Program.Config["YoutubeLive"]}");
 
                         for (int j = 0; j < tmpResult.items.Count; j++)
                         {
-                            (currentBatch[j] as YoutubeLiveTracker).StreamInfo = tmpResult.items[j];
+                            (liveTrackers[tmpResult.items[j].snippet.channelId] as YoutubeLiveTracker).StreamInfo = tmpResult.items[j];
                         }
 
                         await Task.Delay(5000);
