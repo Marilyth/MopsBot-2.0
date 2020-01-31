@@ -232,12 +232,13 @@ namespace MopsBot
             if (commandName != null)
             {
                 var matches = commands.Commands.Where(x => x.Name.ToLower().Equals(commandName) && (moduleNames.Length > 0 ? x.Module.Name.ToLower().Equals(moduleNames.LastOrDefault()) : true));
+                var perfectMatch = matches.FirstOrDefault(match => CommandToString(match).ToLower().Equals(((moduleNames.Count() > 0 ? string.Join(" ", moduleNames) + " " : "" )+ commandName).ToLower()));
 
-                if(matches.Count() > 1){
+                if(matches.Count() > 1 && perfectMatch == null){
                     throw new Exception($"Multiple commands found, please specify between:\n```{String.Join("\n", matches.Select(x => CommandToString(x)))}```");
                 }
 
-                CommandInfo curCommand = matches.FirstOrDefault();
+                CommandInfo curCommand = perfectMatch;
 
                 if (curCommand?.Summary.Equals("") ?? true)
                 {
