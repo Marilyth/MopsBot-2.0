@@ -114,6 +114,7 @@ namespace MopsBot
                 foreach (var tracker in Trackers)
                 {
                     var trackerType = tracker.Key;
+                    
                     if(tracker.Key == BaseTracker.TrackerType.Twitch){
                         Task.Run(() => TwitchTracker.ObtainTwitchToken());
                         Task.Run(() => {
@@ -127,6 +128,10 @@ namespace MopsBot
                     else if(tracker.Key == BaseTracker.TrackerType.Youtube){
                         Task.Run(() => {tracker.Value.PostInitialisation();
                                         YoutubeTracker.fetchChannelsBatch().Wait();});
+                    }
+                    else if(tracker.Key == BaseTracker.TrackerType.YoutubeLive){
+                        Task.Run(() => {tracker.Value.PostInitialisation();
+                                        YoutubeLiveTracker.fetchChannelsBatch().Wait();});
                     }
                     else if(tracker.Key != BaseTracker.TrackerType.TwitchGroup)
                         Task.Run(() => tracker.Value.PostInitialisation());

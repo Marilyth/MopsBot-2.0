@@ -20,10 +20,11 @@ namespace MopsBot.Data.Tracker
     [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
     public class YoutubeLiveTracker : BaseUpdatingTracker
     {
+        //Gets set automatically by batch channel fetching
+        private LiveVideoItem StreamInfo;
         public string VideoId, IconUrl;
         private string channelThumbnailUrl;
         public DatePlot ViewerGraph;
-        private LiveVideoItem liveStatus;
         public static readonly string SHOWEMBED = "ShowEmbed", THUMBNAIL = "LargeThumbnail", OFFLINE = "NotifyOnOffline", ONLINE = "NotifyOnOnline", SHOWCHAT = "ShowChat";
 
         public YoutubeLiveTracker() : base()
@@ -39,7 +40,7 @@ namespace MopsBot.Data.Tracker
             {
                 var checkExists = fetchChannel().Result;
                 Name = checkExists.id;
-                SetTimer();
+                SetTimer(900000);
             }
             catch (Exception e)
             {
@@ -54,7 +55,7 @@ namespace MopsBot.Data.Tracker
                 ViewerGraph.InitPlot();
 
             if(VideoId != null){
-                SetTimer(300000);
+                SetTimer(60000);
             } else {
                 SetTimer(900000);
             }
@@ -113,16 +114,28 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        private async Task<LiveVideoItem> fetchLiveVideoContent()
+        public static async Task<int> scrapeViewers(string videoId){
+            var html = await MopsBot.Module.Information.GetURLAsync($"https://www.youtube.com/watch?v={videoId}");
+            var match = System.Text.RegularExpressions.Regex.Matches(html, @"Aktuell.(.*?).Zuschauer", System.Text.RegularExpressions.RegexOptions.Singleline);
+            var viewers = int.Parse(match[0].Groups[1].Value.Replace(".", ""));
+            return viewers;
+        }
+
+        public static async Task fetchChannelsBatch()
         {
-            var tmpResult = await FetchJSONDataAsync<LiveVideo>($"https://www.googleapis.com/youtube/v3/videos?part=snippet%2C+liveStreamingDetails&id={VideoId}&key={Program.Config["YoutubeLive"]}");
+            while(true){
+                var liveTrackers = StaticBase.Trackers[TrackerType.YoutubeLive].GetTrackers().Values.Where(x => ((YoutubeLiveTracker)x).VideoId != null).ToList();
+                for(int i = 0; i < ((int)(liveTrackers.Count - 1)/50) + 1; i++){
+                    var currentBatch = liveTrackers.Skip(50*i).Take(Math.Min(50, liveTrackers.Count - 50*i)).ToList();
+                    var tmpResult = await FetchJSONDataAsync<LiveVideo>($"https://www.googleapis.com/youtube/v3/videos?part=snippet%2C+liveStreamingDetails&maxResults=50&id={String.Join(",", currentBatch.Select(x => (x as YoutubeLiveTracker).VideoId))}&key={Program.Config["YoutubeLive"]}");
 
-            if (tmpResult.items.Count > 0)
-            {
-                return tmpResult.items.FirstOrDefault();
+                    for(int j = 0; j < tmpResult.items.Count; j++){
+                        (currentBatch[j] as YoutubeLiveTracker).StreamInfo = tmpResult.items[j];
+                    }
+                }
+
+                await Task.Delay(60000);
             }
-
-            return null;
         }
 
         private async Task<ChannelItem> fetchChannel()
@@ -133,8 +146,8 @@ namespace MopsBot.Data.Tracker
         }
 
         private async Task<List<Message>> fetchChat(){
-            if(liveStatus.liveStreamingDetails.activeLiveChatId == null) return new List<Message>();
-            var tmpResult = await FetchJSONDataAsync<ChatMessages>($"https://www.googleapis.com/youtube/v3/liveChat/messages?liveChatId={liveStatus.liveStreamingDetails.activeLiveChatId}&part=snippet,authorDetails&key={Program.Config["YoutubeLive"]}");
+            if(StreamInfo.liveStreamingDetails.activeLiveChatId == null) return new List<Message>();
+            var tmpResult = await FetchJSONDataAsync<ChatMessages>($"https://www.googleapis.com/youtube/v3/liveChat/messages?liveChatId={StreamInfo.liveStreamingDetails.activeLiveChatId}&part=snippet,authorDetails&key={Program.Config["YoutubeLive"]}");
             return tmpResult.items;
         }
 
@@ -153,22 +166,23 @@ namespace MopsBot.Data.Tracker
                     //New livestream
                     else
                     {
+                        while(StreamInfo == null) await Task.Delay(60000);
+
                         ViewerGraph = new DatePlot(Name, "Time since start", "Viewers");
-                        liveStatus = await fetchLiveVideoContent();
-                        ViewerGraph.AddValue("Viewers", 0, liveStatus.liveStreamingDetails.actualStartTime);
+
+                        ViewerGraph.AddValue("Viewers", 0, StreamInfo.liveStreamingDetails.actualStartTime);
 
                         foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][ONLINE]).ToList())
                             await OnMinorChangeTracked(channel, (string)ChannelConfig[channel]["Notification"]);
                         
-                        SetTimer(300000, 300000);
+                        SetTimer(60000, 60000);
 
                         IconUrl = (await fetchChannel()).snippet.thumbnails.medium.url;
                     }
                 }
 
-                liveStatus = await fetchLiveVideoContent();
-
-                bool isStreaming = liveStatus?.snippet?.liveBroadcastContent?.Equals("live") ?? false;
+                if(StreamInfo == null) await Task.Delay(120000);
+                bool isStreaming = StreamInfo?.snippet?.liveBroadcastContent?.Equals("live") ?? false;
 
                 if (!isStreaming)
                 {
@@ -183,11 +197,13 @@ namespace MopsBot.Data.Tracker
                     ToUpdate = new Dictionary<ulong, ulong>();
 
                     foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][OFFLINE]).ToList())
-                        await OnMinorChangeTracked(channel, $"{liveStatus.snippet.channelTitle} went Offline!");
+                        await OnMinorChangeTracked(channel, $"{StreamInfo.snippet.channelTitle} went Offline!");
+                    
+                    StreamInfo = null;
                 }
                 else
                 {
-                    ViewerGraph.AddValue("Viewers", double.Parse(liveStatus.liveStreamingDetails.concurrentViewers));
+                    ViewerGraph.AddValue("Viewers", double.Parse(StreamInfo.liveStreamingDetails.concurrentViewers));
 
                     foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][SHOWEMBED]).ToList())
                         await OnMajorChangeTracked(channel, await createEmbed((bool)ChannelConfig[channel][THUMBNAIL], (bool)ChannelConfig[channel][SHOWCHAT]));
@@ -206,14 +222,14 @@ namespace MopsBot.Data.Tracker
             ViewerGraph.SetMaximumLine();
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0xFF0000);
-            e.Title = liveStatus.snippet.title;
+            e.Title = StreamInfo.snippet.title;
             e.Url = $"https://www.youtube.com/watch?v={VideoId}";
             e.WithCurrentTimestamp();
 
             EmbedAuthorBuilder author = new EmbedAuthorBuilder();
-            author.Name = liveStatus.snippet.channelTitle;
-            author.Url = $"https://www.youtube.com/channel/{liveStatus.snippet.channelId}";
-            author.IconUrl = IconUrl ?? liveStatus.snippet.thumbnails.standard.url;
+            author.Name = StreamInfo.snippet.channelTitle;
+            author.Url = $"https://www.youtube.com/channel/{StreamInfo.snippet.channelId}";
+            author.IconUrl = IconUrl ?? StreamInfo.snippet.thumbnails.standard.url;
             e.Author = author;
 
             EmbedFooterBuilder footer = new EmbedFooterBuilder();
@@ -221,11 +237,11 @@ namespace MopsBot.Data.Tracker
             footer.Text = "Youtube-Live";
             e.Footer = footer;
 
-            e.ThumbnailUrl = largeThumbnail ? ViewerGraph.DrawPlot() : $"{liveStatus.snippet.thumbnails.medium.url}?rand={StaticBase.ran.Next(0, 99999999)}";
-            e.ImageUrl = largeThumbnail ? $"{liveStatus.snippet.thumbnails.maxres?.url ?? liveStatus.snippet.thumbnails.medium.url}?rand={StaticBase.ran.Next(0, 99999999)}" : ViewerGraph.DrawPlot();
+            e.ThumbnailUrl = largeThumbnail ? ViewerGraph.DrawPlot() : $"{StreamInfo.snippet.thumbnails.medium.url}?rand={StaticBase.ran.Next(0, 99999999)}";
+            e.ImageUrl = largeThumbnail ? $"{StreamInfo.snippet.thumbnails.maxres?.url ?? StreamInfo.snippet.thumbnails.medium.url}?rand={StaticBase.ran.Next(0, 99999999)}" : ViewerGraph.DrawPlot();
 
-            e.AddField("Viewers", liveStatus.liveStreamingDetails.concurrentViewers, true);
-            var liveTime = DateTime.UtcNow - liveStatus.liveStreamingDetails.actualStartTime;
+            e.AddField("Viewers", StreamInfo.liveStreamingDetails.concurrentViewers, true);
+            var liveTime = DateTime.UtcNow - StreamInfo.liveStreamingDetails.actualStartTime;
             e.AddField("Runtime", (int)liveTime.TotalHours + "h " + liveTime.ToString(@"mm\m"), true);
 
             if (showChat)
