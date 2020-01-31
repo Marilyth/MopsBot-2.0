@@ -224,7 +224,7 @@ namespace MopsBot.Data.Tracker
                     ToUpdate = new Dictionary<ulong, ulong>();
 
                     foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][OFFLINE]).ToList())
-                        await OnMinorChangeTracked(channel, $"{StreamInfo.snippet.channelTitle} went Offline!");
+                        await OnMinorChangeTracked(channel, $"{StreamInfo?.snippet?.channelTitle ?? "Streamer"} went Offline!");
 
                     StreamInfo = null;
                 }
