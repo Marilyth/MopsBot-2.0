@@ -45,9 +45,24 @@ namespace MopsBot.Data.Tracker
         public async override void PostChannelAdded(ulong channelId)
         {
             base.PostChannelAdded(channelId);
-            ChannelConfig[channelId][VIEWTHRESHOLD] = 2;
+            ChannelConfig[channelId][VIEWTHRESHOLD] = (uint)2;
 
             await UpdateTracker();
+        }
+
+        public override async void Conversion(object obj = null)
+        {
+            bool save = false;
+            foreach (var channel in ChannelConfig.Keys.ToList())
+            {
+                if (ChannelConfig[channel][VIEWTHRESHOLD] is Int32)
+                {
+                    ChannelConfig[channel][VIEWTHRESHOLD] = (uint)(int)ChannelConfig[channel][VIEWTHRESHOLD];
+                    save = true;
+                }
+            }
+            if (save)
+                await UpdateTracker();
         }
         
         protected async override void CheckForChange_Elapsed(object stateinfo)
