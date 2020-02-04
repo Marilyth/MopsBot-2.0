@@ -12,7 +12,7 @@
   <ItemGroup>
     <PackageReference Include="Discord.Net" Version="2.1.1" />
     <PackageReference Include="Discord.Net.Rest" Version="2.1.1" />
-    <PackageReference Include="Discord.Addons.Interactive" Version="1.0.1" />
+    <PackageReference Include="Discord.Addons.PassiveInteractive" Version="2.0.4" />
     <PackageReference Include="OxyPlot.Core" Version="2.0.0-unstable1035" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.0-preview1.19506.1" />
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.2.5" />

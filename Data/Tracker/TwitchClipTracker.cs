@@ -49,21 +49,6 @@ namespace MopsBot.Data.Tracker
 
             await UpdateTracker();
         }
-
-        public override async void Conversion(object obj = null)
-        {
-            bool save = false;
-            foreach (var channel in ChannelConfig.Keys.ToList())
-            {
-                if (ChannelConfig[channel][VIEWTHRESHOLD] is Int32)
-                {
-                    ChannelConfig[channel][VIEWTHRESHOLD] = (uint)(int)ChannelConfig[channel][VIEWTHRESHOLD];
-                    save = true;
-                }
-            }
-            if (save)
-                await UpdateTracker();
-        }
         
         protected async override void CheckForChange_Elapsed(object stateinfo)
         {

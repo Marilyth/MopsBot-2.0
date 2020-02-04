@@ -20,7 +20,7 @@ namespace MopsBot
     {
         private static Exception mostRecentException = null;
         public CommandService commands { get; private set; }
-        private DiscordSocketClient client;
+        private DiscordShardedClient client;
         public IServiceProvider _provider { get; private set; }
 
         /// <summary>
@@ -32,7 +32,7 @@ namespace MopsBot
         {
             // Create Command Service, inject it into Dependency Map
             _provider = provider;
-            client = _provider.GetService<DiscordSocketClient>();
+            client = _provider.GetService<DiscordShardedClient>();
 
             commands = new CommandService();
             //_map.Add(commands);
@@ -107,7 +107,7 @@ namespace MopsBot
                     argPos = "[ProcessBotMessage]".Length;
 
                 // Create a Command Context
-                var context = new SocketCommandContext(client, message);
+                var context = new ShardedCommandContext(client, message);
 
                 //Execute if command exists
                 if (commands.Search(context, argPos).IsSuccess)

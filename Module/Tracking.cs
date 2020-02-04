@@ -19,11 +19,11 @@ using MopsBot.Module.Preconditions;
 
 namespace MopsBot.Module
 {
-    public class Tracking : InteractiveBase
+    public class Tracking : InteractiveBase<ShardedCommandContext>
     {
         [Group("Twitter")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public class Twitter : InteractiveBase
+        public class Twitter : InteractiveBase<ShardedCommandContext>
         {
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified TwitterUser, in the Channel you are calling this command in.")]
@@ -149,7 +149,7 @@ namespace MopsBot.Module
 
         [Group("Osu")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public class Osu : InteractiveBase
+        public class Osu : InteractiveBase<ShardedCommandContext>
         {
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified Osu player, in the Channel you are calling this command in.")]
@@ -236,7 +236,7 @@ namespace MopsBot.Module
 
         [Group("Youtube")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public class Youtube : InteractiveBase
+        public class Youtube : InteractiveBase<ShardedCommandContext>
         {
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified Youtuber, in the Channel you are calling this command in.")]
@@ -307,7 +307,7 @@ namespace MopsBot.Module
 
         [Group("Twitch")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public class Twitch : InteractiveBase
+        public class Twitch : InteractiveBase<ShardedCommandContext>
         {
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified Streamer, in the Channel you are calling this command in.")]
@@ -403,7 +403,7 @@ namespace MopsBot.Module
             }
 
             [Group("Guild")]
-            public class Guild : InteractiveBase
+            public class Guild : InteractiveBase<ShardedCommandContext>
             {
 
                 [Command("SetHostNotificationChannel")]
@@ -553,7 +553,7 @@ namespace MopsBot.Module
 
         [Group("TwitchClip")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public class TwitchClip : InteractiveBase
+        public class TwitchClip : InteractiveBase<ShardedCommandContext>
         {
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified streamer's top clips every 30 minutes, in the Channel you are calling this command in.")]
@@ -637,7 +637,7 @@ namespace MopsBot.Module
 
         [Group("Reddit")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public class Reddit : InteractiveBase
+        public class Reddit : InteractiveBase<ShardedCommandContext>
         {
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified Subreddit, in the Channel you are calling this command in."
@@ -730,7 +730,7 @@ namespace MopsBot.Module
 
         [Group("Overwatch")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public class Overwatch : InteractiveBase
+        public class Overwatch : InteractiveBase<ShardedCommandContext>
         {
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified Overwatch player, in the Channel you are calling this command right now.\nParameter: Username-Battletag")]
@@ -809,7 +809,7 @@ namespace MopsBot.Module
         [Group("GW2")]
         [Hide]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public class GW2 : InteractiveBase
+        public class GW2 : InteractiveBase<ShardedCommandContext>
         {
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified GW2 player, in the Channel you are calling this command right now.")]
@@ -887,7 +887,7 @@ namespace MopsBot.Module
         [Group("Chess")]
         [Hide]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public class Chess : InteractiveBase
+        public class Chess : InteractiveBase<ShardedCommandContext>
         {
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified Lichess player, in the Channel you are calling this command right now.")]
@@ -967,7 +967,7 @@ namespace MopsBot.Module
 
         [Group("JSON")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public class JSON : InteractiveBase
+        public class JSON : InteractiveBase<ShardedCommandContext>
         {
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the Json, using the specified locations.\n" +
@@ -1061,7 +1061,7 @@ namespace MopsBot.Module
 
         [Group("OSRS")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public class OSRS : InteractiveBase
+        public class OSRS : InteractiveBase<ShardedCommandContext>
         {
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the stats of the OSRS player.")]
@@ -1154,7 +1154,7 @@ namespace MopsBot.Module
         [RequireUserPermission(ChannelPermission.ManageChannels)]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         [Ratelimit(1, 60, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
-        public class HTML : InteractiveBase
+        public class HTML : InteractiveBase<ShardedCommandContext>
         {
             [Command("TrackRegex", RunMode = RunMode.Async)]
             [Summary("Tracks regex on a webpage. Use () around the text you want to track to signify a match.")]
@@ -1271,7 +1271,7 @@ namespace MopsBot.Module
 
         [Group("RSS")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public class RSS : InteractiveBase
+        public class RSS : InteractiveBase<ShardedCommandContext>
         {
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified RSS feed url")]
@@ -1351,7 +1351,7 @@ namespace MopsBot.Module
 
         [Group("Steam")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public class Steam : InteractiveBase
+        public class Steam : InteractiveBase<ShardedCommandContext>
         {
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified steam user, in the Channel you are calling this command in.\nWill notify on game changes and achievements.")]
@@ -1479,7 +1479,7 @@ namespace MopsBot.Module
             }
         }
 
-        public static async Task ModifyConfig(InteractiveBase context, BaseTracker tracker, TrackerType trackerType)
+        public static async Task ModifyConfig(InteractiveBase<ShardedCommandContext> context, BaseTracker tracker, TrackerType trackerType)
         {
             await context.Context.Channel.SendMessageAsync($"Current Config:\n```yaml\n{string.Join("\n", tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[context.Context.Guild.Id]].Select(x => x.Key + ": " + x.Value))}```\nPlease reply with one or more changed lines.");
             var reply = await context.NextMessageAsync(new EnsureSourceUserCriterion(), TimeSpan.FromMinutes(5));

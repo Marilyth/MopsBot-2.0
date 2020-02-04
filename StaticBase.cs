@@ -203,7 +203,7 @@ namespace MopsBot
         }
 
         public static async Task<RestUser> GetUserAsync(ulong userId){
-            return await Program.Client.Rest.GetUserAsync(userId);
+            return await Program.Client.Shards.First().Rest.GetUserAsync(userId);
         }
 
         /// <summary>

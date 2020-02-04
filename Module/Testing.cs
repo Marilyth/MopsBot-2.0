@@ -8,7 +8,7 @@ using MopsBot.Module.Preconditions;
 
 namespace MopsBot.Module{
     [Hide]
-    public class Testing : ModuleBase{
+    public class Testing : ModuleBase<ShardedCommandContext>{
 
         [Command("colour")]
         [RequireBotManage]

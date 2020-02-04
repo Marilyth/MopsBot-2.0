@@ -27,14 +27,14 @@ namespace MopsBot
             Task.Run(() => BuildWebHost(args).Run());
             new Program().Start().GetAwaiter().GetResult();
         }
-        public static DiscordSocketClient Client;
+        public static DiscordShardedClient Client;
         public static Dictionary<string, string> Config;
         public static CommandHandler Handler { get; private set; }
         public static ReactionHandler ReactionHandler { get; private set; }
 
         private async Task Start()
         {
-            Client = new DiscordSocketClient(new DiscordSocketConfig()
+            Client = new DiscordShardedClient(new DiscordSocketConfig()
             {
                 LogLevel = LogSeverity.Info,
                 //AlwaysDownloadUsers = true
@@ -47,7 +47,7 @@ namespace MopsBot
             await Client.StartAsync();
 
             Client.Log += ClientLog;
-            Client.Ready += onClientReady;
+            Client.ShardReady += onShardReady;
 
             var map = new ServiceCollection().AddSingleton(Client)
                 // .AddSingleton(new AudioService())
@@ -80,13 +80,21 @@ namespace MopsBot
             Console.WriteLine(message);
         }
 
-        private Task onClientReady()
+        private static int shardsReady = 0;
+        private async Task onShardReady(DiscordSocketClient client)
         {
-            Task.Run(() => {
-                StaticBase.UpdateStatusAsync();
-                StaticBase.initTracking();
-            });
-            return Task.CompletedTask;
+            shardsReady++;
+            await MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Shard {shardsReady} is ready."));
+            if(shardsReady == Client.Shards.Count){
+                Task.Run(() => {
+                    StaticBase.UpdateStatusAsync();
+                    StaticBase.initTracking();
+                });
+            }
+        }
+
+        public static DiscordSocketClient GetShardFor(ulong channelId){
+            return Client.GetShardFor((Client.GetChannel(channelId) as SocketGuildChannel).Guild);
         }
         
         public static IWebHost BuildWebHost(string[] args) =>
