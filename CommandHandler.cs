@@ -107,7 +107,7 @@ namespace MopsBot
                     argPos = "[ProcessBotMessage]".Length;
 
                 // Create a Command Context
-                var context = new SocketCommandContext(client.GetShardFor((message.Channel as SocketGuildChannel).Guild), message);
+                var context = new ShardedCommandContext(client, message);
 
                 //Execute if command exists
                 if (commands.Search(context, argPos).IsSuccess)
