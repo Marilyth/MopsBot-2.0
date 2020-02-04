@@ -30,6 +30,7 @@ namespace MopsBot.Module
             [RequireBotPermission(ChannelPermission.ManageMessages)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
             [RequireUserVotepoints(2)]
+            [TrackerLimit(20, TrackerType.YoutubeLive)]
             public async Task trackYoutube(string channelID, [Remainder]string notificationMessage = "New Stream")
             {
                 using (Context.Channel.EnterTypingState())
@@ -103,6 +104,7 @@ namespace MopsBot.Module
             [RequireBotPermission(ChannelPermission.ManageMessages)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
             [RequireUserVotepoints(2)]
+            [TrackerLimit(20, TrackerType.Mixer)]
             public async Task trackStreamer(string streamerName, [Remainder]string notificationMessage = "Stream went live!")
             {
                 using (Context.Channel.EnterTypingState())
