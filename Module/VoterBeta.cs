@@ -20,7 +20,7 @@ namespace MopsBot.Module
     {
         [Group("YoutubeLive")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public class YoutubeLive : InteractiveBase
+        public class YoutubeLive : InteractiveBase<ShardedCommandContext>
         {
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified Youtubers livestreams, in the Channel you are calling this command in.")]
@@ -93,7 +93,7 @@ namespace MopsBot.Module
 
         [Group("Mixer")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public class Mixer : InteractiveBase
+        public class Mixer : InteractiveBase<ShardedCommandContext>
         {
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified Streamer, in the Channel you are calling this command in.")]
