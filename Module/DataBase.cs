@@ -11,7 +11,7 @@ using MopsBot.Module.Preconditions;
 
 namespace MopsBot.Module
 {
-    public class DataBase : ModuleBase
+    public class DataBase : ModuleBase<ShardedCommandContext>
     {
         [Command("Hug", RunMode = RunMode.Async)]
         [Summary("Hugs the specified person")]

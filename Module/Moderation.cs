@@ -18,14 +18,14 @@ using MopsBot.Data.Entities;
 
 namespace MopsBot.Module
 {
-    public class Moderation : ModuleBase
+    public class Moderation : ModuleBase<ShardedCommandContext>
     {
         public static Dictionary<ulong, ulong> CustomCaller = new Dictionary<ulong, ulong>();
 
         [Group("Role")]
         [RequireBotPermission(ChannelPermission.ManageRoles)]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public class Role : ModuleBase
+        public class Role : ModuleBase<ShardedCommandContext>
         {
             [Command("CreateInvite", RunMode = RunMode.Async)]
             [Summary("Creates a reaction-invite message for the specified Role.\nPeople will be able to invite themselves into the role.")]
@@ -38,7 +38,8 @@ namespace MopsBot.Module
             {
                 using (Context.Channel.EnterTypingState())
                 {
-                    var highestRole = ((SocketGuildUser)await Context.Guild.GetCurrentUserAsync()).Roles.OrderByDescending(x => x.Position).First();
+                    await Context.Guild.DownloadUsersAsync();
+                    var highestRole = ((SocketGuildUser)Context.Guild.GetUser(Context.Client.CurrentUser.Id)).Roles.OrderByDescending(x => x.Position).First();
                     if(description.Equals("DEFAULT")) description = "To join/leave the " + (role.IsMentionable ? role.Mention : $"**{role.Name}**") + " role, add/remove the ✅ Icon below this message!\n" + "If you can manage Roles, you may delete this invitation by pressing the 🗑 Icon";
                     if (role != null && role.Position < highestRole.Position)
                         await StaticBase.ReactRoleJoin.AddInvite((ITextChannel)Context.Channel, role, description);
@@ -69,7 +70,7 @@ namespace MopsBot.Module
         [RequireBotPermission(ChannelPermission.AddReactions)]
         [RequireBotPermission(ChannelPermission.ManageMessages)]
         [RequireBotPermission(ChannelPermission.ReadMessageHistory)]
-        public class Poll : ModuleBase
+        public class Poll : ModuleBase<ShardedCommandContext>
         {
             [Command("Create", RunMode = RunMode.Async), Summary("Creates a poll\nExample: !poll \"What should I play\" \"Dark Souls\" \"Osu!\" \"WoW\"")]
             [RequireUserPermission(ChannelPermission.ManageMessages)]
@@ -118,7 +119,7 @@ namespace MopsBot.Module
         [RequireBotPermission(ChannelPermission.AddReactions)]
         [RequireBotPermission(ChannelPermission.ManageMessages)]
         [RequireBotPermission(ChannelPermission.ReadMessageHistory)]
-        public class Giveaway : ModuleBase
+        public class Giveaway : ModuleBase<ShardedCommandContext>
         {
             [Command("Create", RunMode = RunMode.Async)]
             [Summary("Creates giveaway.")]
@@ -183,7 +184,7 @@ namespace MopsBot.Module
         }
 
         [Group("Janitor")]
-        public class Janitor : ModuleBase
+        public class Janitor : ModuleBase<ShardedCommandContext>
         {
             [Command("Set")]
             [Alias("AutoRemove")]
@@ -268,7 +269,7 @@ namespace MopsBot.Module
 
         [Group("WelcomeMessage")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public class WelcomeMessage : ModuleBase
+        public class WelcomeMessage : ModuleBase<ShardedCommandContext>
         {
             [Command("Create", RunMode = RunMode.Async)]
             [Summary("Makes Mops greet people, in the channel you are calling this command in.\n" +
@@ -574,7 +575,7 @@ namespace MopsBot.Module
              .WithColor(Discord.Color.Blue)
              .WithAuthor(async x =>
              {
-                 x.IconUrl = (await Context.Client.GetGuildAsync(435919579005321237)).IconUrl;
+                 x.IconUrl = Context.Client.GetGuild(435919579005321237).IconUrl;
                  x.Name = "Click to join the Support Server!";
                  x.Url = "https://discord.gg/wZFE2Zs";
              });

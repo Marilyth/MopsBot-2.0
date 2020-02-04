@@ -15,7 +15,7 @@ using MopsBot.Module.Preconditions;
 
 namespace MopsBot.Module
 {
-    public class Information : ModuleBase
+    public class Information : ModuleBase<ShardedCommandContext>
     {
         public static int FailedRequests = 0, SucceededRequests = 0;
 
@@ -27,6 +27,41 @@ namespace MopsBot.Module
             if (user == null)
                 user = (SocketGuildUser)Context.User;
             await ReplyAsync(user.JoinedAt.Value.Date.ToString("d"));
+        }
+
+        [Command("BotInfo")]
+        [Summary("Returns information about the bot.")]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
+        public async Task BotInfo(){
+            using (var prc = new System.Diagnostics.Process())
+                {
+                    prc.StartInfo.FileName = "convert";
+                    prc.StartInfo.Arguments = $"-set density 300 \"//var//www//html//StreamCharts//MopsKillerPlot.pdf\" \"//var//www//html//StreamCharts//MopsKillerPlot.png\"";
+
+                    prc.Start();
+
+                    prc.WaitForExit();
+                }
+            
+            var embed = new EmbedBuilder();
+
+            embed.WithColor(Discord.Color.Blue).WithCurrentTimestamp().WithTitle("Mops Statistics");
+
+            embed.AddField(x => {
+                x.WithName("Shards").WithValue(string.Join("\n", Program.Client.Shards.Select(y => (y.ConnectionState.Equals(ConnectionState.Connected) ? new Emoji("🟢") : new Emoji("🔴")) + $" Shard {y.ShardId} ({y.Guilds.Count} Servers)")));
+                x.IsInline = true;
+            });
+
+            embed.AddField(x => {
+                var MopsBot = Process.GetCurrentProcess();
+                var runtime = DateTime.Now - MopsBot.StartTime;
+                x.WithName("Stats").WithValue($"Runtime: {(int)runtime.TotalHours}h:{runtime.ToString(@"m\m\:s\s")}\n{MopsBot.ProcessName}: {MopsBot.Id}\nHandleCount: {MopsBot.HandleCount}\nThreads: {MopsBot.Threads.Count}\nRAM: {(MopsBot.WorkingSet64/1024)/1024}");
+                x.IsInline = true;
+            });
+
+            embed.WithImageUrl($"{Program.Config["ServerAddress"]}/StreamCharts/MopsKillerPlot.png");
+
+            await Context.Channel.SendMessageAsync(embed: embed.Build());
         }
 
         [Command("Invite")]

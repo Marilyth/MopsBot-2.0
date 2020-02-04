@@ -16,7 +16,7 @@ using static MopsBot.Data.Tracker.BaseTracker;
 
 namespace MopsBot.Module
 {
-    public class VoterBeta : ModuleBase
+    public class VoterBeta : ModuleBase<ShardedCommandContext>
     {
         [Group("YoutubeLive")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
