@@ -263,7 +263,7 @@ namespace MopsBot.Data
         /// <returns>A Task that can be awaited</returns>
         private async Task OnMinorEvent(ulong channelID, Tracker.BaseTracker sender, string notification)
         {
-            if (!Program.Client.ConnectionState.Equals(Discord.ConnectionState.Connected))
+            if (!Program.GetShardFor(channelID).ConnectionState.Equals(Discord.ConnectionState.Connected))
                 return;
             try
             {
@@ -301,7 +301,7 @@ namespace MopsBot.Data
         /// <returns>A Task that can be awaited</returns>
         private async Task OnMajorEvent(ulong channelID, Embed embed, Tracker.BaseTracker sender, string notification)
         {
-            if (!Program.Client.ConnectionState.Equals(Discord.ConnectionState.Connected))
+            if (!Program.GetShardFor(channelID).ConnectionState.Equals(Discord.ConnectionState.Connected))
                 return;
             try
             {

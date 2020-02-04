@@ -71,7 +71,7 @@ namespace MopsBot.Data.Interactive
                     {
                         Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"error for [{channel.Key}][{message}]", e)).Wait();
                         if ((e.Message.Contains("Object reference not set to an instance of an object.") || e.Message.Contains("Value cannot be null."))
-                            && Program.Client.ConnectionState.Equals(ConnectionState.Connected))
+                            && Program.GetShardFor(channel.Key).ConnectionState.Equals(ConnectionState.Connected))
                         {
                             Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"Removing [{channel.Key}][{message}] due to missing message.")).Wait();
 

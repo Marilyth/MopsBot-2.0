@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 
+// Change this namespace if desired
 namespace MopsBot
 {
     // This service requires that your bot is being run by a daemon that handles
@@ -11,6 +12,10 @@ namespace MopsBot
     //
     // If you do not have your bot setup to run in a daemon, this service will just
     // terminate the process and the bot will not restart.
+    // 
+    // Links to daemons:
+    // [Powershell (Windows+Unix)] https://gitlab.com/snippets/21444
+    // [Bash (Unix)] https://stackoverflow.com/a/697064
     public class ReliabilityService
     {
         // --- Begin Configuration Section ---
@@ -26,18 +31,21 @@ namespace MopsBot
         private static readonly LogSeverity _critical = LogSeverity.Critical;
         // --- End Configuration Section ---
 
-        private readonly DiscordSocketClient _discord;
+        private readonly DiscordSocketClient[] _discord;
         private readonly Func<LogMessage, Task> _logger;
-        private CancellationTokenSource _cts;        
+        private CancellationTokenSource _cts;
 
-        public ReliabilityService(DiscordSocketClient discord, Func<LogMessage, Task> logger = null)
+        public ReliabilityService(DiscordShardedClient discord, Func<LogMessage, Task> logger = null)
         {
             _cts = new CancellationTokenSource();
-            _discord = discord;
+            _discord = (DiscordSocketClient[])discord.Shards;
             _logger = logger ?? (_ => Task.CompletedTask);
 
-            _discord.Connected += ConnectedAsync;
-            _discord.Disconnected += DisconnectedAsync;
+            foreach (var shard in _discord)
+            {
+                shard.Connected += ConnectedAsync;
+                shard.Disconnected += DisconnectedAsync;
+            }
         }
 
         public Task ConnectedAsync()
@@ -55,7 +63,7 @@ namespace MopsBot
         {
             // Check the state after <timeout> to see if we reconnected
             _ = InfoAsync("Client disconnected, starting timeout task...");
-            _ = Task.Delay(_timeout, _cts.Token).ContinueWith(async _ => 
+            _ = Task.Delay(_timeout, _cts.Token).ContinueWith(async _ =>
             {
                 await DebugAsync("Timeout expired, continuing to check client state...");
                 await CheckStateAsync();
@@ -68,32 +76,35 @@ namespace MopsBot
         private async Task CheckStateAsync()
         {
             // Client reconnected, no need to reset
-            if (_discord.ConnectionState == ConnectionState.Connected) return;
-            if (_attemptReset)
+            foreach (var shard in _discord)
             {
-                await InfoAsync("Attempting to reset the client");
-
-                var timeout = Task.Delay(_timeout);
-                var connect = _discord.StartAsync();
-                var task = await Task.WhenAny(timeout, connect);
-
-                if (task == timeout)
+                if (shard.ConnectionState == ConnectionState.Connected) return;
+                if (_attemptReset)
                 {
-                    await CriticalAsync("Client reset timed out (task deadlocked?), killing process");
-                    FailFast();
+                    await InfoAsync("Attempting to reset the client");
+
+                    var timeout = Task.Delay(_timeout);
+                    var connect = shard.StartAsync();
+                    var task = await Task.WhenAny(timeout, connect);
+
+                    if (task == timeout)
+                    {
+                        await CriticalAsync("Client reset timed out (task deadlocked?), killing process");
+                        FailFast();
+                    }
+                    else if (connect.IsFaulted)
+                    {
+                        await CriticalAsync("Client reset faulted, killing process", connect.Exception);
+                        FailFast();
+                    }
+                    else if (connect.IsCompletedSuccessfully)
+                        await InfoAsync("Client reset succesfully!");
+                    return;
                 }
-                else if (connect.IsFaulted)
-                {
-                    await CriticalAsync("Client reset faulted, killing process", connect.Exception);
-                    FailFast();
-                }
-                else if (connect.IsCompletedSuccessfully)
-                    await InfoAsync("Client reset succesfully!");
-                return;
+
+                await CriticalAsync("Client did not reconnect in time, killing process");
+                FailFast();
             }
-
-            await CriticalAsync("Client did not reconnect in time, killing process");
-            FailFast();
         }
 
         private void FailFast()

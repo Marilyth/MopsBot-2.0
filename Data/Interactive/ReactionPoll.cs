@@ -59,7 +59,7 @@ namespace MopsBot.Data.Interactive
                     {
                         Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"[{channel.Key}][{poll.MessageID}] could not be loaded", e)).Wait();
                         if ((e.Message.Contains("Object reference not set to an instance of an object.") || e.Message.Contains("Value cannot be null."))
-                            && Program.Client.ConnectionState.Equals(ConnectionState.Connected))
+                            && Program.GetShardFor(channel.Key).ConnectionState.Equals(ConnectionState.Connected))
                         {
                             Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"Removing [{channel.Key}][{poll.MessageID}] due to missing message.")).Wait();
 
