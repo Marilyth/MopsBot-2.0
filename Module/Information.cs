@@ -30,6 +30,7 @@ namespace MopsBot.Module
         }
 
         [Command("BotInfo")]
+        [Hide]
         [Summary("Returns information about the bot.")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public async Task BotInfo(){
