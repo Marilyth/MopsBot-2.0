@@ -60,7 +60,7 @@ namespace MopsBot.Module
                 x.IsInline = true;
             });
 
-            embed.WithImageUrl($"{Program.Config["ServerAddress"]}/StreamCharts/MopsKillerPlot.png");
+            embed.WithImageUrl($"{Program.Config["ServerAddress"]}/StreamCharts/MopsKillerPlot.png?rand={StaticBase.ran.Next(0, 99)}");
 
             await Context.Channel.SendMessageAsync(embed: embed.Build());
         }
