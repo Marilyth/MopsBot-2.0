@@ -29,7 +29,7 @@ namespace MopsBot.Module
             await ReplyAsync(user.JoinedAt.Value.Date.ToString("d"));
         }
 
-        [Command("BotInfo")]
+        [Command("BotInfo", RunMode = RunMode.Async)]
         [Hide]
         [Summary("Returns information about the bot.")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
