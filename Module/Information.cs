@@ -49,7 +49,7 @@ namespace MopsBot.Module
             embed.WithColor(Discord.Color.Blue).WithCurrentTimestamp().WithTitle("Mops Statistics");
 
             embed.AddField(x => {
-                x.WithName("Shards").WithValue(string.Join("\n", Program.Client.Shards.Select(y => (y.ConnectionState.Equals(ConnectionState.Connected) ? new Emoji("🟢") : new Emoji("🔴")) + $" Shard {y.ShardId} ({y.Guilds.Count} Servers)")));
+                x.WithName("Shards").WithValue(string.Join("\n", Program.Client.Shards.Select(y => (y.ConnectionState.Equals(ConnectionState.Connected) ? new Emoji("🟢") : new Emoji("🔴")) + $" Shard {y.ShardId} ({y.Guilds.Count} Servers, {y.Latency}ms)")));
                 x.IsInline = true;
             });
 
