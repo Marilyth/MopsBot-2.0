@@ -125,10 +125,6 @@ namespace MopsBot
                                 foreach(var user in TwitchUsers) user.Value.PostInitialisation();
                         });
                     }
-                    else if(tracker.Key == BaseTracker.TrackerType.Youtube){
-                        Task.Run(() => {tracker.Value.PostInitialisation();
-                                        YoutubeTracker.fetchChannelsBatch().Wait();});
-                    }
                     else if(tracker.Key == BaseTracker.TrackerType.YoutubeLive){
                         Task.Run(() => {tracker.Value.PostInitialisation();
                                         YoutubeLiveTracker.fetchChannelsBatch().Wait();});
