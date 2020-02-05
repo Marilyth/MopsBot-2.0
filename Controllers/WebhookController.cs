@@ -84,7 +84,7 @@ namespace MopsBot.Api.Controllers
             {
                 var data = ConvertAtomToSyndication(HttpContext.Request.Body);
                 MopsBot.Data.Tracker.YoutubeTracker tracker = StaticBase.Trackers[Data.Tracker.BaseTracker.TrackerType.Youtube].GetTrackers()[data.ChannelId] as MopsBot.Data.Tracker.YoutubeTracker;
-                await tracker.CheckStreamerInfoAsync(data);
+                await tracker.CheckInfoAsync(data);
             }
             catch (Exception e)
             {
