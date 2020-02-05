@@ -90,7 +90,7 @@ namespace MopsBot.Data.Tracker
             if (push.IsNewVideo)
             {
                 foreach (ulong channel in ChannelConfig.Keys.ToList())
-                    await OnMinorChangeTracked(channel, (string)ChannelConfig[channel]["Notification"] + "\n" + push.Link);
+                    await OnMinorChangeTracked(channel, (string)ChannelConfig[channel]["Notification"] + "\nhttps://www.youtube.com/watch?v=" + push.VideoId);
             }
         }
 
