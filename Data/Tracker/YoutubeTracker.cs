@@ -49,11 +49,12 @@ namespace MopsBot.Data.Tracker
 
         public async override void PostInitialisation(object info = null)
         {
-            //if ((WebhookExpire - DateTime.Now).TotalMinutes < 10)
-            //{
-            //   await pushSubscribe(Name);
-            //    WebhookExpire = DateTime.Now.AddHours(18);
-            //}
+            if ((WebhookExpire - DateTime.Now).TotalMinutes < 10)
+            {
+                await pushSubscribe(Name);
+                WebhookExpire = DateTime.Now.AddDays(4);
+                await UpdateTracker();
+            }
         }
 
         public static async Task pushSubscribe(string channelId, bool subscribe = true)
@@ -63,11 +64,11 @@ namespace MopsBot.Data.Tracker
                 var callBackUrl = $"{Program.Config["ServerAddress"]}:5000/api/webhook/youtube";
                 var topicUrl = $"https://www.youtube.com/xml/feeds/videos.xml?channel_id={channelId}";
                 var subscribeUrl = "https://pubsubhubbub.appspot.com/subscribe";
-                string postDataStr = $"?hub.mode={(subscribe ? "subscribe" : "unsubscribe")}&"+
-                                     $"hub.verify=async&hub.callback={HttpUtility.UrlEncode(callBackUrl)}&"+
+                string postDataStr = $"?hub.mode={(subscribe ? "subscribe" : "unsubscribe")}&" +
+                                     $"hub.verify=async&hub.callback={HttpUtility.UrlEncode(callBackUrl)}&" +
                                      $"hub.topic={HttpUtility.UrlEncode(topicUrl)}";
 
-                var test = await MopsBot.Module.Information.PostURLAsync(subscribeUrl+postDataStr);
+                var test = await MopsBot.Module.Information.PostURLAsync(subscribeUrl + postDataStr);
             }
             catch (Exception ex)
             {
@@ -182,8 +183,10 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public async Task CheckInfoAsync(YoutubeNotification push){
-            if(push.IsNewVideo){
+        public async Task CheckInfoAsync(YoutubeNotification push)
+        {
+            if (push.IsNewVideo)
+            {
                 await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Successful push received: {push.VideoId}"));
             }
         }
@@ -195,10 +198,10 @@ namespace MopsBot.Data.Tracker
                 if ((WebhookExpire - DateTime.Now).TotalMinutes < 10)
                 {
                     await pushSubscribe(Name);
-                    WebhookExpire = DateTime.Now.AddHours(18);
+                    WebhookExpire = DateTime.Now.AddDays(4);
                     await UpdateTracker();
                 }
-                
+
                 int repetition = 0;
                 while (!channelCache.ContainsKey(Name) || !playlistCountCache.ContainsKey(uploadPlaylistId))
                 {
@@ -278,6 +281,13 @@ namespace MopsBot.Data.Tracker
         public override async Task UpdateTracker()
         {
             await StaticBase.Trackers[TrackerType.Youtube].UpdateDBAsync(this);
+        }
+
+        public override void Dispose()
+        {
+            base.Dispose(true);
+            GC.SuppressFinalize(this);
+            pushSubscribe(Name, false).Wait();
         }
     }
 }

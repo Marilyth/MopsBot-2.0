@@ -75,13 +75,15 @@ namespace MopsBot.Api.Controllers
         [HttpPost("youtube")]
         public async Task<IActionResult> WebhookReceivedYT()
         {
-            string body = new StreamReader(Request.Body).ReadToEnd();
-            var headers = Request.Headers;
-
-            await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Received a YT webhook message\n" + body));
             try
             {
-                var data = ConvertAtomToSyndication(HttpContext.Request.Body);
+                Request.Body.Position = 0;
+                var data = ConvertAtomToSyndication(Request.Body);
+                Request.Body.Position = 0;
+                string body = new StreamReader(Request.Body).ReadToEnd();
+                var headers = Request.Headers;
+
+                await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Received a YT webhook message\n" + body));
                 MopsBot.Data.Tracker.YoutubeTracker tracker = StaticBase.Trackers[Data.Tracker.BaseTracker.TrackerType.Youtube].GetTrackers()[data.ChannelId] as MopsBot.Data.Tracker.YoutubeTracker;
                 await tracker.CheckInfoAsync(data);
             }
@@ -117,7 +119,7 @@ namespace MopsBot.Api.Controllers
             return new OkResult();
         }
 
-        private MopsBot.Data.Tracker.APIResults.Youtube.YoutubeNotification ConvertAtomToSyndication(Stream stream)
+        public static MopsBot.Data.Tracker.APIResults.Youtube.YoutubeNotification ConvertAtomToSyndication(Stream stream)
         {
             using (var xmlReader = System.Xml.XmlReader.Create(stream))
             {
@@ -134,7 +136,7 @@ namespace MopsBot.Api.Controllers
             }
         }
 
-        private string GetElementExtensionValueByOuterName(SyndicationItem item, string outerName)
+        public static string GetElementExtensionValueByOuterName(SyndicationItem item, string outerName)
         {
             if (item.ElementExtensions.All(x => x.OuterName != outerName)) return null;
             return item.ElementExtensions.Single(x => x.OuterName == outerName).GetObject<System.Xml.Linq.XElement>().Value;
