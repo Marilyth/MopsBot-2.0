@@ -85,14 +85,18 @@ namespace MopsBot.Data.Tracker
             return channel;
         }
 
+        private static readonly object APILock = new object();
         public async Task CheckInfoAsync(YoutubeNotification push)
         {
-            if (push.IsNewVideo && !pastVideoIds.Contains(push.VideoId))
+            lock (APILock)
             {
-                foreach (ulong channel in ChannelConfig.Keys.ToList())
-                    await OnMinorChangeTracked(channel, (string)ChannelConfig[channel]["Notification"] + "\nhttps://www.youtube.com/watch?v=" + push.VideoId);
-                
-                pastVideoIds.Append(push.VideoId);
+                if (push.IsNewVideo && !pastVideoIds.Contains(push.VideoId))
+                {
+                    foreach (ulong channel in ChannelConfig.Keys.ToList())
+                        OnMinorChangeTracked(channel, (string)ChannelConfig[channel]["Notification"] + "\nhttps://www.youtube.com/watch?v=" + push.VideoId).Wait();
+
+                    pastVideoIds.Append(push.VideoId);
+                }
             }
         }
 
