@@ -75,15 +75,14 @@ namespace MopsBot.Api.Controllers
         [HttpPost("youtube")]
         public async Task<IActionResult> WebhookReceivedYT()
         {
+            string body = new StreamReader(Request.Body).ReadToEnd();
+            var bodyStream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(body));
+            var headers = Request.Headers;
+
+            await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Received a YT webhook message\n" + body));
             try
             {
-                Request.Body.Position = 0;
-                var data = ConvertAtomToSyndication(Request.Body);
-                Request.Body.Position = 0;
-                string body = new StreamReader(Request.Body).ReadToEnd();
-                var headers = Request.Headers;
-
-                await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Received a YT webhook message\n" + body));
+                var data = ConvertAtomToSyndication(bodyStream);
                 MopsBot.Data.Tracker.YoutubeTracker tracker = StaticBase.Trackers[Data.Tracker.BaseTracker.TrackerType.Youtube].GetTrackers()[data.ChannelId] as MopsBot.Data.Tracker.YoutubeTracker;
                 await tracker.CheckInfoAsync(data);
             }
