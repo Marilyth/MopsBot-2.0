@@ -19,9 +19,9 @@ namespace MopsBot.Data.Tracker
     [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
     public class YoutubeTracker : BaseTracker
     {
-        public int UploadCount = -1;
         public DateTime WebhookExpire = DateTime.Now;
         private string channelThumbnailUrl, uploadPlaylistId;
+        private List<string> pastVideoIds = new List<string>();
 
         public YoutubeTracker() : base()
         {
@@ -87,10 +87,12 @@ namespace MopsBot.Data.Tracker
 
         public async Task CheckInfoAsync(YoutubeNotification push)
         {
-            if (push.IsNewVideo)
+            if (push.IsNewVideo && !pastVideoIds.Contains(push.VideoId))
             {
                 foreach (ulong channel in ChannelConfig.Keys.ToList())
                     await OnMinorChangeTracked(channel, (string)ChannelConfig[channel]["Notification"] + "\nhttps://www.youtube.com/watch?v=" + push.VideoId);
+                
+                pastVideoIds.Append(push.VideoId);
             }
         }
 
