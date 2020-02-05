@@ -196,6 +196,7 @@ namespace MopsBot.Data.Tracker
                 {
                     await pushSubscribe(Name);
                     WebhookExpire = DateTime.Now.AddHours(18);
+                    await UpdateTracker();
                 }
                 
                 int repetition = 0;
