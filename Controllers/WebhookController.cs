@@ -40,7 +40,7 @@ namespace MopsBot.Api.Controllers
             Dictionary<string, string[]> parameters = Request.Query.ToDictionary(x => x.Key, x => x.Value.ToArray());
             if (parameters.ContainsKey("hub.challenge"))
             {
-                Console.WriteLine("Received a YT challenge, responding with " + parameters["hub.challenge"].FirstOrDefault());
+                await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Received a YT challenge, responding with " + parameters["hub.challenge"].FirstOrDefault()));
                 return new OkObjectResult(parameters["hub.challenge"].FirstOrDefault());
             }
             else
@@ -79,7 +79,6 @@ namespace MopsBot.Api.Controllers
             var headers = Request.Headers;
 
             await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Received a YT webhook message\n" + body));
-            var update = JsonConvert.DeserializeObject<dynamic>(body);
             try
             {
                 var data = ConvertAtomToSyndication(HttpContext.Request.Body);
