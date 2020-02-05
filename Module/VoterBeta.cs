@@ -23,7 +23,7 @@ namespace MopsBot.Module
         public class YoutubeLive : InteractiveBase<ShardedCommandContext>
         {
             [Command("Track", RunMode = RunMode.Async)]
-            [Summary("Keeps track of the specified Youtubers livestreams, in the Channel you are calling this command in.")]
+            [Summary("Keeps track of the specified Youtubers livestreams, in the Channel you are calling this command in.\nYoutubes Terms of Service and Googles privacy policy apply:\nhttps://www.youtube.com/t/terms \nhttp://www.google.com/policies/privacy")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.ReadMessageHistory)]
             [RequireBotPermission(ChannelPermission.AddReactions)]

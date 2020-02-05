@@ -105,6 +105,9 @@ namespace MopsBot.Data.Tracker
             return null;
         }
 
+        //Because Youtubes search endpoint is doing not needed work and uses too much quota for any reasonable application, we search ourselves.
+        //Also note, that the endpoint Youtube provided to search for live videos has shown to not work and return false data, very often.
+        //This was a last resort. If you update your endpoint, we will return to our method above (fetchLivestreamId).
         public static async Task<string> scrapeLivestreamId(string channelId)
         {
             var html = await MopsBot.Module.Information.GetURLAsync($"https://www.youtube.com/channel/{channelId}/videos");
@@ -121,14 +124,6 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public static async Task<int> scrapeViewers(string videoId)
-        {
-            var html = await MopsBot.Module.Information.GetURLAsync($"https://www.youtube.com/watch?v={videoId}");
-            var match = System.Text.RegularExpressions.Regex.Matches(html, @"Aktuell.(.*?).Zuschauer", System.Text.RegularExpressions.RegexOptions.Singleline);
-            var viewers = int.Parse(match[0].Groups[1].Value.Replace(".", ""));
-            return viewers;
-        }
-
         public static async Task fetchChannelsBatch()
         {
             while (true)
@@ -140,7 +135,7 @@ namespace MopsBot.Data.Tracker
                     try
                     {
                         var currentBatch = liveTrackersList.Skip(i).Take(50).ToList();
-                        var tmpResult = await FetchJSONDataAsync<LiveVideo>($"https://www.googleapis.com/youtube/v3/videos?part=snippet%2C+liveStreamingDetails&maxResults=50&id={String.Join(",", currentBatch.Select(x => (x as YoutubeLiveTracker).VideoId))}&key={Program.Config["YoutubeLive"]}");
+                        var tmpResult = await FetchJSONDataAsync<LiveVideo>($"https://www.googleapis.com/youtube/v3/videos?part=snippet%2C+liveStreamingDetails&maxResults=50&id={String.Join(",", currentBatch.Select(x => (x as YoutubeLiveTracker).VideoId))}&key={Program.Config["Youtube"]}");
 
                         var nullValues = currentBatch.Select(x => x.Name).ToHashSet();
 

@@ -49,7 +49,6 @@ namespace MopsBot.Data.Tracker
         {
             var tmpResult = await FetchJSONDataAsync<Playlist>($"https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId={uploadPlaylistId}&key={Program.Config["Youtube"]}");
 
-            switchKeys();
             var orderedResult = tmpResult.items.OrderBy(x => x.snippet.publishedAt);
             return orderedResult.TakeLast(count).ToArray();
         }
@@ -59,7 +58,6 @@ namespace MopsBot.Data.Tracker
             if (!playlistCountCache.TryGetValue(uploadPlaylistId, out int count))
             {
                 var tmpResult = await FetchJSONDataAsync<PlaylistCounts>($"https://www.googleapis.com/youtube/v3/playlists?part=contentDetails&id={uploadPlaylistId}&key={Program.Config["Youtube"]}");
-                switchKeys();
 
                 count = tmpResult.items.FirstOrDefault()?.contentDetails?.itemCount ?? 0;
                 playlistCountCache[uploadPlaylistId] = count;
@@ -103,7 +101,6 @@ namespace MopsBot.Data.Tracker
                     await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Loaded {playlistCountCache.Count} playlist caches"));
                     //Be a bit faster than Timer to make cache available before request
                     await Task.Delay((600000 / allTrackers.Count) * 45);
-                    switchKeys();
                 }
             }
         }
@@ -113,8 +110,6 @@ namespace MopsBot.Data.Tracker
             if (!channelCache.TryGetValue(Name, out ChannelItem channel))
             {
                 var tmpResult = await FetchJSONDataAsync<Channel>($"https://www.googleapis.com/youtube/v3/channels?part=contentDetails,snippet&id={Name}&key={Program.Config["Youtube"]}");
-
-                switchKeys();
 
                 channel = tmpResult.items.First();
                 channelCache[Name] = channel;
@@ -151,7 +146,6 @@ namespace MopsBot.Data.Tracker
                     continue;
                 }
 
-                switchKeys();
                 Task.Run(() => fetchPlaylistCountBatch().Wait());
                 await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Loaded {channelCache.Count} channel caches"));
                 await Task.Delay((600000 / trackerList.Count) * 40);
@@ -240,13 +234,6 @@ namespace MopsBot.Data.Tracker
         public override async Task UpdateTracker()
         {
             await StaticBase.Trackers[TrackerType.Youtube].UpdateDBAsync(this);
-        }
-
-        private static void switchKeys()
-        {
-            var tmp = Program.Config["Youtube"];
-            Program.Config["Youtube"] = Program.Config["Youtube2"];
-            Program.Config["Youtube2"] = tmp;
         }
     }
 }

@@ -239,7 +239,7 @@ namespace MopsBot.Module
         public class Youtube : InteractiveBase<ShardedCommandContext>
         {
             [Command("Track", RunMode = RunMode.Async)]
-            [Summary("Keeps track of the specified Youtuber, in the Channel you are calling this command in.")]
+            [Summary("Keeps track of the specified Youtuber, in the Channel you are calling this command in.\nYoutubes Terms of Service and Googles privacy policy apply:\nhttps://www.youtube.com/t/terms \nhttp://www.google.com/policies/privacy")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
             [TrackerLimit(30, TrackerType.Youtube)]
