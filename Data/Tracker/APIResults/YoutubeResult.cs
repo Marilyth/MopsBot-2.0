@@ -256,13 +256,13 @@ namespace MopsBot.Data.Tracker.APIResults.Youtube
         public string Title { get; set; }
         public string Link { get; set; }
         public Author Author { get; set; }
-        public string Published { get; set; }
-        public string Updated { get; set; }
+        public DateTimeOffset Published { get; set; }
+        public DateTimeOffset Updated { get; set; }
         public bool IsNewVideo
         {
             get
             {
-                return Published == Updated && !string.IsNullOrEmpty(Published);
+                return (Updated - Published).Minutes < 2 && !string.IsNullOrEmpty(Published.ToString("dd/MM/yyyy"));
             }
         }
     }

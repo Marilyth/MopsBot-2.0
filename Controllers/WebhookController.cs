@@ -129,8 +129,8 @@ namespace MopsBot.Api.Controllers
                     ChannelId = GetElementExtensionValueByOuterName(item, "channelId"),
                     VideoId = GetElementExtensionValueByOuterName(item, "videoId"),
                     Title = item.Title.Text,
-                    Published = item.PublishDate.ToString("dd/MM/yyyy"),
-                    Updated = item.LastUpdatedTime.ToString("dd/MM/yyyy")
+                    Published = item.PublishDate,
+                    Updated = item.LastUpdatedTime
                 };
             }
         }
