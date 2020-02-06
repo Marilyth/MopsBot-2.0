@@ -160,7 +160,7 @@ namespace MopsBot
             {
                 if ((await MopsBot.Data.Entities.User.GetUserAsync(context.User.Id)).IsTaCDue())
                 {
-                    await context.Channel.SendMessageAsync($"Weekly reminder:\nBy using Mops's tracking services, you agree to our terms and conditions as well as our privacy policy: {Program.Config["ServerAddress"]}/Terms_And_Conditions\n{Program.Config["ServerAddress"]}/Privacy_Policy");
+                    await context.Channel.SendMessageAsync($"Weekly reminder:\nBy using Mops' tracking services, you agree to our terms and conditions as well as our privacy policy: {Program.Config["ServerAddress"]}/Terms_And_Conditions\n{Program.Config["ServerAddress"]}/Privacy_Policy");
                     await MopsBot.Data.Entities.User.ModifyUserAsync(context.User.Id, x => x.LastTaCReminder = DateTime.UtcNow);
                 }
             }
