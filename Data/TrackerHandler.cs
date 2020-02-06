@@ -18,7 +18,6 @@ namespace MopsBot.Data
     {
         public abstract Task UpdateDBAsync(BaseTracker tracker);
         public abstract Task RemoveFromDBAsync(BaseTracker tracker);
-        public abstract Task InsertToDBAsync(BaseTracker tracker);
         public abstract Task<bool> TryRemoveTrackerAsync(string name, ulong channelID);
         public abstract Task<bool> TrySetNotificationAsync(string name, ulong channelID, string notificationMessage);
         public abstract Task AddTrackerAsync(string name, ulong channelID, string notification = "");
@@ -85,12 +84,7 @@ namespace MopsBot.Data
 
         public override async Task UpdateDBAsync(BaseTracker tracker)
         {
-            await StaticBase.Database.GetCollection<BaseTracker>(typeof(T).Name).ReplaceOneAsync(x => x.Name.Equals(tracker.Name), tracker);
-        }
-
-        public override async Task InsertToDBAsync(BaseTracker tracker)
-        {
-            await StaticBase.Database.GetCollection<BaseTracker>(typeof(T).Name).InsertOneAsync(tracker);
+            await StaticBase.Database.GetCollection<BaseTracker>(typeof(T).Name).ReplaceOneAsync(x => x.Name.Equals(tracker.Name), tracker, new UpdateOptions{IsUpsert=true});
         }
 
         public override async Task RemoveFromDBAsync(BaseTracker tracker)
@@ -164,7 +158,7 @@ namespace MopsBot.Data
                 trackers[name].ChannelConfig[channelID]["Notification"] = notification;
                 trackers[name].OnMajorEventFired += OnMajorEvent;
                 trackers[name].OnMinorEventFired += OnMinorEvent;
-                await InsertToDBAsync(trackers[name]);
+                await UpdateDBAsync(trackers[name]);
             }
 
             await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Started a new {typeof(T).Name} for {name}\nChannels: {string.Join(",", trackers[name].ChannelConfig.Keys)}\nMessage: {notification}"));
