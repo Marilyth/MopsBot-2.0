@@ -192,7 +192,7 @@ namespace MopsBot.Module
                         using (var content = response.Content)
                         {
                             string value = "";
-                            if (content?.Headers?.ContentType?.CharSet?.Contains("utf8") ?? false)
+                            if ((content?.Headers?.ContentType?.CharSet?.ToLower().Contains("utf8") ?? false) || (content?.Headers?.ContentType?.CharSet?.ToLower().Contains("utf-8") ?? false))
                                 value = System.Text.Encoding.UTF8.GetString(await content.ReadAsByteArrayAsync());
                             else
                                 value = await content.ReadAsStringAsync();
