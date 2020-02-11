@@ -48,7 +48,7 @@ namespace MopsBot.Module
                 }
             }
 
-            [Command("Prune")]
+            [Command("Prune", RunMode=RunMode.Async)]
             [RequireBotManage]
             [Hide]
             public async Task Prune(bool testing = true)
@@ -97,7 +97,7 @@ namespace MopsBot.Module
                 await ReplyAsync(embed: infoEmbed.Build());
             }
 
-            [Command("Prune")]
+            [Command("Prune", RunMode=RunMode.Async)]
             [RequireBotManage]
             [Hide]
             public async Task Prune(bool testing = true)
@@ -145,7 +145,7 @@ namespace MopsBot.Module
                 }
             }
 
-            [Command("Prune")]
+            [Command("Prune", RunMode=RunMode.Async)]
             [RequireBotManage]
             [Hide]
             public async Task Prune(bool testing = true)
@@ -241,7 +241,7 @@ namespace MopsBot.Module
                 }
             }
 
-            [Command("Prune")]
+            [Command("Prune", RunMode=RunMode.Async)]
             [RequireBotManage]
             [Hide]
             public async Task Prune(bool testing = true)
@@ -370,7 +370,7 @@ namespace MopsBot.Module
                 }
             }
 
-            [Command("Prune")]
+            [Command("Prune", RunMode=RunMode.Async)]
             [RequireBotManage]
             [Hide]
             public async Task Prune(bool testing = true)
