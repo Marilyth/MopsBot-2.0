@@ -86,7 +86,7 @@ namespace MopsBot
                 ReactionHandler = new ReactionHandler();
                 ReactionHandler.Install(provider);
                 Handler = new CommandHandler();
-                Handler.Install(provider).Wait();
+                await Handler.Install(provider);
             }
 
             if (shardsReady == Client.Shards.Count)
