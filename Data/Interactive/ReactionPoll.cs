@@ -46,7 +46,7 @@ namespace MopsBot.Data.Interactive
                     try
                     {
                         var textmessage = (IUserMessage)((ITextChannel)Program.Client.GetChannel(channel.Key)).GetMessageAsync(poll.MessageID).Result;
-                        if(textmessage == null) throw new Exception("Message could not be loaded!");
+                        if (textmessage == null) throw new Exception("Message could not be loaded!");
 
                         for (int i = 0; i < poll.Options.Length; i++)
                         {
@@ -185,7 +185,7 @@ namespace MopsBot.Data.Interactive
         private Dictionary<ulong, bool> updating = new Dictionary<ulong, bool>();
         private async Task updateMessage(IUserMessage message, Poll poll)
         {
-            if(!updating.ContainsKey(message.Id)) updating.Add(message.Id, false);
+            if (!updating.ContainsKey(message.Id)) updating.Add(message.Id, false);
 
             if (!updating[message.Id])
             {
@@ -212,26 +212,39 @@ namespace MopsBot.Data.Interactive
             {
                 foreach (var message in channel.Value.ToList())
                 {
-                    var curChannel = (ITextChannel)Program.Client.GetChannel(channel.Key);
-                    if (curChannel != null)
+                    try
                     {
-                        var curMessage = await curChannel.GetMessageAsync(message.MessageID);
-                        if (curMessage != null) continue;
-                    }
+                        var curChannel = (ITextChannel)Program.Client.GetChannel(channel.Key);
+                        if (curChannel != null)
+                        {
+                            var curMessage = await curChannel.GetMessageAsync(message.MessageID);
+                            if (curMessage != null) continue;
 
-                    pruneList.Add(KeyValuePair.Create<ulong, ulong>(channel.Key, message.MessageID));
-                    if (!testing)
+                            pruneList.Add(KeyValuePair.Create<ulong, ulong>(channel.Key, message.MessageID));
+                        }
+                    }
+                    catch (Exception e)
                     {
-                        if (Polls[channel.Key].Count > 1)
-                        {
-                            Polls[channel.Key].Remove(message);
-                            await UpdateDBAsync(channel.Key);
-                        }
-                        else
-                        {
-                            Polls.Remove(channel.Key);
-                            await RemoveFromDBAsync(channel.Key);
-                        }
+                        if (e.Message.Contains("50001"))
+                            pruneList.Add(KeyValuePair.Create<ulong, ulong>(channel.Key, message.MessageID));
+                    }
+                }
+            }
+
+            if (!testing)
+            {
+                foreach (var channel in pruneList)
+                {
+                    var message = Polls[channel.Key].First(x => x.MessageID.Equals(channel.Value));
+                    if (Polls[channel.Key].Count > 1)
+                    {
+                        Polls[channel.Key].Remove(message);
+                        await UpdateDBAsync(channel.Key);
+                    }
+                    else
+                    {
+                        Polls.Remove(channel.Key);
+                        await RemoveFromDBAsync(channel.Key);
                     }
                 }
             }

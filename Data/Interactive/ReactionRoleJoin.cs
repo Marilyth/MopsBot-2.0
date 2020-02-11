@@ -228,26 +228,38 @@ namespace MopsBot.Data.Interactive
             {
                 foreach (var message in channel.Value.ToList())
                 {
-                    var curChannel = (ITextChannel)Program.Client.GetChannel(channel.Key);
-                    if (curChannel != null)
+                    try
                     {
-                        var curMessage = await curChannel.GetMessageAsync(message);
-                        if (curMessage != null) continue;
-                    }
+                        var curChannel = (ITextChannel)Program.Client.GetChannel(channel.Key);
+                        if (curChannel != null)
+                        {
+                            var curMessage = await curChannel.GetMessageAsync(message);
+                            if (curMessage != null) continue;
 
-                    pruneList.Add(KeyValuePair.Create<ulong, ulong>(channel.Key, message));
-                    if (!testing)
+                            pruneList.Add(KeyValuePair.Create<ulong, ulong>(channel.Key, message));
+                        }
+                    }
+                    catch (Exception e)
                     {
-                        if (RoleInvites[channel.Key].Count > 1)
-                        {
-                            RoleInvites[channel.Key].Remove(message);
-                            await UpdateDBAsync(channel.Key);
-                        }
-                        else
-                        {
-                            RoleInvites.Remove(channel.Key);
-                            await RemoveFromDBAsync(channel.Key);
-                        }
+                        if (e.Message.Contains("50001"))
+                            pruneList.Add(KeyValuePair.Create<ulong, ulong>(channel.Key, message));
+                    }
+                }
+            }
+
+            if (!testing)
+            {
+                foreach (var channel in pruneList)
+                {
+                    if (RoleInvites[channel.Key].Count > 1)
+                    {
+                        RoleInvites[channel.Key].Remove(channel.Value);
+                        await UpdateDBAsync(channel.Key);
+                    }
+                    else
+                    {
+                        RoleInvites.Remove(channel.Key);
+                        await RemoveFromDBAsync(channel.Key);
                     }
                 }
             }
