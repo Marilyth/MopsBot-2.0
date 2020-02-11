@@ -163,7 +163,12 @@ namespace MopsBot
                 }
             }
             
-            await message.AddReactionsAsync(handlers.Select(x => x.Item1).ToArray());
+            foreach(var emote in handlers.Select(x => x.Item1)){
+                if (!emote.Equals(DefaultEmote) && !message.Reactions.ContainsKey(emote))
+                {
+                    await message.AddReactionAsync(emote);
+                }
+            }
         }
 
         /// <summary>
