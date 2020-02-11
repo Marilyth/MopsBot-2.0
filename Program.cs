@@ -31,6 +31,7 @@ namespace MopsBot
         public static Dictionary<string, string> Config;
         public static CommandHandler Handler { get; private set; }
         public static ReactionHandler ReactionHandler { get; private set; }
+        private static ServiceProvider provider;
 
         private async Task Start()
         {
@@ -39,7 +40,7 @@ namespace MopsBot
                 LogLevel = LogSeverity.Info,
                 //AlwaysDownloadUsers = true
             });
-            
+
             using (StreamReader sr = new StreamReader(new FileStream("mopsdata//Config.json", FileMode.Open)))
                 Config = JsonConvert.DeserializeObject<Dictionary<string, string>>(sr.ReadToEnd());
 
@@ -48,19 +49,6 @@ namespace MopsBot
 
             Client.Log += ClientLog;
             Client.ShardReady += onShardReady;
-
-            var map = new ServiceCollection().AddSingleton(Client)
-                // .AddSingleton(new AudioService())
-                .AddSingleton(new ReliabilityService(Client, ClientLog))
-                .AddSingleton(new InteractiveService(Client));
-
-            var provider = map.BuildServiceProvider();
-
-            Handler = new CommandHandler();
-            await Handler.Install(provider);
-
-            ReactionHandler = new ReactionHandler();
-            ReactionHandler.Install(provider);
 
             await Task.Delay(-1);
         }
@@ -73,7 +61,8 @@ namespace MopsBot
         public static async Task MopsLog(LogMessage msg, [CallerMemberName] string callerName = "", [CallerFilePath] string callerPath = "", [CallerLineNumber] int callerLine = 0)
         {
             string message = $"\n[{msg.Severity}] at {DateTime.Now}\nsource: {Path.GetFileNameWithoutExtension(callerPath)}.{callerName}, line: {callerLine}\nmessage: {msg.Message}";
-            if(msg.Exception != null && !msg.Exception.Message.Contains("The SSL connection could not be established")){
+            if (msg.Exception != null && !msg.Exception.Message.Contains("The SSL connection could not be established"))
+            {
                 message += $"\nException: {msg.Exception?.Message ?? ""}\nStacktrace: {msg.Exception?.StackTrace ?? ""}";
             }
 
@@ -85,18 +74,36 @@ namespace MopsBot
         {
             shardsReady++;
             await MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Shard {shardsReady} is ready."));
-            if(shardsReady == Client.Shards.Count){
-                Task.Run(() => {
+
+            if (shardsReady == 1)
+            {
+                var map = new ServiceCollection().AddSingleton(Client)
+                                                 .AddSingleton(new ReliabilityService(Client, ClientLog))
+                                                 .AddSingleton(new InteractiveService(Client));
+
+                provider = map.BuildServiceProvider();
+
+                ReactionHandler = new ReactionHandler();
+                ReactionHandler.Install(provider);
+                Handler = new CommandHandler();
+                Handler.Install(provider).Wait();
+            }
+
+            if (shardsReady == Client.Shards.Count)
+            {
+                Task.Run(() =>
+                {
                     StaticBase.UpdateStatusAsync();
                     StaticBase.initTracking();
                 });
             }
         }
 
-        public static DiscordSocketClient GetShardFor(ulong channelId){
+        public static DiscordSocketClient GetShardFor(ulong channelId)
+        {
             return Client.GetShardFor((Client.GetChannel(channelId) as SocketGuildChannel).Guild);
         }
-        
+
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
                 .UseUrls("http://0.0.0.0:5000/")
