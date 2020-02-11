@@ -77,16 +77,19 @@ namespace MopsBot
 
             if (shardsReady == 1)
             {
-                var map = new ServiceCollection().AddSingleton(Client)
-                                                 .AddSingleton(new ReliabilityService(Client, ClientLog))
-                                                 .AddSingleton(new InteractiveService(Client));
+                Task.Run(() =>
+                {
+                    var map = new ServiceCollection().AddSingleton(Client)
+                                                     .AddSingleton(new ReliabilityService(Client, ClientLog))
+                                                     .AddSingleton(new InteractiveService(Client));
 
-                provider = map.BuildServiceProvider();
+                    provider = map.BuildServiceProvider();
 
-                ReactionHandler = new ReactionHandler();
-                ReactionHandler.Install(provider);
-                Handler = new CommandHandler();
-                await Handler.Install(provider);
+                    ReactionHandler = new ReactionHandler();
+                    ReactionHandler.Install(provider);
+                    Handler = new CommandHandler();
+                    Handler.Install(provider).Wait();
+                });
             }
 
             if (shardsReady == Client.Shards.Count)
