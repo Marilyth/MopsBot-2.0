@@ -215,7 +215,7 @@ namespace MopsBot.Data.Interactive
                     var curChannel = (ITextChannel)Program.Client.GetChannel(channel.Key);
                     if (curChannel != null)
                     {
-                        var curMessage = curChannel.GetMessageAsync(message.MessageID);
+                        var curMessage = await curChannel.GetMessageAsync(message.MessageID);
                         if (curMessage != null) continue;
                     }
 
