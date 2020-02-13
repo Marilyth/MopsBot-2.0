@@ -82,14 +82,23 @@ namespace MopsBot.Data
             }
         }
 
+        
         public override async Task UpdateDBAsync(BaseTracker tracker)
         {
-            await StaticBase.Database.GetCollection<BaseTracker>(typeof(T).Name).ReplaceOneAsync(x => x.Name.Equals(tracker.Name), tracker, new UpdateOptions{IsUpsert=true});
+            try{
+                await StaticBase.Database.GetCollection<BaseTracker>(typeof(T).Name).ReplaceOneAsync(x => x.Name.Equals(tracker.Name), tracker, new UpdateOptions{IsUpsert=true});
+            } catch(Exception e){
+                Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"Error on upsert for {tracker.Name}, {e.Message}", e));
+            }
         }
 
         public override async Task RemoveFromDBAsync(BaseTracker tracker)
         {
-            await StaticBase.Database.GetCollection<T>(typeof(T).Name).DeleteOneAsync(x => x.Name.Equals(tracker.Name));
+            try{
+                await StaticBase.Database.GetCollection<T>(typeof(T).Name).DeleteOneAsync(x => x.Name.Equals(tracker.Name));
+            } catch(Exception e){
+                Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"Error on removing for {tracker.Name}, {e.Message}", e));
+            }
         }
 
         public override async Task<bool> TryRemoveTrackerAsync(string name, ulong channelId)
