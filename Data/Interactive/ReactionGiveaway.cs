@@ -52,6 +52,7 @@ namespace MopsBot.Data.Interactive
                         var leave = new Tuple<IEmote, Func<ReactionHandlerContext, Task>, bool>(new Emoji("✅"), LeaveGiveaway, true);
                         var draw = new Tuple<IEmote, Func<ReactionHandlerContext, Task>, bool>(new Emoji("🎁"), DrawGiveaway, false);
 
+                        if(textmessage == null) throw new Exception("Message could not be loaded!");
                         Program.ReactionHandler.AddHandlers(textmessage, join, leave, draw).Wait();
 
                         foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("✅"), textmessage.Reactions[new Emoji("✅")].ReactionCount).FlattenAsync().Result.Where(x => !x.IsBot))
@@ -67,8 +68,7 @@ namespace MopsBot.Data.Interactive
                     {
                         Program.MopsLog(new LogMessage(LogSeverity.Error, "", $" error by [{channel.Key}][{message.Key}]", e)).Wait();
 
-                        if ((e.Message.Contains("Object reference not set to an instance of an object.") || e.Message.Contains("Value cannot be null."))
-                            && Program.GetShardFor(channel.Key).ConnectionState.Equals(ConnectionState.Connected))
+                        if (e.Message.Contains("Message could not be loaded") && Program.GetShardFor(channel.Key).ConnectionState.Equals(ConnectionState.Connected))
                         {
                             Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"Removing [{channel.Key}][{message.Key}] due to missing message.")).Wait();
 
@@ -279,26 +279,38 @@ namespace MopsBot.Data.Interactive
             {
                 foreach (var message in channel.Value.ToList())
                 {
-                    var curChannel = (ITextChannel)Program.Client.GetChannel(channel.Key);
-                    if (curChannel != null)
+                    try
                     {
-                        var curMessage = curChannel.GetMessageAsync(message.Key);
-                        if (curMessage != null) continue;
-                    }
+                        var curChannel = (ITextChannel)Program.Client.GetChannel(channel.Key);
+                        if (curChannel != null)
+                        {
+                            var curMessage = await curChannel.GetMessageAsync(message.Key);
+                            if (curMessage != null) continue;
 
-                    pruneList.Add(KeyValuePair.Create<ulong, ulong>(channel.Key, message.Key));
-                    if (!testing)
+                            pruneList.Add(KeyValuePair.Create<ulong, ulong>(channel.Key, message.Key));
+                        }
+                    }
+                    catch (Exception e)
                     {
-                        if (Giveaways[channel.Key].Count > 1)
-                        {
-                            Giveaways[channel.Key].Remove(message.Key);
-                            await UpdateDBAsync(channel.Key);
-                        }
-                        else
-                        {
-                            Giveaways.Remove(channel.Key);
-                            await RemoveFromDBAsync(channel.Key);
-                        }
+                        if (e.Message.Contains("50001"))
+                            pruneList.Add(KeyValuePair.Create<ulong, ulong>(channel.Key, message.Key));
+                    }
+                }
+            }
+
+            if (!testing)
+            {
+                foreach (var channel in pruneList)
+                {
+                    if (Giveaways[channel.Key].Count > 1)
+                    {
+                        Giveaways[channel.Key].Remove(channel.Value);
+                        await UpdateDBAsync(channel.Key);
+                    }
+                    else
+                    {
+                        Giveaways.Remove(channel.Key);
+                        await RemoveFromDBAsync(channel.Key);
                     }
                 }
             }

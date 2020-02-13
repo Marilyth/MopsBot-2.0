@@ -262,7 +262,7 @@ namespace MopsBot.Data.Tracker.APIResults.Youtube
         {
             get
             {
-                return (Updated - Published).Minutes < 2 && !string.IsNullOrEmpty(Published.ToString("dd/MM/yyyy"));
+                return (Updated - Published).TotalMinutes < 2 && !default(DateTimeOffset).Equals(Published);
             }
         }
     }
