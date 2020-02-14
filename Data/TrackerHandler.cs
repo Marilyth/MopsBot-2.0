@@ -86,7 +86,7 @@ namespace MopsBot.Data
 
         public override async Task UpdateDBAsync(BaseTracker tracker)
         {
-            lock (tracker.Name)
+            lock (tracker.ChannelConfig)
             {
                 try
                 {
@@ -101,7 +101,7 @@ namespace MopsBot.Data
 
         public override async Task RemoveFromDBAsync(BaseTracker tracker)
         {
-            lock (tracker.Name)
+            lock (tracker.ChannelConfig)
             {
                 try
                 {
