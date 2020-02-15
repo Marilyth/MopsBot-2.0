@@ -61,7 +61,7 @@ namespace MopsBot.Data
                         bool save = cur.ChannelConfig.Count == 0;
                         cur.Conversion(trackers.Count - i);
                         cur.PostInitialisation(trackers.Count - i);
-                        if(save) UpdateDBAsync(cur).Wait();
+                        if (save) UpdateDBAsync(cur).Wait();
                         cur.OnMinorEventFired += OnMinorEvent;
                         cur.OnMajorEventFired += OnMajorEvent;
                     }
@@ -72,8 +72,9 @@ namespace MopsBot.Data
                 }
 
                 //Start Twitter STREAM after all are initialised
-                if(typeof(T) == typeof(TwitterTracker)){
-                    TwitterTracker.STREAM.StreamStopped += (sender, args) => {Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"TwitterSTREAM stopped. {args.DisconnectMessage?.Reason ?? ""}", args.Exception)); TwitterTracker.RestartStream();};
+                if (typeof(T) == typeof(TwitterTracker))
+                {
+                    TwitterTracker.STREAM.StreamStopped += (sender, args) => { Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"TwitterSTREAM stopped. {args.DisconnectMessage?.Reason ?? ""}", args.Exception)); TwitterTracker.RestartStream(); };
                     TwitterTracker.STREAM.StreamStarted += (sender, args) => Program.MopsLog(new LogMessage(LogSeverity.Info, "", "TwitterSTREAM started."));
                     TwitterTracker.STREAM.WarningFallingBehindDetected += (sender, args) => Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"TwitterSTREAM falling behind, {args.WarningMessage.Message} ({args.WarningMessage.PercentFull}%)"));
                     TwitterTracker.STREAM.FilterLevel = Tweetinvi.Streaming.Parameters.StreamFilterLevel.Low;
@@ -82,22 +83,34 @@ namespace MopsBot.Data
             }
         }
 
-        
+
         public override async Task UpdateDBAsync(BaseTracker tracker)
         {
-            try{
-                await StaticBase.Database.GetCollection<BaseTracker>(typeof(T).Name).ReplaceOneAsync(x => x.Name.Equals(tracker.Name), tracker, new UpdateOptions{IsUpsert=true});
-            } catch(Exception e){
-                Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"Error on upsert for {tracker.Name}, {e.Message}", e));
+            lock (tracker.ChannelConfig)
+            {
+                try
+                {
+                    StaticBase.Database.GetCollection<BaseTracker>(typeof(T).Name).ReplaceOneAsync(x => x.Name.Equals(tracker.Name), tracker, new UpdateOptions { IsUpsert = true }).Wait();
+                }
+                catch (Exception e)
+                {
+                    Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"Error on upsert for {tracker.Name}, {e.Message}", e));
+                }
             }
         }
 
         public override async Task RemoveFromDBAsync(BaseTracker tracker)
         {
-            try{
-                await StaticBase.Database.GetCollection<T>(typeof(T).Name).DeleteOneAsync(x => x.Name.Equals(tracker.Name));
-            } catch(Exception e){
-                Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"Error on removing for {tracker.Name}, {e.Message}", e));
+            lock (tracker.ChannelConfig)
+            {
+                try
+                {
+                    StaticBase.Database.GetCollection<T>(typeof(T).Name).DeleteOneAsync(x => x.Name.Equals(tracker.Name)).Wait();
+                }
+                catch (Exception e)
+                {
+                    Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"Error on removing for {tracker.Name}, {e.Message}", e));
+                }
             }
         }
 
@@ -194,12 +207,15 @@ namespace MopsBot.Data
 
         public override IEnumerable<BaseTracker> GetGuildTrackers(ulong guildId)
         {
-            try{
+            try
+            {
                 var channels = Program.Client.GetGuild(guildId).TextChannels;
                 var allTrackers = trackers.Select(x => x.Value).ToList();
                 var guildTrackers = allTrackers.Where(x => x.ChannelConfig.Keys.Any(y => channels.Select(z => z.Id).Contains(y))).ToList();
                 return guildTrackers;
-            } catch {
+            }
+            catch
+            {
                 return new List<BaseTracker>();
             }
         }
@@ -222,14 +238,16 @@ namespace MopsBot.Data
             var guild = (Program.Client.GetChannel(channelID) as SocketGuildChannel).Guild;
 
             var foundTrackers = (searchServer ? GetGuildTrackers(guild.Id) : trackers.Where(x => x.Value.ChannelConfig.ContainsKey(channelID)).Select(x => x.Value));
-            if(name != null) foundTrackers = foundTrackers.Where(x => x.Name.Equals(name));
+            if (name != null) foundTrackers = foundTrackers.Where(x => x.Name.Equals(name));
 
-            var trackerStrings = foundTrackers.Select(x => x.TrackerUrl() != null ? $"[``{x.Name}``]({x.TrackerUrl()}) [{string.Join(" ", x.ChannelConfig.Keys.Where(y => guild.GetTextChannel(y) != null).Select(y => (Program.Client.GetChannel(y) as SocketTextChannel).Mention))}]\n" 
+            var trackerStrings = foundTrackers.Select(x => x.TrackerUrl() != null ? $"[``{x.Name}``]({x.TrackerUrl()}) [{string.Join(" ", x.ChannelConfig.Keys.Where(y => guild.GetTextChannel(y) != null).Select(y => (Program.Client.GetChannel(y) as SocketTextChannel).Mention))}]\n"
                                                                                   : $"``{x.Name}`` [{string.Join(" ", x.ChannelConfig.Keys.Where(y => guild.GetTextChannel(y) != null).Select(y => (Program.Client.GetChannel(y) as SocketTextChannel).Mention))}]\n");
-            var embeds = new List<EmbedBuilder>(){new EmbedBuilder().WithTitle(typeof(T).Name).WithCurrentTimestamp().WithColor(Discord.Color.Blue)};
-            
-            foreach(var tracker in trackerStrings){
-                if((embeds.Last().Description?.Length ?? 0) + tracker.Length > 2048){
+            var embeds = new List<EmbedBuilder>() { new EmbedBuilder().WithTitle(typeof(T).Name).WithCurrentTimestamp().WithColor(Discord.Color.Blue) };
+
+            foreach (var tracker in trackerStrings)
+            {
+                if ((embeds.Last().Description?.Length ?? 0) + tracker.Length > 2048)
+                {
                     embeds.Add(new EmbedBuilder());
                     embeds.Last().WithTitle(typeof(T).Name).WithCurrentTimestamp().WithColor(Discord.Color.Blue);
                 }
@@ -270,7 +288,7 @@ namespace MopsBot.Data
                 return;
             try
             {
-                if(!notification.Equals(""))
+                if (!notification.Equals(""))
                     await ((Discord.WebSocket.SocketTextChannel)Program.Client.GetChannel(channelID)).SendMessageAsync(notification);
             }
             catch
