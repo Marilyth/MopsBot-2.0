@@ -39,8 +39,6 @@ namespace MopsBot.Data.Tracker
                 var value = fetchData().Result;
                 if (string.IsNullOrEmpty(value))
                     throw new ArgumentException();
-
-                SetTimer();
             }
             catch (Exception e)
             {
@@ -61,8 +59,6 @@ namespace MopsBot.Data.Tracker
 
             var config = ChannelConfig[channelId];
             config[TRACKEMPTYSTRINGS] = false;
-
-            await UpdateTracker();
         }
 
         public override async void Conversion(object obj = null)

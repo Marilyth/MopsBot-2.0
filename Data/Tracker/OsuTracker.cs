@@ -43,7 +43,6 @@ namespace MopsBot.Data.Tracker
             {
                 var checkExists = fetchUser().Result;
                 var test = checkExists.username;
-                SetTimer();
             }
             catch (Exception e)
             {
@@ -56,8 +55,6 @@ namespace MopsBot.Data.Tracker
         {
             base.PostChannelAdded(channelId);
             ChannelConfig[channelId][PPTHRESHOLD] = 0.1;
-
-            await UpdateTracker();
         }
 
         protected async override void CheckForChange_Elapsed(object stateinfo)

@@ -44,7 +44,6 @@ namespace MopsBot.Data.Tracker
                     var checkExists = FetchJSONDataAsync<OStatsResult>($"https://owapi.net/api/v3/u/{Name}/blob").Result;
                     Task.Delay(2500).Wait();
                     var test = checkExists.eu;
-                    SetTimer();
                 }
                 catch (Exception e)
                 {

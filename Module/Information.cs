@@ -121,12 +121,14 @@ namespace MopsBot.Module
             {
                 var result = await GetURLAsync($"https://api.wolframalpha.com/v2/query?input={System.Web.HttpUtility.UrlEncode(query)}&format=image,plaintext&podstate=Step-by-step%20solution&output=JSON&appid={Program.Config["WolframAlpha"]}");
                 var jsonResult = JsonConvert.DeserializeObject<Data.Tracker.APIResults.Wolfram.WolframResult>(result);
-                for (int i = 0; i < 2 && i < jsonResult.queryresult.pods.Count; i++)
+                var embeds = new List<Embed>();
+                foreach(var pod in jsonResult.queryresult.pods)
                 {
-                    var image = jsonResult.queryresult.pods[i].subpods.FirstOrDefault(x => x.title == "Possible intermediate steps")?.img.src ?? jsonResult.queryresult.pods[i].subpods.First()?.img.src;
-                    var embed = new EmbedBuilder().WithTitle(jsonResult.queryresult.pods[i].title).WithDescription(query).WithImageUrl(image);
-                    await ReplyAsync("", embed: embed.Build());
+                    var image = pod.subpods.FirstOrDefault(x => x.title == "Possible intermediate steps")?.img.src ?? pod.subpods.First()?.img.src;
+                    embeds.Add(new EmbedBuilder().WithTitle(pod.title).WithDescription(query).WithImageUrl(image).Build());
                 }
+                
+                await MopsBot.Data.Interactive.MopsPaginator.CreatePagedMessage(Context.Channel, embeds);
             }
         }
 

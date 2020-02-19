@@ -37,8 +37,10 @@ namespace MopsBot.Data
     public class TrackerHandler<T> : TrackerWrapper where T : Tracker.BaseTracker
     {
         public Dictionary<string, T> trackers;
-        public TrackerHandler()
+        private int trackerInterval;
+        public TrackerHandler(int trackerInterval = 600000)
         {
+            this.trackerInterval = trackerInterval;
         }
 
         public override void PostInitialisation()
@@ -50,14 +52,14 @@ namespace MopsBot.Data
 
             if (collection.Count > 0)
             {
-                int gap = 600000 / collection.Count;
+                int gap = trackerInterval / collection.Count;
 
                 for (int i = trackers.Count - 1; i >= 0; i--)
                 {
                     try
                     {
                         var cur = trackers[trackers.Keys.ElementAt(i)];
-                        cur.SetTimer(600000, gap * (i + 1) + 20000);
+                        cur.SetTimer(trackerInterval, gap * (i + 1) + 20000);
                         bool save = cur.ChannelConfig.Count == 0;
                         cur.Conversion(trackers.Count - i);
                         cur.PostInitialisation(trackers.Count - i);
@@ -180,6 +182,7 @@ namespace MopsBot.Data
                 trackers[name].ChannelConfig[channelID]["Notification"] = notification;
                 trackers[name].OnMajorEventFired += OnMajorEvent;
                 trackers[name].OnMinorEventFired += OnMinorEvent;
+                trackers[name].SetTimer(trackerInterval);
                 await UpdateDBAsync(trackers[name]);
             }
 

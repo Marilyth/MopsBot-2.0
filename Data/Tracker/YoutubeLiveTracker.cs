@@ -40,7 +40,6 @@ namespace MopsBot.Data.Tracker
             {
                 var checkExists = fetchChannel().Result;
                 Name = checkExists.id;
-                SetTimer(900000);
             }
             catch (Exception e)
             {
@@ -74,8 +73,6 @@ namespace MopsBot.Data.Tracker
             config[OFFLINE] = true;
             config[ONLINE] = true;
             config[SHOWCHAT] = false;
-
-            await UpdateTracker();
         }
 
         public override async void Conversion(object obj = null)

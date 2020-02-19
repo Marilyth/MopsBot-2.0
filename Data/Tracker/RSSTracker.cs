@@ -37,7 +37,6 @@ namespace MopsBot.Data.Tracker
                 try{
                     LastFeed = checkExists.Items.OrderByDescending(x => x.PublishDate.DateTime).FirstOrDefault()?.PublishDate.UtcDateTime ?? DateTime.UtcNow;
                     if(LastFeed.Value.Year == 1){ LastFeed = null; throw new Exception("No date set");}
-                    SetTimer();
                 } catch (Exception e){
                     LastFeed = null;
                     LastTitle = checkExists.Items.FirstOrDefault()?.Title?.Text ?? "";
@@ -48,11 +47,6 @@ namespace MopsBot.Data.Tracker
                 Dispose();
                 throw new Exception($"The url did not provide any valid data!\nIs it an RSS feed?", e);
             }
-        }
-
-        public override void PostInitialisation(object info = null)
-        {
-            SetTimer(1800000);
         }
 
         protected async override void CheckForChange_Elapsed(object stateinfo)

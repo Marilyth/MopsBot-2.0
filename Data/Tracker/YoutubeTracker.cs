@@ -38,7 +38,6 @@ namespace MopsBot.Data.Tracker
                 Name = checkExists.id;
                 uploadPlaylistId = checkExists.contentDetails.relatedPlaylists.uploads;
                 channelThumbnailUrl = checkExists.snippet.thumbnails.medium.url;
-                SetTimer();
             }
             catch (Exception e)
             {
@@ -55,8 +54,6 @@ namespace MopsBot.Data.Tracker
                 WebhookExpire = DateTime.Now.AddDays(4);
                 await UpdateTracker();
             }
-
-            SetTimer(600000);
         }
 
         public static async Task pushSubscribe(string channelId, bool subscribe = true)

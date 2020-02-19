@@ -48,7 +48,6 @@ namespace MopsBot.Data.Tracker
             try
             {
                 TwitchId = GetIdFromUsername(streamerName).Result;
-                SetTimer();
             }
             catch (Exception e)
             {
@@ -71,8 +70,6 @@ namespace MopsBot.Data.Tracker
             config[OFFLINE] = true;
             config[ONLINE] = true;
             config[SENDPDF] = false;
-
-            await UpdateTracker();
         }
 
         public async override void PostInitialisation(object info = null)

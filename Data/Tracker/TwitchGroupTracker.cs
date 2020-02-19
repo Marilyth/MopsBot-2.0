@@ -32,15 +32,12 @@ namespace MopsBot.Data.Tracker
             Name = name;
             FetchTrackers();
             RankChannels = new Dictionary<ulong, ulong>();
-            SetTimer(60000);
         }
 
         public async override void PostInitialisation(object info = null)
         {
             if (RankChannels == null) RankChannels = new Dictionary<ulong, ulong>();
             FetchTrackers();
-            if(trackers.Count != 0) 
-                SetTimer(60000);
         }
 
         public void FetchTrackers()

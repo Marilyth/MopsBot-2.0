@@ -1267,6 +1267,22 @@ namespace MopsBot.Module
                         await ReplyAsync($"Set notification for result {page + 1} of paginator to `{notification}`!");
                 }
             }
+
+            [Command("ChangeConfig", RunMode = RunMode.Async)]
+            [Summary("Edit the Configuration for the tracker")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task ChangeConfig()
+            {
+                using (Context.Channel.EnterTypingState())
+                {
+                    var trackers = Trackers[BaseTracker.TrackerType.HTML].GetTrackers(Context.Channel.Id).ToList();
+                    await Data.Interactive.MopsPaginator.CreatePagedMessage(Context.Channel, trackers.Select(x => $"```html\n{x.Name}```"));
+                    await ReplyAsync("Which tracker do you want to change the config for?\nPlease enter the page number");
+
+                    int page = int.Parse((await NextMessageAsync(timeout: new TimeSpan(0, 5, 0))).Content) - 1;
+                    await ModifyConfig(this, trackers[page], TrackerType.HTML);
+                }
+            }
         }
 
         [Group("RSS")]

@@ -36,8 +36,6 @@ namespace MopsBot.Data.Tracker
             try{
                 var character = GetCharacterEndpoint(CharacterName, APIKey).Result;
                 PastInformation = new GW2Information();
-
-                SetTimer();
             } catch(Exception e){
                 Dispose();
                 throw new Exception($"https://api.guildwars2.com/v2/characters/{CharacterName}?access_token={APIKey} yielded no results.");
@@ -61,8 +59,6 @@ namespace MopsBot.Data.Tracker
             config[TRACKTPSELLS] = false;
             config[TRACKTPDELIVERY] = false;
             config[TRACKWEALTH] = false;
-
-            await UpdateTracker();
         }
 
         public async override void PostInitialisation(object info = null)

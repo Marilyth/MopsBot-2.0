@@ -59,8 +59,6 @@ namespace MopsBot.Data.Tracker
             }
 
             addUser();
-
-            SetTimer(1800000);
         }
 
         public async override void PostChannelAdded(ulong channelId)
@@ -72,8 +70,6 @@ namespace MopsBot.Data.Tracker
 
             ChannelConfig[channelId][RETWEETNOTIFICATION] = ChannelConfig[channelId]["Notification"];
             ChannelConfig[channelId][REPLYNOTIFICATION] = ChannelConfig[channelId]["Notification"];
-
-            await UpdateTracker();
         }
 
         protected async override void CheckForChange_Elapsed(object stateinfo)

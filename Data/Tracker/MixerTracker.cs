@@ -46,7 +46,6 @@ namespace MopsBot.Data.Tracker
             try
             {
                 MixerId = GetIdFromUsername(streamerName).Result;
-                SetTimer();
             }
             catch (Exception e)
             {
@@ -66,8 +65,6 @@ namespace MopsBot.Data.Tracker
             config[OFFLINE] = true;
             config[ONLINE] = true;
             config[SHOWTIMESTAMPS] = true;
-
-            await UpdateTracker();
         }
 
         public async override void PostInitialisation(object info = null)

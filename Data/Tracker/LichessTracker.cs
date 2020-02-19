@@ -33,7 +33,6 @@ namespace MopsBot.Data.Tracker
             {
                 PreviousResults = fetchUser().Result;
                 var test = PreviousResults.username;
-                SetTimer();
             }
             catch (Exception e)
             {

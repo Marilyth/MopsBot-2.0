@@ -34,7 +34,6 @@ namespace MopsBot.Data.Tracker
             {
                 var checkExists = fetchStats(Name).Result;
                 stats = checkExists;
-                SetTimer();
             }
             catch (Exception e)
             {

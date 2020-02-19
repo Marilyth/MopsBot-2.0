@@ -33,7 +33,6 @@ namespace MopsBot.Data.Tracker
             {
                 var checkExists = FetchJSONDataAsync<APIResults.Twitch.Channel>($"https://api.twitch.tv/kraken/channels/{Name}?client_id={Program.Config["Twitch"]}").Result;
                 var test = checkExists.broadcaster_language;
-                SetTimer();
             }
             catch (Exception e)
             {
@@ -46,8 +45,6 @@ namespace MopsBot.Data.Tracker
         {
             base.PostChannelAdded(channelId);
             ChannelConfig[channelId][VIEWTHRESHOLD] = (uint)2;
-
-            await UpdateTracker();
         }
         
         protected async override void CheckForChange_Elapsed(object stateinfo)

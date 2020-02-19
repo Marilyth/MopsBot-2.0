@@ -50,7 +50,6 @@ namespace MopsBot.Data.Tracker
                         else throw new Exception("Graph value is not a number!");
                     }
                 }
-                SetTimer();
             }
             catch (Exception e)
             {

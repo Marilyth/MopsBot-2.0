@@ -36,7 +36,6 @@ namespace MopsBot.Data.Tracker
                 if (!success) SteamId = GetUserSIDAsync(name).Result;
                 if (IsProfilePrivate().Result) throw new Exception();
                 LastCheck = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                SetTimer(600000);
             }
             catch (Exception e)
             {
@@ -49,8 +48,6 @@ namespace MopsBot.Data.Tracker
             base.PostChannelAdded(channelId);
             ChannelConfig[channelId][GAMECONFIG] = true;
             ChannelConfig[channelId][ACHIEVEMENTCONFIG] = true;
-
-            await UpdateTracker();
         }
 
         protected async override void CheckForChange_Elapsed(object sender)
