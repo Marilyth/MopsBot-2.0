@@ -17,7 +17,7 @@ namespace MopsBot.Module
 {
     public class Information : ModuleBase<ShardedCommandContext>
     {
-        public static int FailedRequests = 0, SucceededRequests = 0;
+        public static int FailedRequests = 0, SucceededRequests = 0, FailedRequestsTotal = 0, SucceededRequestsTotal = 0;
 
         [Command("HowLong")]
         [Summary("Returns the date you joined the Guild")]
@@ -54,11 +54,20 @@ namespace MopsBot.Module
             });
 
             embed.AddField(x => {
-                var MopsBot = Process.GetCurrentProcess();
-                var runtime = DateTime.Now - MopsBot.StartTime;
-                x.WithName("Stats").WithValue($"Runtime: {(int)runtime.TotalHours}h:{runtime.ToString(@"m\m\:s\s")}\n{MopsBot.ProcessName}: {MopsBot.Id}\nHandleCount: {MopsBot.HandleCount}\nThreads: {MopsBot.Threads.Count}\nRAM: {(MopsBot.WorkingSet64/1024)/1024}");
+                var mopsbot = Process.GetCurrentProcess();
+                var runtime = DateTime.Now - mopsbot.StartTime;
+                x.WithName("Stats").WithValue($"Runtime: {(int)runtime.TotalHours}h:{runtime.ToString(@"m\m\:s\s")}\nHandleCount: {mopsbot.HandleCount}\nThreads: {mopsbot.Threads.Count}\nRAM: {(mopsbot.WorkingSet64/1024)/1024}\nFailed Requests: {Information.FailedRequestsTotal}\nSucceeded Requests: {Information.SucceededRequestsTotal}");
                 x.IsInline = true;
             });
+            
+            embed.AddField(x => x.WithName("_ _").WithValue("_ _"));
+            var third = (int)Math.Ceiling(StaticBase.Trackers.Count/3.0);
+            for(int i = 0; i < StaticBase.Trackers.Count; i+=third){
+                embed.AddField(x => {
+                    x.WithName("Trackers").WithValue(string.Join("\n", StaticBase.Trackers.Skip(i).Take(third).Select(y => $"{y.Key}: {y.Value.GetTrackers().Count}")));
+                    x.IsInline = true;
+                });
+            }
 
             embed.WithImageUrl($"{Program.Config["ServerAddress"]}/StreamCharts/MopsKillerPlot.png?rand={StaticBase.ran.Next(0, 99)}");
 
@@ -168,11 +177,13 @@ namespace MopsBot.Module
                 {
                     string value = await response.Content.ReadAsStringAsync();
                     SucceededRequests++;
+                    SucceededRequestsTotal++;
                     return value;
                 }
                 catch (Exception e)
                 {
                     FailedRequests++;
+                    FailedRequestsTotal++;
                     await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"error for sending post request to {URL}", e.GetBaseException()));
                     throw e;
                 }
@@ -203,6 +214,7 @@ namespace MopsBot.Module
                                 value = await content.ReadAsStringAsync();
                             
                             SucceededRequests++;
+                            SucceededRequestsTotal++;
                             return value;
                         }
                     }
@@ -211,6 +223,7 @@ namespace MopsBot.Module
             catch (Exception e)
             {
                 FailedRequests++;
+                FailedRequestsTotal++;
                 if (!e.GetBaseException().Message.Contains("the remote party has closed the transport stream") && !e.GetBaseException().Message.Contains("The server returned an invalid or unrecognized response"))
                     await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"error for sending request to {URL}", e.GetBaseException()));
                 else if (e.GetBaseException().Message.Contains("the remote party has closed the transport stream"))
