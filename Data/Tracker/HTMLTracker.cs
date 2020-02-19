@@ -22,6 +22,7 @@ namespace MopsBot.Data.Tracker
         public string Regex;
         public string oldMatch;
         public DatePlot DataGraph;
+        public static readonly string TRACKEMPTYSTRINGS = "TrackEmptyStrings";
 
         public HTMLTracker() : base()
         {
@@ -54,13 +55,38 @@ namespace MopsBot.Data.Tracker
                 DataGraph.InitPlot("Date", "Value", format: "dd-MMM", relative: false);
         }
 
+        public async override void PostChannelAdded(ulong channelId)
+        {
+            base.PostChannelAdded(channelId);
+
+            var config = ChannelConfig[channelId];
+            config[TRACKEMPTYSTRINGS] = false;
+
+            await UpdateTracker();
+        }
+
+        public override async void Conversion(object obj = null)
+        {
+            bool save = false;
+            foreach (var channel in ChannelConfig.Keys.ToList())
+            {
+                if (!ChannelConfig[channel].ContainsKey(TRACKEMPTYSTRINGS))
+                {
+                    ChannelConfig[channel][TRACKEMPTYSTRINGS] = false;
+                    save = true;
+                }
+            }
+            if (save)
+                await UpdateTracker();
+        }
+
         protected async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
             {
                 var match = await fetchData();
 
-                if (!string.IsNullOrEmpty(match))
+                if (!string.IsNullOrEmpty(match) || ChannelConfig.Any(x => (bool)x.Value[TRACKEMPTYSTRINGS]))
                 {
                     bool isNumeric;
 

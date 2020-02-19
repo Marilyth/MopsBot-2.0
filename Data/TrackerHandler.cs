@@ -94,7 +94,7 @@ namespace MopsBot.Data
                 }
                 catch (Exception e)
                 {
-                    Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"Error on upsert for {tracker.Name}, {e.Message}", e));
+                    Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"Error on upsert for {tracker.Name}, {e.Message}", e)).Wait();
                 }
             }
         }
@@ -109,7 +109,7 @@ namespace MopsBot.Data
                 }
                 catch (Exception e)
                 {
-                    Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"Error on removing for {tracker.Name}, {e.Message}", e));
+                    Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"Error on removing for {tracker.Name}, {e.Message}", e)).Wait();
                 }
             }
         }
