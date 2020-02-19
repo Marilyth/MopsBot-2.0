@@ -89,12 +89,15 @@ namespace MopsBot.Module
             using (Context.Channel.EnterTypingState())
             {
 
-                string query = Task.Run(() => GetURLAsync($"http://api.wordnik.com:80/v4/word.json/{text}/definitions?limit=1&includeRelated=false&sourceDictionaries=all&useCanonical=true&includeTags=false&api_key={Program.Config["Wordnik"]}")).Result;
-
+                string query = await GetURLAsync($"http://api.wordnik.com:80/v4/word.json/{text}/definitions?includeRelated=false&sourceDictionaries=all&useCanonical=true&includeTags=false&api_key={Program.Config["Wordnik"]}");
                 dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
 
-                tempDict = tempDict[0];
-                await ReplyAsync($"__**{tempDict["word"]}**__\n\n``{tempDict["text"]}``");
+                var strings = new List<string>();
+                foreach(var result in tempDict){
+                    strings.Add($"__**{result["word"]}**__\n\n``{result["text"]}``");
+                }
+
+                await MopsBot.Data.Interactive.MopsPaginator.CreatePagedMessage(Context.Channel.Id, strings);
             }
         }
 
@@ -106,7 +109,7 @@ namespace MopsBot.Module
         {
             using (Context.Channel.EnterTypingState())
             {
-                string query = Task.Run(() => GetURLAsync($"https://translate.googleapis.com/translate_a/single?client=gtx&sl={srcLanguage}&tl={tgtLanguage}&dt=t&q={text}")).Result;
+                string query = await GetURLAsync($"https://translate.googleapis.com/translate_a/single?client=gtx&ie=UTF-8&oe=UTF-8&sl={srcLanguage}&tl={tgtLanguage}&dt=t&q={text}");
                 dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
                 await ReplyAsync(tempDict[0][0][0].ToString());
             }
@@ -127,7 +130,7 @@ namespace MopsBot.Module
                     var image = pod.subpods.FirstOrDefault(x => x.title == "Possible intermediate steps")?.img.src ?? pod.subpods.First()?.img.src;
                     embeds.Add(new EmbedBuilder().WithTitle(pod.title).WithDescription(query).WithImageUrl(image).Build());
                 }
-                
+
                 await MopsBot.Data.Interactive.MopsPaginator.CreatePagedMessage(Context.Channel, embeds);
             }
         }
