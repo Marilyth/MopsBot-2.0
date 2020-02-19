@@ -53,7 +53,7 @@ namespace MopsBot.Data.Tracker
         {
             try
             {
-                await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"{Name} RSS is getting checked."));
+                //await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"{Name} RSS is getting checked."));
                 var feed = await getFeed();
                 List<SyndicationItem> feedItems;
                 if(LastFeed != null){
