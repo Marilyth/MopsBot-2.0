@@ -112,7 +112,7 @@ namespace MopsBot
                 //Execute if command exists
                 if (commands.Search(context, argPos).IsSuccess)
                 {
-                    await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"executed command: {parameterMessage.Content.Substring(argPos)}"));
+                    await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"{parameterMessage.Author} executed command: {parameterMessage.Content.Substring(argPos)}"));
                     var result = await commands.ExecuteAsync(context, argPos, _provider);
                 }
 
