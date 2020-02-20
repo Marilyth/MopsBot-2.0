@@ -33,8 +33,11 @@ namespace MopsBot.Module
         [Hide]
         [Summary("Returns information about the bot.")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public async Task BotInfo(){
-            using (var prc = new System.Diagnostics.Process())
+        public async Task BotInfo()
+        {
+            using (Context.Channel.EnterTypingState())
+            {
+                using (var prc = new System.Diagnostics.Process())
                 {
                     prc.StartInfo.FileName = "convert";
                     prc.StartInfo.Arguments = $"-set density 300 \"//var//www//html//StreamCharts//MopsKillerPlot.pdf\" \"//var//www//html//StreamCharts//MopsKillerPlot.png\"";
@@ -43,35 +46,57 @@ namespace MopsBot.Module
 
                     prc.WaitForExit();
                 }
-            
-            var embed = new EmbedBuilder();
 
-            embed.WithColor(Discord.Color.Blue).WithCurrentTimestamp().WithTitle("Mops Statistics");
+                var embed = new EmbedBuilder();
 
-            embed.AddField(x => {
-                x.WithName("Shards").WithValue(string.Join("\n", Program.Client.Shards.Select(y => (y.ConnectionState.Equals(ConnectionState.Connected) ? new Emoji("🟢") : new Emoji("🔴")) + $" Shard {y.ShardId} ({y.Guilds.Count} Servers, {y.Latency}ms)")));
-                x.IsInline = true;
-            });
+                embed.WithColor(Discord.Color.Blue).WithCurrentTimestamp().WithTitle("Mops Statistics");
 
-            embed.AddField(x => {
-                var mopsbot = Process.GetCurrentProcess();
-                var runtime = DateTime.Now - mopsbot.StartTime;
-                x.WithName("Stats").WithValue($"Runtime: {(int)runtime.TotalHours}h:{runtime.ToString(@"m\m\:s\s")}\nHandleCount: {mopsbot.HandleCount}\nThreads: {mopsbot.Threads.Count}\nRAM: {(mopsbot.WorkingSet64/1024)/1024}\nFailed Requests: {Information.FailedRequestsTotal}\nSucceeded Requests: {Information.SucceededRequestsTotal}");
-                x.IsInline = true;
-            });
-            
-            embed.AddField(x => x.WithName("_ _").WithValue("_ _"));
-            var third = (int)Math.Ceiling(StaticBase.Trackers.Count/3.0);
-            for(int i = 0; i < StaticBase.Trackers.Count; i+=third){
-                embed.AddField(x => {
-                    x.WithName("Trackers").WithValue(string.Join("\n", StaticBase.Trackers.Skip(i).Take(third).Select(y => $"{y.Key}: {y.Value.GetTrackers().Count}")));
+                embed.AddField(x =>
+                {
+                    x.WithName("Shards").WithValue(string.Join("\n", Program.Client.Shards.Select(y => (y.ConnectionState.Equals(ConnectionState.Connected) ? new Emoji("🟢") : new Emoji("🔴")) + $" Shard {y.ShardId} ({y.Guilds.Count} Servers, {y.Latency}ms)")));
                     x.IsInline = true;
                 });
+
+                embed.AddField(x =>
+                {
+                    var mopsbot = Process.GetCurrentProcess();
+                    var runtime = DateTime.Now - mopsbot.StartTime;
+                    x.WithName("Stats").WithValue($"Runtime: {(int)runtime.TotalHours}h:{runtime.ToString(@"m\m\:s\s")}\nHandleCount: {mopsbot.HandleCount}\nThreads: {mopsbot.Threads.Count}\nRAM: {(mopsbot.WorkingSet64 / 1024) / 1024}\nFailed Requests: {Information.FailedRequestsTotal}\nSucceeded Requests: {Information.SucceededRequestsTotal}");
+                    x.IsInline = true;
+                });
+
+                embed.AddField(x => x.WithName("_ _").WithValue("_ _"));
+                var third = (int)Math.Ceiling(StaticBase.Trackers.Count / 3.0);
+                var sorted = StaticBase.Trackers.OrderByDescending(x => x.Value.GetTrackers().Count);
+                for (int i = 0; i < StaticBase.Trackers.Count; i += third)
+                {
+                    embed.AddField(x =>
+                    {
+                        x.WithName("Trackers").WithValue(string.Join("\n", sorted.Skip(i).Take(third).Select(y => $"{y.Key}: {y.Value.GetTrackers().Count}")));
+                        x.IsInline = true;
+                    });
+                }
+
+                embed.WithImageUrl($"{Program.Config["ServerAddress"]}/StreamCharts/MopsKillerPlot.png?rand={StaticBase.ran.Next(0, 99)}");
+
+                await Context.Channel.SendMessageAsync(embed: embed.Build());
             }
+        }
 
-            embed.WithImageUrl($"{Program.Config["ServerAddress"]}/StreamCharts/MopsKillerPlot.png?rand={StaticBase.ran.Next(0, 99)}");
-
-            await Context.Channel.SendMessageAsync(embed: embed.Build());
+        [Command("TrackerInfo")]
+        [Hide]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
+        public async Task TrackerInfo()
+        {
+            using (Context.Channel.EnterTypingState())
+            {
+                var embeds = new List<Embed>();
+                foreach (var handler in StaticBase.Trackers.OrderByDescending(x => x.Value.GetTrackers().Count))
+                {
+                    embeds.Add(await handler.Value.GetEmbed());
+                }
+                await MopsBot.Data.Interactive.MopsPaginator.CreatePagedMessage(Context.Channel, embeds);
+            }
         }
 
         [Command("Invite")]
@@ -102,7 +127,8 @@ namespace MopsBot.Module
                 dynamic tempDict = JsonConvert.DeserializeObject<dynamic>(query);
 
                 var strings = new List<string>();
-                foreach(var result in tempDict){
+                foreach (var result in tempDict)
+                {
                     strings.Add($"__**{result["word"]}**__\n\n``{result["text"]}``");
                 }
 
@@ -134,7 +160,7 @@ namespace MopsBot.Module
                 var result = await GetURLAsync($"https://api.wolframalpha.com/v2/query?input={System.Web.HttpUtility.UrlEncode(query)}&format=image,plaintext&podstate=Step-by-step%20solution&output=JSON&appid={Program.Config["WolframAlpha"]}");
                 var jsonResult = JsonConvert.DeserializeObject<Data.Tracker.APIResults.Wolfram.WolframResult>(result);
                 var embeds = new List<Embed>();
-                foreach(var pod in jsonResult.queryresult.pods)
+                foreach (var pod in jsonResult.queryresult.pods)
                 {
                     var image = pod.subpods.FirstOrDefault(x => x.title == "Possible intermediate steps")?.img.src ?? pod.subpods.First()?.img.src;
                     embeds.Add(new EmbedBuilder().WithTitle(pod.title).WithDescription(query).WithImageUrl(image).Build());
@@ -161,14 +187,15 @@ namespace MopsBot.Module
 
         public static async Task<string> PostURLAsync(string URL, string body = "", params KeyValuePair<string, string>[] headers)
         {
-            if(FailedRequests >= 10 && SucceededRequests / FailedRequests < 1){
+            if (FailedRequests >= 10 && SucceededRequests / FailedRequests < 1)
+            {
                 await Program.MopsLog(new LogMessage(LogSeverity.Warning, "HttpRequests", $"More Failed requests {FailedRequests} than succeeded ones {SucceededRequests}. Waiting"));
                 return "";
             }
 
             HttpRequestMessage test = new HttpRequestMessage(HttpMethod.Post, URL);
             test.Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");
-            foreach(var header in headers)
+            foreach (var header in headers)
                 test.Headers.TryAddWithoutValidation(header.Key, header.Value);
 
             using (var response = await StaticBase.HttpClient.SendAsync(test))
@@ -192,7 +219,8 @@ namespace MopsBot.Module
 
         public static async Task<string> GetURLAsync(string URL, params KeyValuePair<string, string>[] headers)
         {
-            if(FailedRequests >= 10 && SucceededRequests / FailedRequests < 1){
+            if (FailedRequests >= 10 && SucceededRequests / FailedRequests < 1)
+            {
                 await Program.MopsLog(new LogMessage(LogSeverity.Warning, "HttpRequests", $"More Failed requests {FailedRequests} than succeeded ones {SucceededRequests}. Waiting"));
                 return "";
             }
@@ -212,7 +240,7 @@ namespace MopsBot.Module
                                 value = System.Text.Encoding.UTF8.GetString(await content.ReadAsByteArrayAsync());
                             else
                                 value = await content.ReadAsStringAsync();
-                            
+
                             SucceededRequests++;
                             SucceededRequestsTotal++;
                             return value;

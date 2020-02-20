@@ -21,6 +21,7 @@ namespace MopsBot.Data
         public abstract Task<bool> TryRemoveTrackerAsync(string name, ulong channelID);
         public abstract Task<bool> TrySetNotificationAsync(string name, ulong channelID, string notificationMessage);
         public abstract Task AddTrackerAsync(string name, ulong channelID, string notification = "");
+        public abstract Task<Embed> GetEmbed();
         public abstract HashSet<Tracker.BaseTracker> GetTrackerSet();
         public abstract Dictionary<string, Tracker.BaseTracker> GetTrackers();
         public abstract IEnumerable<BaseTracker> GetTrackers(ulong channelID);
@@ -37,6 +38,7 @@ namespace MopsBot.Data
     public class TrackerHandler<T> : TrackerWrapper where T : Tracker.BaseTracker
     {
         public Dictionary<string, T> trackers;
+        public DatePlot IncreaseGraph;
         private int trackerInterval;
         public TrackerHandler(int trackerInterval = 600000)
         {
@@ -46,6 +48,9 @@ namespace MopsBot.Data
         public override void PostInitialisation()
         {
             var collection = StaticBase.Database.GetCollection<T>(typeof(T).Name).FindSync<T>(x => true).ToList();
+            IncreaseGraph = StaticBase.Database.GetCollection<DatePlot>("TrackerHandler").FindSync<DatePlot>(x => x.ID.Equals(typeof(T).Name+"Handler")).FirstOrDefault();
+            IncreaseGraph?.InitPlot("Date", "Tracker Increase", "dd-MMM", false);
+
             trackers = collection.ToDictionary(x => x.Name);
 
             trackers = (trackers == null ? new Dictionary<string, T>() : trackers);
@@ -154,6 +159,7 @@ namespace MopsBot.Data
                     trackers[name].Dispose();
                     trackers.Remove(name);
                     await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Removed a {typeof(T).FullName} for {name}\nChannel: {channelId}; Last channel left."));
+                    await updateGraph(-1);
                 }
 
                 return true;
@@ -184,9 +190,45 @@ namespace MopsBot.Data
                 trackers[name].OnMinorEventFired += OnMinorEvent;
                 trackers[name].SetTimer(trackerInterval);
                 await UpdateDBAsync(trackers[name]);
+                await updateGraph(1);
             }
 
             await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Started a new {typeof(T).Name} for {name}\nChannels: {string.Join(",", trackers[name].ChannelConfig.Keys)}\nMessage: {notification}"));
+        }
+
+        private async Task updateGraph(int increase = 1){
+            double dateValue = OxyPlot.Axes.DateTimeAxis.ToDouble(DateTime.Today);
+            
+            if(IncreaseGraph == null){
+                IncreaseGraph = new DatePlot(typeof(T).Name + "Handler", "Date", "Tracker Increase", "dd-MMM", false);
+                IncreaseGraph.AddValue("Value", 0, DateTime.Today.AddMilliseconds(-1), relative: false);
+                IncreaseGraph.AddValue("Value", increase, DateTime.Today, relative: false);
+            }
+
+            else {
+                if(IncreaseGraph.PlotDataPoints.Last().Value.Key < dateValue){
+                    //Only show past year
+                    IncreaseGraph.PlotDataPoints = IncreaseGraph.PlotDataPoints.SkipWhile(x => (DateTime.Today - OxyPlot.Axes.DateTimeAxis.ToDateTime(x.Value.Key)).Days >= 365).ToList();
+                    for(int i = (int)(dateValue - IncreaseGraph.PlotDataPoints.Last().Value.Key) - 1; i > 0; i--)
+                        IncreaseGraph.AddValue("Value", 0, DateTime.Today.AddDays(-i), relative: false);
+                    IncreaseGraph.AddValue("Value", increase, DateTime.Today, relative: false);
+                } else {
+                    IncreaseGraph.AddValue("Value", IncreaseGraph.PlotDataPoints.Last().Value.Value + increase, DateTime.Today, relative: false, replace: true);
+                }
+            }
+
+            await StaticBase.Database.GetCollection<DatePlot>("TrackerHandler").ReplaceOneAsync(x => x.ID.Equals(typeof(T).Name + "Handler"), IncreaseGraph, new UpdateOptions { IsUpsert = true });
+        }
+
+        public override async Task<Embed> GetEmbed(){
+            var embed = new EmbedBuilder();
+
+            embed.WithTitle(typeof(T).Name + "Handler").WithDescription($"Currently harboring {this.trackers.Count} {typeof(T).Name}s");
+            
+            await updateGraph(0);
+            embed.WithImageUrl(IncreaseGraph.DrawPlot());
+
+            return embed.Build();
         }
 
         public override async Task<bool> TrySetNotificationAsync(string name, ulong channelID, string notificationMessage)

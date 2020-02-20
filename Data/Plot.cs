@@ -429,7 +429,7 @@ namespace MopsBot.Data
             }
         }
 
-        public void AddValue(string name, double viewerCount, DateTime? xValue = null, bool savePlot = true, bool relative = true)
+        public void AddValue(string name, double value, DateTime? xValue = null, bool savePlot = true, bool relative = true, bool replace = false)
         {
             if (xValue == null) xValue = DateTime.UtcNow;
             if (StartTime == null) StartTime = xValue;
@@ -437,7 +437,10 @@ namespace MopsBot.Data
 
             if (areaSeries.LastOrDefault()?.Title?.Equals(name) ?? false)
             {
-                areaSeries.Last().Points.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), viewerCount));
+                if(replace)
+                    areaSeries.Last().Points.RemoveAt(areaSeries.Last().Points.Count - 1);
+
+                areaSeries.Last().Points.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), value));
             }
 
             else
@@ -454,27 +457,30 @@ namespace MopsBot.Data
                     series.Title = name;
 
                 series.StrokeThickness = 3;
-                areaSeries.LastOrDefault()?.Points?.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), viewerCount));
-                series.Points.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), viewerCount));
+                areaSeries.LastOrDefault()?.Points?.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), value));
+                series.Points.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), value));
                 viewerChart.Series.Add(series);
                 areaSeries.Add(series);
             }
 
             if (savePlot)
             {
-                PlotDataPoints.Add(new KeyValuePair<string, KeyValuePair<double, double>>(name, new KeyValuePair<double, double>(DateTimeAxis.ToDouble(xValue), viewerCount)));
+                if(replace)
+                    PlotDataPoints.RemoveAt(PlotDataPoints.Count - 1);
+
+                PlotDataPoints.Add(new KeyValuePair<string, KeyValuePair<double, double>>(name, new KeyValuePair<double, double>(DateTimeAxis.ToDouble(xValue), value)));
                 AdjustAxisRange();
             }
         }
 
-        public void AddValueSeperate(string name, double viewerCount, DateTime? xValue = null, bool savePlot = true, bool relative = true)
+        public void AddValueSeperate(string name, double value, DateTime? xValue = null, bool savePlot = true, bool relative = true)
         {
             if (xValue == null) xValue = DateTime.UtcNow;
             if (StartTime == null) StartTime = xValue;
             var relativeXValue = relative ? new DateTime(1970, 01, 01).Add((xValue - StartTime).Value) : xValue;
 
             if (areaSeries.FirstOrDefault(x => x.Title.Equals(name)) != null)
-                areaSeries.FirstOrDefault(x => x.Title.Equals(name)).Points.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), viewerCount));
+                areaSeries.FirstOrDefault(x => x.Title.Equals(name)).Points.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), value));
 
             else
             {
@@ -489,14 +495,14 @@ namespace MopsBot.Data
                     series.Title = name;
 
                 series.StrokeThickness = 3;
-                series.Points.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), viewerCount));
+                series.Points.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), value));
                 viewerChart.Series.Add(series);
                 areaSeries.Add(series);
             }
 
             if (savePlot)
             {
-                PlotDataPoints.Add(new KeyValuePair<string, KeyValuePair<double, double>>(name, new KeyValuePair<double, double>(DateTimeAxis.ToDouble(xValue), viewerCount)));
+                PlotDataPoints.Add(new KeyValuePair<string, KeyValuePair<double, double>>(name, new KeyValuePair<double, double>(DateTimeAxis.ToDouble(xValue), value)));
                 AdjustAxisRange();
             }
         }
@@ -513,7 +519,7 @@ namespace MopsBot.Data
                 series.ConstantY2 = ymin;
             }
             axis.AbsoluteMaximum = max;
-            axis.AbsoluteMinimum = min;
+            axis.AbsoluteMinimum = Math.Min(min, max-1);
             yaxis.AbsoluteMinimum = ymin;
         }
 
