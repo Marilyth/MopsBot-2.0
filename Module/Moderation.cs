@@ -605,8 +605,8 @@ namespace MopsBot.Module
         public async Task help([Remainder]string helpModule = null)
         {
             EmbedBuilder e = new EmbedBuilder();
-            e.WithDescription("For more information regarding a **specific command** or **command group***,\nplease use **?<command>** or " +
-                              $"**{await StaticBase.GetGuildPrefixAsync(Context.Guild.Id)}help <command>**")
+            e.WithDescription($"For more information regarding a **specific command** or **command group***,\nplease use **?{(helpModule == null ? "" : helpModule + " ")}<command>** or " +
+                              $"**{await StaticBase.GetGuildPrefixAsync(Context.Guild.Id)}help {(helpModule == null ? "" : helpModule + " ")}<command>**")
              .WithColor(Discord.Color.Blue)
              .WithAuthor(async x =>
              {

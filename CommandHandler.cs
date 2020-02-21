@@ -97,17 +97,16 @@ namespace MopsBot
                 if (char.IsWhiteSpace(message.Content[argPos]))
                     argPos += 1;
 
+                var context = new ShardedCommandContext(client, message);
+
                 if (message.HasCharPrefix('?', ref argPos))
                 {
-                    await getCommands(parameterMessage, prefix);
+                    await commands.Commands.First(x => x.Name.Equals("help")).ExecuteAsync(context, new List<object> { $"{context.Message.Content.Substring(argPos)}" }, new List<object> { }, _provider);
                     return;
                 }
 
                 if (message.Content.StartsWith("[ProcessBotMessage]"))
                     argPos = "[ProcessBotMessage]".Length;
-
-                // Create a Command Context
-                var context = new ShardedCommandContext(client, message);
 
                 //Execute if command exists
                 if (commands.Search(context, argPos).IsSuccess)
@@ -167,31 +166,6 @@ namespace MopsBot
                 }
             }
         }
-
-        /// <summary>
-        /// Creates help message as well as command information, and sends it
-        /// </summary>
-        /// <param name="msg">The message recieved</param>
-        public async Task getCommands(SocketMessage msg, string prefix)
-        {
-            EmbedBuilder e = new EmbedBuilder();
-            e.WithDescription("For more information regarding a **specific command** or **command group***,\nplease use **?<command>** or " +
-                              $"**{prefix}help <command>**")
-             .WithColor(Discord.Color.Blue)
-             .WithAuthor(async x =>
-             {
-                 x.IconUrl = (await ((IDiscordClient)Program.Client).GetGuildAsync(435919579005321237)).IconUrl;
-                 x.Name = "Click to join the Support Server!";
-                 x.Url = "https://discord.gg/wZFE2Zs";
-             });
-
-            string message = msg.Content.Replace("?", "").ToLower();
-            Embed embed = getHelpEmbed(message, prefix, e).Build();
-
-            if (embed != null)
-                await msg.Channel.SendMessageAsync("", embed: embed);
-        }
-
 
         /// <summary>
         /// Creates the embed that is sent whenever ?command is called
