@@ -403,7 +403,7 @@ namespace MopsBot.Module
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public class Command : ModuleBase<ShardedCommandContext>
         {
-            [Command("Create")]
+            [Command("Create", RunMode=RunMode.Async)]
             [Summary("Allows you to create a simple response command.\n" +
                   "Name of user: {User.Username}\n" +
                   "Mention of user: {User.Mention}\n" +
@@ -427,7 +427,7 @@ namespace MopsBot.Module
                     await ReplyAsync("A command can only wrap a maximum of 1 other command!\nThis is for the safety of Mops.");
             }
 
-            [Command("Remove")]
+            [Command("Remove", RunMode=RunMode.Async)]
             [Summary("Removes the specified custom command.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task RemoveCommand(string command)
@@ -443,7 +443,7 @@ namespace MopsBot.Module
                 }
             }
 
-            [Command("AddRestriction")]
+            [Command("AddRestriction", RunMode=RunMode.Async)]
             [Summary("Only users with the `role` will be able to use the command.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task AddRestriction(string command, [Remainder]SocketRole role){
@@ -458,7 +458,7 @@ namespace MopsBot.Module
                 }
             }
 
-            [Command("RemoveRestriction")]
+            [Command("RemoveRestriction", RunMode=RunMode.Async)]
             [Summary("Removes the restriction of `role` for the command.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task RemoveRestriction(string command, [Remainder]SocketRole role){
