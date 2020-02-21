@@ -40,7 +40,7 @@ namespace MopsBot.Module
                 {
                     await Context.Guild.DownloadUsersAsync();
                     var highestRole = ((SocketGuildUser)Context.Guild.GetUser(Context.Client.CurrentUser.Id)).Roles.OrderByDescending(x => x.Position).First();
-                    if(description.Equals("DEFAULT")) description = "To join/leave the " + (role.IsMentionable ? role.Mention : $"**{role.Name}**") + " role, add/remove the ✅ Icon below this message!\n" + "If you can manage Roles, you may delete this invitation by pressing the 🗑 Icon";
+                    if (description.Equals("DEFAULT")) description = "To join/leave the " + (role.IsMentionable ? role.Mention : $"**{role.Name}**") + " role, add/remove the ✅ Icon below this message!\n" + "If you can manage Roles, you may delete this invitation by pressing the 🗑 Icon";
                     if (role != null && role.Position < highestRole.Position)
                         await StaticBase.ReactRoleJoin.AddInvite((ITextChannel)Context.Channel, role, description);
                     else
@@ -48,7 +48,7 @@ namespace MopsBot.Module
                 }
             }
 
-            [Command("Prune", RunMode=RunMode.Async)]
+            [Command("Prune", RunMode = RunMode.Async)]
             [RequireBotManage]
             [Hide]
             public async Task Prune(bool testing = true)
@@ -97,7 +97,7 @@ namespace MopsBot.Module
                 await ReplyAsync(embed: infoEmbed.Build());
             }
 
-            [Command("Prune", RunMode=RunMode.Async)]
+            [Command("Prune", RunMode = RunMode.Async)]
             [RequireBotManage]
             [Hide]
             public async Task Prune(bool testing = true)
@@ -145,7 +145,7 @@ namespace MopsBot.Module
                 }
             }
 
-            [Command("Prune", RunMode=RunMode.Async)]
+            [Command("Prune", RunMode = RunMode.Async)]
             [RequireBotManage]
             [Hide]
             public async Task Prune(bool testing = true)
@@ -241,7 +241,7 @@ namespace MopsBot.Module
                 }
             }
 
-            [Command("Prune", RunMode=RunMode.Async)]
+            [Command("Prune", RunMode = RunMode.Async)]
             [RequireBotManage]
             [Hide]
             public async Task Prune(bool testing = true)
@@ -370,7 +370,7 @@ namespace MopsBot.Module
                 }
             }
 
-            [Command("Prune", RunMode=RunMode.Async)]
+            [Command("Prune", RunMode = RunMode.Async)]
             [RequireBotManage]
             [Hide]
             public async Task Prune(bool testing = true)
@@ -399,43 +399,78 @@ namespace MopsBot.Module
 
         }
 
-        [Command("CreateCommand")]
-        [Summary("Allows you to create a simple response command.\n" +
-                 "Name of user: {User.Username}\n" +
-                 "Mention of user: {User.Mention}\n" +
-                 "User parameters: {User.Parameters}\n" +
-                 "Wrap another command (cannot be custom): {Command:CommandName Parameters}\n")]
-        [RequireUserPermission(ChannelPermission.ManageChannels)]
-        public async Task CreateCommand(string command, [Remainder] string responseText)
+        [Group("Command")]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
+        public class Command : ModuleBase<ShardedCommandContext>
         {
-            if (responseText.Split("{Command:").Length <= 2)
+            [Command("Create")]
+            [Summary("Allows you to create a simple response command.\n" +
+                  "Name of user: {User.Username}\n" +
+                  "Mention of user: {User.Mention}\n" +
+                  "User parameters: {User.Parameters}\n" +
+                  "Wrap another command (cannot be custom): {Command:CommandName Parameters}\n")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task CreateCommand(string command, [Remainder] string responseText)
             {
-                if (!StaticBase.CustomCommands.ContainsKey(Context.Guild.Id))
+                if (responseText.Split("{Command:").Length <= 2)
                 {
-                    StaticBase.CustomCommands.Add(Context.Guild.Id, new Data.Entities.CustomCommands(Context.Guild.Id));
+                    if (!StaticBase.CustomCommands.ContainsKey(Context.Guild.Id))
+                    {
+                        StaticBase.CustomCommands.Add(Context.Guild.Id, new Data.Entities.CustomCommands(Context.Guild.Id));
+                    }
+
+                    await StaticBase.CustomCommands[Context.Guild.Id].AddCommandAsync(command, responseText);
+
+                    await ReplyAsync($"Command **{command}** has been created.");
                 }
-
-                await StaticBase.CustomCommands[Context.Guild.Id].AddCommandAsync(command, responseText);
-
-                await ReplyAsync($"Command **{command}** has been created.");
+                else
+                    await ReplyAsync("A command can only wrap a maximum of 1 other command!\nThis is for the safety of Mops.");
             }
-            else
-                await ReplyAsync("A command can only wrap a maximum of 1 other command!\nThis is for the safety of Mops.");
-        }
 
-        [Command("RemoveCommand")]
-        [Summary("Removes the specified custom command.")]
-        [RequireUserPermission(ChannelPermission.ManageChannels)]
-        public async Task RemoveCommand(string command)
-        {
-            if (StaticBase.CustomCommands.ContainsKey(Context.Guild.Id))
+            [Command("Remove")]
+            [Summary("Removes the specified custom command.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task RemoveCommand(string command)
             {
-                await StaticBase.CustomCommands[Context.Guild.Id].RemoveCommandAsync(command);
-                await ReplyAsync($"Removed command **{command}**.");
+                if (StaticBase.CustomCommands.ContainsKey(Context.Guild.Id))
+                {
+                    await StaticBase.CustomCommands[Context.Guild.Id].RemoveCommandAsync(command);
+                    await ReplyAsync($"Removed command **{command}**.");
+                }
+                else
+                {
+                    await ReplyAsync($"Command **{command}** not found.");
+                }
             }
-            else
-            {
-                await ReplyAsync($"Command **{command}** not found.");
+
+            [Command("AddRestriction")]
+            [Summary("Only users with the `role` will be able to use the command.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task AddRestriction(string command, [Remainder]SocketRole role){
+                if (StaticBase.CustomCommands.ContainsKey(Context.Guild.Id))
+                {
+                    await StaticBase.CustomCommands[Context.Guild.Id].AddRestriction(command, role);
+                    await ReplyAsync($"Command **{command}** is now only usable by roles:\n{string.Join("\n", StaticBase.CustomCommands[Context.Guild.Id].RoleRestrictions[command].Select(x => Context.Guild.GetRole(x).Name))}");
+                }
+                else
+                {
+                    await ReplyAsync($"Command **{command}** not found.");
+                }
+            }
+
+            [Command("RemoveRestriction")]
+            [Summary("Removes the restriction of `role` for the command.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task RemoveRestriction(string command, [Remainder]SocketRole role){
+                if (StaticBase.CustomCommands.ContainsKey(Context.Guild.Id))
+                {
+                    await StaticBase.CustomCommands[Context.Guild.Id].RemoveRestriction(command, role);
+                    await ReplyAsync($"Command **{command}** is not restricted to {role.Name} anymore.");
+                }
+                else
+                {
+                    await ReplyAsync($"Command **{command}** not found.");
+                }
             }
         }
 
@@ -538,7 +573,7 @@ namespace MopsBot.Module
         }
 
         [Command("eval", RunMode = RunMode.Async)]
-        [RequireBotManage()]
+        [RequireBotManage]
         [Hide]
         public async Task eval([Remainder]string expression)
         {
