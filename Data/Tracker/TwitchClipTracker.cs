@@ -32,7 +32,7 @@ namespace MopsBot.Data.Tracker
             try
             {
                 var checkExists = FetchJSONDataAsync<APIResults.Twitch.Channel>($"https://api.twitch.tv/kraken/channels/{Name}?client_id={Program.Config["Twitch"]}").Result;
-                var test = checkExists.broadcaster_language;
+                var test = checkExists.BroadcasterLanguage;
             }
             catch (Exception e)
             {
