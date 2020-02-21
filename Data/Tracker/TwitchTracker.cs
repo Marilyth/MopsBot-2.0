@@ -142,7 +142,7 @@ namespace MopsBot.Data.Tracker
             {
                 StreamerStatus = await streamerInformation();
                 bool isStreaming = StreamerStatus.Stream.Channel != null && (StreamerStatus.Stream.BroadcastPlatform.Contains("other") ? ChannelConfig.Any(x => (bool)x.Value[TRACKRERUN]) : true);
-                bool isRerun = StreamerStatus.Stream.BroadcastPlatform.Contains("other");
+                bool isRerun = StreamerStatus.Stream?.BroadcastPlatform?.Contains("other") ?? false;
                 
                 if(!timerChanged && !IsOnline && (WebhookExpire - DateTime.Now).TotalMinutes >= 60){
                     SetTimer(3600000, StaticBase.ran.Next(5000, 3600000));
