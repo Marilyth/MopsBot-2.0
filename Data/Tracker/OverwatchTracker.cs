@@ -82,7 +82,7 @@ namespace MopsBot.Data.Tracker
                 if (StatGraph == null)
                 {
                     StatGraph = new DatePlot(Name, "Date", "Level", "dd-MMM", false);
-                    StatGraph.AddValue("Level", await OverallStats.GetLevelAsync(Name), relative: false);
+                    StatGraph.AddValue("Level", await OverallStats.GetLevelAsync(Name));
                     await UpdateTracker();
                 }
 
@@ -97,8 +97,8 @@ namespace MopsBot.Data.Tracker
 
                 if (changedStats.Count != 0)
                 {
-                    StatGraph.AddValue("Level", StatGraph.PlotDataPoints.Last().Value.Value, relative: false);
-                    StatGraph.AddValue("Level", await OverallStats.GetLevelAsync(Name), relative: false);
+                    StatGraph.AddValue("Level", StatGraph.PlotDataPoints.Last().Value.Value);
+                    StatGraph.AddValue("Level", await OverallStats.GetLevelAsync(Name));
 
                     foreach (ulong channel in ChannelConfig.Keys.ToList())
                     {

@@ -93,14 +93,14 @@ namespace MopsBot.Data.Tracker
 
                     if((isNumeric = Double.TryParse(oldMatch, out double value)) && DataGraph == null){
                         DataGraph = new DatePlot("HTML" + Name.GetHashCode(), "Date", "Value", "dd-MMM", false);
-                        DataGraph.AddValue("Value", value, relative: false);
+                        DataGraph.AddValue("Value", value);
                     }
 
                     if (!match.Equals(oldMatch)){
                         if(isNumeric){
-                            DataGraph.AddValue("Value", value, relative: false);
+                            DataGraph.AddValue("Value", value);
                             var success = Double.TryParse(match, out value);
-                            if(success) DataGraph.AddValue("Value", value, relative: false);
+                            if(success) DataGraph.AddValue("Value", value);
                         }
 
                         foreach (var channel in ChannelConfig.Keys.ToList())

@@ -201,8 +201,8 @@ namespace MopsBot.Data
             
             if(IncreaseGraph == null){
                 IncreaseGraph = new DatePlot(typeof(T).Name + "Handler", "Date", "Tracker Increase", "dd-MMM", false);
-                IncreaseGraph.AddValue("Value", 0, DateTime.Today.AddMilliseconds(-1), relative: false);
-                IncreaseGraph.AddValue("Value", increase, DateTime.Today, relative: false);
+                IncreaseGraph.AddValue("Value", 0, DateTime.Today.AddMilliseconds(-1));
+                IncreaseGraph.AddValue("Value", increase, DateTime.Today);
             }
 
             else {
@@ -210,10 +210,10 @@ namespace MopsBot.Data
                     //Only show past year
                     IncreaseGraph.PlotDataPoints = IncreaseGraph.PlotDataPoints.SkipWhile(x => (DateTime.Today - OxyPlot.Axes.DateTimeAxis.ToDateTime(x.Value.Key)).Days >= 365).ToList();
                     for(int i = (int)(dateValue - IncreaseGraph.PlotDataPoints.Last().Value.Key) - 1; i > 0; i--)
-                        IncreaseGraph.AddValue("Value", 0, DateTime.Today.AddDays(-i), relative: false);
-                    IncreaseGraph.AddValue("Value", increase, DateTime.Today, relative: false);
+                        IncreaseGraph.AddValue("Value", 0, DateTime.Today.AddDays(-i));
+                    IncreaseGraph.AddValue("Value", increase, DateTime.Today);
                 } else {
-                    IncreaseGraph.AddValue("Value", IncreaseGraph.PlotDataPoints.Last().Value.Value + increase, DateTime.Today, relative: false, replace: true);
+                    IncreaseGraph.AddValue("Value", IncreaseGraph.PlotDataPoints.Last().Value.Value + increase, DateTime.Today, replace: true);
                 }
             }
 

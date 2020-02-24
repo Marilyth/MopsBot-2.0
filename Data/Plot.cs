@@ -311,12 +311,18 @@ namespace MopsBot.Data
 
         [BsonId]
         public string ID;
+        public string xName, yName, format;
         public bool MultipleLines;
+        public bool? RelativeTime;
 
         public DatePlot(string name, string xName = "x", string yName = "y", string format = "HH:mm", bool relativeTime = true, bool multipleLines = false)
         {
             ID = name;
             MultipleLines = multipleLines;
+            this.xName = xName;
+            this.yName = yName;
+            this.format = format;
+            this.RelativeTime = relativeTime;
             //PlotPoints = new List<KeyValuePair<string, double>>();
             PlotDataPoints = new List<KeyValuePair<string, KeyValuePair<double, double>>>();
             InitPlot(xName, yName, format, relative: relativeTime);
@@ -324,6 +330,11 @@ namespace MopsBot.Data
 
         public void InitPlot(string xAxis = "Time", string yAxis = "Viewers", string format = "HH:mm", bool relative = true)
         {
+            if(RelativeTime == null) RelativeTime = relative;
+            if(xName == null) xName = xAxis;
+            if(yName == null) yName = yAxis;
+            if(format == null) this.format = format;
+
             if (PlotDataPoints == null) PlotDataPoints = new List<KeyValuePair<string, KeyValuePair<double, double>>>();
 
             viewerChart = new PlotModel();
@@ -333,7 +344,7 @@ namespace MopsBot.Data
             {
                 Position = OxyPlot.Axes.AxisPosition.Left,
                 TicklineColor = OxyColor.FromRgb(125, 125, 155),
-                Title = yAxis,
+                Title = yName,
                 FontSize = 26,
                 TitleFontSize = 26,
                 AxislineThickness = 3,
@@ -351,7 +362,7 @@ namespace MopsBot.Data
             {
                 Position = OxyPlot.Axes.AxisPosition.Bottom,
                 TicklineColor = OxyColor.FromRgb(125, 125, 155),
-                Title = xAxis,
+                Title = xName,
                 FontSize = 26,
                 TitleFontSize = 26,
                 AxislineThickness = 3,
@@ -362,7 +373,7 @@ namespace MopsBot.Data
                 TitleFontWeight = 700,
                 AxislineStyle = LineStyle.Solid,
                 AxislineColor = OxyColor.FromRgb(125, 125, 155),
-                StringFormat = format
+                StringFormat = this.format
             };
 
             viewerChart.Axes.Add(valueAxisY);
@@ -385,8 +396,8 @@ namespace MopsBot.Data
                 StartTime = DateTimeAxis.ToDateTime(PlotDataPoints.First().Value.Key);
                 foreach (var dataPoint in PlotDataPoints)
                 {
-                    if (!MultipleLines) AddValue(dataPoint.Key, dataPoint.Value.Value, DateTimeAxis.ToDateTime(dataPoint.Value.Key), false, relative);
-                    else AddValueSeperate(dataPoint.Key, dataPoint.Value.Value, DateTimeAxis.ToDateTime(dataPoint.Value.Key), false, relative);
+                    if (!MultipleLines) AddValue(dataPoint.Key, dataPoint.Value.Value, DateTimeAxis.ToDateTime(dataPoint.Value.Key), false);
+                    else AddValueSeperate(dataPoint.Key, dataPoint.Value.Value, DateTimeAxis.ToDateTime(dataPoint.Value.Key), false);
                 }
             }
         }
@@ -429,11 +440,11 @@ namespace MopsBot.Data
             }
         }
 
-        public void AddValue(string name, double value, DateTime? xValue = null, bool savePlot = true, bool relative = true, bool replace = false)
+        public void AddValue(string name, double value, DateTime? xValue = null, bool savePlot = true, bool replace = false)
         {
             if (xValue == null) xValue = DateTime.UtcNow;
             if (StartTime == null) StartTime = xValue;
-            var relativeXValue = relative ? new DateTime(1970, 01, 01).Add((xValue - StartTime).Value) : xValue;
+            var relativeXValue = RelativeTime.Value ? new DateTime(1970, 01, 01).Add((xValue - StartTime).Value) : xValue;
 
             if (areaSeries.LastOrDefault()?.Title?.Equals(name) ?? false)
             {
@@ -473,11 +484,11 @@ namespace MopsBot.Data
             }
         }
 
-        public void AddValueSeperate(string name, double value, DateTime? xValue = null, bool savePlot = true, bool relative = true)
+        public void AddValueSeperate(string name, double value, DateTime? xValue = null, bool savePlot = true)
         {
             if (xValue == null) xValue = DateTime.UtcNow;
             if (StartTime == null) StartTime = xValue;
-            var relativeXValue = relative ? new DateTime(1970, 01, 01).Add((xValue - StartTime).Value) : xValue;
+            var relativeXValue = RelativeTime.Value ? new DateTime(1970, 01, 01).Add((xValue - StartTime).Value) : xValue;
 
             if (areaSeries.FirstOrDefault(x => x.Title.Equals(name)) != null)
                 areaSeries.FirstOrDefault(x => x.Title.Equals(name)).Points.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), value));
