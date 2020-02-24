@@ -403,7 +403,7 @@ namespace MopsBot.Module
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public class Command : ModuleBase<ShardedCommandContext>
         {
-            [Command("Create", RunMode=RunMode.Async)]
+            [Command("Create", RunMode = RunMode.Async)]
             [Summary("Allows you to create a simple response command.\n" +
                   "Name of user: {User.Username}\n" +
                   "Mention of user: {User.Mention}\n" +
@@ -427,7 +427,7 @@ namespace MopsBot.Module
                     await ReplyAsync("A command can only wrap a maximum of 1 other command!\nThis is for the safety of Mops.");
             }
 
-            [Command("Remove", RunMode=RunMode.Async)]
+            [Command("Remove", RunMode = RunMode.Async)]
             [Summary("Removes the specified custom command.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task RemoveCommand(string command)
@@ -443,10 +443,11 @@ namespace MopsBot.Module
                 }
             }
 
-            [Command("AddRestriction", RunMode=RunMode.Async)]
+            [Command("AddRestriction", RunMode = RunMode.Async)]
             [Summary("Only users with the `role` will be able to use the command.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task AddRestriction(string command, [Remainder]SocketRole role){
+            public async Task AddRestriction(string command, [Remainder]SocketRole role)
+            {
                 if (StaticBase.CustomCommands.ContainsKey(Context.Guild.Id))
                 {
                     await StaticBase.CustomCommands[Context.Guild.Id].AddRestriction(command, role);
@@ -458,10 +459,11 @@ namespace MopsBot.Module
                 }
             }
 
-            [Command("RemoveRestriction", RunMode=RunMode.Async)]
+            [Command("RemoveRestriction", RunMode = RunMode.Async)]
             [Summary("Removes the restriction of `role` for the command.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task RemoveRestriction(string command, [Remainder]SocketRole role){
+            public async Task RemoveRestriction(string command, [Remainder]SocketRole role)
+            {
                 if (StaticBase.CustomCommands.ContainsKey(Context.Guild.Id))
                 {
                     await StaticBase.CustomCommands[Context.Guild.Id].RemoveRestriction(command, role);
@@ -604,73 +606,80 @@ namespace MopsBot.Module
         [Ratelimit(1, 2, Measure.Seconds, RatelimitFlags.ChannelwideLimit)]
         public async Task help([Remainder]string helpModule = null)
         {
-            EmbedBuilder e = new EmbedBuilder();
-            e.WithDescription($"For more information regarding a **specific command** or **command group***,\nplease use **?{(helpModule == null ? "" : helpModule + " ")}<command>** or " +
-                              $"**{await StaticBase.GetGuildPrefixAsync(Context.Guild.Id)}help {(helpModule == null ? "" : helpModule + " ")}<command>**")
-             .WithColor(Discord.Color.Blue)
-             .WithAuthor(async x =>
-             {
-                 x.IconUrl = Context.Client.GetGuild(435919579005321237).IconUrl;
-                 x.Name = "Click to join the Support Server!";
-                 x.Url = "https://discord.gg/wZFE2Zs";
-             });
-
-            if (helpModule == null)
+            try
             {
-                foreach (var module in Program.Handler.commands.Modules.Where(x => !x.Preconditions.OfType<HideAttribute>().Any()))
-                {
-                    if (!module.IsSubmodule)
-                    {
-                        string moduleInformation = "";
-                        moduleInformation += string.Join(", ", module.Commands.Where(x => !x.Preconditions.Any(y => y is HideAttribute)).Select(x => $"[{x.Name}]({CommandHandler.GetCommandHelpImage(x.Name)})"));
-                        moduleInformation += "\n";
+                EmbedBuilder e = new EmbedBuilder();
+                e.WithDescription($"For more information regarding a **specific command** or **command group***,\nplease use **?{(helpModule == null ? "" : helpModule + " ")}<command>** or " +
+                                  $"**{await StaticBase.GetGuildPrefixAsync(Context.Guild.Id)}help {(helpModule == null ? "" : helpModule + " ")}<command>**")
+                 .WithColor(Discord.Color.Blue)
+                 .WithAuthor(async x =>
+                 {
+                     x.IconUrl = Context.Client.GetGuild(435919579005321237).IconUrl;
+                     x.Name = "Click to join the Support Server!";
+                     x.Url = "https://discord.gg/wZFE2Zs";
+                 });
 
-                        moduleInformation += string.Join(", ", module.Submodules.Where(x => !x.Preconditions.Any(y => y is HideAttribute)).Select(x => $"[{x.Name}\\*]({CommandHandler.GetCommandHelpImage(x.Name)})"));
-                        var modulesections = moduleInformation.Length / 1024 + 1;
-                        if (modulesections > 1)
+                if (helpModule == null)
+                {
+                    foreach (var module in Program.Handler.commands.Modules.Where(x => !x.Preconditions.OfType<HideAttribute>().Any()))
+                    {
+                        if (!module.IsSubmodule)
                         {
-                            var segments = moduleInformation.Split(", ");
-                            var submoduleInformation = "";
-                            foreach (var segment in segments)
+                            string moduleInformation = "";
+                            moduleInformation += string.Join(", ", module.Commands.Where(x => !x.Preconditions.Any(y => y is HideAttribute)).Select(x => $"[{x.Name}]({CommandHandler.GetCommandHelpImage(x.Name)})"));
+                            moduleInformation += "\n";
+
+                            moduleInformation += string.Join(", ", module.Submodules.Where(x => !x.Preconditions.Any(y => y is HideAttribute)).Select(x => $"[{x.Name}\\*]({CommandHandler.GetCommandHelpImage(x.Name)})"));
+                            var modulesections = moduleInformation.Length / 1024 + 1;
+                            if (modulesections > 1)
                             {
-                                if (submoduleInformation.Length + segment.Length > 1000)
+                                var segments = moduleInformation.Split(", ");
+                                var submoduleInformation = "";
+                                foreach (var segment in segments)
                                 {
-                                    submoduleInformation = string.Concat(submoduleInformation.SkipLast(2));
-                                    e.AddField($"**{module.Name}**", submoduleInformation);
-                                    submoduleInformation = "";
+                                    if (submoduleInformation.Length + segment.Length > 1000)
+                                    {
+                                        submoduleInformation = string.Concat(submoduleInformation.SkipLast(2));
+                                        e.AddField($"**{module.Name}**", submoduleInformation);
+                                        submoduleInformation = "";
+                                    }
+                                    submoduleInformation += segment + ", ";
                                 }
-                                submoduleInformation += segment + ", ";
+                                e.AddField($"**{module.Name}**", submoduleInformation);
                             }
-                            e.AddField($"**{module.Name}**", submoduleInformation);
-                        }
-                        else
-                        {
-                            e.AddField($"**{module.Name}**", moduleInformation);
+                            else
+                            {
+                                e.AddField($"**{module.Name}**", moduleInformation);
+                            }
                         }
                     }
-                }
 
-                if (StaticBase.CustomCommands.ContainsKey(Context.Guild.Id))
+                    if (StaticBase.CustomCommands.ContainsKey(Context.Guild.Id))
+                    {
+                        e.AddField("**Custom Commands**", string.Join(", ", StaticBase.CustomCommands.Where(x => x.Key == Context.Guild.Id).First().Value.Commands.Select(x => $"`{x.Key}`")));
+                    }
+                }
+                else
                 {
-                    e.AddField("**Custom Commands**", string.Join(", ", StaticBase.CustomCommands.Where(x => x.Key == Context.Guild.Id).First().Value.Commands.Select(x => $"`{x.Key}`")));
+                    // var module = Program.Handler.commands.Modules.First(x => x.Name.ToLower().Equals(helpModule.ToLower()));
+
+                    // string moduleInformation = "";
+                    // moduleInformation += string.Join(", ", module.Commands.Where(x => !x.Preconditions.OfType<HideAttribute>().Any()).Select(x => $"[{x.Name}]({CommandHandler.GetCommandHelpImage($"{module.Name} {x.Name}")})"));
+                    // moduleInformation += "\n";
+
+                    // moduleInformation += string.Join(", ", module.Submodules.Select(x => $"{x.Name}\\*"));
+
+                    // e.AddField($"**{module.Name}**", moduleInformation);
+                    var prefix = await GetGuildPrefixAsync(Context.Guild.Id);
+                    e = Program.Handler.getHelpEmbed(helpModule.ToLower(), prefix, e);
                 }
+
+                await ReplyAsync("", embed: e.Build());
             }
-            else
+            catch
             {
-                // var module = Program.Handler.commands.Modules.First(x => x.Name.ToLower().Equals(helpModule.ToLower()));
 
-                // string moduleInformation = "";
-                // moduleInformation += string.Join(", ", module.Commands.Where(x => !x.Preconditions.OfType<HideAttribute>().Any()).Select(x => $"[{x.Name}]({CommandHandler.GetCommandHelpImage($"{module.Name} {x.Name}")})"));
-                // moduleInformation += "\n";
-
-                // moduleInformation += string.Join(", ", module.Submodules.Select(x => $"{x.Name}\\*"));
-
-                // e.AddField($"**{module.Name}**", moduleInformation);
-                var prefix = await GetGuildPrefixAsync(Context.Guild.Id);
-                e = Program.Handler.getHelpEmbed(helpModule.ToLower(), prefix, e);
             }
-
-            await ReplyAsync("", embed: e.Build());
         }
     }
 
