@@ -21,6 +21,75 @@ namespace MopsBot.Module
 {
     public class Tracking : InteractiveBase<ShardedCommandContext>
     {
+        public static readonly Dictionary<string, (string, string)> Names = new Dictionary<string, (string, string)>{
+            {"Twitter", ("Twitter username, without the @ in the beginning!", "https://cdn.discordapp.com/attachments/158166244493623296/681834842240974867/unknown.png")},
+            {"Osu", ("name of the osu! player", "https://cdn.discordapp.com/attachments/158166244493623296/681835932047114240/unknown.png")},
+            {"Youtube", ("YouTube channel-id", "https://cdn.discordapp.com/attachments/158166244493623296/681836381768777744/unknown.png")},
+            {"YoutubeLive", ("YouTube channel-id", "https://cdn.discordapp.com/attachments/158166244493623296/681836381768777744/unknown.png")},
+            {"Twitch", ("name of the Twitch streamer", "https://cdn.discordapp.com/attachments/158166244493623296/681836767158337542/unknown.png")},
+            {"TwitchClip", ("name of the Twitch streamer", "https://cdn.discordapp.com/attachments/158166244493623296/681836767158337542/unknown.png")},
+            //{"Reddit", ("name of the subreddit (without the r/)", "https://cdn.discordapp.com/attachments/158166244493623296/681837609898868753/unknown.png")},
+            {"Overwatch", ("name and battletag of the Overwatch player (make sure to replace the `#` with `-`)", "https://cdn.discordapp.com/attachments/158166244493623296/681838241363918878/unknown.png")},
+            //{"JSON", ("URL to the JSON source", "https://cdn.discordapp.com/attachments/158166244493623296/681838828092522507/unknown.png")},
+            {"OSRS",("name of the OSRS player","https://cdn.discordapp.com/attachments/158166244493623296/681839431644348466/unknown.png")},
+            {"RSS", ("URL to the RSS-feed", "https://cdn.discordapp.com/attachments/158166244493623296/681839831407394827/unknown.png")},
+            {"Steam", ("steam-id64 of the user (you can find it here https://steamidfinder.com/ )", "https://cdn.discordapp.com/attachments/158166244493623296/681840280311169059/unknown.png")},
+            {"Mixer", ("name of the Mixer streamer", "https://cdn.discordapp.com/attachments/158166244493623296/681840797993402368/unknown.png")}
+        };
+
+        [Command("Setup", RunMode=RunMode.Async)]
+        [Hide]
+        [Summary("Helps the user set up the tracker they want.")]
+        [RequireUserPermission(ChannelPermission.ManageChannels)]
+        [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
+        public async Task Setup(){
+            await ReplyAsync($"Hello there, {Context.User.Username}!\nLet me guide you through your tracking setup:\n");
+            await ReplyAsync($"First of all: What kind of tracker do you want to create?\nCopy & Paste one of these:```\n{string.Join("\n", Names.Keys)}```");
+            string tracker = (await NextMessageAsync(timeout: new TimeSpan(0, 5, 0))).Content;
+            TrackerType type = Enum.Parse<TrackerType>(tracker, true);
+
+            await ReplyAsync($"To create a {type.ToString()}-Tracker you need the {Names[type.ToString()].Item1}.\nYou can find it like this: {Names[type.ToString()].Item2}");
+            await ReplyAsync($"Please copy & paste it here after you found it!");
+            string name = (await NextMessageAsync(timeout: new TimeSpan(0, 5, 0))).Content;
+            if(!CapSensitive.Any(x => x == type))
+                name = name.ToLower();
+
+            var conditions = await Program.Handler.commands.Search($"{type.ToString()} Track").Commands.FirstOrDefault().CheckPreconditionsAsync(Context);
+            if(!conditions.IsSuccess){
+                await ReplyAsync($"I am sorry, we failed due to:\n{conditions.ErrorReason}");
+                return;
+            }
+
+            while(true){
+                try{
+                    await StaticBase.Trackers[type].AddTrackerAsync(name, Context.Channel.Id);
+                    break;
+                } catch(Exception e){
+                    await ReplyAsync("**Error**: " + e.InnerException.Message);
+                    await ReplyAsync($"Hmm, that didn't seem to work.\nRemember, you need to copy & paste the {Names[type.ToString()].Item1}, just like in the image above.\nTry it again:");
+                    name = (await NextMessageAsync(timeout: new TimeSpan(0, 5, 0))).Content;
+                    if(!CapSensitive.Any(x => x == type))
+                        name = name.ToLower();
+                }
+            }
+
+            var baseTracker = StaticBase.Trackers[type].GetTracker(Context.Channel.Id, name);
+
+            await ReplyAsync($"Now, whenever the tracker finds something new to send, I will send a notification message alongside it.\nWhat do you want the notification message to be?");
+            string notification = (await NextMessageAsync(timeout: new TimeSpan(0, 5, 0))).Content;
+            baseTracker.ChannelConfig[Context.Channel.Id]["Notification"] = notification;
+            
+            await ReplyAsync($"And finally, where do you want the notifications to appear in?\nPlease mention a #channel:");
+            ulong channel = ulong.Parse(string.Join("", (await NextMessageAsync(timeout: new TimeSpan(0, 5, 0))).Content.Skip(2).SkipLast(1)));
+            if(channel != Context.Channel.Id){
+                var currentConfig = baseTracker.ChannelConfig[Context.Channel.Id];
+                baseTracker.ChannelConfig[channel] = currentConfig;
+                await StaticBase.Trackers[type].TryRemoveTrackerAsync(baseTracker.Name, Context.Channel.Id);
+            }
+
+            await ReplyAsync($"And we are all done!");
+        }
+
         [Group("Twitter")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public class Twitter : InteractiveBase<ShardedCommandContext>
