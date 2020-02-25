@@ -333,7 +333,7 @@ namespace MopsBot.Data
             if(RelativeTime == null) RelativeTime = relative;
             if(xName == null) xName = xAxis;
             if(yName == null) yName = yAxis;
-            if(format == null) this.format = format;
+            if(this.format == null) this.format = format;
 
             if (PlotDataPoints == null) PlotDataPoints = new List<KeyValuePair<string, KeyValuePair<double, double>>>();
 
