@@ -173,8 +173,8 @@ namespace MopsBot
                 await Program.MopsLog(new LogMessage(LogSeverity.Error, "", "discord bot list api failed", e));
             }
 
-            await Task.Delay(30000);
             await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", "Heartbeat. I am still alive :)"));
+            await Task.Delay(30000);
             foreach(var client in Program.Client.Shards)
                 await client.SetActivityAsync(new Game($"{client.Latency}ms Latency", ActivityType.Listening));
         }
