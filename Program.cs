@@ -104,7 +104,9 @@ namespace MopsBot
 
         public static DiscordSocketClient GetShardFor(ulong channelId)
         {
-            return Client.GetShardFor((Client.GetChannel(channelId) as SocketGuildChannel).Guild);
+            if(Client.GetChannel(channelId) != null)
+                return Client.GetShardFor((Client.GetChannel(channelId) as SocketGuildChannel).Guild);
+            return null;
         }
 
         public static IWebHost BuildWebHost(string[] args) =>
