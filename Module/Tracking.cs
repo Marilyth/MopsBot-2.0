@@ -29,12 +29,12 @@ namespace MopsBot.Module
             {"Twitch", ("name of the Twitch streamer", "https://cdn.discordapp.com/attachments/158166244493623296/681836767158337542/unknown.png")},
             {"TwitchClip", ("name of the Twitch streamer", "https://cdn.discordapp.com/attachments/158166244493623296/681836767158337542/unknown.png")},
             //{"Reddit", ("name of the subreddit (without the r/)", "https://cdn.discordapp.com/attachments/158166244493623296/681837609898868753/unknown.png")},
-            {"Overwatch", ("name and battletag of the Overwatch player (make sure to replace the `#` with `-`)", "https://cdn.discordapp.com/attachments/158166244493623296/681838241363918878/unknown.png")},
+            {"Overwatch", ("name and battletag of the Overwatch player (make sure to replace the `#` with `-`)", "https://cdn.discordapp.com/attachments/158166244493623296/681855715815587865/unknown.png")},
             //{"JSON", ("URL to the JSON source", "https://cdn.discordapp.com/attachments/158166244493623296/681838828092522507/unknown.png")},
-            {"OSRS",("name of the OSRS player","https://cdn.discordapp.com/attachments/158166244493623296/681839431644348466/unknown.png")},
-            {"RSS", ("URL to the RSS-feed", "https://cdn.discordapp.com/attachments/158166244493623296/681839831407394827/unknown.png")},
-            {"Steam", ("steam-id64 of the user (you can find it here https://steamidfinder.com/ )", "https://cdn.discordapp.com/attachments/158166244493623296/681840280311169059/unknown.png")},
-            {"Mixer", ("name of the Mixer streamer", "https://cdn.discordapp.com/attachments/158166244493623296/681840797993402368/unknown.png")}
+            {"OSRS",("name of the OSRS player","https://cdn.discordapp.com/attachments/158166244493623296/681856581159223326/unknown.png")},
+            {"RSS", ("URL to the RSS-feed", "https://cdn.discordapp.com/attachments/158166244493623296/681856139331371028/unknown.png")},
+            {"Steam", ("steam-id64 of the user (you can find it here https://steamidfinder.com/ )", "https://cdn.discordapp.com/attachments/158166244493623296/681856888874598465/unknown.png")},
+            {"Mixer", ("name of the Mixer streamer", "https://cdn.discordapp.com/attachments/158166244493623296/681855363691053133/unknown.png")}
         };
 
         [Command("Setup", RunMode=RunMode.Async)]
@@ -318,7 +318,7 @@ namespace MopsBot.Module
                 {
                     await Trackers[BaseTracker.TrackerType.Youtube].AddTrackerAsync(channelID, Context.Channel.Id, notificationMessage);
 
-                    await ReplyAsync("Keeping track of " + channelID + "'s videos, from now on!");
+                    await ReplyAsync("Keeping track of " + channelID + "'s videos, from now on!\nThis tracker **only tracks videos, no livestreams!**\nFor livestreams, start a `YoutubeLive` tracker, not a `Youtube` tracker!");
                 }
             }
 
