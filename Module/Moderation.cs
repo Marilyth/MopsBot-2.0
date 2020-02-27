@@ -608,6 +608,9 @@ namespace MopsBot.Module
         {
             try
             {
+                if(helpModule != null && !Program.Handler.commands.Modules.FirstOrDefault(x => x.Name.Equals(helpModule.Split(" ").Last(), StringComparison.InvariantCultureIgnoreCase)).IsSubmodule){
+                    return;
+                }
                 EmbedBuilder e = new EmbedBuilder();
                 e.WithDescription($"For more information regarding a **specific command** or **command group***,\nplease use **?{(helpModule == null ? "" : helpModule + " ")}<command>** or " +
                                   $"**{await StaticBase.GetGuildPrefixAsync(Context.Guild.Id)}help {(helpModule == null ? "" : helpModule + " ")}<command>**")
