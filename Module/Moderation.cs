@@ -608,7 +608,7 @@ namespace MopsBot.Module
         {
             try
             {
-                if(helpModule != null && !Program.Handler.commands.Modules.FirstOrDefault(x => x.Name.Equals(helpModule.Split(" ").Last(), StringComparison.InvariantCultureIgnoreCase)).IsSubmodule){
+                if(helpModule != null && (!Program.Handler.commands.Modules.FirstOrDefault(x => x.Name.Equals(helpModule.Split(" ").Last(), StringComparison.InvariantCultureIgnoreCase))?.IsSubmodule ?? false)){
                     return;
                 }
                 EmbedBuilder e = new EmbedBuilder();
