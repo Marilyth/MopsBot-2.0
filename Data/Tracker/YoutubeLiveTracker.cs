@@ -57,10 +57,6 @@ namespace MopsBot.Data.Tracker
             {
                 SetTimer(60000);
             }
-            else
-            {
-                SetTimer(900000);
-            }
         }
 
         public async override void PostChannelAdded(ulong channelId)
@@ -108,7 +104,7 @@ namespace MopsBot.Data.Tracker
         public static async Task<string> scrapeLivestreamId(string channelId)
         {
             var html = await MopsBot.Module.Information.GetURLAsync($"https://www.youtube.com/channel/{channelId}/videos");
-            var videoSegment = html.Split(">Jetzt live</span>").FirstOrDefault();
+            var videoSegment = html.Split("Jetzt live").FirstOrDefault();
             if (videoSegment == null || html.Length == videoSegment.Length)
             {
                 return null;
