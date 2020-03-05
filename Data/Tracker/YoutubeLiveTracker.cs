@@ -25,7 +25,7 @@ namespace MopsBot.Data.Tracker
         public string VideoId, IconUrl;
         private string channelThumbnailUrl;
         public DatePlot ViewerGraph;
-        public static readonly string SHOWEMBED = "ShowEmbed", THUMBNAIL = "LargeThumbnail", OFFLINE = "NotifyOnOffline", ONLINE = "NotifyOnOnline", SHOWCHAT = "ShowChat";
+        public static readonly string SHOWEMBED = "ShowEmbed", THUMBNAIL = "LargeThumbnail", OFFLINE = "NotifyOnOffline", ONLINE = "NotifyOnOnline", SHOWCHAT = "ShowChat", SENDPDF = "SendGraphPDFAfterOffline";
 
         public YoutubeLiveTracker() : base()
         {
@@ -69,6 +69,7 @@ namespace MopsBot.Data.Tracker
             config[OFFLINE] = true;
             config[ONLINE] = true;
             config[SHOWCHAT] = false;
+            config[SENDPDF] = false;
         }
 
         public override async void Conversion(object obj = null)
@@ -76,9 +77,9 @@ namespace MopsBot.Data.Tracker
             bool save = false;
             foreach (var channel in ChannelConfig.Keys.ToList())
             {
-                if (!ChannelConfig[channel].ContainsKey(SHOWCHAT))
+                if (!ChannelConfig[channel].ContainsKey(SENDPDF))
                 {
-                    ChannelConfig[channel][SHOWCHAT] = false;
+                    ChannelConfig[channel][SENDPDF] = false;
                     save = true;
                 }
             }
@@ -132,12 +133,13 @@ namespace MopsBot.Data.Tracker
 
                         var nullValues = currentBatch.Select(x => x.Name).ToHashSet();
 
-                        foreach(var video in tmpResult.items)
+                        foreach (var video in tmpResult.items)
                         {
                             (liveTrackers[video.snippet.channelId] as YoutubeLiveTracker).StreamInfo = video;
                             nullValues.Remove(video.snippet.channelId);
                         }
-                        foreach(var nullChannel in nullValues){
+                        foreach (var nullChannel in nullValues)
+                        {
                             (liveTrackers[nullChannel] as YoutubeLiveTracker).StreamInfo = null;
                         }
 
@@ -206,6 +208,11 @@ namespace MopsBot.Data.Tracker
                 {
                     VideoId = null;
                     SetTimer(900000);
+                    var pdf = ViewerGraph.DrawPlot(true, $"{Name}-{DateTime.UtcNow.ToString("MM-dd-yy_hh-mm")}");
+                    foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][SENDPDF]).ToList())
+                        await (Program.Client.GetChannel(channel) as SocketTextChannel).SendFileAsync(pdf, "Graph PDF for personal use:");
+                    File.Delete(pdf);
+
                     ViewerGraph?.Dispose();
                     ViewerGraph = null;
 
