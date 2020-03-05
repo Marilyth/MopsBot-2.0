@@ -25,7 +25,7 @@ namespace MopsBot.Data.Tracker
         public string VideoId, IconUrl;
         private string channelThumbnailUrl;
         public DatePlot ViewerGraph;
-        public static readonly string SHOWEMBED = "ShowEmbed", THUMBNAIL = "LargeThumbnail", OFFLINE = "NotifyOnOffline", ONLINE = "NotifyOnOnline", SHOWCHAT = "ShowChat", SENDPDF = "SendGraphPDFAfterOffline";
+        public static readonly string SHOWEMBED = "ShowEmbed", THUMBNAIL = "LargeThumbnail", OFFLINE = "NotifyOnOffline", ONLINE = "NotifyOnOnline", SHOWCHAT = "ShowChat", SENDGRAPH = "SendGraphAfterOffline";
 
         public YoutubeLiveTracker() : base()
         {
@@ -69,7 +69,7 @@ namespace MopsBot.Data.Tracker
             config[OFFLINE] = true;
             config[ONLINE] = true;
             config[SHOWCHAT] = false;
-            config[SENDPDF] = false;
+            config[SENDGRAPH] = false;
         }
 
         public override async void Conversion(object obj = null)
@@ -77,9 +77,9 @@ namespace MopsBot.Data.Tracker
             bool save = false;
             foreach (var channel in ChannelConfig.Keys.ToList())
             {
-                if (!ChannelConfig[channel].ContainsKey(SENDPDF))
+                if (!ChannelConfig[channel].ContainsKey(SENDGRAPH))
                 {
-                    ChannelConfig[channel][SENDPDF] = false;
+                    ChannelConfig[channel][SENDGRAPH] = false;
                     save = true;
                 }
             }
@@ -208,10 +208,10 @@ namespace MopsBot.Data.Tracker
                 {
                     VideoId = null;
                     SetTimer(900000);
-                    var pdf = ViewerGraph.DrawPlot(true, $"{Name}-{DateTime.UtcNow.ToString("MM-dd-yy_hh-mm")}");
-                    foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][SENDPDF]).ToList())
-                        await (Program.Client.GetChannel(channel) as SocketTextChannel).SendFileAsync(pdf, "Graph PDF for personal use:");
-                    File.Delete(pdf);
+                    var png = ViewerGraph.DrawPlot(false, $"{Name}-{DateTime.UtcNow.ToString("MM-dd-yy_hh-mm")}", true);
+                    foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][SENDGRAPH]).ToList())
+                        await (Program.Client.GetChannel(channel) as SocketTextChannel).SendFileAsync(png, "Graph for personal use:");
+                    //File.Delete(png);
 
                     ViewerGraph?.Dispose();
                     ViewerGraph = null;
