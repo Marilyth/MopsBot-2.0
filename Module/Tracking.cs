@@ -1448,7 +1448,7 @@ namespace MopsBot.Module
         public static async Task ModifyConfig(InteractiveBase<ShardedCommandContext> context, BaseTracker tracker, TrackerType trackerType)
         {
             await context.Context.Channel.SendMessageAsync($"Current Config:\n```yaml\n{string.Join("\n", tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[context.Context.Guild.Id]].Select(x => x.Key + ": " + x.Value))}```\nPlease reply with one or more changed lines.");
-            var reply = await context.NextMessageAsync(new EnsureSourceUserCriterion(), TimeSpan.FromMinutes(5));
+            var reply = await context.NextMessageAsync(true, true, TimeSpan.FromMinutes(5));
             var settings = tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[context.Context.Guild.Id]].ToDictionary(x => x.Key, x => x.Value);
 
             if (reply != null)
