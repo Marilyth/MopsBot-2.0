@@ -179,14 +179,15 @@ namespace MopsBot
                 await client.SetActivityAsync(new Game($"{client.Latency}ms Latency", ActivityType.Listening));
         }
 
-        public static async Task UserVoted(IDblEntity user)
+        public static async Task UserVoted(ulong userId)
         {
-            await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"User {user.ToString()}({user.Id}) voted. Adding 10 VP to balance!"));
-            await MopsBot.Data.Entities.User.ModifyUserAsync(user.Id, x => x.Money += 10);
+            var user = await GetUserAsync(userId);
+            await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"User {user.ToString()}({userId}) voted. Adding 10 VP to balance!"));
+            await MopsBot.Data.Entities.User.ModifyUserAsync(userId, x => x.Money += 10);
             try
             {
                 if (Program.Client.CurrentUser.Id == 305398845389406209)
-                    await (await (await StaticBase.GetUserAsync(user.Id)).GetOrCreateDMChannelAsync()).SendMessageAsync("Thanks for voting for me!\nI have added 10 Votepoints to your balance!");
+                    await (await user.GetOrCreateDMChannelAsync()).SendMessageAsync("Thanks for voting for me!\nI have added 10 Votepoints to your balance!");
             }
             catch (Exception e)
             {

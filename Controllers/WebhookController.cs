@@ -118,6 +118,33 @@ namespace MopsBot.Api.Controllers
             return new OkResult();
         }
 
+        [HttpPost("dbl")]
+        public async Task<IActionResult> VoteWebhookReceived()
+        {
+            string body = new StreamReader(Request.Body).ReadToEnd();
+            var headers = Request.Headers;
+
+            await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Received a vote webhook message\n" + body));
+            if (headers["Authorization"].Equals(Program.Config["DiscordBotListPassword"]))
+            {
+                await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Webhook had correct password, processing"));
+
+                var update = JsonConvert.DeserializeObject<dynamic>(body);
+                try
+                {
+                    ulong voterId = update["user"];
+                    await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Voter id is: {voterId}"));
+                    //await StaticBase.UserVoted(voterId);
+                }
+                catch (Exception e)
+                {
+                    await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $" error by voter Webhook.", e));
+                }
+            }
+
+            return new OkResult();
+        }
+
         public static MopsBot.Data.Tracker.APIResults.Youtube.YoutubeNotification ConvertAtomToSyndication(Stream stream)
         {
             using (var xmlReader = System.Xml.XmlReader.Create(stream))
