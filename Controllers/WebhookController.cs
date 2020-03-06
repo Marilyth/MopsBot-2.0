@@ -25,7 +25,7 @@ namespace MopsBot.Api.Controllers
             Dictionary<string, string[]> parameters = Request.Query.ToDictionary(x => x.Key, x => x.Value.ToArray());
             if (parameters.ContainsKey("hub.challenge"))
             {
-                Console.WriteLine("Received a challenge, responding with " + parameters["hub.challenge"].FirstOrDefault());
+                await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Received a Twitch challenge, containing {string.Join("\n", parameters.Select(x => x.Key + ": " + string.Join(", ", x.Value)))}"));
                 return new OkObjectResult(parameters["hub.challenge"].FirstOrDefault());
             }
             else
@@ -40,7 +40,7 @@ namespace MopsBot.Api.Controllers
             Dictionary<string, string[]> parameters = Request.Query.ToDictionary(x => x.Key, x => x.Value.ToArray());
             if (parameters.ContainsKey("hub.challenge"))
             {
-                await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Received a YT challenge, responding with " + parameters["hub.challenge"].FirstOrDefault()));
+                await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Received a YT challenge, containing {string.Join("\n", parameters.Select(x => x.Key + ": " + string.Join(", ", x.Value)))}"));
                 return new OkObjectResult(parameters["hub.challenge"].FirstOrDefault());
             }
             else
