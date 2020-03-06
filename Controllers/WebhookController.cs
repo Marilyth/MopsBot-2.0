@@ -28,7 +28,7 @@ namespace MopsBot.Api.Controllers
             {
                 await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Received a Twitch challenge, containing {string.Join("\n", parameters.Select(x => x.Key + ": " + string.Join(", ", x.Value)))}"));
                 ulong id = ulong.Parse(parameters["hub.topic"].FirstOrDefault().Split("user_id=").LastOrDefault());
-                TwitchTracker tracker = StaticBase.Trackers[Data.Tracker.BaseTracker.TrackerType.Youtube].GetTrackers().First(x => (x.Value as TwitchTracker).TwitchId == id).Value as TwitchTracker;
+                TwitchTracker tracker = StaticBase.Trackers[Data.Tracker.BaseTracker.TrackerType.Twitch].GetTrackers().First(x => (x.Value as TwitchTracker).TwitchId == id).Value as TwitchTracker;
                 tracker.WebhookExpire = DateTime.Now.AddHours(18);
                 await tracker.UpdateTracker();
                 return new OkObjectResult(parameters["hub.challenge"].FirstOrDefault());

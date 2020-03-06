@@ -227,6 +227,10 @@ namespace MopsBot
                 {
                     try
                     {
+                        //Collect garbage when over 2GB of RAM is used
+                        if(((System.Diagnostics.Process.GetCurrentProcess().WorkingSet64 / 1024) / 1024) > 2000)
+                            System.GC.Collect();
+                            
                         BaseTracker.TrackerType type = (BaseTracker.TrackerType)status++;
 
                         //Skip everything after GW2, as this is hidden
