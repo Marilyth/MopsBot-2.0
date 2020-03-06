@@ -133,7 +133,7 @@ namespace MopsBot.Api.Controllers
                 try
                 {
                     ulong voterId = update["user"];
-                    await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Voter id is: {voterId}"));
+                    //await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Voter id is: {voterId}"));
                     await StaticBase.UserVoted(voterId);
                 }
                 catch (Exception e)
