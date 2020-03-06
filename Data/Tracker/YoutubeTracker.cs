@@ -51,8 +51,6 @@ namespace MopsBot.Data.Tracker
             if ((WebhookExpire - DateTime.Now).TotalMinutes <= 60)
             {
                 await pushSubscribe(Name);
-                WebhookExpire = DateTime.Now.AddDays(4);
-                await UpdateTracker();
             }
         }
 
@@ -98,8 +96,6 @@ namespace MopsBot.Data.Tracker
             if ((WebhookExpire - DateTime.Now).TotalMinutes <= 60)
             {
                 await pushSubscribe(Name);
-                WebhookExpire = DateTime.Now.AddDays(4);
-                await UpdateTracker();
             }
         }
 
