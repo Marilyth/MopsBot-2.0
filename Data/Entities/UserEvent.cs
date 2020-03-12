@@ -17,7 +17,7 @@ namespace MopsBot.Data.Entities
     {
         public List<ulong> pastList;
         public static event UserHasVoted UserVoted;
-        public delegate Task UserHasVoted(IDblEntity voter);
+        public delegate Task UserHasVoted(ulong userId);
 
         public async Task CheckUsersVotedLoop()
         {
@@ -66,7 +66,7 @@ namespace MopsBot.Data.Entities
 
                     if (UserVoted != null)
                         foreach (var user in newVoters)
-                            await UserVoted.Invoke(user);
+                            await UserVoted.Invoke(user.Id);
                 }
                 catch (Exception e)
                 {

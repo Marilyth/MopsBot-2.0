@@ -406,7 +406,7 @@ namespace MopsBot.Data
         /// Saves the plot as a .png and returns the URL.
         /// </summary>
         /// <returns>The URL</returns>
-        public string DrawPlot(bool returnPdf = false, string fileName = null)
+        public string DrawPlot(bool returnPdf = false, string fileName = null, bool path = false)
         {
             if(fileName == null)
                 fileName = $"{ID}plot";
@@ -433,7 +433,9 @@ namespace MopsBot.Data
                 foreach (var f in files)
                     f.Delete();
 
-                return $"{Program.Config["ServerAddress"]}/StreamCharts/{fileName}.png?rand={StaticBase.ran.Next(0, 999999999)}";
+                if(!path)
+                    return $"{Program.Config["ServerAddress"]}/StreamCharts/{fileName}.png?rand={StaticBase.ran.Next(0, 999999999)}";
+                else return $"//var//www//html//StreamCharts//{fileName}.png";
             }
             else{
                 return $"mopsdata//{fileName}.pdf";

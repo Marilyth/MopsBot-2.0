@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.IO;
 using System;
 using Discord;
+using MopsBot.Data.Tracker;
 using System.ServiceModel.Syndication;
 
 namespace MopsBot.Api.Controllers
@@ -25,7 +26,11 @@ namespace MopsBot.Api.Controllers
             Dictionary<string, string[]> parameters = Request.Query.ToDictionary(x => x.Key, x => x.Value.ToArray());
             if (parameters.ContainsKey("hub.challenge"))
             {
-                Console.WriteLine("Received a challenge, responding with " + parameters["hub.challenge"].FirstOrDefault());
+                await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Received a Twitch challenge, containing {string.Join("\n", parameters.Select(x => x.Key + ": " + string.Join(", ", x.Value)))}"));
+                ulong id = ulong.Parse(parameters["hub.topic"].FirstOrDefault().Split("user_id=").LastOrDefault());
+                TwitchTracker tracker = StaticBase.Trackers[Data.Tracker.BaseTracker.TrackerType.Twitch].GetTrackers().First(x => (x.Value as TwitchTracker).TwitchId == id).Value as TwitchTracker;
+                tracker.WebhookExpire = DateTime.Now.AddHours(18);
+                await tracker.UpdateTracker();
                 return new OkObjectResult(parameters["hub.challenge"].FirstOrDefault());
             }
             else
@@ -40,7 +45,11 @@ namespace MopsBot.Api.Controllers
             Dictionary<string, string[]> parameters = Request.Query.ToDictionary(x => x.Key, x => x.Value.ToArray());
             if (parameters.ContainsKey("hub.challenge"))
             {
-                await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Received a YT challenge, responding with " + parameters["hub.challenge"].FirstOrDefault()));
+                await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Received a YT challenge, containing {string.Join("\n", parameters.Select(x => x.Key + ": " + string.Join(", ", x.Value)))}"));
+                var channel = parameters["hub.topic"].FirstOrDefault().Split("channel_id=").LastOrDefault();
+                MopsBot.Data.Tracker.YoutubeTracker tracker = StaticBase.Trackers[Data.Tracker.BaseTracker.TrackerType.Youtube].GetTrackers()[channel] as MopsBot.Data.Tracker.YoutubeTracker;
+                tracker.WebhookExpire = DateTime.Now.AddDays(4);
+                await tracker.UpdateTracker();
                 return new OkObjectResult(parameters["hub.challenge"].FirstOrDefault());
             }
             else
@@ -113,6 +122,33 @@ namespace MopsBot.Api.Controllers
             catch (Exception e)
             {
                 await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $" error by Mixer Webhook.", e));
+            }
+
+            return new OkResult();
+        }
+
+        [HttpPost("dbl")]
+        public async Task<IActionResult> VoteWebhookReceived()
+        {
+            string body = new StreamReader(Request.Body).ReadToEnd();
+            var headers = Request.Headers;
+
+            await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Received a vote webhook message\n" + body));
+            if (headers["Authorization"].Equals(Program.Config["DiscordBotListPassword"]))
+            {
+                await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Webhook had correct password, processing"));
+
+                var update = JsonConvert.DeserializeObject<dynamic>(body);
+                try
+                {
+                    ulong voterId = update["user"];
+                    //await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Voter id is: {voterId}"));
+                    await StaticBase.UserVoted(voterId);
+                }
+                catch (Exception e)
+                {
+                    await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $" error by voter Webhook.", e));
+                }
             }
 
             return new OkResult();

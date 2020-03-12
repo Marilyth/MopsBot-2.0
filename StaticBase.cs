@@ -61,8 +61,8 @@ namespace MopsBot
                 HttpClient.Timeout = TimeSpan.FromSeconds(10);
                 ServicePointManager.DefaultConnectionLimit = 100;
                 ServicePointManager.MaxServicePointIdleTime = 10000;
-                MopsBot.Data.Entities.UserEvent.UserVoted += UserVoted;
-                Task.Run(() => new MopsBot.Data.Entities.UserEvent().CheckUsersVotedLoop());
+                //MopsBot.Data.Entities.UserEvent.UserVoted += UserVoted;
+                //Task.Run(() => new MopsBot.Data.Entities.UserEvent().CheckUsersVotedLoop());
 
                 Task.Run(() =>
                 {
@@ -179,14 +179,15 @@ namespace MopsBot
                 await client.SetActivityAsync(new Game($"{client.Latency}ms Latency", ActivityType.Listening));
         }
 
-        public static async Task UserVoted(IDblEntity user)
+        public static async Task UserVoted(ulong userId)
         {
-            await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"User {user.ToString()}({user.Id}) voted. Adding 10 VP to balance!"));
-            await MopsBot.Data.Entities.User.ModifyUserAsync(user.Id, x => x.Money += 10);
+            var user = await GetUserAsync(userId);
+            await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"User {user.ToString()}({userId}) voted. Adding 10 VP to balance!"));
+            await MopsBot.Data.Entities.User.ModifyUserAsync(userId, x => x.Money += 10);
             try
             {
                 if (Program.Client.CurrentUser.Id == 305398845389406209)
-                    await (await (await StaticBase.GetUserAsync(user.Id)).GetOrCreateDMChannelAsync()).SendMessageAsync("Thanks for voting for me!\nI have added 10 Votepoints to your balance!");
+                    await (await user.GetOrCreateDMChannelAsync()).SendMessageAsync("Thanks for voting for me!\nI have added 10 Votepoints to your balance!");
             }
             catch (Exception e)
             {
@@ -226,6 +227,10 @@ namespace MopsBot
                 {
                     try
                     {
+                        //Collect garbage when over 2GB of RAM is used
+                        if(((System.Diagnostics.Process.GetCurrentProcess().WorkingSet64 / 1024) / 1024) > 2000)
+                            System.GC.Collect();
+                            
                         BaseTracker.TrackerType type = (BaseTracker.TrackerType)status++;
 
                         //Skip everything after GW2, as this is hidden
