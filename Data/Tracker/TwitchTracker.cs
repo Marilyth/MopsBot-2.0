@@ -75,12 +75,12 @@ namespace MopsBot.Data.Tracker
 
         public async override void PostInitialisation(object info = null)
         {
-            if (IsOnline) SetTimer(120000, StaticBase.ran.Next(5000, 120000));
+            //if (IsOnline) SetTimer(120000, StaticBase.ran.Next(5000, 120000));
 
             if (ViewerGraph != null)
                 ViewerGraph.InitPlot();
 
-            if ((WebhookExpire - DateTime.Now).TotalMinutes < 10)
+            if ((WebhookExpire - DateTime.Now).TotalMinutes < 60)
             {
                 await SubscribeWebhookAsync();
             }
@@ -113,7 +113,7 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        protected async override void CheckForChange_Elapsed(object stateinfo)
+        public async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
             {
@@ -140,7 +140,7 @@ namespace MopsBot.Data.Tracker
                 bool isRerun = StreamerStatus.Stream?.BroadcastPlatform?.Contains("other") ?? false;
                 
                 if(!timerChanged && !IsOnline && (WebhookExpire - DateTime.Now).TotalMinutes >= 60){
-                    SetTimer(3600000, StaticBase.ran.Next(5000, 3600000));
+                    //SetTimer(3600000, StaticBase.ran.Next(5000, 3600000));
                     timerChanged = true;
                 }
 
@@ -171,7 +171,7 @@ namespace MopsBot.Data.Tracker
                             foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][OFFLINE] && (isRerun ? (bool)ChannelConfig[x][TRACKRERUN] : true)).ToList())
                                 await OnMinorChangeTracked(channel, $"{Name} went Offline!");
 
-                            SetTimer(3600000, 3600000);
+                            //SetTimer(3600000, 3600000);
 
                         }
                         else if (!IsHosting)
@@ -200,7 +200,7 @@ namespace MopsBot.Data.Tracker
                         foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][ONLINE] && (isRerun ? (bool)ChannelConfig[x][TRACKRERUN] : true)).ToList())
                             await OnMinorChangeTracked(channel, (string)ChannelConfig[channel]["Notification"]);
 
-                        SetTimer(120000, 120000);
+                        //SetTimer(120000, 120000);
                     }
                     await UpdateTracker();
                 }

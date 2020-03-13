@@ -69,7 +69,7 @@ namespace MopsBot.Data.Tracker
 
         public async override void PostInitialisation(object info = null)
         {
-            if (IsOnline) SetTimer(60000, StaticBase.ran.Next(5000, 60000));
+            //if (IsOnline) SetTimer(60000, StaticBase.ran.Next(5000, 60000));
 
             if (ViewerGraph != null)
                 ViewerGraph.InitPlot();
@@ -103,7 +103,7 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        protected async override void CheckForChange_Elapsed(object stateinfo)
+        public async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
             {
@@ -147,7 +147,7 @@ namespace MopsBot.Data.Tracker
                             foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][OFFLINE]).ToList())
                                 await OnMinorChangeTracked(channel, $"{Name} went Offline!");
 
-                            SetTimer(600000, 600000);
+                            //SetTimer(600000, 600000);
 
                         }
                     }
@@ -162,7 +162,7 @@ namespace MopsBot.Data.Tracker
                         foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][ONLINE]).ToList())
                             await OnMinorChangeTracked(channel, (string)ChannelConfig[channel]["Notification"]);
 
-                        SetTimer(60000, 60000);
+                        //SetTimer(60000, 60000);
                     }
                     await UpdateTracker();
                 }

@@ -26,7 +26,7 @@ namespace MopsBot.Data.Tracker
         public static List<TrackerType> CapSensitive = new List<TrackerType>{TrackerType.HTML, TrackerType.Reddit, TrackerType.JSON, TrackerType.Overwatch, TrackerType.RSS, TrackerType.Youtube, TrackerType.YoutubeLive};
         private bool disposed = false;
         private SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
-        protected System.Threading.Timer checkForChange;
+        //protected System.Threading.Timer checkForChange;
         public event MainEventHandler OnMajorEventFired;
         public event MinorEventHandler OnMinorEventFired;
         public delegate Task MinorEventHandler(ulong channelID, BaseTracker self, string notificationText);
@@ -44,7 +44,7 @@ namespace MopsBot.Data.Tracker
             ExistingTrackers++;
             ChannelConfig = new Dictionary<ulong, Dictionary<string, object>>();
             LastCalledChannelPerGuild = new Dictionary<ulong, ulong>();
-            checkForChange = new System.Threading.Timer(CheckForChange_Elapsed);
+            //checkForChange = new System.Threading.Timer(CheckForChange_Elapsed);
         }
 
         public virtual void PostInitialisation(object info = null){}
@@ -61,10 +61,10 @@ namespace MopsBot.Data.Tracker
             return true;
         }
 
-        public void SetTimer(int interval = 600000, int delay = -1)
+        /*public void SetTimer(int interval = 600000, int delay = -1)
         {
             checkForChange.Change(delay == -1 ? StaticBase.ran.Next(5000, interval) : delay, interval);
-        }
+        }*/
 
         public static async Task<T> FetchJSONDataAsync<T>(string url, params KeyValuePair<string, string>[] headers)
         {
@@ -112,7 +112,7 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        protected abstract void CheckForChange_Elapsed(object stateinfo);
+        public abstract void CheckForChange_Elapsed(object stateinfo);
 
         public virtual string TrackerUrl()
         {
@@ -149,7 +149,7 @@ namespace MopsBot.Data.Tracker
             if (disposing)
             {
                 handle.Dispose();
-                checkForChange.Dispose();
+                //checkForChange.Dispose();
             }
 
             disposed = true;

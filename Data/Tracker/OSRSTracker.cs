@@ -42,7 +42,7 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        protected async override void CheckForChange_Elapsed(object stateinfo)
+        public async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
             {

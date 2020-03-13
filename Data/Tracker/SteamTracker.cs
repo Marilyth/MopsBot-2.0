@@ -50,7 +50,7 @@ namespace MopsBot.Data.Tracker
             ChannelConfig[channelId][ACHIEVEMENTCONFIG] = true;
         }
 
-        protected async override void CheckForChange_Elapsed(object sender)
+        public async override void CheckForChange_Elapsed(object sender)
         {
             try
             {

@@ -57,7 +57,7 @@ namespace MopsBot.Data.Tracker
             ChannelConfig[channelId][PPTHRESHOLD] = 0.1;
         }
 
-        protected async override void CheckForChange_Elapsed(object stateinfo)
+        public async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
             {

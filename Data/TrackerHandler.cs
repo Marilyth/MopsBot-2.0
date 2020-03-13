@@ -40,7 +40,8 @@ namespace MopsBot.Data
         public Dictionary<string, T> trackers;
         public DatePlot IncreaseGraph;
         private int trackerInterval;
-        public TrackerHandler(int trackerInterval = 600000)
+        private System.Threading.Timer nextTracker, nextUpdate;
+        public TrackerHandler(int trackerInterval = 60000)
         {
             this.trackerInterval = trackerInterval;
         }
@@ -48,7 +49,7 @@ namespace MopsBot.Data
         public override void PostInitialisation()
         {
             var collection = StaticBase.Database.GetCollection<T>(typeof(T).Name).FindSync<T>(x => true).ToList();
-            IncreaseGraph = StaticBase.Database.GetCollection<DatePlot>("TrackerHandler").FindSync<DatePlot>(x => x.ID.Equals(typeof(T).Name+"Handler")).FirstOrDefault();
+            IncreaseGraph = StaticBase.Database.GetCollection<DatePlot>("TrackerHandler").FindSync<DatePlot>(x => x.ID.Equals(typeof(T).Name + "Handler")).FirstOrDefault();
             IncreaseGraph?.InitPlot("Date", "Tracker Increase", "dd-MMM", false);
 
             trackers = collection.ToDictionary(x => x.Name);
@@ -64,7 +65,7 @@ namespace MopsBot.Data
                     try
                     {
                         var cur = trackers[trackers.Keys.ElementAt(i)];
-                        cur.SetTimer(trackerInterval, gap * (i + 1) + 20000);
+                        //cur.SetTimer(trackerInterval, gap * (i + 1) + 20000);
                         bool save = cur.ChannelConfig.Count == 0;
                         cur.Conversion(trackers.Count - i);
                         cur.PostInitialisation(trackers.Count - i);
@@ -88,8 +89,79 @@ namespace MopsBot.Data
                     TwitterTracker.STREAM.StartStreamMatchingAllConditionsAsync();
                 }
             }
+
+            nextTracker = new System.Threading.Timer(LoopTrackers);
+            loopQueue = trackers.Values.ToList();
+            if (typeof(T) == typeof(BaseUpdatingTracker))
+            {
+                nextUpdate = new System.Threading.Timer(LoopTrackersUpdate);
+                loopQueue = trackers.Where(x => (x.Value as BaseUpdatingTracker).ToUpdate.Count == 0).Select(x => x.Value).ToList();
+                updateQueue = trackers.Where(x => (x.Value as BaseUpdatingTracker).ToUpdate.Count > 0).Select(x => x.Value).ToList();
+                nextUpdate.Change(5000, 120000 / (updateQueue.Count > 0 ? updateQueue.Count : 1));
+            }
+            nextTracker.Change(5000, trackerInterval / (loopQueue.Count > 0 ? loopQueue.Count : 1));
         }
 
+        private int trackerTurn;
+        private List<T> loopQueue;
+        public async void LoopTrackers(object state)
+        {
+            if (loopQueue.Count > 0)
+            {
+                var curTracker = loopQueue[trackerTurn];
+                try
+                {
+                    curTracker.CheckForChange_Elapsed(null);
+                }
+                catch (Exception e)
+                {
+                    await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"Error on checking for change for {curTracker.Name}", e));
+                }
+            }
+
+            trackerTurn++;
+            if (trackerTurn >= loopQueue.Count)
+            {
+                if (typeof(T) == typeof(BaseUpdatingTracker))
+                {
+                    loopQueue = trackers.Where(x => (x.Value as BaseUpdatingTracker).ToUpdate.Count == 0).Select(x => x.Value).ToList();
+                }
+                else
+                {
+                    loopQueue = trackers.Values.ToList();
+                }
+                var gap = trackerInterval / (loopQueue.Count > 0 ? loopQueue.Count : 1);
+                nextTracker.Change(gap, gap);
+                trackerTurn = 0;
+            }
+        }
+
+        private int updateTurn;
+        private List<T> updateQueue;
+        public async void LoopTrackersUpdate(object state)
+        {
+            if (updateQueue.Count > 0)
+            {
+                var curTracker = updateQueue[updateTurn];
+                try
+                {
+                    curTracker.CheckForChange_Elapsed(null);
+                }
+                catch (Exception e)
+                {
+                    await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"Error on checking for change for {curTracker.Name}", e));
+                }
+            }
+
+            updateTurn++;
+            if (updateTurn >= updateQueue.Count)
+            {
+                updateQueue = trackers.Where(x => (x.Value as BaseUpdatingTracker).ToUpdate.Count > 0).Select(x => x.Value).ToList();
+                var gap = 120000 / (updateQueue.Count > 0 ? updateQueue.Count : 1);
+                nextUpdate.Change(gap, gap);
+                updateTurn = 0;
+            }
+        }
 
         public override async Task UpdateDBAsync(BaseTracker tracker)
         {
@@ -188,7 +260,7 @@ namespace MopsBot.Data
                 trackers[name].ChannelConfig[channelID]["Notification"] = notification;
                 trackers[name].OnMajorEventFired += OnMajorEvent;
                 trackers[name].OnMinorEventFired += OnMinorEvent;
-                trackers[name].SetTimer(trackerInterval);
+                //trackers[name].SetTimer(trackerInterval);
                 await UpdateDBAsync(trackers[name]);
                 await updateGraph(1);
             }
@@ -196,23 +268,29 @@ namespace MopsBot.Data
             await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Started a new {typeof(T).Name} for {name}\nChannels: {string.Join(",", trackers[name].ChannelConfig.Keys)}\nMessage: {notification}"));
         }
 
-        private async Task updateGraph(int increase = 1){
+        private async Task updateGraph(int increase = 1)
+        {
             double dateValue = OxyPlot.Axes.DateTimeAxis.ToDouble(DateTime.Today);
-            
-            if(IncreaseGraph == null){
+
+            if (IncreaseGraph == null)
+            {
                 IncreaseGraph = new DatePlot(typeof(T).Name + "Handler", "Date", "Tracker Increase", "dd-MMM", false);
                 IncreaseGraph.AddValue("Value", 0, DateTime.Today.AddMilliseconds(-1));
                 IncreaseGraph.AddValue("Value", increase, DateTime.Today);
             }
 
-            else {
-                if(IncreaseGraph.PlotDataPoints.Last().Value.Key < dateValue){
+            else
+            {
+                if (IncreaseGraph.PlotDataPoints.Last().Value.Key < dateValue)
+                {
                     //Only show past year
                     IncreaseGraph.PlotDataPoints = IncreaseGraph.PlotDataPoints.SkipWhile(x => (DateTime.Today - OxyPlot.Axes.DateTimeAxis.ToDateTime(x.Value.Key)).Days >= 365).ToList();
-                    for(int i = (int)(dateValue - IncreaseGraph.PlotDataPoints.Last().Value.Key) - 1; i > 0; i--)
+                    for (int i = (int)(dateValue - IncreaseGraph.PlotDataPoints.Last().Value.Key) - 1; i > 0; i--)
                         IncreaseGraph.AddValue("Value", 0, DateTime.Today.AddDays(-i));
                     IncreaseGraph.AddValue("Value", increase, DateTime.Today);
-                } else {
+                }
+                else
+                {
                     IncreaseGraph.AddValue("Value", IncreaseGraph.PlotDataPoints.Last().Value.Value + increase, DateTime.Today, replace: true);
                 }
             }
@@ -220,11 +298,12 @@ namespace MopsBot.Data
             await StaticBase.Database.GetCollection<DatePlot>("TrackerHandler").ReplaceOneAsync(x => x.ID.Equals(typeof(T).Name + "Handler"), IncreaseGraph, new UpdateOptions { IsUpsert = true });
         }
 
-        public override async Task<Embed> GetEmbed(){
+        public override async Task<Embed> GetEmbed()
+        {
             var embed = new EmbedBuilder();
 
             embed.WithTitle(typeof(T).Name + "Handler").WithDescription($"Currently harboring {this.trackers.Count} {typeof(T).Name}s");
-            
+
             await updateGraph(0);
             embed.WithImageUrl(IncreaseGraph.DrawPlot());
 

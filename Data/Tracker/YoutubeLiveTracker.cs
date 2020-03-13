@@ -55,7 +55,7 @@ namespace MopsBot.Data.Tracker
 
             if (VideoId != null)
             {
-                SetTimer(120000);
+                //SetTimer(120000);
             }
         }
 
@@ -171,7 +171,7 @@ namespace MopsBot.Data.Tracker
             return tmpResult.items;
         }
 
-        protected async override void CheckForChange_Elapsed(object stateinfo)
+        public async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
             {
@@ -195,7 +195,7 @@ namespace MopsBot.Data.Tracker
                         foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][ONLINE]).ToList())
                             await OnMinorChangeTracked(channel, (string)ChannelConfig[channel]["Notification"]);
 
-                        SetTimer(120000, 120000);
+                        //SetTimer(120000, 120000);
 
                         IconUrl = (await fetchChannel()).snippet.thumbnails.medium.url;
                     }
@@ -207,7 +207,7 @@ namespace MopsBot.Data.Tracker
                 if (!isStreaming)
                 {
                     VideoId = null;
-                    SetTimer(900000);
+                    //SetTimer(900000);
                     var png = ViewerGraph.DrawPlot(false, $"{Name}-{DateTime.UtcNow.ToString("MM-dd-yy_hh-mm")}", true);
                     foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][SENDGRAPH]).ToList())
                         await (Program.Client.GetChannel(channel) as SocketTextChannel).SendFileAsync(png, "Graph for personal use:");

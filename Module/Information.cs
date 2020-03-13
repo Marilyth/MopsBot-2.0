@@ -32,6 +32,7 @@ namespace MopsBot.Module
         [Command("BotInfo", RunMode = RunMode.Async)]
         [Hide]
         [Summary("Returns information about the bot.")]
+        [RequireBotManage]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public async Task BotInfo()
         {
@@ -83,8 +84,9 @@ namespace MopsBot.Module
             }
         }
 
-        [Command("TrackerInfo")]
+        [Command("TrackerInfo", RunMode = RunMode.Async)]
         [Hide]
+        [RequireBotManage]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public async Task TrackerInfo()
         {

@@ -63,7 +63,7 @@ namespace MopsBot.Data.Tracker
         /// Event for the Timer, to check for changed stats
         /// </summary>
         /// <param Name="stateinfo"></param>
-        protected async override void CheckForChange_Elapsed(object stateinfo)
+        public async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
             {
@@ -115,9 +115,9 @@ namespace MopsBot.Data.Tracker
 
                 if (e.Message.Contains("TOO MANY REQUESTS"))
                 {
-                    var nextElapse = StaticBase.ran.Next(10000, 300000);
-                    checkForChange.Change(nextElapse, 300000);
-                    await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Trying again in {nextElapse}ms", e));
+                    //var nextElapse = StaticBase.ran.Next(10000, 300000);
+                    //checkForChange.Change(nextElapse, 300000);
+                    await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Trying again next cycle", e));
                 }
             }
         }

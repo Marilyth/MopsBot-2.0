@@ -72,7 +72,7 @@ namespace MopsBot.Data.Tracker
             ChannelConfig[channelId][REPLYNOTIFICATION] = ChannelConfig[channelId]["Notification"];
         }
 
-        protected async override void CheckForChange_Elapsed(object stateinfo)
+        public async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
             {
@@ -82,7 +82,7 @@ namespace MopsBot.Data.Tracker
                     await checkMissedTweets();
                 }
 
-                checkForChange.Dispose();
+                //checkForChange.Dispose();
             }
             catch (Exception e)
             {

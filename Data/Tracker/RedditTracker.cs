@@ -52,7 +52,7 @@ namespace MopsBot.Data.Tracker
         /// Event for the Timer, to check for changed stats
         /// </summary>
         /// <param Name="stateinfo"></param>
-        protected async override void CheckForChange_Elapsed(object stateinfo)
+        public async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
             {

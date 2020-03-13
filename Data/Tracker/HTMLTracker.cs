@@ -76,7 +76,7 @@ namespace MopsBot.Data.Tracker
                 await UpdateTracker();
         }
 
-        protected async override void CheckForChange_Elapsed(object stateinfo)
+        public async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
             {
