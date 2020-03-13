@@ -41,7 +41,7 @@ namespace MopsBot.Data
         public DatePlot IncreaseGraph;
         private int trackerInterval;
         private System.Threading.Timer nextTracker, nextUpdate;
-        public TrackerHandler(int trackerInterval = 60000)
+        public TrackerHandler(int trackerInterval = 600000)
         {
             this.trackerInterval = trackerInterval;
         }
@@ -92,7 +92,7 @@ namespace MopsBot.Data
 
             nextTracker = new System.Threading.Timer(LoopTrackers);
             loopQueue = trackers.Values.ToList();
-            if (typeof(T) == typeof(BaseUpdatingTracker))
+            if (trackers.FirstOrDefault().Value is BaseUpdatingTracker)
             {
                 nextUpdate = new System.Threading.Timer(LoopTrackersUpdate);
                 loopQueue = trackers.Where(x => (x.Value as BaseUpdatingTracker).ToUpdate.Count == 0).Select(x => x.Value).ToList();
@@ -122,7 +122,7 @@ namespace MopsBot.Data
             trackerTurn++;
             if (trackerTurn >= loopQueue.Count)
             {
-                if (typeof(T) == typeof(BaseUpdatingTracker))
+                if (trackers.FirstOrDefault().Value is BaseUpdatingTracker)
                 {
                     loopQueue = trackers.Where(x => (x.Value as BaseUpdatingTracker).ToUpdate.Count == 0).Select(x => x.Value).ToList();
                 }
@@ -197,28 +197,13 @@ namespace MopsBot.Data
         {
             if (trackers.ContainsKey(name) && trackers[name].ChannelConfig.ContainsKey(channelId))
             {
-                if (typeof(T) == typeof(BaseUpdatingTracker))
-                    foreach (var channel in (trackers[name] as BaseUpdatingTracker).ToUpdate.Where(x => x.Key.Equals(channelId)))
-                        try
-                        {
-                            Program.ReactionHandler.ClearHandler((IUserMessage)((ITextChannel)Program.Client.GetChannel(channelId)).GetMessageAsync(channel.Value).Result).Wait();
-                        }
-                        catch
-                        {
-                        }
-
                 if (trackers[name].ChannelConfig.Keys.Count > 1)
                 {
                     trackers[name].ChannelConfig.Remove(channelId);
 
-                    if (trackers.First().Value.GetType() == typeof(Tracker.TwitchTracker))
+                    if (trackers.FirstOrDefault().Value is BaseUpdatingTracker)
                     {
-                        (trackers[name] as Tracker.TwitchTracker).ToUpdate.Remove(channelId);
-                    }
-
-                    else if (trackers.First().Value.GetType() == typeof(Tracker.YoutubeLiveTracker))
-                    {
-                        (trackers[name] as Tracker.YoutubeLiveTracker).ToUpdate.Remove(channelId);
+                        (trackers[name] as BaseUpdatingTracker).ToUpdate.Remove(channelId);
                     }
 
                     await UpdateDBAsync(trackers[name]);
