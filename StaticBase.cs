@@ -61,8 +61,6 @@ namespace MopsBot
                 HttpClient.Timeout = TimeSpan.FromSeconds(10);
                 ServicePointManager.DefaultConnectionLimit = 100;
                 ServicePointManager.MaxServicePointIdleTime = 10000;
-                //MopsBot.Data.Entities.UserEvent.UserVoted += UserVoted;
-                //Task.Run(() => new MopsBot.Data.Entities.UserEvent().CheckUsersVotedLoop());
 
                 Task.Run(() =>
                 {
@@ -86,7 +84,6 @@ namespace MopsBot
                 TweetinviEvents.QueryBeforeExecute += Data.Tracker.TwitterTracker.QueryBeforeExecute;
                 Tweetinvi.Logic.JsonConverters.JsonPropertyConverterRepository.JsonConverters.Remove(typeof(Tweetinvi.Models.Language));
                 Tweetinvi.Logic.JsonConverters.JsonPropertyConverterRepository.JsonConverters.Add(typeof(Tweetinvi.Models.Language), new CustomJsonLanguageConverter());
-                //WoWTracker.WoWClient = new SharprWowApi.WowClient(Region.EU, Locale.en_GB, Program.Config["WoWKey"]);
 
                 Trackers = new Dictionary<BaseTracker.TrackerType, Data.TrackerWrapper>();
                 Trackers[BaseTracker.TrackerType.Twitter] = new TrackerHandler<TwitterTracker>(1800000);
@@ -100,14 +97,10 @@ namespace MopsBot
                 Trackers[BaseTracker.TrackerType.Overwatch] = new TrackerHandler<OverwatchTracker>();
                 Trackers[BaseTracker.TrackerType.TwitchGroup] = new TrackerHandler<TwitchGroupTracker>(60000);
                 Trackers[BaseTracker.TrackerType.TwitchClip] = new TrackerHandler<TwitchClipTracker>();
-                //Trackers[BaseTracker.TrackerType.WoW] = new TrackerHandler<WoWTracker>();
-                //Trackers[ITracker.TrackerType.WoWGuild] = new TrackerHandler<WoWGuildTracker>();
                 Trackers[BaseTracker.TrackerType.OSRS] = new TrackerHandler<OSRSTracker>();
                 Trackers[BaseTracker.TrackerType.HTML] = new TrackerHandler<HTMLTracker>();
                 Trackers[BaseTracker.TrackerType.RSS] = new TrackerHandler<RSSTracker>(1800000);
                 Trackers[BaseTracker.TrackerType.Steam] = new TrackerHandler<SteamTracker>();
-                //Trackers[BaseTracker.TrackerType.Tibia] = new TrackerHandler<JSONTracker>();
-                //Trackers[BaseTracker.TrackerType.TwitterRealtime] = new TrackerHandler<TwitterTracker>();
 
                 foreach (var tracker in Trackers)
                 {
