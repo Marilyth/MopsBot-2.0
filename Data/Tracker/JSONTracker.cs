@@ -133,11 +133,11 @@ namespace MopsBot.Data.Tracker
                         }
                     }
 
-                    if (!ChannelConfig.Any(x => (bool)x.Value[UPDATEUNTILNULL])) ToUpdate = new Dictionary<ulong, ulong>();
                     foreach (var channel in ChannelConfig.Keys.ToList())
                     {
                         await OnMajorChangeTracked(channel, DataGraph == null ? embed : createEmbed(newInformation, PastInformation, out changed), (string)ChannelConfig[channel]["Notification"]);
                     }
+                    if (!ChannelConfig.Any(x => (bool)x.Value[UPDATEUNTILNULL])) ToUpdate = new Dictionary<ulong, ulong>();
 
                     PastInformation = newInformation;
                     await UpdateTracker();
