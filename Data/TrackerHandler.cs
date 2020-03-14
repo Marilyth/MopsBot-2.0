@@ -39,11 +39,12 @@ namespace MopsBot.Data
     {
         public Dictionary<string, T> trackers;
         public DatePlot IncreaseGraph;
-        private int trackerInterval;
+        private int trackerInterval, updateInterval;
         private System.Threading.Timer nextTracker, nextUpdate;
-        public TrackerHandler(int trackerInterval = 600000)
+        public TrackerHandler(int trackerInterval = 600000, int updateInterval = 120000)
         {
             this.trackerInterval = trackerInterval;
+            this.updateInterval = updateInterval;
         }
 
         public override void PostInitialisation()
@@ -97,7 +98,7 @@ namespace MopsBot.Data
                 nextUpdate = new System.Threading.Timer(LoopTrackersUpdate);
                 loopQueue = trackers.Where(x => (x.Value as BaseUpdatingTracker).ToUpdate.Count == 0).Select(x => x.Value).ToList();
                 updateQueue = trackers.Where(x => (x.Value as BaseUpdatingTracker).ToUpdate.Count > 0).Select(x => x.Value).ToList();
-                nextUpdate.Change(5000, 120000 / (updateQueue.Count > 0 ? updateQueue.Count : 1));
+                nextUpdate.Change(5000, updateInterval / (updateQueue.Count > 0 ? updateQueue.Count : 1));
             }
             nextTracker.Change(5000, trackerInterval / (loopQueue.Count > 0 ? loopQueue.Count : 1));
         }
@@ -157,7 +158,7 @@ namespace MopsBot.Data
             if (updateTurn >= updateQueue.Count)
             {
                 updateQueue = trackers.Where(x => (x.Value as BaseUpdatingTracker).ToUpdate.Count > 0).Select(x => x.Value).ToList();
-                var gap = 120000 / (updateQueue.Count > 0 ? updateQueue.Count : 1);
+                var gap = updateInterval / (updateQueue.Count > 0 ? updateQueue.Count : 1);
                 nextUpdate.Change(gap, gap);
                 updateTurn = 0;
             }
