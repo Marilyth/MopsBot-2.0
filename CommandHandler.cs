@@ -71,14 +71,14 @@ namespace MopsBot
                 var message = parameterMessage as SocketUserMessage;
 
                 //Add experience the size of the message length
-                if(message.Channel is SocketGuildChannel channel && (!message.Author.IsBot || message.Author.Id == Program.Client.CurrentUser.Id)){
+                /*if(message.Channel is SocketGuildChannel channel && (!message.Author.IsBot || message.Author.Id == Program.Client.CurrentUser.Id)){
                     if((DateTime.Now - System.Diagnostics.Process.GetCurrentProcess().StartTime).Minutes >= 2 && channel.Guild.MemberCount <= 10000){
                         await MopsBot.Data.Entities.User.ModifyUserAsync(message.Author.Id, x => {
                             x.CharactersSent += message.Content.Length;
                             x.AddGraphValue(message.Content.Length);
                         });
                     }
-                }
+                }*/
 
                 if (message == null || (message.Author.IsBot && !message.Content.StartsWith("[ProcessBotMessage]"))) return;
 
