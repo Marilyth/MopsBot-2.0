@@ -94,7 +94,7 @@ namespace MopsBot
                 Trackers[BaseTracker.TrackerType.Reddit] = new TrackerHandler<RedditTracker>();
                 Trackers[BaseTracker.TrackerType.JSON] = new TrackerHandler<JSONTracker>(updateInterval: 600000);
                 Trackers[BaseTracker.TrackerType.Osu] = new TrackerHandler<OsuTracker>();
-                Trackers[BaseTracker.TrackerType.Overwatch] = new TrackerHandler<OverwatchTracker>();
+                Trackers[BaseTracker.TrackerType.Overwatch] = new TrackerHandler<OverwatchTracker>(3600000);
                 Trackers[BaseTracker.TrackerType.TwitchGroup] = new TrackerHandler<TwitchGroupTracker>(60000);
                 Trackers[BaseTracker.TrackerType.TwitchClip] = new TrackerHandler<TwitchClipTracker>();
                 Trackers[BaseTracker.TrackerType.OSRS] = new TrackerHandler<OSRSTracker>();
