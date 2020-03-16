@@ -38,7 +38,9 @@ namespace MopsBot
             Client = new DiscordShardedClient(new DiscordSocketConfig()
             {
                 LogLevel = LogSeverity.Info,
-                //AlwaysDownloadUsers = true
+                TotalShards = 2,
+                LargeThreshold = 50,
+                AlwaysDownloadUsers = false,
             });
 
             using (StreamReader sr = new StreamReader(new FileStream("mopsdata//Config.json", FileMode.Open)))
