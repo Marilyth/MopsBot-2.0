@@ -109,15 +109,16 @@ namespace MopsBot.Data
         {
             if (trackerTurn < loopQueue.Count)
             {
+                BaseTracker curTracker = null;
                 try
                 {
-                    var curTracker = loopQueue[trackerTurn];
+                    curTracker = loopQueue[trackerTurn];
                     trackerTurn++;
                     curTracker.CheckForChange_Elapsed(null);
                 }
                 catch (Exception e)
                 {
-                    await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"Error on checking for change for {curTracker.Name}", e));
+                    await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"Error on checking for change for {curTracker?.Name ?? "Unknown"}", e));
                 }
             }
 
@@ -143,15 +144,16 @@ namespace MopsBot.Data
         {
             if (updateTurn < updateQueue.Count)
             {
+                BaseTracker curTracker = null;
                 try
                 {
-                    var curTracker = updateQueue[updateTurn];
+                    curTracker = updateQueue[updateTurn];
                     updateTurn++;
                     curTracker.CheckForChange_Elapsed(null);
                 }
                 catch (Exception e)
                 {
-                    await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"Error on checking for change for {curTracker.Name}", e));
+                    await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"Error on checking for change for {curTracker?.Name ?? "Unknown"}", e));
                 }
             }
 
