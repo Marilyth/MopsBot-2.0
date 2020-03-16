@@ -31,77 +31,74 @@ namespace MopsBot
         private static readonly LogSeverity _critical = LogSeverity.Critical;
         // --- End Configuration Section ---
 
-        private readonly DiscordSocketClient[] _discord;
+        private readonly DiscordSocketClient _discord;
         private readonly Func<LogMessage, Task> _logger;
-        private CancellationTokenSource _cts;
+        private CancellationTokenSource _cts;        
 
-        public ReliabilityService(DiscordShardedClient discord, Func<LogMessage, Task> logger = null)
+        public ReliabilityService(DiscordSocketClient discord, Func<LogMessage, Task> logger = null)
         {
             _cts = new CancellationTokenSource();
-            _discord = (DiscordSocketClient[])discord.Shards;
+            _discord = discord;
             _logger = logger ?? (_ => Task.CompletedTask);
 
-            foreach (var shard in _discord)
-            {
-                shard.Connected += () => ConnectedAsync(shard);
-                shard.Disconnected += x => DisconnectedAsync(shard, x);
-            }
+            _discord.Connected += ConnectedAsync;
+            _discord.Disconnected += DisconnectedAsync;
         }
 
-        public Task ConnectedAsync(DiscordSocketClient client)
+        public Task ConnectedAsync()
         {
             // Cancel all previous state checks and reset the CancelToken - client is back online
-            _ = DebugAsync($"Shard {client.ShardId} reconnected, resetting cancel tokens...");
+            _ = DebugAsync("Client reconnected, resetting cancel tokens...");
             _cts.Cancel();
             _cts = new CancellationTokenSource();
-            _ = DebugAsync($"Shard {client.ShardId} reconnected, cancel tokens reset.");
+            _ = DebugAsync("Client reconnected, cancel tokens reset.");
 
             return Task.CompletedTask;
         }
 
-        public Task DisconnectedAsync(DiscordSocketClient client, Exception _e)
+        public Task DisconnectedAsync(Exception _e)
         {
             // Check the state after <timeout> to see if we reconnected
-            _ = InfoAsync($"Shard {client.ShardId} disconnected, starting timeout task...");
-            _ = Task.Delay(_timeout, _cts.Token).ContinueWith(async _ =>
+            _ = InfoAsync("Client disconnected, starting timeout task...");
+            _ = Task.Delay(_timeout, _cts.Token).ContinueWith(async _ => 
             {
                 await DebugAsync("Timeout expired, continuing to check client state...");
-                await CheckStateAsync(client);
+                await CheckStateAsync();
                 await DebugAsync("State came back okay");
             });
 
             return Task.CompletedTask;
         }
 
-        private async Task CheckStateAsync(DiscordSocketClient client)
+        private async Task CheckStateAsync()
         {
             // Client reconnected, no need to reset
-                if (client.ConnectionState == ConnectionState.Connected) return;
-                if (_attemptReset)
+            if (_discord.ConnectionState == ConnectionState.Connected) return;
+            if (_attemptReset)
+            {
+                await InfoAsync("Attempting to reset the client");
+
+                var timeout = Task.Delay(_timeout);
+                var connect = _discord.StartAsync();
+                var task = await Task.WhenAny(timeout, connect);
+
+                if (task == timeout)
                 {
-                    await InfoAsync("Attempting to reset the client");
-
-                    var timeout = Task.Delay(_timeout);
-                    var connect = client.StartAsync();
-                    var task = await Task.WhenAny(timeout, connect);
-
-                    if (task == timeout)
-                    {
-                        await CriticalAsync($"Shard {client.ShardId} reset timed out (task deadlocked?), killing process");
-                        FailFast();
-                    }
-                    else if (connect.IsFaulted)
-                    {
-                        await CriticalAsync($"Shard {client.ShardId} reset faulted, killing process", connect.Exception);
-                        FailFast();
-                    }
-                    else if (connect.IsCompletedSuccessfully)
-                        await InfoAsync($"Shard {client.ShardId} reset succesfully!");
-                    return;
+                    await CriticalAsync("Client reset timed out (task deadlocked?), killing process");
+                    FailFast();
                 }
+                else if (connect.IsFaulted)
+                {
+                    await CriticalAsync("Client reset faulted, killing process", connect.Exception);
+                    FailFast();
+                }
+                else if (connect.IsCompletedSuccessfully)
+                    await InfoAsync("Client reset succesfully!");
+                return;
+            }
 
-                await CriticalAsync($"Shard {client.ShardId} did not reconnect in time, killing process");
-                FailFast();
+            await CriticalAsync("Client did not reconnect in time, killing process");
+            FailFast();
         }
 
         private void FailFast()

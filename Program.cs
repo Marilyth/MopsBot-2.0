@@ -32,6 +32,7 @@ namespace MopsBot
         public static CommandHandler Handler { get; private set; }
         public static ReactionHandler ReactionHandler { get; private set; }
         private static ServiceProvider provider;
+        private static List<ReliabilityService> failsafe = new List<ReliabilityService>();
 
         private async Task Start()
         {
@@ -82,8 +83,11 @@ namespace MopsBot
                 Task.Run(() =>
                 {
                     var map = new ServiceCollection().AddSingleton(Client)
-                                                     .AddSingleton(new ReliabilityService(Client, ClientLog))
                                                      .AddSingleton(new InteractiveService(Client));
+
+                    foreach(var shard in Client.Shards){
+                        failsafe.Add(new ReliabilityService(shard, ClientLog));
+                    }
 
                     provider = map.BuildServiceProvider();
 
