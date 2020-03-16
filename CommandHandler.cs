@@ -43,7 +43,7 @@ namespace MopsBot
             await loadCustomCommands();
             client.MessageReceived += HandleCommand;
             commands.CommandExecuted += CommandExecuted;
-            commands.Log += (LogMessage log) => {mostRecentException = log.Exception; return Task.CompletedTask;};
+            commands.Log += (LogMessage log) => { mostRecentException = log.Exception; return Task.CompletedTask; };
             client.UserJoined += Client_UserJoined;
         }
 
@@ -65,65 +65,63 @@ namespace MopsBot
         /// <param name="parameterMessage">The message to check</param>
         public async Task HandleCommand(SocketMessage parameterMessage)
         {
-            Task.Run(async () =>
+            // Don't handle the command if it is a system message
+            var message = parameterMessage as SocketUserMessage;
+
+            //Add experience the size of the message length
+            /*if(message.Channel is SocketGuildChannel channel && (!message.Author.IsBot || message.Author.Id == Program.Client.CurrentUser.Id)){
+                if((DateTime.Now - System.Diagnostics.Process.GetCurrentProcess().StartTime).Minutes >= 2 && channel.Guild.MemberCount <= 10000){
+                    await MopsBot.Data.Entities.User.ModifyUserAsync(message.Author.Id, x => {
+                        x.CharactersSent += message.Content.Length;
+                        x.AddGraphValue(message.Content.Length);
+                    });
+                }
+            }*/
+
+            if (message == null || (message.Author.IsBot && !message.Content.StartsWith("[ProcessBotMessage]"))) return;
+
+            // Mark where the prefix ends and the command begins
+            int argPos = 0;
+
+            //Determines if the Guild has set a special prefix, if not, ! is used
+            ulong id = 0;
+            if (message.Channel is Discord.IDMChannel) id = message.Channel.Id;
+            else id = ((SocketGuildChannel)message.Channel).Guild.Id;
+            var prefix = await GetGuildPrefixAsync(id);
+
+            // Determine if the message has a valid prefix, adjust argPos 
+            if (!message.Content.StartsWith("[ProcessBotMessage]") && !(message.HasMentionPrefix(client.CurrentUser, ref argPos) || message.HasStringPrefix(prefix, ref argPos) || message.HasCharPrefix('?', ref argPos))) return;
+
+            if (char.IsWhiteSpace(message.Content[argPos]))
+                argPos += 1;
+
+            var context = new ShardedCommandContext(client, message);
+
+            if (message.HasCharPrefix('?', ref argPos))
             {
-                // Don't handle the command if it is a system message
-                var message = parameterMessage as SocketUserMessage;
+                await commands.Commands.First(x => x.Name.Equals("help")).ExecuteAsync(context, new List<object> { $"{context.Message.Content.Substring(argPos)}" }, new List<object> { }, _provider);
+                return;
+            }
 
-                //Add experience the size of the message length
-                /*if(message.Channel is SocketGuildChannel channel && (!message.Author.IsBot || message.Author.Id == Program.Client.CurrentUser.Id)){
-                    if((DateTime.Now - System.Diagnostics.Process.GetCurrentProcess().StartTime).Minutes >= 2 && channel.Guild.MemberCount <= 10000){
-                        await MopsBot.Data.Entities.User.ModifyUserAsync(message.Author.Id, x => {
-                            x.CharactersSent += message.Content.Length;
-                            x.AddGraphValue(message.Content.Length);
-                        });
-                    }
-                }*/
+            if (message.Content.StartsWith("[ProcessBotMessage]"))
+                argPos = "[ProcessBotMessage]".Length;
 
-                if (message == null || (message.Author.IsBot && !message.Content.StartsWith("[ProcessBotMessage]"))) return;
+            //Execute if command exists
+            if (commands.Search(context, argPos).IsSuccess)
+            {
+                await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"{parameterMessage.Author} executed command: {parameterMessage.Content.Substring(argPos)}"));
+                var result = await commands.ExecuteAsync(context, argPos, _provider);
+            }
 
-                // Mark where the prefix ends and the command begins
-                int argPos = 0;
-
-                //Determines if the Guild has set a special prefix, if not, ! is used
-                ulong id = 0;
-                if (message.Channel is Discord.IDMChannel) id = message.Channel.Id;
-                else id = ((SocketGuildChannel)message.Channel).Guild.Id;
-                var prefix = await GetGuildPrefixAsync(id);
-
-                // Determine if the message has a valid prefix, adjust argPos 
-                if (!message.Content.StartsWith("[ProcessBotMessage]") && !(message.HasMentionPrefix(client.CurrentUser, ref argPos) || message.HasStringPrefix(prefix, ref argPos) || message.HasCharPrefix('?', ref argPos))) return;
-
-                if (char.IsWhiteSpace(message.Content[argPos]))
-                    argPos += 1;
-
-                var context = new ShardedCommandContext(client, message);
-
-                if (message.HasCharPrefix('?', ref argPos))
+            //Else execute custom commands
+            else if (!message.Author.IsBot && CustomCommands.ContainsKey(context.Guild.Id) && CustomCommands[context.Guild.Id].Commands.ContainsKey(context.Message.Content.Substring(argPos).Split(" ").First()))
+            {
+                if (CustomCommands[context.Guild.Id].CheckPermission(context.Message.Content.Substring(argPos).Split(" ").First(), (SocketGuildUser)context.User))
                 {
-                    await commands.Commands.First(x => x.Name.Equals("help")).ExecuteAsync(context, new List<object> { $"{context.Message.Content.Substring(argPos)}" }, new List<object> { }, _provider);
-                    return;
+                    await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"executed command: {parameterMessage.Content.Substring(argPos)}"));
+                    await commands.Commands.First(x => x.Name.Equals("UseCustomCommand")).ExecuteAsync(context, new List<object> { $"{context.Message.Content.Substring(argPos)}" }, new List<object> { }, _provider);
                 }
-
-                if (message.Content.StartsWith("[ProcessBotMessage]"))
-                    argPos = "[ProcessBotMessage]".Length;
-
-                //Execute if command exists
-                if (commands.Search(context, argPos).IsSuccess)
-                {
-                    await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"{parameterMessage.Author} executed command: {parameterMessage.Content.Substring(argPos)}"));
-                    var result = await commands.ExecuteAsync(context, argPos, _provider);
-                }
-
-                //Else execute custom commands
-                else if (!message.Author.IsBot && CustomCommands.ContainsKey(context.Guild.Id) && CustomCommands[context.Guild.Id].Commands.ContainsKey(context.Message.Content.Substring(argPos).Split(" ").First()))
-                {
-                    if(CustomCommands[context.Guild.Id].CheckPermission(context.Message.Content.Substring(argPos).Split(" ").First(), (SocketGuildUser)context.User)){
-                        await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"executed command: {parameterMessage.Content.Substring(argPos)}"));
-                        await commands.Commands.First(x => x.Name.Equals("UseCustomCommand")).ExecuteAsync(context, new List<object> { $"{context.Message.Content.Substring(argPos)}" }, new List<object> { }, _provider);
-                    }
-                }
-            });
+            }
         }
 
         public async Task CommandExecuted(Discord.Optional<CommandInfo> commandInfo, ICommandContext context, IResult result)
@@ -208,9 +206,10 @@ namespace MopsBot
             if (commandName != null)
             {
                 var matches = commands.Commands.Where(x => x.Name.ToLower().Equals(commandName) && (moduleNames.Length > 0 ? x.Module.Name.ToLower().Equals(moduleNames.LastOrDefault()) : true));
-                var perfectMatch = matches.FirstOrDefault(match => CommandToString(match).ToLower().Equals(((moduleNames.Count() > 0 ? string.Join(" ", moduleNames) + " " : "" )+ commandName).ToLower()));
+                var perfectMatch = matches.FirstOrDefault(match => CommandToString(match).ToLower().Equals(((moduleNames.Count() > 0 ? string.Join(" ", moduleNames) + " " : "") + commandName).ToLower()));
 
-                if(matches.Count() > 1 && perfectMatch == null){
+                if (matches.Count() > 1 && perfectMatch == null)
+                {
                     throw new Exception($"Multiple commands found, please specify between:\n```{String.Join("\n", matches.Select(x => CommandToString(x)))}```");
                 }
 
@@ -272,7 +271,7 @@ namespace MopsBot
                 string moduleInformation = "";
                 moduleInformation += string.Join(", ", module.Commands.Where(x => !x.Preconditions.OfType<HideAttribute>().Any()).Select(x => $"[{x.Name}]({CommandHandler.GetCommandHelpImage($"{string.Join(" ", moduleNames)} {x.Name}")})"));
                 moduleInformation += "\n";
-                
+
                 moduleInformation += string.Join(", ", module.Submodules.Where(x => !x.Preconditions.Any(y => y is HideAttribute)).Select(x => $"[{x.Name}\\*]({CommandHandler.GetCommandHelpImage(x.Name)})"));
 
                 e.AddField($"**{module.Name}**", moduleInformation);
@@ -280,10 +279,12 @@ namespace MopsBot
             return e;
         }
 
-        public static string CommandToString(CommandInfo c){
+        public static string CommandToString(CommandInfo c)
+        {
             string output = c.Name;
             ModuleInfo module = c.Module;
-            while(module?.IsSubmodule ?? false){
+            while (module?.IsSubmodule ?? false)
+            {
                 output = module.Name + " " + output;
                 module = module.Parent;
             }
