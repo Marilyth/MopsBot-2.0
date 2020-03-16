@@ -41,7 +41,7 @@ namespace MopsBot.Data
         public DatePlot IncreaseGraph;
         private int trackerInterval, updateInterval;
         private System.Threading.Timer nextTracker, nextUpdate;
-        public TrackerHandler(int trackerInterval = 600000, int updateInterval = 120000)
+        public TrackerHandler(int trackerInterval = 900000, int updateInterval = 120000)
         {
             this.trackerInterval = trackerInterval;
             this.updateInterval = updateInterval;

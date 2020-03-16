@@ -90,17 +90,17 @@ namespace MopsBot
                 Trackers[BaseTracker.TrackerType.Youtube] = new TrackerHandler<YoutubeTracker>(3600000);
                 Trackers[BaseTracker.TrackerType.Twitch] = new TrackerHandler<TwitchTracker>(3600000);
                 Trackers[BaseTracker.TrackerType.YoutubeLive] = new TrackerHandler<YoutubeLiveTracker>(900000);
-                //Trackers[BaseTracker.TrackerType.Mixer] = new TrackerHandler<MixerTracker>();
-                //Trackers[BaseTracker.TrackerType.Reddit] = new TrackerHandler<RedditTracker>();
+                Trackers[BaseTracker.TrackerType.Mixer] = new TrackerHandler<MixerTracker>();
+                Trackers[BaseTracker.TrackerType.Reddit] = new TrackerHandler<RedditTracker>();
                 Trackers[BaseTracker.TrackerType.JSON] = new TrackerHandler<JSONTracker>(updateInterval: 600000);
-                //Trackers[BaseTracker.TrackerType.Osu] = new TrackerHandler<OsuTracker>();
+                Trackers[BaseTracker.TrackerType.Osu] = new TrackerHandler<OsuTracker>();
                 Trackers[BaseTracker.TrackerType.Overwatch] = new TrackerHandler<OverwatchTracker>(3600000);
                 Trackers[BaseTracker.TrackerType.TwitchGroup] = new TrackerHandler<TwitchGroupTracker>(60000);
-                //Trackers[BaseTracker.TrackerType.TwitchClip] = new TrackerHandler<TwitchClipTracker>();
-                //Trackers[BaseTracker.TrackerType.OSRS] = new TrackerHandler<OSRSTracker>();
-                //Trackers[BaseTracker.TrackerType.HTML] = new TrackerHandler<HTMLTracker>();
+                Trackers[BaseTracker.TrackerType.TwitchClip] = new TrackerHandler<TwitchClipTracker>();
+                Trackers[BaseTracker.TrackerType.OSRS] = new TrackerHandler<OSRSTracker>();
+                Trackers[BaseTracker.TrackerType.HTML] = new TrackerHandler<HTMLTracker>();
                 Trackers[BaseTracker.TrackerType.RSS] = new TrackerHandler<RSSTracker>(1800000);
-                //Trackers[BaseTracker.TrackerType.Steam] = new TrackerHandler<SteamTracker>();
+                Trackers[BaseTracker.TrackerType.Steam] = new TrackerHandler<SteamTracker>();
 
                 foreach (var tracker in Trackers)
                 {
