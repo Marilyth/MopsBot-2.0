@@ -401,6 +401,11 @@ namespace MopsBot.Data
             {
                 if (!notification.Equals(""))
                     await ((Discord.WebSocket.SocketTextChannel)Program.Client.GetChannel(channelID)).SendMessageAsync(notification);
+
+                if((DateTime.Now - sender.LastActivity).TotalSeconds > 10){
+                    sender.LastActivity = DateTime.Now;
+                    await sender.UpdateTracker();
+                }
             }
             catch
             {
@@ -467,6 +472,11 @@ namespace MopsBot.Data
                 }
                 else
                     await ((Discord.WebSocket.SocketTextChannel)Program.Client.GetChannel(channelID)).SendMessageAsync(notification, embed: embed);
+                
+                if((DateTime.Now - sender.LastActivity).TotalSeconds > 10){
+                    sender.LastActivity = DateTime.Now;
+                    await sender.UpdateTracker();
+                }
             }
             catch
             {
