@@ -107,11 +107,12 @@ namespace MopsBot.Data
         private List<T> loopQueue;
         public async void LoopTrackers(object state)
         {
-            if (loopQueue.Count > 0)
+            if (trackerTurn < loopQueue.Count)
             {
-                var curTracker = loopQueue[trackerTurn];
                 try
                 {
+                    var curTracker = loopQueue[trackerTurn];
+                    trackerTurn++;
                     curTracker.CheckForChange_Elapsed(null);
                 }
                 catch (Exception e)
@@ -120,8 +121,7 @@ namespace MopsBot.Data
                 }
             }
 
-            trackerTurn++;
-            if (trackerTurn >= loopQueue.Count)
+            else
             {
                 if (trackers.FirstOrDefault().Value is BaseUpdatingTracker)
                 {
@@ -141,11 +141,12 @@ namespace MopsBot.Data
         private List<T> updateQueue;
         public async void LoopTrackersUpdate(object state)
         {
-            if (updateQueue.Count > 0)
+            if (updateTurn < updateQueue.Count)
             {
-                var curTracker = updateQueue[updateTurn];
                 try
                 {
+                    var curTracker = updateQueue[updateTurn];
+                    updateTurn++;
                     curTracker.CheckForChange_Elapsed(null);
                 }
                 catch (Exception e)
@@ -154,9 +155,7 @@ namespace MopsBot.Data
                 }
             }
 
-            updateTurn++;
-            if (updateTurn >= updateQueue.Count)
-            {
+            else{
                 updateQueue = trackers.Where(x => (x.Value as BaseUpdatingTracker).ToUpdate.Count > 0).Select(x => x.Value).ToList();
                 var gap = updateInterval / (updateQueue.Count > 0 ? updateQueue.Count : 1);
                 nextUpdate.Change(gap, gap);
