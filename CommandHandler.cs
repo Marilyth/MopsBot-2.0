@@ -34,7 +34,9 @@ namespace MopsBot
             _provider = provider;
             client = _provider.GetService<DiscordShardedClient>();
 
-            commands = new CommandService();
+            commands = new CommandService(new CommandServiceConfig(){
+                DefaultRunMode = RunMode.Async,
+            });
             //_map.Add(commands);
 
             commands.AddTypeReader(typeof(MopsBot.Data.Tracker.BaseTracker), new Module.TypeReader.TrackerTypeReader());
