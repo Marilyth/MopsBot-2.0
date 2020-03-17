@@ -62,6 +62,8 @@ namespace MopsBot
             }
         }
 
+
+        public static Dictionary<ulong, int> MessagesPerGuild = new Dictionary<ulong, int>();
         /// <summary>
         /// Checks if message is a command, and executes it
         /// </summary>
@@ -70,8 +72,11 @@ namespace MopsBot
         {
             Task.Run(async () =>
             {
-                // Don't handle the command if it is a system message
                 var message = parameterMessage as SocketUserMessage;
+                if(!(message.Channel is IDMChannel)){
+                    var guildId = ((SocketGuildChannel)message.Channel).Guild.Id;
+                    MessagesPerGuild[guildId] = MessagesPerGuild.ContainsKey(guildId) ? MessagesPerGuild[guildId] + 1 : 1;
+                }
 
                 //Add experience the size of the message length
                 /*if(message.Channel is SocketGuildChannel channel && (!message.Author.IsBot || message.Author.Id == Program.Client.CurrentUser.Id)){

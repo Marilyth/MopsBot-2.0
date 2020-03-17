@@ -166,7 +166,7 @@ namespace MopsBot
                 await Program.MopsLog(new LogMessage(LogSeverity.Error, "", "discord bot list api failed", e));
             }
 
-            await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", "Heartbeat. I am still alive :)"));
+            await SendHeartbeat();
             await Task.Delay(30000);
             foreach(var client in Program.Client.Shards)
                 await client.SetActivityAsync(new Game($"{client.Latency}ms Latency", ActivityType.Listening));
@@ -209,9 +209,7 @@ namespace MopsBot
             {
                 try{
                     await Program.Client.SetActivityAsync(new Game("Currently Restarting!", ActivityType.Playing));
-                    await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", "Heartbeat. I was born :)"));
-                    await Task.Delay(30000);
-                    await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", "Heartbeat. I am still alive :)"));
+                    await SendHeartbeat();
                     await Task.Delay(30000);
                 } catch {}
 
@@ -245,13 +243,19 @@ namespace MopsBot
                         } catch {}
                     }
                     finally{
-                        await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Heartbeat. I am still alive :)\nRatio: {MopsBot.Module.Information.FailedRequests} failed vs {MopsBot.Module.Information.SucceededRequests} succeeded requests"));
-                        MopsBot.Module.Information.FailedRequests = 0;
-                        MopsBot.Module.Information.SucceededRequests = 0;
+                        await SendHeartbeat();
                     }
                     await Task.Delay(30000);
                 }
             }
+        }
+
+        public static async Task SendHeartbeat(){
+            var messageReport = string.Join(" ", CommandHandler.MessagesPerGuild.OrderByDescending(x => x.Value).Take(5).Select(x => $"Guild {x.Key} sent {x.Value} messages."));
+            await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Heartbeat. I am still alive :)\nRatio: {MopsBot.Module.Information.FailedRequests} failed vs {MopsBot.Module.Information.SucceededRequests} succeeded requests\nSpamcheck: {messageReport}"));
+            CommandHandler.MessagesPerGuild = new Dictionary<ulong, int>();
+            MopsBot.Module.Information.FailedRequests = 0;
+            MopsBot.Module.Information.SucceededRequests = 0;
         }
     }
     public class CustomJsonLanguageConverter : Tweetinvi.Logic.JsonConverters.JsonLanguageConverter
