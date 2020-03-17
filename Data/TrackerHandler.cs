@@ -20,7 +20,7 @@ namespace MopsBot.Data
         public abstract Task RemoveFromDBAsync(BaseTracker tracker);
         public abstract Task<bool> TryRemoveTrackerAsync(string name, ulong channelID);
         public abstract Task<bool> TrySetNotificationAsync(string name, ulong channelID, string notificationMessage);
-        public abstract Task AddTrackerAsync(string name, ulong channelID, string notification = "");
+        public abstract Task AddTrackerAsync(string name, ulong channelID, ulong creator, string notification = "");
         public abstract Task<Embed> GetEmbed();
         public abstract HashSet<Tracker.BaseTracker> GetTrackerSet();
         public abstract Dictionary<string, Tracker.BaseTracker> GetTrackers();
@@ -226,7 +226,7 @@ namespace MopsBot.Data
             return false;
         }
 
-        public override async Task AddTrackerAsync(string name, ulong channelID, string notification = "")
+        public override async Task AddTrackerAsync(string name, ulong channelID, ulong creator, string notification = "")
         {
             if (trackers.ContainsKey(name))
             {
@@ -234,6 +234,7 @@ namespace MopsBot.Data
                 {
                     trackers[name].PostChannelAdded(channelID);
                     trackers[name].ChannelConfig[channelID]["Notification"] = notification;
+                    trackers[name].Creators.Add(creator);
                     await UpdateDBAsync(trackers[name]);
                 }
             }
@@ -245,6 +246,7 @@ namespace MopsBot.Data
                 tracker.PostChannelAdded(channelID);
                 tracker.PostInitialisation();
                 trackers[name].ChannelConfig[channelID]["Notification"] = notification;
+                trackers[name].Creators.Add(creator);
                 trackers[name].OnMajorEventFired += OnMajorEvent;
                 trackers[name].OnMinorEventFired += OnMinorEvent;
                 //trackers[name].SetTimer(trackerInterval);

@@ -23,6 +23,7 @@ namespace MopsBot.Data.Tracker
         //Avoid ratelimit by placing a gap between all trackers.
         public static int ExistingTrackers = 0;
         public DateTime LastActivity;
+        public List<ulong> Creators = new List<ulong>();
         public enum TrackerType { Twitch, TwitchGroup, TwitchClip, Mixer, Twitter, Youtube, YoutubeLive, Reddit, Steam, Osu, Overwatch, OSRS /*Tibia,*/, JSON, HTML, RSS };
         public static List<TrackerType> CapSensitive = new List<TrackerType>{TrackerType.HTML, TrackerType.Reddit, TrackerType.JSON, TrackerType.Overwatch, TrackerType.RSS, TrackerType.Youtube, TrackerType.YoutubeLive};
         private bool disposed = false;

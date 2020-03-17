@@ -19,6 +19,7 @@ namespace MopsBot.Data.Entities
         public ulong Id;
         public int Money, Experience, CharactersSent, Punched, Hugged, Kissed;
         public int WeaponId;
+        public bool IsBanned;
         public List<int> Inventory;
         public DateTime LastTaCReminder = DateTime.MinValue;
         public DatePlot ActivityGraph;

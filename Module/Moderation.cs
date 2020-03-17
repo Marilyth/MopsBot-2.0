@@ -600,6 +600,14 @@ namespace MopsBot.Module
             }
         }
 
+        [Command("ban")]
+        [Hide]
+        [RequireBotManage]
+        public async Task ban(ulong userId){
+            await MopsBot.Data.Entities.User.ModifyUserAsync(userId, x => x.IsBanned = true);
+            await ReplyAsync($"Banned user with id {userId} indefinitely.");
+        }
+
         [Command("help")]
         [Alias("commands")]
         [Hide]
