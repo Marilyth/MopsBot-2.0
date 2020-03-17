@@ -23,7 +23,11 @@ namespace MopsBot.Module.Preconditions{
             var guildId = context.Guild.Id;
             var trackers = StaticBase.Trackers[Type].GetGuildTrackers(guildId);
 
-            if(trackers.Count() < Limit)
+            int countTrackers = 0;
+            foreach(var tracker in trackers)
+                countTrackers += tracker.ChannelConfig.Keys.Where(x => (context.Guild as SocketGuild).GetTextChannel(x) != null).Count();
+
+            if(countTrackers < Limit)
                 return PreconditionResult.FromSuccess();
 
             return PreconditionResult.FromError($"Your server exceeded the limit of {Limit} {Type.ToString()}-Trackers.\nTo add another tracker, get below the limit first.");
