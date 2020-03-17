@@ -689,7 +689,7 @@ namespace MopsBot.Module
             }
             catch
             {
-
+                throw;
             }
         }
     }

@@ -164,14 +164,16 @@ namespace MopsBot
                     }
                 });
 
-                if (result.ErrorReason.Contains("The input text has too many parameters"))
-                    await context.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}\nIf your parameter contains spaces, please wrap it around quotation marks like this: `\"A Parameter\"`.");
-                else if (!result.ErrorReason.Contains("Command not found"))
-                    await context.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}");
+                if(!context.Message.Content.Contains("help", StringComparison.InvariantCultureIgnoreCase) && !context.Message.Content.StartsWith("?")){
+                    if (result.ErrorReason.Contains("The input text has too many parameters"))
+                        await context.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}\nIf your parameter contains spaces, please wrap it around quotation marks like this: `\"A Parameter\"`.");
+                    else if (!result.ErrorReason.Contains("Command not found"))
+                        await context.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}");
+                }
             }
 
             else if(result.IsSuccess){
-                var cmdEmbed = new EmbedBuilder().AddField("Guild", context.Guild.Id, true).AddField("Channel", context.Channel.Id).AddField("User", $"{context.User} ({context.User.Id})").AddField("Command", context.Message.Content);
+                var cmdEmbed = new EmbedBuilder().AddField("Guild", $"{context.Guild.Name} ({context.Guild.Id})", true).AddField("Channel", $"{context.Channel.Name} ({context.Channel.Id})").AddField("User", $"{context.User} ({context.User.Id})").AddField("Command", context.Message.Content);
                 await (Program.Client.GetChannel(689393210438582285) as ITextChannel).SendMessageAsync(embed: cmdEmbed.Build());
             }
 
