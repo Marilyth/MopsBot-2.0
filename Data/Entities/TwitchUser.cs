@@ -57,7 +57,7 @@ namespace MopsBot.Data.Entities
 
         public static async Task CreateSilentTrackerAsync(string name, ulong channelId)
         {
-            await StaticBase.Trackers[BaseTracker.TrackerType.Twitch].AddTrackerAsync(name.ToLower(), channelId, 0);
+            await StaticBase.Trackers[BaseTracker.TrackerType.Twitch].AddTrackerAsync(name.ToLower(), channelId);
             var tracker = StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTracker(channelId, name.ToLower()) as TwitchTracker;
             await tracker.ModifyAsync(x =>
             {

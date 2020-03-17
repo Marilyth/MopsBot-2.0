@@ -170,6 +170,10 @@ namespace MopsBot
                     await context.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}");
             }
 
+            else if(result.IsSuccess){
+                var cmdEmbed = new EmbedBuilder().AddField("Guild", context.Guild.Id, true).AddField("Channel", context.Channel.Id).AddField("User", $"{context.User} ({context.User.Id})").AddField("Command", context.Message.Content);
+                await (Program.Client.GetChannel(689393210438582285) as ITextChannel).SendMessageAsync(embed: cmdEmbed.Build());
+            }
 
             else if (result.IsSuccess && context.Message.Content.Contains("track", StringComparison.InvariantCultureIgnoreCase))
             {

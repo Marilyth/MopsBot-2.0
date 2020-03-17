@@ -35,7 +35,7 @@ namespace MopsBot.Module
             {
                 using (Context.Channel.EnterTypingState())
                 {
-                    await Trackers[BaseTracker.TrackerType.YoutubeLive].AddTrackerAsync(channelID, Context.Channel.Id, Context.User.Id, notificationMessage);
+                    await Trackers[BaseTracker.TrackerType.YoutubeLive].AddTrackerAsync(channelID, Context.Channel.Id, notificationMessage);
 
                     await ReplyAsync("Keeping track of " + channelID + "'s streams, from now on!");
                 }
@@ -110,7 +110,7 @@ namespace MopsBot.Module
                 using (Context.Channel.EnterTypingState())
                 {
                     streamerName = streamerName.ToLower();
-                    await Trackers[BaseTracker.TrackerType.Mixer].AddTrackerAsync(streamerName, Context.Channel.Id, Context.User.Id, notificationMessage);
+                    await Trackers[BaseTracker.TrackerType.Mixer].AddTrackerAsync(streamerName, Context.Channel.Id, notificationMessage);
 
                     await ReplyAsync("Keeping track of " + streamerName + "'s streams, from now on!");
                 }
