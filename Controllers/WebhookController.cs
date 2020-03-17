@@ -28,9 +28,11 @@ namespace MopsBot.Api.Controllers
             {
                 await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Received a Twitch challenge, containing {string.Join("\n", parameters.Select(x => x.Key + ": " + string.Join(", ", x.Value)))}"));
                 ulong id = ulong.Parse(parameters["hub.topic"].FirstOrDefault().Split("user_id=").LastOrDefault());
-                TwitchTracker tracker = StaticBase.Trackers[Data.Tracker.BaseTracker.TrackerType.Twitch].GetTrackers().First(x => (x.Value as TwitchTracker).TwitchId == id).Value as TwitchTracker;
-                tracker.WebhookExpire = DateTime.Now.AddHours(18);
-                await tracker.UpdateTracker();
+                if(!parameters["hub.mode"].FirstOrDefault().Contains("unsubscribe")){
+                    TwitchTracker tracker = StaticBase.Trackers[Data.Tracker.BaseTracker.TrackerType.Twitch].GetTrackers().First(x => (x.Value as TwitchTracker).TwitchId == id).Value as TwitchTracker;
+                    tracker.WebhookExpire = DateTime.Now.AddHours(18);
+                    await tracker.UpdateTracker();
+                }
                 return new OkObjectResult(parameters["hub.challenge"].FirstOrDefault());
             }
             else
@@ -47,9 +49,11 @@ namespace MopsBot.Api.Controllers
             {
                 await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Received a YT challenge, containing {string.Join("\n", parameters.Select(x => x.Key + ": " + string.Join(", ", x.Value)))}"));
                 var channel = parameters["hub.topic"].FirstOrDefault().Split("channel_id=").LastOrDefault();
-                MopsBot.Data.Tracker.YoutubeTracker tracker = StaticBase.Trackers[Data.Tracker.BaseTracker.TrackerType.Youtube].GetTrackers()[channel] as MopsBot.Data.Tracker.YoutubeTracker;
-                tracker.WebhookExpire = DateTime.Now.AddDays(4);
-                await tracker.UpdateTracker();
+                if(!parameters["hub.mode"].FirstOrDefault().Contains("unsubscribe")){
+                    MopsBot.Data.Tracker.YoutubeTracker tracker = StaticBase.Trackers[Data.Tracker.BaseTracker.TrackerType.Youtube].GetTrackers()[channel] as MopsBot.Data.Tracker.YoutubeTracker;
+                    tracker.WebhookExpire = DateTime.Now.AddDays(4);
+                    await tracker.UpdateTracker();
+                }
                 return new OkObjectResult(parameters["hub.challenge"].FirstOrDefault());
             }
             else
