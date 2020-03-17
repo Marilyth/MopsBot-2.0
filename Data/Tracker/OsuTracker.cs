@@ -64,7 +64,11 @@ namespace MopsBot.Data.Tracker
                 foreach (var pp in AllPP.ToList())
                 {
                     OsuResult userInformation = await fetchUser(pp.Key);
-                    if(pp.Value + ChannelConfig.Select(x => (double)x.Value[PPTHRESHOLD]).Min() >= double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture)) continue;
+                    try{
+                        if(pp.Value + ChannelConfig.Select(x => (double)x.Value[PPTHRESHOLD]).Min() >= double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture)) continue;
+                    } catch{
+                        continue;
+                    }
                     
                     var recentScores = await fetchRecent(pp.Key);
                     RecentScore scoreInformation = recentScores.FirstOrDefault(x => !x.rank.Equals("F"));
