@@ -251,7 +251,7 @@ namespace MopsBot
         }
 
         public static async Task SendHeartbeat(){
-            var messageReport = string.Join(" ", CommandHandler.MessagesPerGuild.OrderByDescending(x => x.Value).Take(5).Select(x => $"Guild {x.Key} sent {x.Value} messages."));
+            var messageReport = string.Join(" ", CommandHandler.MessagesPerGuild.OrderByDescending(x => x.Value).Take(1).Select(x => $"Guild {Program.Client.GetGuild(x.Key).Name} ({x.Key}) sent {x.Value} messages."));
             await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Heartbeat. I am still alive :)\nRatio: {MopsBot.Module.Information.FailedRequests} failed vs {MopsBot.Module.Information.SucceededRequests} succeeded requests\nSpamcheck: {messageReport}"));
             CommandHandler.MessagesPerGuild = new Dictionary<ulong, int>();
             MopsBot.Module.Information.FailedRequests = 0;
