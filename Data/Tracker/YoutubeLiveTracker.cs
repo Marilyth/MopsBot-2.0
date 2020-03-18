@@ -227,6 +227,8 @@ namespace MopsBot.Data.Tracker
                 {
                     if(StreamInfo.liveStreamingDetails?.concurrentViewers != null)
                         ViewerGraph.AddValue("Viewers", double.Parse(StreamInfo.liveStreamingDetails.concurrentViewers));
+                    else
+                        ViewerGraph.AddValue("Viewers", ViewerGraph.PlotDataPoints.Last().Value.Value);
 
                     foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][SHOWEMBED]).ToList())
                         await OnMajorChangeTracked(channel, await createEmbed((bool)ChannelConfig[channel][THUMBNAIL], (bool)ChannelConfig[channel][SHOWCHAT]));
