@@ -20,11 +20,7 @@ namespace MopsBot.Data.Tracker
     public class RedditTracker : BaseTracker
     {
         public double lastCheck;
-
-        /// <summary>
-        /// Initialises the tracker by setting attributes and setting up a Timer with a 10 minutes interval
-        /// </summary>
-        /// <param Name="OWName"> The Name-Battletag combination of the player to track </param>
+        public static readonly string POSTAGE = "MinPostAgeInMinutes";        
         public RedditTracker() : base()
         {
         }
@@ -48,6 +44,21 @@ namespace MopsBot.Data.Tracker
             }
         }
 
+        public override async void Conversion(object obj = null)
+        {
+            bool save = false;
+            foreach (var channel in ChannelConfig.Keys.ToList())
+            {
+                if (!ChannelConfig[channel].ContainsKey(POSTAGE))
+                {
+                    ChannelConfig[channel][POSTAGE] = 0;
+                    save = true;
+                }
+            }
+            if (save)
+                await UpdateTracker();
+        }
+
         /// <summary>
         /// Event for the Timer, to check for changed stats
         /// </summary>
@@ -57,7 +68,8 @@ namespace MopsBot.Data.Tracker
             try
             {
                 var allThings = await fetchPosts();
-                var newPosts = allThings.data.children.TakeWhile(x => x.data.created_utc > lastCheck).ToArray();
+                var minPostAge = ChannelConfig.Select(x => (int)x.Value[POSTAGE]).Min();
+                var newPosts = allThings.data.children.TakeWhile(x => x.data.created_utc > lastCheck && (DateTime.UtcNow - DateTimeOffset.FromUnixTimeSeconds((long)x.data.created_utc)).TotalMinutes > minPostAge).ToArray();
 
                 if (newPosts.Length > 0)
                 {
