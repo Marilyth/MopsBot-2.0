@@ -83,14 +83,15 @@ namespace MopsBot.Data.Tracker
                 foreach (var channel in ChannelConfig)
                 {
                     var minPostAge = (int)ChannelConfig[channel.Key][POSTAGE];
-                    var newPosts = allThings.data.children.TakeWhile(x => x.data.created_utc > LastCheck[channel.Key] && (DateTime.UtcNow - DateTimeOffset.FromUnixTimeSeconds((long)x.data.created_utc)).TotalMinutes > minPostAge).ToArray();
+                    var newPosts = allThings.data.children.TakeWhile(x => x.data.created_utc > LastCheck[channel.Key]).ToList();
+                    newPosts.RemoveAll(x => (DateTime.UtcNow - DateTimeOffset.FromUnixTimeSeconds((long)x.data.created_utc)).TotalMinutes < minPostAge);
 
-                    if (newPosts.Length > 0)
+                    if (newPosts.Count > 0)
                     {
                         LastCheck[channel.Key] = newPosts.Max(x => x.data.created_utc);
                         await UpdateTracker();
 
-                        newPosts = newPosts.Reverse().ToArray();
+                        newPosts.Reverse();
                         foreach (var post in newPosts)
                             await OnMajorChangeTracked(channel.Key, await createEmbed(post.data), (string)ChannelConfig[channel.Key]["Notification"]);
 
