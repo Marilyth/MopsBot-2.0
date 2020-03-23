@@ -8,6 +8,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using MopsBot.Data.Tracker.APIResults.Reddit;
+using MongoDB.Bson.Serialization.Options;
+using MongoDB.Bson.Serialization.Attributes;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 
@@ -19,15 +21,15 @@ namespace MopsBot.Data.Tracker
     [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
     public class RedditTracker : BaseTracker
     {
-        public double lastCheck;
-        public static readonly string POSTAGE = "MinPostAgeInMinutes";        
+        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
+        public Dictionary<ulong, double> LastCheck = new Dictionary<ulong, double>();
+        public static readonly string POSTAGE = "MinPostAgeInMinutes";
         public RedditTracker() : base()
         {
         }
 
         public RedditTracker(string name) : base()
         {
-            lastCheck = (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
             Name = name;
 
             try
@@ -44,14 +46,23 @@ namespace MopsBot.Data.Tracker
             }
         }
 
+        public async override void PostChannelAdded(ulong channelId)
+        {
+            base.PostChannelAdded(channelId);
+
+            var config = ChannelConfig[channelId];
+            config[POSTAGE] = 0;
+            LastCheck[channelId] = (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
+        }
+
         public override async void Conversion(object obj = null)
         {
             bool save = false;
             foreach (var channel in ChannelConfig.Keys.ToList())
             {
-                if (!ChannelConfig[channel].ContainsKey(POSTAGE))
+                if (!LastCheck.ContainsKey(channel))
                 {
-                    ChannelConfig[channel][POSTAGE] = 0;
+                    LastCheck[channel] = (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
                     save = true;
                 }
             }
@@ -68,20 +79,22 @@ namespace MopsBot.Data.Tracker
             try
             {
                 var allThings = await fetchPosts();
-                var minPostAge = ChannelConfig.Select(x => (int)x.Value[POSTAGE]).Min();
-                var newPosts = allThings.data.children.TakeWhile(x => x.data.created_utc > lastCheck && (DateTime.UtcNow - DateTimeOffset.FromUnixTimeSeconds((long)x.data.created_utc)).TotalMinutes > minPostAge).ToArray();
 
-                if (newPosts.Length > 0)
+                foreach (var channel in ChannelConfig)
                 {
-                    lastCheck = newPosts.Max(x => x.data.created_utc);
-                    await UpdateTracker();
+                    var minPostAge = (int)ChannelConfig[channel.Key][POSTAGE];
+                    var newPosts = allThings.data.children.TakeWhile(x => x.data.created_utc > LastCheck[channel.Key] && (DateTime.UtcNow - DateTimeOffset.FromUnixTimeSeconds((long)x.data.created_utc)).TotalMinutes > minPostAge).ToArray();
 
-                    newPosts = newPosts.Reverse().ToArray();
-                    foreach (var post in newPosts)
-                        foreach (ulong channel in ChannelConfig.Keys.ToList())
-                        {
-                            await OnMajorChangeTracked(channel, await createEmbed(post.data), (string)ChannelConfig[channel]["Notification"]);
-                        }
+                    if (newPosts.Length > 0)
+                    {
+                        LastCheck[channel.Key] = newPosts.Max(x => x.data.created_utc);
+                        await UpdateTracker();
+
+                        newPosts = newPosts.Reverse().ToArray();
+                        foreach (var post in newPosts)
+                            await OnMajorChangeTracked(channel.Key, await createEmbed(post.data), (string)ChannelConfig[channel.Key]["Notification"]);
+
+                    }
                 }
             }
             catch (Exception e)
@@ -90,12 +103,14 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public static async Task<List<Embed>> checkReddit(string subreddit, string query=null, int limit=1){
+        public static async Task<List<Embed>> checkReddit(string subreddit, string query = null, int limit = 1)
+        {
             var results = await FetchJSONDataAsync<RedditResult>($"https://www.reddit.com/r/{subreddit}/" +
                                                                         $"{(query != null ? $"search.json?sort=new&restrict_sr=on&q={query}" : "new.json?restrict_sr=on")}" + $"&limit={limit}");
 
             List<Embed> embeds = new List<Embed>();
-            foreach(var post in results.data.children){
+            foreach (var post in results.data.children)
+            {
                 embeds.Add(await createEmbed(post.data));
             }
 
@@ -147,15 +162,17 @@ namespace MopsBot.Data.Tracker
             else if (redditPost.media != null && redditPost.media.reddit_video != null)
                 e.ImageUrl = (await Module.Information.ConvertToGifAsync(redditPost.media.reddit_video.fallback_url)).Max5MbGif;
             */
-            
+
             return e.Build();
         }
 
-        public override string TrackerUrl(){
+        public override string TrackerUrl()
+        {
             return "https://www.reddit.com/r/" + Name.Split(" ").First();
         }
 
-        public override async Task UpdateTracker(){
+        public override async Task UpdateTracker()
+        {
             await StaticBase.Trackers[TrackerType.Reddit].UpdateDBAsync(this);
         }
     }
