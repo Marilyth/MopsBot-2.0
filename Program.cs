@@ -39,7 +39,7 @@ namespace MopsBot
             Client = new DiscordShardedClient(new DiscordSocketConfig()
             {
                 LogLevel = LogSeverity.Info,
-                TotalShards = 2,
+                //TotalShards = 2,
                 LargeThreshold = 50,
                 AlwaysDownloadUsers = false,
             });
