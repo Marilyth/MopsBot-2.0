@@ -245,6 +245,7 @@ namespace MopsBot.Data
                 tracker.PostChannelAdded(channelID);
                 tracker.PostInitialisation();
                 trackers[name].ChannelConfig[channelID]["Notification"] = notification;
+                trackers[name].LastActivity = DateTime.Now;
                 trackers[name].OnMajorEventFired += OnMajorEvent;
                 trackers[name].OnMinorEventFired += OnMinorEvent;
                 //trackers[name].SetTimer(trackerInterval);

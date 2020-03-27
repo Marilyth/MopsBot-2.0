@@ -713,7 +713,7 @@ namespace MopsBot.Module
             + "\n queries MUST look something like this: `title:mei+title:hanzo`")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
-            public async Task trackSubreddit(string subreddit, string query = null)
+            public async Task trackSubreddit(string subreddit, [Remainder]string query = null)
             {
                 using (Context.Channel.EnterTypingState())
                 {
@@ -726,7 +726,7 @@ namespace MopsBot.Module
             [Command("UnTrack")]
             [Summary("Stops tracking the specified Subreddit.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task unTrackSubreddit(BaseTracker subreddit)
+            public async Task unTrackSubreddit([Remainder]BaseTracker subreddit)
             {
                 if (await Trackers[BaseTracker.TrackerType.Reddit].TryRemoveTrackerAsync(subreddit.Name, subreddit.LastCalledChannelPerGuild[Context.Guild.Id]))
                     await ReplyAsync("Stopped keeping track of " + subreddit.Name + "'s posts!");
@@ -775,7 +775,7 @@ namespace MopsBot.Module
             [Command("ShowConfig")]
             [Hide]
             [Summary("Shows all the settings for this tracker, and their values")]
-            public async Task ShowConfig(BaseTracker tracker)
+            public async Task ShowConfig([Remainder]BaseTracker tracker)
             {
                 await ReplyAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value))}```");
             }
