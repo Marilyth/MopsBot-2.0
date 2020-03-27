@@ -231,12 +231,17 @@ namespace MopsBot.Data.Tracker
             return e.Build();
         }
 
+        private static bool restarting;
         public static async Task RestartStream()
         {
-            await Task.Delay(5000);
-            if (STREAM.StreamState == StreamState.Stop)
-            {
-                STREAM.StartStreamMatchingAllConditionsAsync();
+            if(!restarting){
+                restarting = true;
+                await Task.Delay(5000);
+                if (STREAM.StreamState == StreamState.Stop)
+                {
+                    STREAM.StartStreamMatchingAllConditionsAsync();
+                }
+                restarting = false;
             }
         }
 
