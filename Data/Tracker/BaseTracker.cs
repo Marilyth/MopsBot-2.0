@@ -138,6 +138,7 @@ namespace MopsBot.Data.Tracker
 
         public virtual void Dispose()
         {
+            ChannelConfig.Clear();
             Dispose(true);
             GC.SuppressFinalize(this);
         }

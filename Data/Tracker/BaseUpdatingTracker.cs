@@ -26,5 +26,13 @@ namespace MopsBot.Data.Tracker
         }
 
         public async virtual Task setReaction(IUserMessage message){}
+
+        public override void Dispose()
+        {
+            ChannelConfig.Clear();
+            ToUpdate.Clear();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
     }
 }

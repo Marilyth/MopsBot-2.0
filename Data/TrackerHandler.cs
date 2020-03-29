@@ -214,8 +214,10 @@ namespace MopsBot.Data
 
                 else
                 {
-                    await RemoveFromDBAsync(trackers[name]);
+                    var worked = loopQueue.Remove(trackers[name]);
+                    var uWorked = updateQueue?.Remove(trackers[name]) ?? false;
                     trackers[name].Dispose();
+                    await RemoveFromDBAsync(trackers[name]);
                     trackers.Remove(name);
                     await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Removed a {typeof(T).FullName} for {name}\nChannel: {channelId}; Last channel left."));
                     await updateGraph(-1);
