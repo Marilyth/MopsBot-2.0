@@ -382,7 +382,6 @@ namespace MopsBot.Module
             [Summary("Keeps track of the specified Streamer, in the Channel you are calling this command in.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.ReadMessageHistory)]
-            [RequireBotPermission(ChannelPermission.AddReactions)]
             [RequireBotPermission(ChannelPermission.ManageMessages)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
             [TrackerLimit(50, TrackerType.Twitch)]
