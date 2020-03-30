@@ -410,7 +410,7 @@ namespace MopsBot.Data
                     await sender.UpdateTracker();
                 }
             }
-            catch
+            catch(Exception e)
             {
                 if (Program.Client.GetChannel(channelID) == null || (await ((IGuildChannel)Program.Client.GetChannel(channelID)).Guild.GetCurrentUserAsync()) == null)
                 {
@@ -420,10 +420,11 @@ namespace MopsBot.Data
                 else
                 {
                     var permission = (await ((IGuildChannel)Program.Client.GetChannel(channelID)).Guild.GetCurrentUserAsync()).GetPermissions(((IGuildChannel)Program.Client.GetChannel(channelID)));
-                    if (!permission.SendMessages || !permission.ReadMessageHistory)
+                    if (!permission.SendMessages)
                     {
                         await TryRemoveTrackerAsync(sender.Name, channelID);
-                        await Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"Removed Tracker: {sender.Name} Channel {channelID} due to missing permissions"));
+                        var perms = string.Join(", ", permission.ToList().Select(x => x.ToString() + ": " + permission.Has(x)));
+                        await Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"Removed a {typeof(T).Name} for {sender.Name} from Channel {channelID} due to missing Permissions:\n{perms}", e));
                         if (permission.SendMessages)
                         {
                             await ((ITextChannel)Program.Client.GetChannel(channelID)).SendMessageAsync($"Removed tracker for `{sender.Name}` due to missing Permissions");
@@ -481,7 +482,7 @@ namespace MopsBot.Data
                     await sender.UpdateTracker();
                 }
             }
-            catch
+            catch(Exception e)
             {
                 //Check if channel still exists, or existing only in cache
                 if (Program.Client.GetChannel(channelID) == null || (await ((IGuildChannel)Program.Client.GetChannel(channelID)).Guild.GetCurrentUserAsync()) == null)
@@ -493,10 +494,11 @@ namespace MopsBot.Data
                 else
                 {
                     var permission = (await ((IGuildChannel)Program.Client.GetChannel(channelID)).Guild.GetCurrentUserAsync()).GetPermissions(((IGuildChannel)Program.Client.GetChannel(channelID)));
-                    if (!permission.SendMessages || !permission.ReadMessageHistory || (sender is Tracker.BaseUpdatingTracker && (!permission.ManageMessages)))
+                    if (!permission.SendMessages || (sender is Tracker.BaseUpdatingTracker && (!permission.ManageMessages || !permission.ReadMessageHistory)))
                     {
                         await TryRemoveTrackerAsync(sender.Name, channelID);
-                        await Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"Removed a {typeof(T).Name} for {sender.Name} from Channel {channelID} due to missing Permissions"));
+                        var perms = string.Join(", ", permission.ToList().Select(x => x.ToString() + ": " + permission.Has(x)));
+                        await Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"Removed a {typeof(T).Name} for {sender.Name} from Channel {channelID} due to missing Permissions:\n{perms}", e));
                         if (permission.SendMessages)
                         {
                             await ((ITextChannel)Program.Client.GetChannel(channelID)).SendMessageAsync($"Removed tracker for `{sender.Name}` due to missing Permissions");
