@@ -253,6 +253,7 @@ namespace MopsBot.Data
                 //trackers[name].SetTimer(trackerInterval);
                 await UpdateDBAsync(trackers[name]);
                 await updateGraph(1);
+                loopQueue.Add(tracker);
             }
 
             await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Started a new {typeof(T).Name} for {name}\nChannels: {string.Join(",", trackers[name].ChannelConfig.Keys)}\nMessage: {notification}"));
@@ -412,6 +413,7 @@ namespace MopsBot.Data
             }
             catch(Exception e)
             {
+                await Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"A {typeof(T).Name} for {sender.Name} got an error:", e));
                 if (Program.Client.GetChannel(channelID) == null || (await ((IGuildChannel)Program.Client.GetChannel(channelID)).Guild.GetCurrentUserAsync()) == null)
                 {
                     await TryRemoveTrackerAsync(sender.Name, channelID);
@@ -484,6 +486,7 @@ namespace MopsBot.Data
             }
             catch(Exception e)
             {
+                await Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"A {typeof(T).Name} for {sender.Name} got an error:", e));
                 //Check if channel still exists, or existing only in cache
                 if (Program.Client.GetChannel(channelID) == null || (await ((IGuildChannel)Program.Client.GetChannel(channelID)).Guild.GetCurrentUserAsync()) == null)
                 {
