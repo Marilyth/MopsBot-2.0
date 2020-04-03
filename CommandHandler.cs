@@ -352,7 +352,7 @@ namespace MopsBot
             embed.AddField("Command", command.Name + " (" + string.Join(", ", command.Parameters.Select(x => $"{x.Type.ToString()} {x.Name}{(x.IsOptional ? " = " + x.DefaultValue : "")}")) + ")");
             var userPermissions = (context.User as SocketGuildUser).GetPermissions(context.Channel as IGuildChannel);
             var mopsPermissions = context.Guild.GetUser(Program.Client.CurrentUser.Id).GetPermissions(context.Channel as IGuildChannel);
-            embed.AddField("User", context.User.Username + "#" + context.User.Discriminator + "\nPerms: " +
+            embed.AddField("User", context.User.Username + "#" + context.User.Discriminator + " (" + context.User.Id + ")\nPerms: " +
                                    userPermissions.ToString(), inline: true);
             embed.AddField("Bot", Program.Client.CurrentUser.Username + "#" + Program.Client.CurrentUser.Discriminator + "\nPerms: " +
                                   mopsPermissions.ToString(), inline: true);
