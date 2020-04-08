@@ -25,6 +25,7 @@ namespace MopsBot.Data.Tracker
         public delegate Task HostingEventHandler(string hostName, string targetName, int viewers);
         public delegate Task StatusEventHandler(BaseTracker sender);
         public DatePlot ViewerGraph;
+        public List<Tuple<string, DateTime>> GameChanges = new List<Tuple<string, DateTime>>();
         private MixerResult StreamerStatus;
         public Boolean IsOnline;
         public string CurGame;
@@ -158,6 +159,7 @@ namespace MopsBot.Data.Tracker
                                 await Program.ReactionHandler.ClearHandler((IUserMessage)await ((ITextChannel)Program.Client.GetChannel(channelMessage.Key)).GetMessageAsync(channelMessage.Value));
 
                             ToUpdate = new Dictionary<ulong, ulong>();
+                            GameChanges = new List<Tuple<string, DateTime>>();
 
                             if (OnOffline != null) await OnOffline.Invoke(this);
                             foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][OFFLINE]).ToList())
@@ -172,6 +174,7 @@ namespace MopsBot.Data.Tracker
                         ViewerGraph = new DatePlot(Name + "Mixer", "Time since start", "Viewers");
                         IsOnline = true;
                         CurGame = StreamerStatus.type?.name ?? "Nothing";
+                        GameChanges.Add(Tuple.Create(CurGame, DateTime.UtcNow));
                         ViewerGraph.AddValue(CurGame, 0, (await GetBroadcastStartTime()).AddHours(-2));
 
                         if (OnLive != null) await OnLive.Invoke(this);
@@ -190,12 +193,15 @@ namespace MopsBot.Data.Tracker
                     if (CurGame.CompareTo(StreamerStatus.type?.name ?? "Nothing") != 0)
                     {
                         CurGame = StreamerStatus.type?.name ?? "Nothing";
+                        GameChanges.Add(Tuple.Create(CurGame, DateTime.UtcNow));
+                        await UpdateTracker();
 
                         foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][GAMECHANGE]).ToList())
                             await OnMinorChangeTracked(channel, $"{Name} switched games to **{CurGame}**");
                     }
 
-                    await ModifyAsync(x => x.ViewerGraph.AddValue(CurGame, StreamerStatus.viewersCurrent));
+                    if (ChannelConfig.Any(x => (bool)x.Value[SHOWGRAPH]))
+                        await ModifyAsync(x => x.ViewerGraph.AddValue(CurGame, StreamerStatus.viewersCurrent));
 
                     foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][SHOWEMBED]).ToList())
                         await OnMajorChangeTracked(channel, createEmbed(StreamerStatus, (bool)ChannelConfig[channel][THUMBNAIL], (bool)ChannelConfig[channel][SHOWTIMESTAMPS], (bool)ChannelConfig[channel][SHOWGRAPH]));
@@ -230,7 +236,7 @@ namespace MopsBot.Data.Tracker
 
         public Embed createEmbed(MixerResult StreamerStatus, bool largeThumbnail = false, bool showTimestamps = false, bool showGraph = false)
         {
-            if(showGraph)
+            if (showGraph)
                 ViewerGraph.SetMaximumLine();
 
             EmbedBuilder e = new EmbedBuilder();
@@ -241,28 +247,15 @@ namespace MopsBot.Data.Tracker
 
             if (showTimestamps)
             {
-                List<KeyValuePair<string, double>> games = new List<KeyValuePair<string, double>>();
-                for (int i = 0; i < ViewerGraph.PlotDataPoints.Count; i++)
-                {
-                    string current = ViewerGraph.PlotDataPoints[i].Key;
-                    games.Add(new KeyValuePair<string, double>(current, ViewerGraph.PlotDataPoints[i].Value.Key));
-
-                    while (i < ViewerGraph.PlotDataPoints.Count && ViewerGraph.PlotDataPoints[i].Key.Equals(current))
-                    {
-                        i++;
-                    }
-                    i--;
-                }
-
                 string vods = "";
-                for (int i = Math.Max(0, games.Count - 6); i < games.Count; i++)
+                for (int i = Math.Max(0, GameChanges.Count - 6); i < GameChanges.Count; i++)
                 {
-                    TimeSpan duration = i != games.Count - 1 ? OxyPlot.Axes.DateTimeAxis.ToDateTime(games[i + 1].Value) - OxyPlot.Axes.DateTimeAxis.ToDateTime(games[i].Value)
-                                                             : DateTime.UtcNow - OxyPlot.Axes.DateTimeAxis.ToDateTime(games[i].Value);
-                    TimeSpan timestamp = OxyPlot.Axes.DateTimeAxis.ToDateTime(games[i].Value) - OxyPlot.Axes.DateTimeAxis.ToDateTime(games[0].Value);
-                    vods += $"\n{games[i].Key} ({duration.ToString("hh")}h {duration.ToString("mm")}m)";
+                    TimeSpan duration = i != GameChanges.Count - 1 ? GameChanges[i + 1].Item2 - GameChanges[i].Item2
+                                                             : DateTime.UtcNow - GameChanges[i].Item2;
+                    TimeSpan timestamp = GameChanges[i].Item2 - GameChanges[0].Item2;
+                    vods += $"\n{GameChanges[i].Item1} ({duration.ToString("hh")}h {duration.ToString("mm")}m)";
                 }
-                e.AddField("VOD Segments", vods);
+                e.AddField("VOD Segments", String.IsNullOrEmpty(vods) ? "/" : vods);
             }
 
 
@@ -277,17 +270,21 @@ namespace MopsBot.Data.Tracker
             footer.Text = "Mixer";
             e.Footer = footer;
 
-            if(largeThumbnail){
+            if (largeThumbnail)
+            {
                 e.ImageUrl = $"https://thumbs.mixer.com/channel/{MixerId}.small.jpg?rand={StaticBase.ran.Next(0, 99999999)}";
-                if(showGraph)
+                if (showGraph)
                     e.ThumbnailUrl = ViewerGraph.DrawPlot();
-            }else{
+            }
+            else
+            {
                 e.ThumbnailUrl = $"https://thumbs.mixer.com/channel/{MixerId}.small.jpg?rand={StaticBase.ran.Next(0, 99999999)}";
-                if(showGraph)
+                if (showGraph)
                     e.ImageUrl = ViewerGraph.DrawPlot();
             }
 
-            if(!showGraph){
+            if (!showGraph)
+            {
                 e.AddField("Viewers", StreamerStatus.viewersCurrent, true);
                 e.AddField("Game", StreamerStatus.type?.name ?? "Nothing", true);
             }

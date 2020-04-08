@@ -199,6 +199,8 @@ namespace MopsBot.Data.Tracker
                         //SetTimer(120000, 120000);
 
                         IconUrl = (await fetchChannel()).snippet.thumbnails.medium.url;
+
+                        await UpdateTracker();
                     }
                 }
 
@@ -225,19 +227,22 @@ namespace MopsBot.Data.Tracker
                         await OnMinorChangeTracked(channel, $"{StreamInfo?.snippet?.channelTitle ?? "Streamer"} went Offline!");
 
                     StreamInfo = null;
+
+                    await UpdateTracker();
                 }
                 else
                 {
-                    if(StreamInfo.liveStreamingDetails?.concurrentViewers != null)
-                        ViewerGraph.AddValue("Viewers", double.Parse(StreamInfo.liveStreamingDetails.concurrentViewers));
-                    else
-                        ViewerGraph.AddValue("Viewers", 0);
+                    if(ChannelConfig.Any(x => (bool)x.Value[SHOWGRAPH])){
+                        if(StreamInfo.liveStreamingDetails?.concurrentViewers != null)
+                            ViewerGraph.AddValue("Viewers", double.Parse(StreamInfo.liveStreamingDetails.concurrentViewers));
+                        else
+                            ViewerGraph.AddValue("Viewers", 0);
+                        await UpdateTracker();
+                    }
 
                     foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][SHOWEMBED]).ToList())
                         await OnMajorChangeTracked(channel, await createEmbed((bool)ChannelConfig[channel][THUMBNAIL], (bool)ChannelConfig[channel][SHOWCHAT], (bool)ChannelConfig[channel][SHOWGRAPH]));
                 }
-
-                await UpdateTracker();
             }
             catch (Exception e)
             {
@@ -247,7 +252,9 @@ namespace MopsBot.Data.Tracker
 
         public async Task<Embed> createEmbed(bool largeThumbnail = false, bool showChat = false, bool showGraph = false)
         {
-            ViewerGraph.SetMaximumLine();
+            if(showGraph)
+                ViewerGraph.SetMaximumLine();
+                
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0xFF0000);
             e.Title = StreamInfo.snippet.title;

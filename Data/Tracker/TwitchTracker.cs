@@ -25,6 +25,7 @@ namespace MopsBot.Data.Tracker
         public delegate Task HostingEventHandler(string hostName, string targetName, int viewers);
         public delegate Task StatusEventHandler(BaseTracker sender);
         private List<Comment> comments = new List<Comment>();
+        public List<Tuple<string, DateTime>> GameChanges = new List<Tuple<string, DateTime>>();
         public DatePlot ViewerGraph;
         private ChannelResult StreamerStatus;
         public Boolean IsOnline;
@@ -167,6 +168,7 @@ namespace MopsBot.Data.Tracker
                                 await Program.ReactionHandler.ClearHandler((IUserMessage)await ((ITextChannel)Program.Client.GetChannel(channelMessage.Key)).GetMessageAsync(channelMessage.Value));
 
                             ToUpdate = new Dictionary<ulong, ulong>();
+                            GameChanges = new List<Tuple<string, DateTime>>();
 
                             if (OnOffline != null) await OnOffline.Invoke(this);
                             foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][OFFLINE] && (isRerun ? (bool)ChannelConfig[x][TRACKRERUN] : true)).ToList())
@@ -196,6 +198,7 @@ namespace MopsBot.Data.Tracker
                         IsHosting = false;
                         CurGame = StreamerStatus.Stream.Game;
                         ViewerGraph.AddValue(CurGame, 0, StreamerStatus.Stream.CreatedAt.UtcDateTime);
+                        GameChanges.Add(Tuple.Create(StreamerStatus.Stream.Game, DateTime.UtcNow));
 
                         if (OnLive != null) await OnLive.Invoke(this);
                         foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][ONLINE] && (isRerun ? (bool)ChannelConfig[x][TRACKRERUN] : true)).ToList())
@@ -216,13 +219,15 @@ namespace MopsBot.Data.Tracker
                     if (CurGame.ToLower().CompareTo(StreamerStatus.Stream.Game.ToLower()) != 0)
                     {
                         CurGame = StreamerStatus.Stream.Game;
-                        //ViewerGraph.AddValue(CurGame, StreamerStatus.stream.viewers);
+                        GameChanges.Add(Tuple.Create(StreamerStatus.Stream.Game, DateTime.UtcNow));
+                        await UpdateTracker();
 
                         foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][GAMECHANGE] && (isRerun ? (bool)ChannelConfig[x][TRACKRERUN] : true)).ToList())
                             await OnMinorChangeTracked(channel, $"{Name} switched games to **{CurGame}**");
                     }
 
-                    await ModifyAsync(x => x.ViewerGraph.AddValue(CurGame, StreamerStatus.Stream.Viewers));
+                    if(ChannelConfig.Any(x => (bool)x.Value[SHOWGRAPH]))
+                        await ModifyAsync(x => x.ViewerGraph.AddValue(CurGame, StreamerStatus.Stream.Viewers));
 
                     foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][SHOWEMBED] && (isRerun ? (bool)ChannelConfig[x][TRACKRERUN] : true)).ToList())
                         await OnMajorChangeTracked(channel, createEmbed((bool)ChannelConfig[channel][THUMBNAIL], (bool)ChannelConfig[channel][SHOWCHAT], (bool)ChannelConfig[channel][SHOWVOD], (bool)ChannelConfig[channel][SHOWGRAPH]));
@@ -321,28 +326,15 @@ namespace MopsBot.Data.Tracker
             {
                 if (showVod)
                 {
-                    List<KeyValuePair<string, double>> games = new List<KeyValuePair<string, double>>();
-                    for (int i = 0; i < ViewerGraph.PlotDataPoints.Count; i++)
-                    {
-                        string current = ViewerGraph.PlotDataPoints[i].Key;
-                        games.Add(new KeyValuePair<string, double>(current, ViewerGraph.PlotDataPoints[i].Value.Key));
-
-                        while (i < ViewerGraph.PlotDataPoints.Count && ViewerGraph.PlotDataPoints[i].Key.Equals(current))
-                        {
-                            i++;
-                        }
-                        i--;
-                    }
-
                     string vods = "";
-                    for (int i = Math.Max(0, games.Count - 6); i < games.Count; i++)
+                    for (int i = Math.Max(0, GameChanges.Count - 6); i < GameChanges.Count; i++)
                     {
-                        TimeSpan duration = i != games.Count - 1 ? OxyPlot.Axes.DateTimeAxis.ToDateTime(games[i + 1].Value) - OxyPlot.Axes.DateTimeAxis.ToDateTime(games[i].Value)
-                                                                 : DateTime.UtcNow - OxyPlot.Axes.DateTimeAxis.ToDateTime(games[i].Value);
-                        TimeSpan timestamp = OxyPlot.Axes.DateTimeAxis.ToDateTime(games[i].Value) - OxyPlot.Axes.DateTimeAxis.ToDateTime(games[0].Value);
-                        vods += $"\n[{games[i].Key}]({VodUrl}?t={(int)timestamp.TotalMinutes}m) ({duration.ToString("hh")}h {duration.ToString("mm")}m)";
+                        TimeSpan duration = i != GameChanges.Count - 1 ? GameChanges[i + 1].Item2 - GameChanges[i].Item2
+                                                                 : DateTime.UtcNow - GameChanges[i].Item2;
+                        TimeSpan timestamp = GameChanges[i].Item2 - GameChanges[0].Item2;
+                        vods += $"\n[{GameChanges[i].Item1}]({VodUrl}?t={(int)timestamp.TotalMinutes}m) ({duration.ToString("hh")}h {duration.ToString("mm")}m)";
                     }
-                    e.AddField("VOD Segments", vods);
+                    e.AddField("VOD Segments", String.IsNullOrEmpty(vods) ? "/" : vods);
                 }
 
                 if (showChat)
