@@ -214,13 +214,16 @@ namespace MopsBot
                 } catch {}
 
                 int status = Enum.GetNames(typeof(BaseTracker.TrackerType)).Length;
+                DateTime LastGC = default(DateTime);
                 while (true)
                 {
                     try
                     {
                         //Collect garbage when over 2GB of RAM is used
-                        if(((System.Diagnostics.Process.GetCurrentProcess().WorkingSet64 / 1024) / 1024) > 2000)
+                        if(((System.Diagnostics.Process.GetCurrentProcess().WorkingSet64 / 1024) / 1024) > 2000 && (DateTime.UtcNow - LastGC).TotalMinutes > 2){
                             System.GC.Collect();
+                            LastGC = DateTime.UtcNow;
+                        }
                             
                         BaseTracker.TrackerType type = (BaseTracker.TrackerType)status++;
 
