@@ -25,7 +25,7 @@ namespace MopsBot.Data.Tracker
         public string VideoId, IconUrl;
         private string channelThumbnailUrl;
         public DatePlot ViewerGraph;
-        public static readonly string SHOWEMBED = "ShowEmbed", THUMBNAIL = "LargeThumbnail", OFFLINE = "NotifyOnOffline", ONLINE = "NotifyOnOnline", SHOWCHAT = "ShowChat", SENDGRAPH = "SendGraphAfterOffline";
+        public static readonly string SHOWEMBED = "ShowEmbed", THUMBNAIL = "LargeThumbnail", OFFLINE = "NotifyOnOffline", ONLINE = "NotifyOnOnline", SHOWCHAT = "ShowChat", SHOWGRAPH = "ShowGraph", SENDGRAPH = "SendGraphAfterOffline";
 
         public YoutubeLiveTracker() : base()
         {
@@ -69,6 +69,7 @@ namespace MopsBot.Data.Tracker
             config[OFFLINE] = true;
             config[ONLINE] = true;
             config[SHOWCHAT] = false;
+            config[SHOWGRAPH] = false;
             config[SENDGRAPH] = false;
         }
 
@@ -77,9 +78,9 @@ namespace MopsBot.Data.Tracker
             bool save = false;
             foreach (var channel in ChannelConfig.Keys.ToList())
             {
-                if (!ChannelConfig[channel].ContainsKey(SENDGRAPH))
+                if (!ChannelConfig[channel].ContainsKey(SHOWGRAPH))
                 {
-                    ChannelConfig[channel][SENDGRAPH] = false;
+                    ChannelConfig[channel][SHOWGRAPH] = false;
                     save = true;
                 }
             }
@@ -233,7 +234,7 @@ namespace MopsBot.Data.Tracker
                         ViewerGraph.AddValue("Viewers", 0);
 
                     foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][SHOWEMBED]).ToList())
-                        await OnMajorChangeTracked(channel, await createEmbed((bool)ChannelConfig[channel][THUMBNAIL], (bool)ChannelConfig[channel][SHOWCHAT]));
+                        await OnMajorChangeTracked(channel, await createEmbed((bool)ChannelConfig[channel][THUMBNAIL], (bool)ChannelConfig[channel][SHOWCHAT], (bool)ChannelConfig[channel][SHOWGRAPH]));
                 }
 
                 await UpdateTracker();
@@ -244,7 +245,7 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public async Task<Embed> createEmbed(bool largeThumbnail = false, bool showChat = false)
+        public async Task<Embed> createEmbed(bool largeThumbnail = false, bool showChat = false, bool showGraph = false)
         {
             ViewerGraph.SetMaximumLine();
             EmbedBuilder e = new EmbedBuilder();
@@ -264,8 +265,15 @@ namespace MopsBot.Data.Tracker
             footer.Text = "Youtube-Live";
             e.Footer = footer;
 
-            e.ThumbnailUrl = largeThumbnail ? ViewerGraph.DrawPlot() : $"{StreamInfo.snippet.thumbnails.medium.url}?rand={StaticBase.ran.Next(0, 99999999)}";
-            e.ImageUrl = largeThumbnail ? $"{StreamInfo.snippet.thumbnails.maxres?.url ?? StreamInfo.snippet.thumbnails.medium.url}?rand={StaticBase.ran.Next(0, 99999999)}" : ViewerGraph.DrawPlot();
+            if(largeThumbnail){
+                e.ImageUrl = $"{StreamInfo.snippet.thumbnails.maxres?.url ?? StreamInfo.snippet.thumbnails.medium.url}?rand={StaticBase.ran.Next(0, 99999999)}";
+                if(showGraph)
+                    e.ThumbnailUrl = ViewerGraph.DrawPlot();
+            }else{
+                e.ThumbnailUrl = $"{StreamInfo.snippet.thumbnails.medium.url}?rand={StaticBase.ran.Next(0, 99999999)}";
+                if(showGraph)
+                    e.ImageUrl = ViewerGraph.DrawPlot();
+            }
 
             e.AddField("Viewers", StreamInfo.liveStreamingDetails.concurrentViewers, true);
             var liveTime = DateTime.UtcNow - StreamInfo.liveStreamingDetails.actualStartTime;

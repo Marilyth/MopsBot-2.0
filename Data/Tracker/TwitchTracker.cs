@@ -33,7 +33,7 @@ namespace MopsBot.Data.Tracker
         public int TimeoutCount;
         public ulong TwitchId;
         public DateTime WebhookExpire = DateTime.Now;
-        public static readonly string GAMECHANGE = "NotifyOnGameChange", HOST = "NotifyOnHost", ONLINE = "NotifyOnOnline", OFFLINE = "NotifyOnOffline", SHOWEMBED = "ShowEmbed", SHOWCHAT = "ShowChat", SHOWVOD = "ShowVod", THUMBNAIL = "LargeThumbnail", SENDPDF = "SendGraphPDFAfterOffline", TRACKRERUN = "TrackReRun";
+        public static readonly string GAMECHANGE = "NotifyOnGameChange", HOST = "NotifyOnHost", ONLINE = "NotifyOnOnline", OFFLINE = "NotifyOnOffline", SHOWEMBED = "ShowEmbed", SHOWCHAT = "ShowChat", SHOWVOD = "ShowVod", THUMBNAIL = "LargeThumbnail", SHOWGRAPH = "ShowGraph", SENDPDF = "SendGraphPDFAfterOffline", TRACKRERUN = "TrackReRun";
 
         public TwitchTracker() : base()
         {
@@ -64,6 +64,7 @@ namespace MopsBot.Data.Tracker
             config[SHOWEMBED] = true;
             config[SHOWCHAT] = false;
             config[SHOWVOD] = true;
+            config[SHOWGRAPH] = false;
             config[THUMBNAIL] = false;
             config[GAMECHANGE] = true;
             config[HOST] = false;
@@ -224,7 +225,7 @@ namespace MopsBot.Data.Tracker
                     await ModifyAsync(x => x.ViewerGraph.AddValue(CurGame, StreamerStatus.Stream.Viewers));
 
                     foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][SHOWEMBED] && (isRerun ? (bool)ChannelConfig[x][TRACKRERUN] : true)).ToList())
-                        await OnMajorChangeTracked(channel, createEmbed((bool)ChannelConfig[channel][THUMBNAIL], (bool)ChannelConfig[channel][SHOWCHAT], (bool)ChannelConfig[channel][SHOWVOD]));
+                        await OnMajorChangeTracked(channel, createEmbed((bool)ChannelConfig[channel][THUMBNAIL], (bool)ChannelConfig[channel][SHOWCHAT], (bool)ChannelConfig[channel][SHOWVOD], (bool)ChannelConfig[channel][SHOWGRAPH]));
                 }
             }
             catch (Exception e)
@@ -238,9 +239,9 @@ namespace MopsBot.Data.Tracker
             bool save = false;
             foreach (var channel in ChannelConfig.Keys.ToList())
             {
-                if (!ChannelConfig[channel].ContainsKey(TRACKRERUN))
+                if (!ChannelConfig[channel].ContainsKey(SHOWGRAPH))
                 {
-                    ChannelConfig[channel][TRACKRERUN] = false;
+                    ChannelConfig[channel][SHOWGRAPH] = false;
                     save = true;
                 }
             }
@@ -304,10 +305,11 @@ namespace MopsBot.Data.Tracker
             return result;
         }
 
-        public Embed createEmbed(bool largeThumbnail = false, bool showChat = false, bool showVod = false)
+        public Embed createEmbed(bool largeThumbnail = false, bool showChat = false, bool showVod = false, bool showGraph = false)
         {
             Channel streamer = StreamerStatus.Stream.Channel;
-            ViewerGraph.SetMaximumLine();
+            if(showGraph)
+                ViewerGraph.SetMaximumLine();
 
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0x6441A4);
@@ -377,11 +379,19 @@ namespace MopsBot.Data.Tracker
             footer.Text = "Twitch";
             e.Footer = footer;
 
-            e.ThumbnailUrl = largeThumbnail ? ViewerGraph.DrawPlot() : $"{StreamerStatus.Stream.Preview.Medium}?rand={StaticBase.ran.Next(0, 99999999)}";
-            e.ImageUrl = largeThumbnail ? $"{StreamerStatus.Stream.Preview.Large}?rand={StaticBase.ran.Next(0, 99999999)}" : ViewerGraph.DrawPlot();
-
-            //e.AddField("Game", CurGame, true);
-            //e.AddField("Viewers", StreamerStatus.stream.viewers, true);
+            if(largeThumbnail){
+                e.ImageUrl = $"{StreamerStatus.Stream.Preview.Medium}?rand={StaticBase.ran.Next(0, 99999999)}";
+                if(showGraph)
+                    e.ThumbnailUrl = ViewerGraph.DrawPlot();
+            }else{
+                e.ThumbnailUrl = $"{StreamerStatus.Stream.Preview.Medium}?rand={StaticBase.ran.Next(0, 99999999)}";
+                if(showGraph)
+                    e.ImageUrl = ViewerGraph.DrawPlot();
+            }
+            if(!showGraph){
+                e.AddField("Viewers", StreamerStatus.Stream.Viewers, true);
+                e.AddField("Game", StreamerStatus.Stream.Game, true);
+            }
 
             return e.Build();
         }

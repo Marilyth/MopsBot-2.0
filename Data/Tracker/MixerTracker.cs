@@ -31,7 +31,7 @@ namespace MopsBot.Data.Tracker
         public int TimeoutCount;
         public ulong MixerId;
         //public DateTime WebhookExpire = DateTime.Now;
-        public static readonly string GAMECHANGE = "NotifyOnGameChange", ONLINE = "NotifyOnOnline", OFFLINE = "NotifyOnOffline", SHOWEMBED = "ShowEmbed", SHOWTIMESTAMPS = "ShowTimestamps", THUMBNAIL = "LargeThumbnail";
+        public static readonly string GAMECHANGE = "NotifyOnGameChange", ONLINE = "NotifyOnOnline", OFFLINE = "NotifyOnOffline", SHOWEMBED = "ShowEmbed", SHOWGRAPH = "ShowGraph", SHOWTIMESTAMPS = "ShowTimestamps", THUMBNAIL = "LargeThumbnail";
 
         public MixerTracker() : base()
         {
@@ -60,11 +60,27 @@ namespace MopsBot.Data.Tracker
 
             var config = ChannelConfig[channelId];
             config[SHOWEMBED] = true;
+            config[SHOWGRAPH] = false;
             config[THUMBNAIL] = false;
             config[GAMECHANGE] = true;
             config[OFFLINE] = true;
             config[ONLINE] = true;
             config[SHOWTIMESTAMPS] = true;
+        }
+
+        public override async void Conversion(object obj = null)
+        {
+            bool save = false;
+            foreach (var channel in ChannelConfig.Keys.ToList())
+            {
+                if (!ChannelConfig[channel].ContainsKey(SHOWGRAPH))
+                {
+                    ChannelConfig[channel][SHOWGRAPH] = false;
+                    save = true;
+                }
+            }
+            if (save)
+                await UpdateTracker();
         }
 
         public async override void PostInitialisation(object info = null)
@@ -173,7 +189,7 @@ namespace MopsBot.Data.Tracker
                 {
                     if (CurGame.CompareTo(StreamerStatus.type?.name ?? "Nothing") != 0)
                     {
-                        CurGame = StreamerStatus.type?.name ?? "Noting";
+                        CurGame = StreamerStatus.type?.name ?? "Nothing";
 
                         foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][GAMECHANGE]).ToList())
                             await OnMinorChangeTracked(channel, $"{Name} switched games to **{CurGame}**");
@@ -182,7 +198,7 @@ namespace MopsBot.Data.Tracker
                     await ModifyAsync(x => x.ViewerGraph.AddValue(CurGame, StreamerStatus.viewersCurrent));
 
                     foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][SHOWEMBED]).ToList())
-                        await OnMajorChangeTracked(channel, createEmbed((bool)ChannelConfig[channel][THUMBNAIL], (bool)ChannelConfig[channel][SHOWTIMESTAMPS]));
+                        await OnMajorChangeTracked(channel, createEmbed(StreamerStatus, (bool)ChannelConfig[channel][THUMBNAIL], (bool)ChannelConfig[channel][SHOWTIMESTAMPS], (bool)ChannelConfig[channel][SHOWGRAPH]));
                 }
             }
             catch (Exception e)
@@ -212,9 +228,10 @@ namespace MopsBot.Data.Tracker
             return DateTime.Parse(tmpResult["startedAt"].ToString());
         }
 
-        public Embed createEmbed(bool largeThumbnail = false, bool showTimestamps = false)
+        public Embed createEmbed(MixerResult StreamerStatus, bool largeThumbnail = false, bool showTimestamps = false, bool showGraph = false)
         {
-            ViewerGraph.SetMaximumLine();
+            if(showGraph)
+                ViewerGraph.SetMaximumLine();
 
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0, 163, 243);
@@ -260,8 +277,20 @@ namespace MopsBot.Data.Tracker
             footer.Text = "Mixer";
             e.Footer = footer;
 
-            e.ThumbnailUrl = largeThumbnail ? ViewerGraph.DrawPlot() : $"https://thumbs.mixer.com/channel/{MixerId}.small.jpg?rand={StaticBase.ran.Next(0, 99999999)}";
-            e.ImageUrl = largeThumbnail ? $"https://thumbs.mixer.com/channel/{MixerId}.small.jpg?rand={StaticBase.ran.Next(0, 99999999)}" : ViewerGraph.DrawPlot();
+            if(largeThumbnail){
+                e.ImageUrl = $"https://thumbs.mixer.com/channel/{MixerId}.small.jpg?rand={StaticBase.ran.Next(0, 99999999)}";
+                if(showGraph)
+                    e.ThumbnailUrl = ViewerGraph.DrawPlot();
+            }else{
+                e.ThumbnailUrl = $"https://thumbs.mixer.com/channel/{MixerId}.small.jpg?rand={StaticBase.ran.Next(0, 99999999)}";
+                if(showGraph)
+                    e.ImageUrl = ViewerGraph.DrawPlot();
+            }
+
+            if(!showGraph){
+                e.AddField("Viewers", StreamerStatus.viewersCurrent, true);
+                e.AddField("Game", StreamerStatus.type?.name ?? "Nothing", true);
+            }
 
             return e.Build();
         }
