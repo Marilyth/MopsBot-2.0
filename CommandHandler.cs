@@ -119,10 +119,10 @@ namespace MopsBot
                 //Execute if command exists
                 if (commands.Search(context, argPos).IsSuccess)
                 {
-                    if((await MopsBot.Data.Entities.User.GetUserAsync(message.Author.Id)).IsBanned){
+                    /*if((await MopsBot.Data.Entities.User.GetUserAsync(message.Author.Id)).IsBanned){
                         await context.Channel.SendMessageAsync("You are banned from using Mops.");
                         return;
-                    }
+                    }*/
 
                     await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"{parameterMessage.Author} ({parameterMessage.Author.Id}) executed command: {parameterMessage.Content.Substring(argPos)}"));
                     var result = await commands.ExecuteAsync(context, argPos, _provider);
@@ -133,10 +133,10 @@ namespace MopsBot
                 {
                     if (CustomCommands[context.Guild.Id].CheckPermission(context.Message.Content.Substring(argPos).Split(" ").First(), (SocketGuildUser)context.User))
                     {
-                        if((await MopsBot.Data.Entities.User.GetUserAsync(message.Author.Id)).IsBanned){
+                        /*if((await MopsBot.Data.Entities.User.GetUserAsync(message.Author.Id)).IsBanned){
                             await context.Channel.SendMessageAsync("You are banned from using Mops.");
                             return;
-                        }
+                        }*/
 
                         await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"executed command: {parameterMessage.Content.Substring(argPos)}"));
                         await commands.Commands.First(x => x.Name.Equals("UseCustomCommand")).ExecuteAsync(context, new List<object> { $"{context.Message.Content.Substring(argPos)}" }, new List<object> { }, _provider);
