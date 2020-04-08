@@ -275,7 +275,7 @@ namespace MopsBot.Data.Tracker
                     e.ImageUrl = ViewerGraph.DrawPlot();
             }
 
-            e.AddField("Viewers", StreamInfo.liveStreamingDetails.concurrentViewers, true);
+            e.AddField("Viewers", StreamInfo.liveStreamingDetails?.concurrentViewers ?? "0", true);
             var liveTime = DateTime.UtcNow - StreamInfo.liveStreamingDetails.actualStartTime;
             e.AddField("Runtime", (int)liveTime.TotalHours + "h " + liveTime.ToString(@"mm\m"), true);
 
