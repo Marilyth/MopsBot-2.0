@@ -100,6 +100,9 @@ namespace MopsBot
 
             if (shardsReady == Client.Shards.Count)
             {
+                System.Runtime.GCSettings.LargeObjectHeapCompactionMode = System.Runtime.GCLargeObjectHeapCompactionMode.CompactOnce;
+                System.GC.Collect();
+
                 Task.Run(() =>
                 {
                     StaticBase.UpdateStatusAsync();
