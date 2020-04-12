@@ -221,6 +221,7 @@ namespace MopsBot
                     {
                         //Collect garbage when over 2GB of RAM is used
                         if(((System.Diagnostics.Process.GetCurrentProcess().WorkingSet64 / 1024) / 1024) > 2000 && (DateTime.UtcNow - LastGC).TotalMinutes > 2){
+                            System.Runtime.GCSettings.LargeObjectHeapCompactionMode = System.Runtime.GCLargeObjectHeapCompactionMode.CompactOnce;
                             System.GC.Collect();
                             LastGC = DateTime.UtcNow;
                         }
