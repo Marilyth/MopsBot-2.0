@@ -62,7 +62,7 @@ namespace MopsBot
                 ServicePointManager.DefaultConnectionLimit = 100;
                 ServicePointManager.MaxServicePointIdleTime = 10000;
 
-                /*Task.Run(() =>
+                Task.Run(() =>
                 {
                     WelcomeMessages = Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").FindSync(x => true).ToEnumerable().ToDictionary(x => x.GuildId);
                     Task.Delay(5000).Wait();
@@ -73,7 +73,7 @@ namespace MopsBot
                     ReactRoleJoin = new ReactionRoleJoin();
                     Task.Delay(5000).Wait();
                     Poll = new ReactionPoll();
-                });*/
+                });
 
                 Auth.SetUserCredentials(Program.Config["TwitterKey"], Program.Config["TwitterSecret"],
                                         Program.Config["TwitterToken"], Program.Config["TwitterAccessSecret"]);

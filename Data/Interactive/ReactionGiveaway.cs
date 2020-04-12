@@ -57,11 +57,11 @@ namespace MopsBot.Data.Interactive
 
                         foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("✅"), textmessage.Reactions[new Emoji("✅")].ReactionCount).FlattenAsync().Result.Where(x => !x.IsBot))
                         {
-                            JoinGiveaway(user.Id, textmessage);
+                            JoinGiveaway(user.Id, textmessage).Wait();
                         }
                         foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("🎁"), textmessage.Reactions[new Emoji("🎁")].ReactionCount).FlattenAsync().Result.Where(x => !x.IsBot))
                         {
-                            DrawGiveaway(user.Id, textmessage);
+                            DrawGiveaway(user.Id, textmessage).Wait();
                         }
                     }
                     catch (Exception e)

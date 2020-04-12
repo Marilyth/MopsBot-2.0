@@ -57,7 +57,7 @@ namespace MopsBot.Data.Interactive
 
                         foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("✅"), textmessage.Reactions[new Emoji("✅")].ReactionCount).FlattenAsync().Result.Where(x => !x.IsBot).Reverse())
                         {
-                            JoinRole(user.Id, textmessage);
+                            JoinRole(user.Id, textmessage).Wait();
                         }
                         /*foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("❎"), textmessage.Reactions[new Emoji("❎")].ReactionCount).First().Result.Where(x => !x.IsBot).Reverse())
                         {
@@ -65,7 +65,7 @@ namespace MopsBot.Data.Interactive
                         }*/
                         foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("🗑"), textmessage.Reactions[new Emoji("🗑")].ReactionCount).FlattenAsync().Result.Where(x => !x.IsBot).Reverse())
                         {
-                            DeleteInvite(user.Id, textmessage);
+                            DeleteInvite(user.Id, textmessage).Wait();
                         }
                     }
                     catch (Exception e)
