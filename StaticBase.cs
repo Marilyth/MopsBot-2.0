@@ -71,8 +71,8 @@ namespace MopsBot
                     ReactGiveaways = new ReactionGiveaway();
                     Task.Delay(5000).Wait();
                     ReactRoleJoin = new ReactionRoleJoin();
-                    Task.Delay(5000).Wait();
-                    Poll = new ReactionPoll();
+                    //Task.Delay(5000).Wait();
+                    //Poll = new ReactionPoll();
                 });
 
                 Auth.SetUserCredentials(Program.Config["TwitterKey"], Program.Config["TwitterSecret"],
