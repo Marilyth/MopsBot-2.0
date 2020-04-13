@@ -80,6 +80,7 @@ namespace MopsBot
             await MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Shard {shardsReady} is ready."));
 
             if(((System.Diagnostics.Process.GetCurrentProcess().WorkingSet64 / 1024) / 1024) > 2000 && (DateTime.UtcNow - LastGC).TotalMinutes > 1){
+                await MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Shard {shardsReady} caused GC."));
                 System.Runtime.GCSettings.LargeObjectHeapCompactionMode = System.Runtime.GCLargeObjectHeapCompactionMode.CompactOnce;
                 System.GC.Collect();
             }
