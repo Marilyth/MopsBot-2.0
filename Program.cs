@@ -73,10 +73,16 @@ namespace MopsBot
         }
 
         private static int shardsReady = 0;
+        private DateTime LastGC = default(DateTime);
         private async Task onShardReady(DiscordSocketClient client)
         {
             shardsReady++;
             await MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Shard {shardsReady} is ready."));
+
+            if(((System.Diagnostics.Process.GetCurrentProcess().WorkingSet64 / 1024) / 1024) > 2000 && (DateTime.UtcNow - LastGC).TotalMinutes > 1){
+                System.Runtime.GCSettings.LargeObjectHeapCompactionMode = System.Runtime.GCLargeObjectHeapCompactionMode.CompactOnce;
+                System.GC.Collect();
+            }
 
             if (shardsReady == 1)
             {
@@ -100,9 +106,6 @@ namespace MopsBot
 
             if (shardsReady == Client.Shards.Count)
             {
-                System.Runtime.GCSettings.LargeObjectHeapCompactionMode = System.Runtime.GCLargeObjectHeapCompactionMode.CompactOnce;
-                System.GC.Collect();
-
                 Task.Run(() =>
                 {
                     StaticBase.UpdateStatusAsync();
