@@ -210,10 +210,21 @@ namespace MopsBot.Data.Interactive
 
                 if(string.IsNullOrEmpty(winnerDescription))
                     winnerDescription = "No winners could be drawn.";
-                    
-                await message.Channel.SendMessageAsync(winnerDescription);
+                
+                var winners = winnerDescription.Split("\n");
+                var messageText = "";
+                for(int i = 0; i < winners.Count(); i++){
+                    if(messageText.Count() + winners[i].Count() <= 2000)
+                        messageText += winners[i] + "\n";
+                    else{
+                        await message.Channel.SendMessageAsync(messageText);
+                        messageText = "";
+                    }
+                }
+                if(messageText.Count() > 0)
+                    await message.Channel.SendMessageAsync(messageText);
 
-                var embed = message.Embeds.First().ToEmbedBuilder().WithDescription(winnerDescription);
+                var embed = message.Embeds.First().ToEmbedBuilder().WithDescription("Giveaway has ended");
                 await message.ModifyAsync(x => x.Embed = embed.Build());
 
                 if (Giveaways[message.Channel.Id].Count == 1)
