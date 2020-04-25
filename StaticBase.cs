@@ -122,9 +122,13 @@ namespace MopsBot
 
                 try{
                     ChannelJanitors = MopsBot.Data.Entities.ChannelJanitor.GetJanitors().Result;
+                    Program.MopsLog(new LogMessage(LogSeverity.Error, "React init", $"Janitors started")).Wait();
                     WelcomeMessages = Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").FindSync(x => true).ToEnumerable().ToDictionary(x => x.GuildId);
+                    Program.MopsLog(new LogMessage(LogSeverity.Error, "React init", $"Welcome messages loaded")).Wait();
                     ReactRoleJoin = new ReactionRoleJoin();
+                    Program.MopsLog(new LogMessage(LogSeverity.Error, "React init", $"React role joins loaded")).Wait();
                     ReactGiveaways = new ReactionGiveaway();
+                    Program.MopsLog(new LogMessage(LogSeverity.Error, "React init", $"React giveaways loaded")).Wait();
                 } catch (Exception e){
                     Program.MopsLog(new LogMessage(LogSeverity.Error, "React init", $"Weird thing happened", e)).Wait();
                 }
