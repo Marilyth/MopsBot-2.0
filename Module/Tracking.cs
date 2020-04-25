@@ -709,7 +709,7 @@ namespace MopsBot.Module
         {
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified Subreddit, in the Channel you are calling this command in."
-            + "\n queries MUST look something like this: `title:mei+title:hanzo`")]
+            + "\nYou can check how queries look like here https://www.reddit.com/wiki/search")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
             public async Task trackSubreddit(string subreddit, [Remainder]string query = null)

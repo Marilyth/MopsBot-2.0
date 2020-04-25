@@ -64,13 +64,29 @@ namespace MopsBot
 
                 Task.Run(() =>
                 {
-                    WelcomeMessages = Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").FindSync(x => true).ToEnumerable().ToDictionary(x => x.GuildId);
+                    try
+                    {
+                        WelcomeMessages = Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").FindSync(x => true).ToEnumerable().ToDictionary(x => x.GuildId);
+                    }
+                    catch { }
                     Task.Delay(5000).Wait();
-                    ChannelJanitors = MopsBot.Data.Entities.ChannelJanitor.GetJanitors().Result;
+                    try
+                    {
+                        ChannelJanitors = MopsBot.Data.Entities.ChannelJanitor.GetJanitors().Result;
+                    }
+                    catch { }
                     Task.Delay(5000).Wait();
-                    ReactGiveaways = new ReactionGiveaway();
+                    try
+                    {
+                        ReactGiveaways = new ReactionGiveaway();
+                    }
+                    catch { }
                     Task.Delay(5000).Wait();
-                    ReactRoleJoin = new ReactionRoleJoin();
+                    try
+                    {
+                        ReactRoleJoin = new ReactionRoleJoin();
+                    }
+                    catch { }
                     //Task.Delay(5000).Wait();
                     //Poll = new ReactionPoll();
                 });
@@ -105,22 +121,28 @@ namespace MopsBot
                 foreach (var tracker in Trackers)
                 {
                     var trackerType = tracker.Key;
-                    
-                    if(tracker.Key == BaseTracker.TrackerType.Twitch){
+
+                    if (tracker.Key == BaseTracker.TrackerType.Twitch)
+                    {
                         Task.Run(() => TwitchTracker.ObtainTwitchToken());
-                        Task.Run(() => {
-                                tracker.Value.PostInitialisation();
-                                Trackers[BaseTracker.TrackerType.TwitchGroup].PostInitialisation();
-                                TwitchGuilds = Database.GetCollection<Data.Entities.TwitchGuild>("TwitchGuilds").FindSync(x => true).ToEnumerable().ToDictionary(x => x.DiscordId);
-                                TwitchUsers = Database.GetCollection<Data.Entities.TwitchUser>("TwitchUsers").FindSync(x => true).ToEnumerable().ToDictionary(x => x.GuildPlusDiscordId);
-                                foreach(var user in TwitchUsers) user.Value.PostInitialisation();
+                        Task.Run(() =>
+                        {
+                            tracker.Value.PostInitialisation();
+                            Trackers[BaseTracker.TrackerType.TwitchGroup].PostInitialisation();
+                            TwitchGuilds = Database.GetCollection<Data.Entities.TwitchGuild>("TwitchGuilds").FindSync(x => true).ToEnumerable().ToDictionary(x => x.DiscordId);
+                            TwitchUsers = Database.GetCollection<Data.Entities.TwitchUser>("TwitchUsers").FindSync(x => true).ToEnumerable().ToDictionary(x => x.GuildPlusDiscordId);
+                            foreach (var user in TwitchUsers) user.Value.PostInitialisation();
                         });
                     }
-                    else if(tracker.Key == BaseTracker.TrackerType.YoutubeLive){
-                        Task.Run(() => {tracker.Value.PostInitialisation();
-                                        YoutubeLiveTracker.fetchChannelsBatch().Wait();});
+                    else if (tracker.Key == BaseTracker.TrackerType.YoutubeLive)
+                    {
+                        Task.Run(() =>
+                        {
+                            tracker.Value.PostInitialisation();
+                            YoutubeLiveTracker.fetchChannelsBatch().Wait();
+                        });
                     }
-                    else if(tracker.Key != BaseTracker.TrackerType.TwitchGroup)
+                    else if (tracker.Key != BaseTracker.TrackerType.TwitchGroup)
                         Task.Run(() => tracker.Value.PostInitialisation());
 
                     Program.MopsLog(new LogMessage(LogSeverity.Info, "Tracker init", $"Initialising {trackerType.ToString()}"));
@@ -155,7 +177,7 @@ namespace MopsBot
         public static async Task UpdateServerCount()
         {
             await Program.Client.SetActivityAsync(new Game($"{Program.Client.Guilds.Count} servers", ActivityType.Watching));
-            
+
             try
             {
                 if (Program.Client.CurrentUser.Id == 305398845389406209)
@@ -168,7 +190,7 @@ namespace MopsBot
 
             await SendHeartbeat();
             await Task.Delay(30000);
-            foreach(var client in Program.Client.Shards)
+            foreach (var client in Program.Client.Shards)
                 await client.SetActivityAsync(new Game($"{client.Latency}ms Latency", ActivityType.Listening));
         }
 
@@ -188,14 +210,16 @@ namespace MopsBot
             }
         }
 
-        public static async Task<SocketGuildUser> GetGuildUserAsync(ulong guildId, ulong userId){
+        public static async Task<SocketGuildUser> GetGuildUserAsync(ulong guildId, ulong userId)
+        {
             var guild = Program.Client.GetGuild(guildId);
-            if(!guild.HasAllMembers)
+            if (!guild.HasAllMembers)
                 await guild.DownloadUsersAsync();
             return guild.GetUser(userId);
         }
 
-        public static async Task<RestUser> GetUserAsync(ulong userId){
+        public static async Task<RestUser> GetUserAsync(ulong userId)
+        {
             return await Program.Client.Shards.First().Rest.GetUserAsync(userId);
         }
 
@@ -207,11 +231,13 @@ namespace MopsBot
         {
             if (!init)
             {
-                try{
+                try
+                {
                     await Program.Client.SetActivityAsync(new Game("Currently Restarting!", ActivityType.Playing));
                     await SendHeartbeat();
                     await Task.Delay(30000);
-                } catch {}
+                }
+                catch { }
 
                 int status = Enum.GetNames(typeof(BaseTracker.TrackerType)).Length;
                 DateTime LastGC = default(DateTime);
@@ -220,17 +246,19 @@ namespace MopsBot
                     try
                     {
                         //Collect garbage when over 2GB of RAM is used
-                        if(((System.Diagnostics.Process.GetCurrentProcess().WorkingSet64 / 1024) / 1024) > 2000 && (DateTime.UtcNow - LastGC).TotalMinutes > 2){
+                        if (((System.Diagnostics.Process.GetCurrentProcess().WorkingSet64 / 1024) / 1024) > 2000 && (DateTime.UtcNow - LastGC).TotalMinutes > 2)
+                        {
                             await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"GC triggered."));
                             System.Runtime.GCSettings.LargeObjectHeapCompactionMode = System.Runtime.GCLargeObjectHeapCompactionMode.CompactOnce;
                             System.GC.Collect();
                             LastGC = DateTime.UtcNow;
                         }
-                            
+
                         BaseTracker.TrackerType type = (BaseTracker.TrackerType)status++;
 
                         //Skip everything after GW2, as this is hidden
-                        if(type.ToString().Equals("GW2")){
+                        if (type.ToString().Equals("GW2"))
+                        {
                             status = Enum.GetNames(typeof(BaseTracker.TrackerType)).Length;
                             continue;
                         }
@@ -243,11 +271,14 @@ namespace MopsBot
                         //Trackers were not initialised yet, or status exceeded trackertypes
                         //Show servers instead
                         status = 0;
-                        try{
+                        try
+                        {
                             await UpdateServerCount();
-                        } catch {}
+                        }
+                        catch { }
                     }
-                    finally{
+                    finally
+                    {
                         await SendHeartbeat();
                     }
                     await Task.Delay(30000);
@@ -255,7 +286,8 @@ namespace MopsBot
             }
         }
 
-        public static async Task SendHeartbeat(){
+        public static async Task SendHeartbeat()
+        {
             var messageReport = string.Join(" ", CommandHandler.MessagesPerGuild.OrderByDescending(x => x.Value).Take(1).Select(x => $"Guild {Program.Client.GetGuild(x.Key).Name} ({x.Key}) sent {x.Value} messages."));
             await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Heartbeat. I am still alive :)\nRatio: {MopsBot.Module.Information.FailedRequests} failed vs {MopsBot.Module.Information.SucceededRequests} succeeded requests\nSpamcheck: {messageReport}"));
             CommandHandler.MessagesPerGuild = new Dictionary<ulong, int>();
@@ -267,8 +299,8 @@ namespace MopsBot
     {
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, Newtonsoft.Json.JsonSerializer serializer)
         {
-            return reader.Value != null 
-                ? base.ReadJson(reader, objectType, existingValue, serializer) 
+            return reader.Value != null
+                ? base.ReadJson(reader, objectType, existingValue, serializer)
                 : Tweetinvi.Models.Language.English;
         }
     }
