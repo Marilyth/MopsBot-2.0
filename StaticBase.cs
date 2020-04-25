@@ -62,35 +62,6 @@ namespace MopsBot
                 ServicePointManager.DefaultConnectionLimit = 100;
                 ServicePointManager.MaxServicePointIdleTime = 10000;
 
-                Task.Run(() =>
-                {
-                    try
-                    {
-                        WelcomeMessages = Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").FindSync(x => true).ToEnumerable().ToDictionary(x => x.GuildId);
-                    }
-                    catch { }
-                    Task.Delay(5000).Wait();
-                    try
-                    {
-                        ChannelJanitors = MopsBot.Data.Entities.ChannelJanitor.GetJanitors().Result;
-                    }
-                    catch { }
-                    Task.Delay(5000).Wait();
-                    try
-                    {
-                        ReactGiveaways = new ReactionGiveaway();
-                    }
-                    catch { }
-                    Task.Delay(5000).Wait();
-                    try
-                    {
-                        ReactRoleJoin = new ReactionRoleJoin();
-                    }
-                    catch { }
-                    //Task.Delay(5000).Wait();
-                    //Poll = new ReactionPoll();
-                });
-
                 Auth.SetUserCredentials(Program.Config["TwitterKey"], Program.Config["TwitterSecret"],
                                         Program.Config["TwitterToken"], Program.Config["TwitterAccessSecret"]);
                 TweetinviConfig.CurrentThreadSettings.TweetMode = TweetMode.Extended;
@@ -149,6 +120,15 @@ namespace MopsBot
                     Task.Delay((int)(60000 / Trackers.Count)).Wait();
                 }
 
+                try{
+                    ChannelJanitors = MopsBot.Data.Entities.ChannelJanitor.GetJanitors().Result;
+                    WelcomeMessages = Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").FindSync(x => true).ToEnumerable().ToDictionary(x => x.GuildId);
+                    ReactRoleJoin = new ReactionRoleJoin();
+                    ReactGiveaways = new ReactionGiveaway();
+                } catch (Exception e){
+                    Program.MopsLog(new LogMessage(LogSeverity.Error, "React init", $"Weird thing happened", e)).Wait();
+                }
+                
                 init = true;
 
             }
