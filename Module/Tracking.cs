@@ -97,6 +97,7 @@ namespace MopsBot.Module
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified TwitterUser, in the Channel you are calling this command in.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
             [TrackerLimit(30, TrackerType.Twitter)]
             public async Task trackTwitter(string twitterUser, [Remainder]string tweetNotification = "~Tweet Tweet~")
@@ -181,6 +182,7 @@ namespace MopsBot.Module
             [Command("ChangeChannel", RunMode = RunMode.Async)]
             [Summary("Changes the channel of the specified tracker from #FromChannel to the current channel")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [RequireBotPermission(ChannelPermission.EmbedLinks)]
             public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel)
             {
                 await ChangeChannelAsync(Name, FromChannel, TrackerType.Twitter, Context);
@@ -223,6 +225,7 @@ namespace MopsBot.Module
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified Osu player, in the Channel you are calling this command in.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
             public async Task trackOsu([Remainder]string OsuUser)
             {
@@ -297,6 +300,7 @@ namespace MopsBot.Module
             [Command("ChangeChannel", RunMode = RunMode.Async)]
             [Summary("Changes the channel of the specified tracker from #FromChannel to the current channel")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [RequireBotPermission(ChannelPermission.EmbedLinks)]
             public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel)
             {
                 await ChangeChannelAsync(Name, FromChannel, TrackerType.Osu, Context);
@@ -383,6 +387,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.ReadMessageHistory)]
             [RequireBotPermission(ChannelPermission.ManageMessages)]
+            [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
             [TrackerLimit(50, TrackerType.Twitch)]
             public async Task trackStreamer(string streamerName, [Remainder]string notificationMessage = "Stream went live!")
@@ -442,6 +447,7 @@ namespace MopsBot.Module
             [Command("ChangeChannel", RunMode = RunMode.Async)]
             [Summary("Changes the channel of the specified tracker from #FromChannel to the current channel")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [RequireBotPermission(ChannelPermission.EmbedLinks)]
             public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel)
             {
                 await ChangeChannelAsync(Name, FromChannel, TrackerType.Twitch, Context);
@@ -626,6 +632,7 @@ namespace MopsBot.Module
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified streamer's top clips every 30 minutes, in the Channel you are calling this command in.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
             [TrackerLimit(50, TrackerType.TwitchClip)]
             public async Task trackClips(string streamerName, [Remainder]string notificationMessage = "New trending clip found!")
@@ -697,6 +704,7 @@ namespace MopsBot.Module
             [Command("ChangeChannel", RunMode = RunMode.Async)]
             [Summary("Changes the channel of the specified tracker from #FromChannel to the current channel")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [RequireBotPermission(ChannelPermission.EmbedLinks)]
             public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel)
             {
                 await ChangeChannelAsync(Name, FromChannel, TrackerType.TwitchClip, Context);
@@ -711,6 +719,7 @@ namespace MopsBot.Module
             [Summary("Keeps track of the specified Subreddit, in the Channel you are calling this command in."
             + "\nYou can check how queries look like here https://www.reddit.com/wiki/search")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
             public async Task trackSubreddit(string subreddit, [Remainder]string query = null)
             {
@@ -790,6 +799,7 @@ namespace MopsBot.Module
             [Command("ChangeChannel", RunMode = RunMode.Async)]
             [Summary("Changes the channel of the specified tracker from #FromChannel to the current channel")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [RequireBotPermission(ChannelPermission.EmbedLinks)]
             public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel)
             {
                 await ChangeChannelAsync(Name, FromChannel, TrackerType.Reddit, Context);
@@ -803,6 +813,7 @@ namespace MopsBot.Module
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified Overwatch player, in the Channel you are calling this command right now.\nParameter: Username-Battletag")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
             public async Task trackOW(string owUser)
             {
@@ -868,6 +879,7 @@ namespace MopsBot.Module
             [Command("ChangeChannel", RunMode = RunMode.Async)]
             [Summary("Changes the channel of the specified tracker from #FromChannel to the current channel")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [RequireBotPermission(ChannelPermission.EmbedLinks)]
             public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel)
             {
                 await ChangeChannelAsync(Name, FromChannel, TrackerType.Overwatch, Context);
@@ -883,6 +895,7 @@ namespace MopsBot.Module
                      "graph:<location> adds the numeric value to a time/value graph\n" +
                      "always:<location> adds the value to the embed, regardless of whether it changed or not.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
             public async Task trackJson(string source, [Remainder]string paths)
             {
@@ -1002,6 +1015,7 @@ namespace MopsBot.Module
             [Command("ChangeChannel", RunMode = RunMode.Async)]
             [Summary("Changes the channel of the specified tracker from #FromChannel to the current channel")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [RequireBotPermission(ChannelPermission.EmbedLinks)]
             public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel)
             {
                 await ChangeChannelAsync(Name, FromChannel, TrackerType.JSON, Context);
@@ -1015,6 +1029,7 @@ namespace MopsBot.Module
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the stats of the OSRS player.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
             public async Task Track(string name, [Remainder]string notification = "")
             {
@@ -1093,6 +1108,7 @@ namespace MopsBot.Module
             [Command("ChangeChannel", RunMode = RunMode.Async)]
             [Summary("Changes the channel of the specified tracker from #FromChannel to the current channel")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [RequireBotPermission(ChannelPermission.EmbedLinks)]
             public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel)
             {
                 await ChangeChannelAsync(Name, FromChannel, TrackerType.OSRS, Context);
@@ -1102,6 +1118,7 @@ namespace MopsBot.Module
         [Group("HTML")]
         [RequireUserPermission(ChannelPermission.ManageChannels)]
         [RequireBotPermission(ChannelPermission.SendMessages)]
+        [RequireBotPermission(ChannelPermission.EmbedLinks)]
         [Ratelimit(1, 60, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
         public class HTML : InteractiveBase<ShardedCommandContext>
         {
@@ -1241,6 +1258,7 @@ namespace MopsBot.Module
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified RSS feed url")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
             [TrackerLimit(40, TrackerType.RSS)]
             public async Task TrackRSS(string url, string notification = "")
@@ -1308,6 +1326,7 @@ namespace MopsBot.Module
             [Command("ChangeChannel", RunMode = RunMode.Async)]
             [Summary("Changes the channel of the specified tracker from #FromChannel to the current channel")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [RequireBotPermission(ChannelPermission.EmbedLinks)]
             public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel)
             {
                 await ChangeChannelAsync(Name, FromChannel, TrackerType.RSS, Context);
@@ -1321,6 +1340,7 @@ namespace MopsBot.Module
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified steam user, in the Channel you are calling this command in.\nWill notify on game changes and achievements.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
             public async Task Track([Remainder]string SteamNameOrId)
             {
@@ -1381,6 +1401,7 @@ namespace MopsBot.Module
             [Command("ChangeChannel", RunMode = RunMode.Async)]
             [Summary("Changes the channel of the specified tracker from #FromChannel to the current channel")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [RequireBotPermission(ChannelPermission.EmbedLinks)]
             public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel)
             {
                 await ChangeChannelAsync(Name, FromChannel, TrackerType.Steam, Context);

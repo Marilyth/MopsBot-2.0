@@ -27,6 +27,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.ReadMessageHistory)]
             [RequireBotPermission(ChannelPermission.ManageMessages)]
+            [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
             [RequireUserVotepoints(2)]
             [TrackerLimit(20, TrackerType.YoutubeLive)]
@@ -86,6 +87,7 @@ namespace MopsBot.Module
             [Command("ChangeChannel", RunMode = RunMode.Async)]
             [Summary("Changes the channel of the specified tracker from #FromChannel to the current channel")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [RequireBotPermission(ChannelPermission.EmbedLinks)]
             public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel){
                 await Tracking.ChangeChannelAsync(Name, FromChannel, TrackerType.YoutubeLive, Context);
             }
@@ -100,6 +102,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.ReadMessageHistory)]
             [RequireBotPermission(ChannelPermission.ManageMessages)]
+            [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
             [RequireUserVotepoints(2)]
             [TrackerLimit(20, TrackerType.Mixer)]
@@ -160,6 +163,7 @@ namespace MopsBot.Module
             [Command("ChangeChannel", RunMode = RunMode.Async)]
             [Summary("Changes the channel of the specified tracker from #FromChannel to the current channel")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [RequireBotPermission(ChannelPermission.EmbedLinks)]
             public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel){
                 await Tracking.ChangeChannelAsync(Name, FromChannel, TrackerType.Mixer, Context);
             }
