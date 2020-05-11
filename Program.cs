@@ -41,6 +41,7 @@ namespace MopsBot
                 LogLevel = LogSeverity.Info,
                 //TotalShards = 2,
                 LargeThreshold = 50,
+                MessageCacheSize = 0,
                 AlwaysDownloadUsers = false,
             });
 
