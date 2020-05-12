@@ -37,6 +37,7 @@ namespace MopsBot.Api.Controllers
             }
             else
             {
+                await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Received a bad Twitch challenge, containing {string.Join("\n", parameters.Select(x => x.Key + ": " + string.Join(", ", x.Value)))}"));
                 return new BadRequestResult();
             }
         }

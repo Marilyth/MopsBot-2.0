@@ -121,7 +121,7 @@ namespace MopsBot.Data.Tracker
             {
                 if ((WebhookExpire - DateTime.Now).TotalMinutes < 60)
                 {
-                    await SubscribeWebhookAsync();
+                    await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Tried subscribing {Name} to Twitch webhooks:\n" + await SubscribeWebhookAsync()));
                 }
 
                 await CheckStreamerInfoAsync();
