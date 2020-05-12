@@ -50,7 +50,7 @@ namespace MopsBot.Data.Entities
             {
                 while (true)
                 {
-                    var messages = await (Program.Client.GetChannel(ChannelId) as ITextChannel).GetMessagesAsync().Flatten().Where(x => GetMessageTime(x) > JanitorBegin).OrderByDescending(x => GetMessageTime(x)).ToArray();
+                    var messages = await (Program.Client.GetChannel(ChannelId) as ITextChannel).GetMessagesAsync().Flatten().Where(x => GetMessageTime(x) > JanitorBegin).OrderByDescending(x => GetMessageTime(x)).ToArrayAsync();
                     var messagesToDelete = messages.Where(x => DateTimeOffset.UtcNow - GetMessageTime(x) > MessageDuration);
                     foreach (var message in messagesToDelete)
                     {
