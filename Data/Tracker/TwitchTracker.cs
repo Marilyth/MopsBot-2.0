@@ -100,8 +100,9 @@ namespace MopsBot.Data.Tracker
                               $"&hub.callback={Program.Config["ServerAddress"]}:5000/api/webhook/twitch" +
                               $"&hub.mode={(subscribe ? "subscribe" : "unsubscribe")}";
 
-                    var test = await MopsBot.Module.Information.PostURLAsync(url, headers:
-                        KeyValuePair.Create("Authorization", "Bearer " + Program.Config["TwitchToken"])
+                    var test = await MopsBot.Module.Information.PostURLAsync(url, "", 
+                        KeyValuePair.Create("Authorization", "Bearer " + Program.Config["TwitchToken"]),
+                        KeyValuePair.Create("client-id", Program.Config["Twitch"])
                     );
 
                     return test;
@@ -400,7 +401,8 @@ namespace MopsBot.Data.Tracker
             {
                 try
                 {
-                    Program.Config["TwitchToken"] = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(MopsBot.Module.Information.PostURLAsync($"https://id.twitch.tv/oauth2/token?client_id={Program.Config["Twitch"]}&client_secret={Program.Config["TwitchSecret"]}&grant_type=client_credentials").Result)["access_token"].ToString();
+                    var result = MopsBot.Module.Information.PostURLAsync($"https://id.twitch.tv/oauth2/token?client_id={Program.Config["Twitch"]}&client_secret={Program.Config["TwitchSecret"]}&grant_type=client_credentials").Result;
+                    Program.Config["TwitchToken"] = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(result)["access_token"].ToString();
                     Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Getting token succeeded."));
                 }
                 catch (Exception)
