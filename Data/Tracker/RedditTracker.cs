@@ -149,7 +149,12 @@ namespace MopsBot.Data.Tracker
 
             try
             {
-                e.ImageUrl = !redditPost.thumbnail.Equals("self") && !redditPost.thumbnail.Equals("default") ? redditPost.thumbnail : null;
+                if(!string.IsNullOrEmpty(redditPost.url) && redditPost.url.Contains(".jpg", StringComparison.CurrentCultureIgnoreCase) || redditPost.url.Contains(".png", StringComparison.CurrentCultureIgnoreCase)){
+                        e.ImageUrl = redditPost.url;
+                }
+                else if(!redditPost.thumbnail.Equals("self") && !redditPost.thumbnail.Equals("default") && !string.IsNullOrEmpty(redditPost.thumbnail)){
+                        e.ImageUrl = redditPost.thumbnail;
+                }
             }
             catch (Exception)
             {
