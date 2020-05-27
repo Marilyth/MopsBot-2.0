@@ -410,12 +410,12 @@ namespace MopsBot.Data
         private DateTime lastPlot;
         public string DrawPlot(bool returnPdf = false, string fileName = null, bool path = false)
         {
+            if (fileName == null)
+                fileName = $"{ID}plot";
+
             if ((DateTime.UtcNow - lastPlot).TotalMinutes > 1 || returnPdf || path)
             {
                 lastPlot = DateTime.UtcNow;
-
-                if (fileName == null)
-                    fileName = $"{ID}plot";
 
                 using (var stream = File.Create($"mopsdata//{fileName}.pdf"))
                 {
