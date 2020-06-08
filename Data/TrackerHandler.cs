@@ -16,6 +16,7 @@ namespace MopsBot.Data
 {
     public abstract class TrackerWrapper
     {
+        public abstract void PauseLoops(int minutes = 10);
         public abstract Task UpdateDBAsync(BaseTracker tracker);
         public abstract Task RemoveFromDBAsync(BaseTracker tracker);
         public abstract Task<bool> TryRemoveTrackerAsync(string name, ulong channelID);
@@ -98,9 +99,16 @@ namespace MopsBot.Data
                 nextUpdate = new System.Threading.Timer(LoopTrackersUpdate);
                 loopQueue = trackers.Where(x => (x.Value as BaseUpdatingTracker).ToUpdate.Count == 0).Select(x => x.Value).ToList();
                 updateQueue = trackers.Where(x => (x.Value as BaseUpdatingTracker).ToUpdate.Count > 0).Select(x => x.Value).ToList();
-                nextUpdate.Change(5000, updateInterval / (updateQueue.Count > 0 ? updateQueue.Count : 1));
             }
-            nextTracker.Change(5000, trackerInterval / (loopQueue.Count > 0 ? loopQueue.Count : 1));
+
+            PauseLoops(10);
+        }
+
+        public override void PauseLoops(int minutes){
+            nextTracker.Change(minutes * 60 * 1000, trackerInterval / (loopQueue.Count > 0 ? loopQueue.Count : 1));
+            
+            if(nextUpdate != null)
+                nextUpdate.Change(minutes * 60 * 1000, updateInterval / (updateQueue.Count > 0 ? updateQueue.Count : 1));
         }
 
         private int trackerTurn;
