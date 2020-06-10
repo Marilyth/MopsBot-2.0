@@ -101,7 +101,7 @@ namespace MopsBot.Data
                 updateQueue = trackers.Where(x => (x.Value as BaseUpdatingTracker).ToUpdate.Count > 0).Select(x => x.Value).ToList();
             }
 
-            PauseLoops(10);
+            PauseLoops(1);
         }
 
         public override void PauseLoops(int minutes){
