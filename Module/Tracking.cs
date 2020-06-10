@@ -37,12 +37,13 @@ namespace MopsBot.Module
             {"Mixer", ("name of the Mixer streamer", "https://cdn.discordapp.com/attachments/158166244493623296/681855363691053133/unknown.png")}
         };
 
-        [Command("Setup", RunMode=RunMode.Async)]
+        [Command("Setup", RunMode = RunMode.Async)]
         [Hide]
         [Summary("Helps the user set up the tracker they want.")]
         [RequireUserPermission(ChannelPermission.ManageChannels)]
         [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
-        public async Task Setup(){
+        public async Task Setup()
+        {
             await ReplyAsync($"Hello there, {Context.User.Username}!\nLet me guide you through your tracking setup:\n");
             await ReplyAsync($"First of all: What kind of tracker do you want to create?\nCopy & Paste one of these:```\n{string.Join("\n", Names.Keys)}```");
             string tracker = (await NextMessageAsync(timeout: new TimeSpan(0, 5, 0))).Content;
@@ -51,24 +52,29 @@ namespace MopsBot.Module
             await ReplyAsync($"To create a {type.ToString()}-Tracker you need the {Names[type.ToString()].Item1}.\nYou can find it like this: {Names[type.ToString()].Item2}");
             await ReplyAsync($"Please copy & paste it here after you found it!");
             string name = (await NextMessageAsync(timeout: new TimeSpan(0, 5, 0))).Content;
-            if(!CapSensitive.Any(x => x == type))
+            if (!CapSensitive.Any(x => x == type))
                 name = name.ToLower();
 
             var conditions = await Program.Handler.commands.Search($"{type.ToString()} Track").Commands.FirstOrDefault().CheckPreconditionsAsync(Context);
-            if(!conditions.IsSuccess){
+            if (!conditions.IsSuccess)
+            {
                 await ReplyAsync($"I am sorry, we failed due to:\n{conditions.ErrorReason}");
                 return;
             }
 
-            while(true){
-                try{
+            while (true)
+            {
+                try
+                {
                     await StaticBase.Trackers[type].AddTrackerAsync(name, Context.Channel.Id);
                     break;
-                } catch(Exception e){
+                }
+                catch (Exception e)
+                {
                     await ReplyAsync("**Error**: " + e.InnerException.Message);
                     await ReplyAsync($"Hmm, that didn't seem to work.\nRemember, you need to copy & paste the {Names[type.ToString()].Item1}, just like in the image above.\nTry it again:");
                     name = (await NextMessageAsync(timeout: new TimeSpan(0, 5, 0))).Content;
-                    if(!CapSensitive.Any(x => x == type))
+                    if (!CapSensitive.Any(x => x == type))
                         name = name.ToLower();
                 }
             }
@@ -78,10 +84,11 @@ namespace MopsBot.Module
             await ReplyAsync($"Now, whenever the tracker finds something new to send, I will send a notification message alongside it.\nWhat do you want the notification message to be?");
             string notification = (await NextMessageAsync(timeout: new TimeSpan(0, 5, 0))).Content;
             baseTracker.ChannelConfig[Context.Channel.Id]["Notification"] = notification;
-            
+
             await ReplyAsync($"And finally, where do you want the notifications to appear in?\nPlease mention a #channel:");
             ulong channel = ulong.Parse(string.Join("", (await NextMessageAsync(timeout: new TimeSpan(0, 5, 0))).Content.Skip(2).SkipLast(1)));
-            if(channel != Context.Channel.Id){
+            if (channel != Context.Channel.Id)
+            {
                 var currentConfig = baseTracker.ChannelConfig[Context.Channel.Id];
                 baseTracker.ChannelConfig[channel] = currentConfig;
                 await StaticBase.Trackers[type].TryRemoveTrackerAsync(baseTracker.Name, Context.Channel.Id);
@@ -100,7 +107,7 @@ namespace MopsBot.Module
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
             [TrackerLimit(30, TrackerType.Twitter)]
-            public async Task trackTwitter(string twitterUser, [Remainder]string tweetNotification = "~Tweet Tweet~")
+            public async Task trackTwitter(string twitterUser, [Remainder] string tweetNotification = "~Tweet Tweet~")
             {
                 twitterUser = twitterUser.ToLower().Replace("@", "");
                 using (Context.Channel.EnterTypingState())
@@ -131,7 +138,7 @@ namespace MopsBot.Module
             [Command("SetNotification")]
             [Summary("Sets the notification text that is used each time a new Main-Tweet is found.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(BaseTracker TwitterName, [Remainder]string notification = "")
+            public async Task SetNotification(BaseTracker TwitterName, [Remainder] string notification = "")
             {
                 TwitterName.GetLastCalledConfig(Context.Guild.Id)["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.Twitter].UpdateDBAsync(TwitterName);
@@ -141,7 +148,7 @@ namespace MopsBot.Module
             [Command("SetNonMainNotification")]
             [Summary("Sets the notification text that is used each time a new retweet or reply is found.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNonMainNotification(BaseTracker TwitterName, [Remainder]string notification = "")
+            public async Task SetNonMainNotification(BaseTracker TwitterName, [Remainder] string notification = "")
             {
                 var config = TwitterName.GetLastCalledConfig(Context.Guild.Id);
                 config[TwitterTracker.REPLYNOTIFICATION] = notification;
@@ -227,7 +234,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
-            public async Task trackOsu([Remainder]string OsuUser)
+            public async Task trackOsu([Remainder] string OsuUser)
             {
                 using (Context.Channel.EnterTypingState())
                 {
@@ -241,7 +248,7 @@ namespace MopsBot.Module
             [Command("UnTrack")]
             [Summary("Stops keeping track of the specified Osu player, in the Channel you are calling this command in.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task unTrackOsu([Remainder]BaseTracker OsuUser)
+            public async Task unTrackOsu([Remainder] BaseTracker OsuUser)
             {
                 if (await Trackers[BaseTracker.TrackerType.Osu].TryRemoveTrackerAsync(OsuUser.Name, OsuUser.LastCalledChannelPerGuild[Context.Guild.Id]))
                     await ReplyAsync("Stopped keeping track of " + OsuUser.Name + "'s plays!");
@@ -274,7 +281,7 @@ namespace MopsBot.Module
             [Command("SetNotification")]
             [Summary("Sets the notification text that is used each time a player gained pp.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(BaseTracker osuUser, [Remainder]string notification = "")
+            public async Task SetNotification(BaseTracker osuUser, [Remainder] string notification = "")
             {
                 osuUser.ChannelConfig[osuUser.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.Osu].UpdateDBAsync(osuUser);
@@ -316,7 +323,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
             [TrackerLimit(30, TrackerType.Youtube)]
-            public async Task trackYoutube(string channelID, [Remainder]string notificationMessage = "New Video")
+            public async Task trackYoutube(string channelID, [Remainder] string notificationMessage = "New Video")
             {
                 using (Context.Channel.EnterTypingState())
                 {
@@ -346,7 +353,7 @@ namespace MopsBot.Module
             [Command("SetNotification")]
             [Summary("Sets the notification text that is used each time a new video appears.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(BaseTracker channelID, [Remainder]string notification = "")
+            public async Task SetNotification(BaseTracker channelID, [Remainder] string notification = "")
             {
                 channelID.ChannelConfig[channelID.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.Youtube].UpdateDBAsync(channelID);
@@ -390,7 +397,7 @@ namespace MopsBot.Module
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
             [TrackerLimit(50, TrackerType.Twitch)]
-            public async Task trackStreamer(string streamerName, [Remainder]string notificationMessage = "Stream went live!")
+            public async Task trackStreamer(string streamerName, [Remainder] string notificationMessage = "Stream went live!")
             {
                 using (Context.Channel.EnterTypingState())
                 {
@@ -421,7 +428,7 @@ namespace MopsBot.Module
             [Command("SetNotification")]
             [Summary("Sets the notification text that is used each time a streamer goes live.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(BaseTracker streamer, [Remainder]string notification = "")
+            public async Task SetNotification(BaseTracker streamer, [Remainder] string notification = "")
             {
                 streamer.ChannelConfig[streamer.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.Twitch].UpdateDBAsync(streamer);
@@ -455,7 +462,7 @@ namespace MopsBot.Module
 
             [Command("GroupTrackers")]
             [Summary("Adds all trackers of the guild to a unified embed, in the channel you are calling this command in.")]
-            public async Task GroupTrackers([Remainder]SocketRole rank = null)
+            public async Task GroupTrackers([Remainder] SocketRole rank = null)
             {
                 await StaticBase.Trackers[BaseTracker.TrackerType.TwitchGroup].AddTrackerAsync(Context.Guild.Id.ToString(), Context.Channel.Id);
                 if (rank != null)
@@ -483,7 +490,7 @@ namespace MopsBot.Module
                 [Command("SetHostNotificationChannel")]
                 [Summary("Sets the channel which will receive host notification.")]
                 [RequireUserPermission(GuildPermission.ManageRoles)]
-                public async Task AddHostChannel([Remainder]SocketTextChannel channel)
+                public async Task AddHostChannel([Remainder] SocketTextChannel channel)
                 {
                     if (!StaticBase.TwitchGuilds.ContainsKey(Context.Guild.Id))
                     {
@@ -500,7 +507,7 @@ namespace MopsBot.Module
                 [Command("AddRankRole")]
                 [Summary("Adds a role to your rank system.")]
                 [RequireUserPermission(GuildPermission.ManageRoles)]
-                public async Task AddRank(int pointsNeeded, [Remainder]SocketRole role)
+                public async Task AddRank(int pointsNeeded, [Remainder] SocketRole role)
                 {
                     var rankRoles = StaticBase.TwitchGuilds[Context.Guild.Id].RankRoles;
 
@@ -516,7 +523,7 @@ namespace MopsBot.Module
                 [Command("RemoveRankRole")]
                 [Summary("Removes a role of your rank system.")]
                 [RequireUserPermission(GuildPermission.ManageRoles)]
-                public async Task RemoveRank([Remainder]SocketRole role)
+                public async Task RemoveRank([Remainder] SocketRole role)
                 {
                     var rankRoles = StaticBase.TwitchGuilds[Context.Guild.Id].RankRoles;
 
@@ -531,7 +538,7 @@ namespace MopsBot.Module
                 [Command("AddLiveRole")]
                 [Summary("Assigns a role assigned when somebody goes live.")]
                 [RequireUserPermission(GuildPermission.ManageRoles)]
-                public async Task AddLiveRole([Remainder]SocketRole role)
+                public async Task AddLiveRole([Remainder] SocketRole role)
                 {
                     StaticBase.TwitchGuilds[Context.Guild.Id].LiveRole = role.Id;
                     await StaticBase.TwitchGuilds[Context.Guild.Id].UpdateGuildAsync();
@@ -635,7 +642,7 @@ namespace MopsBot.Module
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
             [TrackerLimit(50, TrackerType.TwitchClip)]
-            public async Task trackClips(string streamerName, [Remainder]string notificationMessage = "New trending clip found!")
+            public async Task trackClips(string streamerName, [Remainder] string notificationMessage = "New trending clip found!")
             {
                 using (Context.Channel.EnterTypingState())
                 {
@@ -666,7 +673,7 @@ namespace MopsBot.Module
             [Command("SetNotification")]
             [Summary("Sets the notification text that is used each time a new clip is found.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(BaseTracker streamer, [Remainder]string notification = "")
+            public async Task SetNotification(BaseTracker streamer, [Remainder] string notification = "")
             {
                 streamer.ChannelConfig[streamer.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.TwitchClip].UpdateDBAsync(streamer);
@@ -721,7 +728,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
-            public async Task trackSubreddit(string subreddit, [Remainder]string query = null)
+            public async Task trackSubreddit(string subreddit, [Remainder] string query = null)
             {
                 using (Context.Channel.EnterTypingState())
                 {
@@ -734,7 +741,7 @@ namespace MopsBot.Module
             [Command("UnTrack")]
             [Summary("Stops tracking the specified Subreddit.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task unTrackSubreddit([Remainder]BaseTracker subreddit)
+            public async Task unTrackSubreddit([Remainder] BaseTracker subreddit)
             {
                 if (await Trackers[BaseTracker.TrackerType.Reddit].TryRemoveTrackerAsync(subreddit.Name, subreddit.LastCalledChannelPerGuild[Context.Guild.Id]))
                     await ReplyAsync("Stopped keeping track of " + subreddit.Name + "'s posts!");
@@ -774,7 +781,7 @@ namespace MopsBot.Module
             [Command("Check", RunMode = RunMode.Async)]
             [Summary("Returns the newest `limit` entries using the `subreddit` and `query` provided.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task Check(int limit, string subreddit, [Remainder]string query=null)
+            public async Task Check(int limit, string subreddit, [Remainder] string query = null)
             {
                 var result = await RedditTracker.checkReddit(subreddit, query, limit);
                 await MopsBot.Data.Interactive.MopsPaginator.CreatePagedMessage(Context.Channel.Id, result);
@@ -783,7 +790,7 @@ namespace MopsBot.Module
             [Command("ShowConfig")]
             [Hide]
             [Summary("Shows all the settings for this tracker, and their values")]
-            public async Task ShowConfig([Remainder]BaseTracker tracker)
+            public async Task ShowConfig([Remainder] BaseTracker tracker)
             {
                 await ReplyAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value))}```");
             }
@@ -791,7 +798,7 @@ namespace MopsBot.Module
             [Command("ChangeConfig", RunMode = RunMode.Async)]
             [Summary("Edit the Configuration for the tracker")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task ChangeConfig([Remainder]BaseTracker subreddit)
+            public async Task ChangeConfig([Remainder] BaseTracker subreddit)
             {
                 await ModifyConfig(this, subreddit, TrackerType.Reddit);
             }
@@ -853,7 +860,7 @@ namespace MopsBot.Module
             [Command("SetNotification")]
             [Summary("Sets the notification text that is used each time a players' stats changed.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(BaseTracker owUser, [Remainder]string notification = "")
+            public async Task SetNotification(BaseTracker owUser, [Remainder] string notification = "")
             {
                 owUser.ChannelConfig[owUser.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.Overwatch].UpdateDBAsync(owUser);
@@ -897,7 +904,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
-            public async Task trackJson(string source, [Remainder]string paths)
+            public async Task trackJson(string source, [Remainder] string paths)
             {
                 using (Context.Channel.EnterTypingState())
                 {
@@ -913,11 +920,11 @@ namespace MopsBot.Module
                      "always:<location> adds the value to the embed, regardless of whether it changed or not.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
-            public async Task trackExtended(string source, string body, [Remainder]string paths)
+            public async Task trackExtended(string source, string body, [Remainder] string paths)
             {
                 using (Context.Channel.EnterTypingState())
                 {
-                    await Trackers[BaseTracker.TrackerType.JSON].AddTrackerAsync(String.Join("|||", new string[] { source+"||"+body, paths }), Context.Channel.Id);
+                    await Trackers[BaseTracker.TrackerType.JSON].AddTrackerAsync(String.Join("|||", new string[] { source + "||" + body, paths }), Context.Channel.Id);
                     await ReplyAsync($"Keeping track of `{source}`'s attributes from now on!");
                 }
             }
@@ -925,7 +932,7 @@ namespace MopsBot.Module
             [Command("UnTrack")]
             [Summary("Stops tracking jsons.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task unTrackNews([Remainder]BaseTracker JsonSource)
+            public async Task unTrackNews([Remainder] BaseTracker JsonSource)
             {
                 if (await Trackers[BaseTracker.TrackerType.JSON].TryRemoveTrackerAsync(JsonSource.Name, JsonSource.LastCalledChannelPerGuild[Context.Guild.Id]))
                     await ReplyAsync($"Stopped keeping track of {JsonSource.Name}");
@@ -942,7 +949,7 @@ namespace MopsBot.Module
             [Command("SetNotification")]
             [Summary("Sets the notification text that is used each time a change in the json was found.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(BaseTracker jsonSource, [Remainder]string notification = "")
+            public async Task SetNotification(BaseTracker jsonSource, [Remainder] string notification = "")
             {
                 jsonSource.ChannelConfig[jsonSource.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.JSON].UpdateDBAsync(jsonSource);
@@ -952,7 +959,7 @@ namespace MopsBot.Module
             [Command("Check", RunMode = RunMode.Async)]
             [Summary("Checks the json for the specified paths, and returns the values")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task Check(string Url, [Remainder]string paths)
+            public async Task Check(string Url, [Remainder] string paths)
             {
                 var result = await JSONTracker.GetResults(Url, paths.Split("\n"));
                 var embed = new EmbedBuilder().WithCurrentTimestamp().WithColor(255, 227, 21).WithFooter(x =>
@@ -964,7 +971,7 @@ namespace MopsBot.Module
                 foreach (var cur in result)
                 {
                     var resultName = cur.Key.Contains("as:") ? cur.Key.Split(":").Last() : cur.Key.Split("->").Last();
-                    if(!cur.Key.Contains("image:"))
+                    if (!cur.Key.Contains("image:"))
                         embed.AddField(resultName, cur.Value);
                     else
                         embed.ThumbnailUrl = cur.Value;
@@ -976,7 +983,7 @@ namespace MopsBot.Module
             [Hide]
             [Summary("Checks the json for the specified paths, and returns the values")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task CheckExtended(string Url, string body, [Remainder]string paths)
+            public async Task CheckExtended(string Url, string body, [Remainder] string paths)
             {
                 var result = await JSONTracker.GetResults(Url, paths.Split("\n"), body);
                 var embed = new EmbedBuilder().WithCurrentTimestamp().WithColor(255, 227, 21).WithFooter(x =>
@@ -988,7 +995,7 @@ namespace MopsBot.Module
                 foreach (var cur in result)
                 {
                     var resultName = cur.Key.Contains("as:") ? cur.Key.Split(":").Last() : cur.Key.Split("->").Last();
-                    if(!cur.Key.Contains("image:"))
+                    if (!cur.Key.Contains("image:"))
                         embed.AddField(resultName, cur.Value);
                     else
                         embed.ThumbnailUrl = cur.Value;
@@ -1007,7 +1014,7 @@ namespace MopsBot.Module
             [Command("ChangeConfig", RunMode = RunMode.Async)]
             [Summary("Edit the Configuration for the tracker")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task ChangeConfig([Remainder]BaseTracker jsonSource)
+            public async Task ChangeConfig([Remainder] BaseTracker jsonSource)
             {
                 await ModifyConfig(this, jsonSource, TrackerType.JSON);
             }
@@ -1031,7 +1038,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
-            public async Task Track(string name, [Remainder]string notification = "")
+            public async Task Track(string name, [Remainder] string notification = "")
             {
                 name = name.ToLower();
                 using (Context.Channel.EnterTypingState())
@@ -1044,7 +1051,7 @@ namespace MopsBot.Module
             [Command("UnTrack")]
             [Summary("Stops tracking the player with the specified name.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task UnTrack([Remainder]BaseTracker name)
+            public async Task UnTrack([Remainder] BaseTracker name)
             {
                 if (await Trackers[BaseTracker.TrackerType.OSRS].TryRemoveTrackerAsync(name.Name, name.LastCalledChannelPerGuild[Context.Guild.Id]))
                     await ReplyAsync($"Stopped keeping track of {name.Name}!");
@@ -1052,7 +1059,7 @@ namespace MopsBot.Module
 
             [Command("GetStats")]
             [Summary("Gets all top 2kk stats of the specified player.")]
-            public async Task GetStats([Remainder]string name)
+            public async Task GetStats([Remainder] string name)
             {
                 await ReplyAsync("", embed: await OSRSTracker.GetStatEmbed(name));
             }
@@ -1066,7 +1073,7 @@ namespace MopsBot.Module
 
             [Command("GetItem")]
             [Summary("Gets information on an Item")]
-            public async Task GetItem([Remainder]string name)
+            public async Task GetItem([Remainder] string name)
             {
                 await ReplyAsync("", embed: await OSRSTracker.GetItemEmbed(name));
             }
@@ -1082,7 +1089,7 @@ namespace MopsBot.Module
             [Command("SetNotification")]
             [Summary("Sets the notification text that is used each time a level up takes place.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(BaseTracker name, [Remainder]string notification = "")
+            public async Task SetNotification(BaseTracker name, [Remainder] string notification = "")
             {
                 name.ChannelConfig[name.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.OSRS].UpdateDBAsync(name);
@@ -1124,7 +1131,7 @@ namespace MopsBot.Module
         {
             [Command("TrackRegex", RunMode = RunMode.Async)]
             [Summary("Tracks regex on a webpage. Use () around the text you want to track to signify a match.")]
-            public async Task TrackRegex(string website, [Remainder]string scrapeRegex)
+            public async Task TrackRegex(string website, [Remainder] string scrapeRegex)
             {
                 using (Context.Channel.EnterTypingState())
                 {
@@ -1183,7 +1190,7 @@ namespace MopsBot.Module
 
             [Command("TestRegex", RunMode = RunMode.Async)]
             [Summary("Tests the regex and returns it's value. Handy if you want to check your regex before tracking with it!")]
-            public async Task Test(string website, [Remainder]string scrapeRegex)
+            public async Task Test(string website, [Remainder] string scrapeRegex)
             {
                 using (Context.Channel.EnterTypingState())
                 {
@@ -1220,7 +1227,7 @@ namespace MopsBot.Module
 
             [Command("SetNotification", RunMode = RunMode.Async)]
             [Summary("Sets the notification for when the text of a regex match changes.\nRequires only the notification, paginator will guide you.")]
-            public async Task SetNotification([Remainder]string notification = "")
+            public async Task SetNotification([Remainder] string notification = "")
             {
                 using (Context.Channel.EnterTypingState())
                 {
@@ -1291,7 +1298,7 @@ namespace MopsBot.Module
             [Command("SetNotification")]
             [Summary("Sets the notification text that is used each time a new post was found.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(BaseTracker url, [Remainder]string notification = "")
+            public async Task SetNotification(BaseTracker url, [Remainder] string notification = "")
             {
                 url.ChannelConfig[url.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.RSS].UpdateDBAsync(url);
@@ -1342,7 +1349,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
-            public async Task Track([Remainder]string SteamNameOrId)
+            public async Task Track([Remainder] string SteamNameOrId)
             {
                 using (Context.Channel.EnterTypingState())
                 {
@@ -1358,7 +1365,7 @@ namespace MopsBot.Module
             [Command("UnTrack")]
             [Summary("Stops keeping track of the specified Steam user, in the Channel you are calling this command in.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task unTrackOsu([Remainder]BaseTracker SteamNameOrId)
+            public async Task unTrackOsu([Remainder] BaseTracker SteamNameOrId)
             {
                 if (await Trackers[BaseTracker.TrackerType.Steam].TryRemoveTrackerAsync(SteamNameOrId.Name, SteamNameOrId.LastCalledChannelPerGuild[Context.Guild.Id]))
                     await ReplyAsync("Stopped keeping track of " + SteamNameOrId.Name + "'s Steam data!");
@@ -1375,7 +1382,7 @@ namespace MopsBot.Module
             [Command("SetNotification")]
             [Summary("Sets the notification text that is used each time a new achievement was achieved.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(BaseTracker SteamNameOrId, [Remainder]string notification = "")
+            public async Task SetNotification(BaseTracker SteamNameOrId, [Remainder] string notification = "")
             {
                 SteamNameOrId.ChannelConfig[SteamNameOrId.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.Steam].UpdateDBAsync(SteamNameOrId);
@@ -1409,10 +1416,10 @@ namespace MopsBot.Module
         }
 
 
-        [Command("PruneTrackers", RunMode = RunMode.Async)]
+        [Command("PurgeTrackers", RunMode = RunMode.Async)]
         [RequireBotManage()]
         [Hide]
-        public async Task PruneTrackers(bool testing = true)
+        public async Task PurgeTrackers(bool testing = true)
         {
             using (Context.Channel.EnterTypingState())
             {
@@ -1432,6 +1439,53 @@ namespace MopsBot.Module
 
                                 pruneCount[trackerHandler.Key.ToString()]++;
                             }
+                        }
+                    }
+                }
+
+                await ReplyAsync($"```yaml\n{"TrackerType",-20}{"PruneCount"}\n{string.Join("\n", pruneCount.Select(x => $"{x.Key,-20}{x.Value,-3}"))}```");
+            }
+        }
+
+        [Command("PruneTrackers", RunMode = RunMode.Async)]
+        [RequireBotManage()]
+        [Hide]
+        public async Task PruneTrackers(int days = 45, bool testing = true)
+        {
+            using (Context.Channel.EnterTypingState())
+            {
+                Dictionary<string, int> pruneCount = new Dictionary<string, int>();
+
+                foreach (var trackerHandler in StaticBase.Trackers)
+                {
+                    pruneCount[trackerHandler.Key.ToString()] = 0;
+                    foreach (var tracker in trackerHandler.Value.GetTrackerSet())
+                    {
+                        double inactiveDays = (DateTime.Now - tracker.LastActivity).TotalDays;
+                        if (inactiveDays >= days)
+                        {
+                            if (!testing)
+                            {
+                                var embed = new EmbedBuilder();
+                                embed.WithCurrentTimestamp().WithFooter($"{trackerHandler.Key.ToString()}Tracker");
+                                embed.WithTitle($"Your tracker has been removed due to inactivity above {days} days!");
+                                embed.WithColor(Discord.Color.Blue);
+                                embed.WithDescription("Feel free to add this tracker again once the activity resumes.");
+                                embed.AddField("Name", string.Join("", tracker.Name.Take(1000)));
+                                embed.AddField("Inactivity", inactiveDays > 100000 ? "Ever since records began." : $"{(int)inactiveDays} days.");
+                                var builtEmbed = embed.Build();
+
+                                foreach (var channel in tracker.ChannelConfig.Keys.ToList())
+                                {
+                                    if (Program.Client.GetChannel(channel) != null)
+                                    {
+                                        await (Program.Client.GetChannel(channel) as ITextChannel).SendMessageAsync(embed: embed.Build());
+                                    }
+                                    await trackerHandler.Value.TryRemoveTrackerAsync(tracker.Name, channel);
+                                }
+                            }
+
+                            pruneCount[trackerHandler.Key.ToString()]++;
                         }
                     }
                 }
