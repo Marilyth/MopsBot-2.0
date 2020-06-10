@@ -199,7 +199,7 @@ namespace MopsBot.Data.Tracker
                         IsHosting = false;
                         CurGame = StreamerStatus.Stream.Game;
                         ViewerGraph.AddValue(CurGame, 0, StreamerStatus.Stream.CreatedAt.UtcDateTime);
-                        GameChanges.Add(Tuple.Create(StreamerStatus.Stream.Game, DateTime.UtcNow));
+                        GameChanges.Add(Tuple.Create(StreamerStatus.Stream.Game, StreamerStatus.Stream.CreatedAt.UtcDateTime));
 
                         if (OnLive != null) await OnLive.Invoke(this);
                         foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][ONLINE] && (isRerun ? (bool)ChannelConfig[x][TRACKRERUN] : true)).ToList())
