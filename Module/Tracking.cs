@@ -1479,7 +1479,11 @@ namespace MopsBot.Module
                                 {
                                     if (Program.Client.GetChannel(channel) != null)
                                     {
-                                        await (Program.Client.GetChannel(channel) as ITextChannel).SendMessageAsync(embed: embed.Build());
+                                        try{
+                                            await (Program.Client.GetChannel(channel) as ITextChannel).SendMessageAsync(embed: embed.Build());
+                                        } catch(Exception e){
+                                            await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Could not send prune message to {channel}", e));
+                                        }
                                     }
                                     await trackerHandler.Value.TryRemoveTrackerAsync(tracker.Name, channel);
                                 }
