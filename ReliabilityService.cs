@@ -29,6 +29,8 @@ namespace MopsBot
         private static readonly LogSeverity _debug = LogSeverity.Debug;
         private static readonly LogSeverity _info = LogSeverity.Info;
         private static readonly LogSeverity _critical = LogSeverity.Critical;
+
+        private static DateTime lastDisconnect;
         // --- End Configuration Section ---
 
         private readonly DiscordSocketClient _discord;
@@ -79,6 +81,10 @@ namespace MopsBot
                 await InfoAsync("Attempting to reset the client");
 
                 var timeout = Task.Delay(_timeout);
+                while((DateTime.UtcNow - lastDisconnect).TotalSeconds <= 30)
+                    await Task.Delay(30000);
+                    
+                lastDisconnect = DateTime.UtcNow;
                 var connect = _discord.StartAsync();
                 var task = await Task.WhenAny(timeout, connect);
 
