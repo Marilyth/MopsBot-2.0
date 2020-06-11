@@ -91,7 +91,7 @@ namespace MopsBot
                 if (task == timeout)
                 {
                     await CriticalAsync("Client reset timed out (task deadlocked?), killing process");
-                    FailFast();
+                    //FailFast();
                 }
                 else if (connect.IsFaulted)
                 {
