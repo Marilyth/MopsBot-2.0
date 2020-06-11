@@ -48,6 +48,7 @@ namespace MopsBot
             using (StreamReader sr = new StreamReader(new FileStream("mopsdata//Config.json", FileMode.Open)))
                 Config = JsonConvert.DeserializeObject<Dictionary<string, string>>(sr.ReadToEnd());
 
+
             Client.Log += ClientLog;
             Client.ShardReady += onShardReady;
 
@@ -95,24 +96,23 @@ namespace MopsBot
             {
                 Task.Run(() =>
                 {
-                    var map = new ServiceCollection().AddSingleton(Client)
-                                                     .AddSingleton(new InteractiveService(Client));
-
                     foreach(var shard in Client.Shards){
                         failsafe.Add(new ReliabilityService(shard, ClientLog));
                     }
-
-                    provider = map.BuildServiceProvider();
-
-                    ReactionHandler = new ReactionHandler();
-                    ReactionHandler.Install(provider);
-                    Handler = new CommandHandler();
-                    Handler.Install(provider).Wait();
                 });
             }
 
             if (shardsReady == Client.Shards.Count)
             {
+                var map = new ServiceCollection().AddSingleton(Client)
+                                                 .AddSingleton(new InteractiveService(Client));
+                provider = map.BuildServiceProvider();
+
+                ReactionHandler = new ReactionHandler();
+                ReactionHandler.Install(provider);
+                Handler = new CommandHandler();
+                Handler.Install(provider).Wait();
+
                 Task.Run(() =>
                 {
                     StaticBase.UpdateStatusAsync();
