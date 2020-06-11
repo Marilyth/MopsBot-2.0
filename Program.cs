@@ -48,11 +48,14 @@ namespace MopsBot
             using (StreamReader sr = new StreamReader(new FileStream("mopsdata//Config.json", FileMode.Open)))
                 Config = JsonConvert.DeserializeObject<Dictionary<string, string>>(sr.ReadToEnd());
 
-            await Client.LoginAsync(TokenType.Bot, Config["Discord"]);
-            await Client.StartAsync();
-
             Client.Log += ClientLog;
             Client.ShardReady += onShardReady;
+
+            await Client.LoginAsync(TokenType.Bot, Config["Discord"]);
+            foreach(var shard in Client.Shards){
+                await shard.StartAsync();
+                await Task.Delay(30000);
+            }
 
             await Task.Delay(-1);
         }
