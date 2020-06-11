@@ -626,7 +626,8 @@ namespace MopsBot.Module
                  .WithColor(Discord.Color.Blue)
                  .WithAuthor(async x =>
                  {
-                     x.IconUrl = Context.Client.GetGuild(435919579005321237).IconUrl;
+                     //Don't require support server shard to be online for help. This failing actually kills Mops.
+                     x.IconUrl = "https://cdn.discordapp.com/icons/435919579005321237/3e995c6b3df5776e262d8ce4a2c514c2.jpg";//Context.Client.GetGuild(435919579005321237).IconUrl;
                      x.Name = "Click to join the Support Server!";
                      x.Url = "https://discord.gg/wZFE2Zs";
                  });
