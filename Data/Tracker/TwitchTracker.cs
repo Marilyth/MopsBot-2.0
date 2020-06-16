@@ -158,7 +158,7 @@ namespace MopsBot.Data.Tracker
 
                             var pdf = ViewerGraph.DrawPlot(true, $"{Name}-{DateTime.UtcNow.ToString("MM-dd-yy_hh-mm")}");
                             foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][SENDPDF]).ToList())
-                                await (Program.Client.GetChannel(channel) as SocketTextChannel).SendFileAsync(pdf, "Graph PDF for personal use:");
+                                await (Program.Client.GetChannel(channel) as SocketTextChannel)?.SendFileAsync(pdf, "Graph PDF for personal use:");
                             File.Delete(pdf);
 
                             ViewerGraph?.Dispose();
