@@ -81,7 +81,7 @@ namespace MopsBot
                 await InfoAsync("Attempting to reset the client");
 
                 var timeout = Task.Delay(_timeout);
-                while((DateTime.UtcNow - lastDisconnect).TotalSeconds <= 30)
+                while((DateTime.UtcNow - lastDisconnect).TotalSeconds <= 30 || StaticBase.GetMopsRAM() > 2200)
                     await Task.Delay(30000);
                     
                 lastDisconnect = DateTime.UtcNow;

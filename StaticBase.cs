@@ -44,6 +44,7 @@ namespace MopsBot
         public static Dictionary<ulong, MopsBot.Data.Entities.TwitchUser> TwitchUsers;
         public static Dictionary<ulong, MopsBot.Data.Entities.TwitchGuild> TwitchGuilds;
         public static Dictionary<ulong, MopsBot.Data.Entities.ChannelJanitor> ChannelJanitors;
+        public static double GetMopsRAM() => ((System.Diagnostics.Process.GetCurrentProcess().WorkingSet64 / 1024) / 1024);
 
         public static bool init = false;
 
@@ -160,21 +161,23 @@ namespace MopsBot
         /// <returns>A Task that sets the activity</returns>
         public static async Task UpdateServerCount()
         {
-            await Program.Client.SetActivityAsync(new Game($"{Program.Client.Guilds.Count} servers", ActivityType.Watching));
+            if(Program.Client.LoginState == LoginState.LoggedIn){
+                await Program.Client.SetActivityAsync(new Game($"{Program.Client.Guilds.Count} servers", ActivityType.Watching));
 
-            try
-            {
-                if (Program.Client.CurrentUser.Id == 305398845389406209)
-                    await DiscordBotList.UpdateStats(Program.Client.Guilds.Count);
-            }
-            catch (Exception e)
-            {
-                await Program.MopsLog(new LogMessage(LogSeverity.Error, "", "discord bot list api failed", e));
+                try
+                {
+                    if (Program.Client.CurrentUser.Id == 305398845389406209)
+                        await DiscordBotList.UpdateStats(Program.Client.Guilds.Count);
+                }
+                catch (Exception e)
+                {
+                    await Program.MopsLog(new LogMessage(LogSeverity.Error, "", "discord bot list api failed", e));
+                }
             }
 
             await SendHeartbeat();
             await Task.Delay(30000);
-            foreach (var client in Program.Client.Shards)
+            foreach (var client in Program.Client.Shards.Where(x => x.LoginState == LoginState.LoggedIn))
                 await client.SetActivityAsync(new Game($"{client.Latency}ms Latency", ActivityType.Listening));
         }
 
@@ -217,7 +220,9 @@ namespace MopsBot
             {
                 try
                 {
-                    await Program.Client.SetActivityAsync(new Game("Currently Restarting!", ActivityType.Playing));
+                    if(Program.Client.LoginState == LoginState.LoggedIn)
+                        await Program.Client.SetActivityAsync(new Game("Currently Restarting!", ActivityType.Playing));
+
                     await SendHeartbeat();
                     await Task.Delay(30000);
                 }
@@ -230,7 +235,7 @@ namespace MopsBot
                     try
                     {
                         //Collect garbage when over 2GB of RAM is used
-                        if (((System.Diagnostics.Process.GetCurrentProcess().WorkingSet64 / 1024) / 1024) > 2000 && (DateTime.UtcNow - LastGC).TotalMinutes > 2)
+                        if (((System.Diagnostics.Process.GetCurrentProcess().WorkingSet64 / 1024) / 1024) > 2200 && (DateTime.UtcNow - LastGC).TotalMinutes > 1)
                         {
                             await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"GC triggered."));
                             System.Runtime.GCSettings.LargeObjectHeapCompactionMode = System.Runtime.GCLargeObjectHeapCompactionMode.CompactOnce;
@@ -248,7 +253,9 @@ namespace MopsBot
                         }
 
                         var trackerCount = Trackers[type].GetTrackers().Count;
-                        await Program.Client.SetActivityAsync(new Game($"{trackerCount} {type.ToString()} Trackers", ActivityType.Watching));
+
+                        if(Program.Client.LoginState == LoginState.LoggedIn)
+                            await Program.Client.SetActivityAsync(new Game($"{trackerCount} {type.ToString()} Trackers", ActivityType.Watching));
                     }
                     catch
                     {

@@ -52,10 +52,16 @@ namespace MopsBot
             Client.Log += ClientLog;
             Client.ShardReady += onShardReady;
 
+            Task.Run(()=>{
+                StaticBase.UpdateStatusAsync();
+            });
+
             await Client.LoginAsync(TokenType.Bot, Config["Discord"]);
             foreach(var shard in Client.Shards){
                 await shard.StartAsync();
-                await Task.Delay(30000);
+                do{
+                    await Task.Delay(30000);
+                } while(StaticBase.GetMopsRAM() > 2200);
             }
 
             await Task.Delay(-1);
@@ -84,14 +90,6 @@ namespace MopsBot
             shardsReady++;
             await MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Shard {shardsReady} is ready."));
 
-            if((DateTime.UtcNow - LastGC).TotalMinutes > 1 && (((System.Diagnostics.Process.GetCurrentProcess().WorkingSet64 / 1024) / 1024) > 2000
-                || shardsReady == Client.Shards.Count)){
-                LastGC = DateTime.UtcNow;
-                await MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Shard {shardsReady} caused GC."));
-                System.Runtime.GCSettings.LargeObjectHeapCompactionMode = System.Runtime.GCLargeObjectHeapCompactionMode.CompactOnce;
-                System.GC.Collect();
-            }
-
             if (shardsReady == 1)
             {
                 Task.Run(() =>
@@ -115,7 +113,6 @@ namespace MopsBot
 
                 Task.Run(() =>
                 {
-                    StaticBase.UpdateStatusAsync();
                     StaticBase.initTracking();
                 });
             }
