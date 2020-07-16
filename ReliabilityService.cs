@@ -71,7 +71,8 @@ namespace MopsBot
 
             return Task.CompletedTask;
         }
-
+        
+        private object resetLock = new object();
         private async Task CheckStateAsync()
         {
             // Client reconnected, no need to reset
@@ -81,10 +82,14 @@ namespace MopsBot
                 await InfoAsync("Attempting to reset the client");
 
                 var timeout = Task.Delay(_timeout);
-                while((DateTime.UtcNow - lastDisconnect).TotalSeconds <= 30 || StaticBase.GetMopsRAM() > 2200)
-                    await Task.Delay(30000);
+
+                lock(resetLock){
+                    while((DateTime.UtcNow - lastDisconnect).TotalSeconds <= 30 || StaticBase.GetMopsRAM() > 2200)
+                        Task.Delay(30000).Wait();
                     
-                lastDisconnect = DateTime.UtcNow;
+                    lastDisconnect = DateTime.UtcNow;
+                }
+                
                 var connect = _discord.StartAsync();
                 var task = await Task.WhenAny(timeout, connect);
 
