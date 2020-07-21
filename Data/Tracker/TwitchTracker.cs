@@ -100,7 +100,7 @@ namespace MopsBot.Data.Tracker
                               $"&hub.callback={Program.Config["ServerAddress"]}:5000/api/webhook/twitch" +
                               $"&hub.mode={(subscribe ? "subscribe" : "unsubscribe")}";
 
-                    var test = await MopsBot.Module.Information.PostURLAsync(url, "", 
+                    var test = await MopsBot.Module.Information.PostURLAsync(url, "",
                         KeyValuePair.Create("Authorization", "Bearer " + Program.Config["TwitchToken"]),
                         KeyValuePair.Create("client-id", Program.Config["Twitch"])
                     );
@@ -141,8 +141,9 @@ namespace MopsBot.Data.Tracker
                 StreamerStatus = await streamerInformation();
                 bool isStreaming = StreamerStatus.Stream.Channel != null && (StreamerStatus.Stream.BroadcastPlatform.Contains("other") ? ChannelConfig.Any(x => (bool)x.Value[TRACKRERUN]) : true);
                 bool isRerun = StreamerStatus.Stream?.BroadcastPlatform?.Contains("other") ?? false;
-                
-                if(!timerChanged && !IsOnline && (WebhookExpire - DateTime.Now).TotalMinutes >= 60){
+
+                if (!timerChanged && !IsOnline && (WebhookExpire - DateTime.Now).TotalMinutes >= 60)
+                {
                     //SetTimer(3600000, StaticBase.ran.Next(5000, 3600000));
                     timerChanged = true;
                 }
@@ -156,10 +157,17 @@ namespace MopsBot.Data.Tracker
                             TimeoutCount = 0;
                             IsOnline = false;
 
-                            var pdf = ViewerGraph.DrawPlot(true, $"{Name}-{DateTime.UtcNow.ToString("MM-dd-yy_hh-mm")}");
-                            foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][SENDPDF]).ToList())
-                                await (Program.Client.GetChannel(channel) as SocketTextChannel)?.SendFileAsync(pdf, "Graph PDF for personal use:");
-                            File.Delete(pdf);
+                            try
+                            {
+                                var pdf = ViewerGraph.DrawPlot(true, $"{Name}-{DateTime.UtcNow.ToString("MM-dd-yy_hh-mm")}");
+                                foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][SENDPDF]).ToList())
+                                    await (Program.Client.GetChannel(channel) as SocketTextChannel)?.SendFileAsync(pdf, "Graph PDF for personal use:");
+                                File.Delete(pdf);
+                            }
+                            catch (Exception e)
+                            {
+                                await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $" error sending graph by {Name}", e));
+                            }
 
                             ViewerGraph?.Dispose();
                             ViewerGraph = null;
@@ -227,7 +235,7 @@ namespace MopsBot.Data.Tracker
                             await OnMinorChangeTracked(channel, $"{Name} switched games to **{CurGame}**");
                     }
 
-                    if(ChannelConfig.Any(x => (bool)x.Value[SHOWGRAPH]))
+                    if (ChannelConfig.Any(x => (bool)x.Value[SHOWGRAPH]))
                         await ModifyAsync(x => x.ViewerGraph.AddValue(CurGame, StreamerStatus.Stream.Viewers));
 
                     foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][SHOWEMBED] && (isRerun ? (bool)ChannelConfig[x][TRACKRERUN] : true)).ToList())
@@ -314,7 +322,7 @@ namespace MopsBot.Data.Tracker
         public Embed createEmbed(bool largeThumbnail = false, bool showChat = false, bool showVod = false, bool showGraph = false)
         {
             Channel streamer = StreamerStatus.Stream.Channel;
-            if(showGraph)
+            if (showGraph)
                 ViewerGraph.SetMaximumLine();
 
             EmbedBuilder e = new EmbedBuilder();
@@ -372,16 +380,20 @@ namespace MopsBot.Data.Tracker
             footer.Text = "Twitch";
             e.Footer = footer;
 
-            if(largeThumbnail){
+            if (largeThumbnail)
+            {
                 e.ImageUrl = $"{StreamerStatus.Stream.Preview.Medium}?rand={StaticBase.ran.Next(0, 99999999)}";
-                if(showGraph)
+                if (showGraph)
                     e.ThumbnailUrl = ViewerGraph.DrawPlot();
-            }else{
+            }
+            else
+            {
                 e.ThumbnailUrl = $"{StreamerStatus.Stream.Preview.Medium}?rand={StaticBase.ran.Next(0, 99999999)}";
-                if(showGraph)
+                if (showGraph)
                     e.ImageUrl = ViewerGraph.DrawPlot();
             }
-            if(!showGraph){
+            if (!showGraph)
+            {
                 e.AddField("Viewers", StreamerStatus.Stream.Viewers, true);
                 e.AddField("Game", StreamerStatus.Stream.Game, true);
             }
