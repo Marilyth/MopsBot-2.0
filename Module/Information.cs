@@ -101,8 +101,8 @@ namespace MopsBot.Module
             }
         }
 
-        [Command("Invite")]
-        [Summary("Provides link to make me join your Server")]
+        /*[Command("Invite")]
+        [Summary("Provides a link to make me join your Server")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public async Task joinServer()
         {
@@ -115,7 +115,7 @@ namespace MopsBot.Module
         public async Task Vote()
         {
             await ReplyAsync($"https://discordbots.org/bot/{Program.Client.CurrentUser.Id}/vote");
-        }
+        }*/
 
         [Command("Define", RunMode = RunMode.Async)]
         [Summary("Searches dictionaries for a definition of the specified word or expression")]

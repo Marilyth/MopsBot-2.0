@@ -132,7 +132,7 @@ namespace MopsBot.Api.Controllers
             return new OkResult();
         }
 
-        [HttpPost("dbl")]
+        /*[HttpPost("dbl")]
         public async Task<IActionResult> VoteWebhookReceived()
         {
             string body = new StreamReader(Request.Body).ReadToEnd();
@@ -157,7 +157,7 @@ namespace MopsBot.Api.Controllers
             }
 
             return new OkResult();
-        }
+        }*/
 
         public static MopsBot.Data.Tracker.APIResults.Youtube.YoutubeNotification ConvertAtomToSyndication(Stream stream)
         {

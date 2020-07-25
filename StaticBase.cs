@@ -30,7 +30,7 @@ namespace MopsBot
         public static MongoClient DatabaseClient = new MongoClient($"{Program.Config["DatabaseURL"]}");
         public static IMongoDatabase Database = DatabaseClient.GetDatabase("Mops");
         public static readonly System.Net.Http.HttpClient HttpClient = new System.Net.Http.HttpClient();
-        public static AuthDiscordBotListApi DiscordBotList = new AuthDiscordBotListApi(305398845389406209, Program.Config["DiscordBotListKey"]);
+        //public static AuthDiscordBotListApi DiscordBotList = new AuthDiscordBotListApi(305398845389406209, Program.Config["DiscordBotListKey"]);
         public static Random ran = new Random();
         public static List<string> Playlist = new List<string>();
         [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
@@ -163,7 +163,7 @@ namespace MopsBot
             if(Program.Client.LoginState == LoginState.LoggedIn){
                 await Program.Client.SetActivityAsync(new Game($"{Program.Client.Guilds.Count} servers", ActivityType.Watching));
 
-                try
+                /*try
                 {
                     if (Program.Client.CurrentUser.Id == 305398845389406209)
                         await DiscordBotList.UpdateStats(Program.Client.Guilds.Count);
@@ -171,7 +171,7 @@ namespace MopsBot
                 catch (Exception e)
                 {
                     await Program.MopsLog(new LogMessage(LogSeverity.Error, "", "discord bot list api failed", e));
-                }
+                }*/
             }
 
             await SendHeartbeat();
@@ -180,7 +180,7 @@ namespace MopsBot
                 await client.SetActivityAsync(new Game($"{client.Latency}ms Latency", ActivityType.Listening));
         }
 
-        public static async Task UserVoted(ulong userId)
+        /*public static async Task UserVoted(ulong userId)
         {
             var user = await GetUserAsync(userId);
             await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"User {user.ToString()}({userId}) voted. Adding 10 VP to balance!"));
@@ -194,7 +194,7 @@ namespace MopsBot
             {
                 await Program.MopsLog(new LogMessage(LogSeverity.Error, "", "messaging voter failed", e));
             }
-        }
+        }*/
 
         public static async Task<SocketGuildUser> GetGuildUserAsync(ulong guildId, ulong userId)
         {
