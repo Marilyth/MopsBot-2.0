@@ -209,6 +209,7 @@ namespace MopsBot.Data.Tracker
 
                 if (!isStreaming)
                 {
+                    await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Stream went offline for {Name}, investigate please:\n{JsonConvert.SerializeObject(StreamInfo)}"));
                     VideoId = null;
                     //SetTimer(900000);
                     try{
