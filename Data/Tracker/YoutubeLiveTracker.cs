@@ -106,14 +106,14 @@ namespace MopsBot.Data.Tracker
         public static async Task<string> scrapeLivestreamId(string channelId)
         {
             var html = await MopsBot.Module.Information.GetURLAsync($"https://www.youtube.com/channel/{channelId}/videos");
-            var videoSegment = html.Split("Jetzt live").FirstOrDefault();
+            var videoSegment = html.Split("viewCountText\":{\"runs", 2).LastOrDefault();
             if (videoSegment == null || html.Length == videoSegment.Length)
             {
                 return null;
             }
             else
             {
-                videoSegment = videoSegment.Split("/watch?v=").LastOrDefault();
+                videoSegment = videoSegment.Split("/watch?v=", 2).LastOrDefault();
                 var videoId = videoSegment.Split("\"").FirstOrDefault();
                 return videoId;
             }
