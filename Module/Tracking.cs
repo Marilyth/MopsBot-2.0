@@ -1430,6 +1430,16 @@ namespace MopsBot.Module
                     pruneCount[trackerHandler.Key.ToString()] = 0;
                     foreach (var tracker in trackerHandler.Value.GetTrackerSet())
                     {
+                        //Tracker empty due to race conditions
+                        if(tracker.ChannelConfig.Count == 0){
+                            pruneCount[trackerHandler.Key.ToString()]++;
+                            if(!testing){
+                                await trackerHandler.Value.AddTrackerAsync(tracker.Name, 158166244493623296);
+                                await trackerHandler.Value.TryRemoveTrackerAsync(tracker.Name, 158166244493623296);
+                            }
+                            continue;
+                        }
+
                         foreach (var channel in tracker.ChannelConfig.Keys.ToList())
                         {
                             if (Program.Client.GetChannel(channel) == null)
