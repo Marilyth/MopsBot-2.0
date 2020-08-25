@@ -134,7 +134,8 @@ namespace MopsBot
                         builder.AllowAnyOrigin()
                                .AllowAnyHeader()
                                .AllowAnyMethod()
-                               .AllowCredentials();
+                               .AllowCredentials()
+                               .SetIsOriginAllowed(hostName => true);
                     })))
                 .UseKestrel()
                 .UseContentRoot(Directory.GetCurrentDirectory())
