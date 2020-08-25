@@ -1161,7 +1161,7 @@ namespace MopsBot.Module
 
                         //Find out position of text, and replace it with wild characters
                         var match = Regex.Match(unescapedMatchString, $@">[^<>]*?({escapedTextToTrack})[^<>]*?<", RegexOptions.Singleline);
-                        int position = match.Groups.First(x => x.Value.Equals(textToTrack)).Index;
+                        int position = match.Groups.Values.First(x => x.Value.Equals(textToTrack)).Index;
                         string scrapeRegex = unescapedMatchString.Remove(position, textToTrack.Length).Insert(position, $@"\(\[^<>\]\*\?\)");
 
                         //Make any additional occurences of text in context wild characters

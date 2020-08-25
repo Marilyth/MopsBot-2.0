@@ -121,14 +121,14 @@ namespace MopsBot.Data.Tracker
         {
             var html = await Module.Information.GetURLAsync(Name.Split("|||")[0]);
             var match = System.Text.RegularExpressions.Regex.Match(html, Regex, System.Text.RegularExpressions.RegexOptions.Singleline);
-            return match.Groups.Last().Value;
+            return match.Groups.Values.Last().Value;
         }
 
         public static async Task<string> FetchData(string expression)
         {
             var html = await Module.Information.GetURLAsync(expression.Split("|||")[0]);
             var match = System.Text.RegularExpressions.Regex.Match(html, expression.Split("|||")[1], System.Text.RegularExpressions.RegexOptions.Singleline);
-            return match.Groups.Last().Value;
+            return match.Groups.Values.Last().Value;
         }
 
         public static async Task<System.Text.RegularExpressions.MatchCollection> FetchAllData(string expression)
