@@ -59,8 +59,6 @@ namespace MopsBot.Data.Tracker
             }
 
             addUser();
-
-            SetTimer(1800000);
         }
 
         public async override void PostChannelAdded(ulong channelId)
@@ -72,11 +70,9 @@ namespace MopsBot.Data.Tracker
 
             ChannelConfig[channelId][RETWEETNOTIFICATION] = ChannelConfig[channelId]["Notification"];
             ChannelConfig[channelId][REPLYNOTIFICATION] = ChannelConfig[channelId]["Notification"];
-
-            await UpdateTracker();
         }
 
-        protected async override void CheckForChange_Elapsed(object stateinfo)
+        public async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
             {
@@ -86,7 +82,7 @@ namespace MopsBot.Data.Tracker
                     await checkMissedTweets();
                 }
 
-                checkForChange.Dispose();
+                //checkForChange.Dispose();
             }
             catch (Exception e)
             {
@@ -235,12 +231,17 @@ namespace MopsBot.Data.Tracker
             return e.Build();
         }
 
+        private static bool restarting;
         public static async Task RestartStream()
         {
-            await Task.Delay(5000);
-            if (STREAM.StreamState == StreamState.Stop)
-            {
-                STREAM.StartStreamMatchingAllConditionsAsync();
+            if(!restarting){
+                restarting = true;
+                await Task.Delay(5000);
+                if (STREAM.StreamState == StreamState.Stop)
+                {
+                    STREAM.StartStreamMatchingAllConditionsAsync();
+                }
+                restarting = false;
             }
         }
 

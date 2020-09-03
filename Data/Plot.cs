@@ -311,12 +311,18 @@ namespace MopsBot.Data
 
         [BsonId]
         public string ID;
+        public string xName, yName, format;
         public bool MultipleLines;
+        public bool? RelativeTime;
 
         public DatePlot(string name, string xName = "x", string yName = "y", string format = "HH:mm", bool relativeTime = true, bool multipleLines = false)
         {
             ID = name;
             MultipleLines = multipleLines;
+            this.xName = xName;
+            this.yName = yName;
+            this.format = format;
+            this.RelativeTime = relativeTime;
             //PlotPoints = new List<KeyValuePair<string, double>>();
             PlotDataPoints = new List<KeyValuePair<string, KeyValuePair<double, double>>>();
             InitPlot(xName, yName, format, relative: relativeTime);
@@ -324,6 +330,11 @@ namespace MopsBot.Data
 
         public void InitPlot(string xAxis = "Time", string yAxis = "Viewers", string format = "HH:mm", bool relative = true)
         {
+            if (RelativeTime == null) RelativeTime = relative;
+            if (xName == null) xName = xAxis;
+            if (yName == null) yName = yAxis;
+            if (this.format == null) this.format = format;
+
             if (PlotDataPoints == null) PlotDataPoints = new List<KeyValuePair<string, KeyValuePair<double, double>>>();
 
             viewerChart = new PlotModel();
@@ -333,7 +344,7 @@ namespace MopsBot.Data
             {
                 Position = OxyPlot.Axes.AxisPosition.Left,
                 TicklineColor = OxyColor.FromRgb(125, 125, 155),
-                Title = yAxis,
+                Title = yName,
                 FontSize = 26,
                 TitleFontSize = 26,
                 AxislineThickness = 3,
@@ -351,7 +362,7 @@ namespace MopsBot.Data
             {
                 Position = OxyPlot.Axes.AxisPosition.Bottom,
                 TicklineColor = OxyColor.FromRgb(125, 125, 155),
-                Title = xAxis,
+                Title = xName,
                 FontSize = 26,
                 TitleFontSize = 26,
                 AxislineThickness = 3,
@@ -362,7 +373,7 @@ namespace MopsBot.Data
                 TitleFontWeight = 700,
                 AxislineStyle = LineStyle.Solid,
                 AxislineColor = OxyColor.FromRgb(125, 125, 155),
-                StringFormat = format
+                StringFormat = this.format
             };
 
             viewerChart.Axes.Add(valueAxisY);
@@ -385,8 +396,8 @@ namespace MopsBot.Data
                 StartTime = DateTimeAxis.ToDateTime(PlotDataPoints.First().Value.Key);
                 foreach (var dataPoint in PlotDataPoints)
                 {
-                    if (!MultipleLines) AddValue(dataPoint.Key, dataPoint.Value.Value, DateTimeAxis.ToDateTime(dataPoint.Value.Key), false, relative);
-                    else AddValueSeperate(dataPoint.Key, dataPoint.Value.Value, DateTimeAxis.ToDateTime(dataPoint.Value.Key), false, relative);
+                    if (!MultipleLines) AddValue(dataPoint.Key, dataPoint.Value.Value, DateTimeAxis.ToDateTime(dataPoint.Value.Key), false);
+                    else AddValueSeperate(dataPoint.Key, dataPoint.Value.Value, DateTimeAxis.ToDateTime(dataPoint.Value.Key), false);
                 }
             }
         }
@@ -395,49 +406,64 @@ namespace MopsBot.Data
         /// Saves the plot as a .png and returns the URL.
         /// </summary>
         /// <returns>The URL</returns>
-        public string DrawPlot(bool returnPdf = false, string fileName = null)
+        //Don't redraw if only 1 minute old
+        private DateTime lastPlot;
+        public string DrawPlot(bool returnPdf = false, string fileName = null, bool path = false)
         {
-            if(fileName == null)
+            if (fileName == null)
                 fileName = $"{ID}plot";
-            using (var stream = File.Create($"mopsdata//{fileName}.pdf"))
-            {
-                var pdfExporter = new PdfExporter { Width = 800, Height = 400 };
-                pdfExporter.Export(viewerChart, stream);
-            }
 
-            if (!returnPdf)
+            if ((DateTime.UtcNow - lastPlot).TotalMinutes > 1 || returnPdf || path)
             {
-                using (var prc = new System.Diagnostics.Process())
+                lastPlot = DateTime.UtcNow;
+
+                using (var stream = File.Create($"mopsdata//{fileName}.pdf"))
                 {
-                    prc.StartInfo.FileName = "convert";
-                    prc.StartInfo.Arguments = $"-set density 300 \"mopsdata//{fileName}.pdf\" \"//var//www//html//StreamCharts//{fileName}.png\"";
-
-                    prc.Start();
-
-                    prc.WaitForExit();
+                    var pdfExporter = new PdfExporter { Width = 800, Height = 400 };
+                    pdfExporter.Export(viewerChart, stream);
                 }
 
-                var dir = new DirectoryInfo("mopsdata//");
-                var files = dir.GetFiles().Where(x => x.Name.Contains($"{fileName}"));
-                foreach (var f in files)
-                    f.Delete();
+                if (!returnPdf)
+                {
+                    using (var prc = new System.Diagnostics.Process())
+                    {
+                        prc.StartInfo.FileName = "convert";
+                        prc.StartInfo.Arguments = $"-set density 300 \"mopsdata//{fileName}.pdf\" \"//var//www//html//StreamCharts//{fileName}.png\"";
 
-                return $"{Program.Config["ServerAddress"]}/StreamCharts/{fileName}.png?rand={StaticBase.ran.Next(0, 999999999)}";
+                        prc.Start();
+
+                        prc.WaitForExit();
+                    }
+
+                    var dir = new DirectoryInfo("mopsdata//");
+                    var files = dir.GetFiles().Where(x => x.Name.Contains($"{fileName}"));
+                    foreach (var f in files)
+                        f.Delete();
+
+                    if (!path)
+                        return $"{Program.Config["ServerAddress"]}/StreamCharts/{fileName}.png?rand={StaticBase.ran.Next(0, 999999999)}";
+                    else return $"//var//www//html//StreamCharts//{fileName}.png";
+                }
+                else
+                {
+                    return $"mopsdata//{fileName}.pdf";
+                }
             }
-            else{
-                return $"mopsdata//{fileName}.pdf";
-            }
+            return $"{Program.Config["ServerAddress"]}/StreamCharts/{fileName}.png?rand={StaticBase.ran.Next(0, 999999999)}";
         }
 
-        public void AddValue(string name, double viewerCount, DateTime? xValue = null, bool savePlot = true, bool relative = true)
+        public void AddValue(string name, double value, DateTime? xValue = null, bool savePlot = true, bool replace = false)
         {
             if (xValue == null) xValue = DateTime.UtcNow;
             if (StartTime == null) StartTime = xValue;
-            var relativeXValue = relative ? new DateTime(1970, 01, 01).Add((xValue - StartTime).Value) : xValue;
+            var relativeXValue = RelativeTime.Value ? new DateTime(1970, 01, 01).Add((xValue - StartTime).Value) : xValue;
 
             if (areaSeries.LastOrDefault()?.Title?.Equals(name) ?? false)
             {
-                areaSeries.Last().Points.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), viewerCount));
+                if (replace)
+                    areaSeries.Last().Points.RemoveAt(areaSeries.Last().Points.Count - 1);
+
+                areaSeries.Last().Points.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), value));
             }
 
             else
@@ -454,27 +480,30 @@ namespace MopsBot.Data
                     series.Title = name;
 
                 series.StrokeThickness = 3;
-                areaSeries.LastOrDefault()?.Points?.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), viewerCount));
-                series.Points.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), viewerCount));
+                areaSeries.LastOrDefault()?.Points?.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), value));
+                series.Points.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), value));
                 viewerChart.Series.Add(series);
                 areaSeries.Add(series);
             }
 
             if (savePlot)
             {
-                PlotDataPoints.Add(new KeyValuePair<string, KeyValuePair<double, double>>(name, new KeyValuePair<double, double>(DateTimeAxis.ToDouble(xValue), viewerCount)));
+                if (replace)
+                    PlotDataPoints.RemoveAt(PlotDataPoints.Count - 1);
+
+                PlotDataPoints.Add(new KeyValuePair<string, KeyValuePair<double, double>>(name, new KeyValuePair<double, double>(DateTimeAxis.ToDouble(xValue), value)));
                 AdjustAxisRange();
             }
         }
 
-        public void AddValueSeperate(string name, double viewerCount, DateTime? xValue = null, bool savePlot = true, bool relative = true)
+        public void AddValueSeperate(string name, double value, DateTime? xValue = null, bool savePlot = true)
         {
             if (xValue == null) xValue = DateTime.UtcNow;
             if (StartTime == null) StartTime = xValue;
-            var relativeXValue = relative ? new DateTime(1970, 01, 01).Add((xValue - StartTime).Value) : xValue;
+            var relativeXValue = RelativeTime.Value ? new DateTime(1970, 01, 01).Add((xValue - StartTime).Value) : xValue;
 
             if (areaSeries.FirstOrDefault(x => x.Title.Equals(name)) != null)
-                areaSeries.FirstOrDefault(x => x.Title.Equals(name)).Points.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), viewerCount));
+                areaSeries.FirstOrDefault(x => x.Title.Equals(name)).Points.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), value));
 
             else
             {
@@ -489,14 +518,14 @@ namespace MopsBot.Data
                     series.Title = name;
 
                 series.StrokeThickness = 3;
-                series.Points.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), viewerCount));
+                series.Points.Add(new DataPoint(DateTimeAxis.ToDouble(relativeXValue), value));
                 viewerChart.Series.Add(series);
                 areaSeries.Add(series);
             }
 
             if (savePlot)
             {
-                PlotDataPoints.Add(new KeyValuePair<string, KeyValuePair<double, double>>(name, new KeyValuePair<double, double>(DateTimeAxis.ToDouble(xValue), viewerCount)));
+                PlotDataPoints.Add(new KeyValuePair<string, KeyValuePair<double, double>>(name, new KeyValuePair<double, double>(DateTimeAxis.ToDouble(xValue), value)));
                 AdjustAxisRange();
             }
         }
@@ -513,7 +542,7 @@ namespace MopsBot.Data
                 series.ConstantY2 = ymin;
             }
             axis.AbsoluteMaximum = max;
-            axis.AbsoluteMinimum = min;
+            axis.AbsoluteMinimum = Math.Min(min, max - 1);
             yaxis.AbsoluteMinimum = ymin;
         }
 

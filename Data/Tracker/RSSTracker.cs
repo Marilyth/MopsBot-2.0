@@ -37,7 +37,6 @@ namespace MopsBot.Data.Tracker
                 try{
                     LastFeed = checkExists.Items.OrderByDescending(x => x.PublishDate.DateTime).FirstOrDefault()?.PublishDate.UtcDateTime ?? DateTime.UtcNow;
                     if(LastFeed.Value.Year == 1){ LastFeed = null; throw new Exception("No date set");}
-                    SetTimer();
                 } catch (Exception e){
                     LastFeed = null;
                     LastTitle = checkExists.Items.FirstOrDefault()?.Title?.Text ?? "";
@@ -50,16 +49,11 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public override void PostInitialisation(object info = null)
-        {
-            SetTimer(1800000);
-        }
-
-        protected async override void CheckForChange_Elapsed(object stateinfo)
+        public async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
             {
-                await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"{Name} RSS is getting checked."));
+                //await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"{Name} RSS is getting checked."));
                 var feed = await getFeed();
                 List<SyndicationItem> feedItems;
                 if(LastFeed != null){
@@ -157,7 +151,7 @@ namespace MopsBot.Data.Tracker
             var tagWhiteSpaceRegex = new Regex(tagWhiteSpace, RegexOptions.Multiline);
 
             var text = html;
-            image = imagesRegex.Match(text).Groups.Last().Value;
+            image = imagesRegex.Match(text).Groups.Values.Last().Value;
             //Decode html specific characters
             text = System.Net.WebUtility.HtmlDecode(text);
             //Remove tag whitespace/line breaks

@@ -27,44 +27,42 @@ namespace MopsBot
             Task.Run(() => BuildWebHost(args).Run());
             new Program().Start().GetAwaiter().GetResult();
         }
-        public static DiscordSocketClient Client;
-        public static DiscordRestClient RestClient;
+        public static DiscordShardedClient Client;
         public static Dictionary<string, string> Config;
         public static CommandHandler Handler { get; private set; }
         public static ReactionHandler ReactionHandler { get; private set; }
+        private static ServiceProvider provider;
+        private static List<ReliabilityService> failsafe = new List<ReliabilityService>();
 
         private async Task Start()
         {
-            Client = new DiscordSocketClient(new DiscordSocketConfig()
+            Client = new DiscordShardedClient(new DiscordSocketConfig()
             {
                 LogLevel = LogSeverity.Info,
-                //AlwaysDownloadUsers = true
+                //TotalShards = 2,
+                LargeThreshold = 50,
+                MessageCacheSize = 0,
+                AlwaysDownloadUsers = false,
             });
-            RestClient = new DiscordRestClient();
-            
+
             using (StreamReader sr = new StreamReader(new FileStream("mopsdata//Config.json", FileMode.Open)))
                 Config = JsonConvert.DeserializeObject<Dictionary<string, string>>(sr.ReadToEnd());
 
-            await Client.LoginAsync(TokenType.Bot, Config["Discord"]);
-            await Client.StartAsync();
-
-            await RestClient.LoginAsync(TokenType.Bot, Config["Discord"]);
 
             Client.Log += ClientLog;
-            Client.Ready += onClientReady;
+            Client.ShardReady += onShardReady;
 
-            var map = new ServiceCollection().AddSingleton(Client)
-                // .AddSingleton(new AudioService())
-                .AddSingleton(new ReliabilityService(Client, ClientLog))
-                .AddSingleton(new InteractiveService(Client));
+            Task.Run(()=>{
+                StaticBase.UpdateStatusAsync();
+            });
 
-            var provider = map.BuildServiceProvider();
-
-            Handler = new CommandHandler();
-            await Handler.Install(provider);
-
-            ReactionHandler = new ReactionHandler();
-            ReactionHandler.Install(provider);
+            await Client.LoginAsync(TokenType.Bot, Config["Discord"]);
+            foreach(var shard in Client.Shards){
+                await shard.StartAsync();
+                do{
+                    await Task.Delay(30000);
+                } while(StaticBase.GetMopsRAM() > 2200);
+            }
 
             await Task.Delay(-1);
         }
@@ -77,22 +75,56 @@ namespace MopsBot
         public static async Task MopsLog(LogMessage msg, [CallerMemberName] string callerName = "", [CallerFilePath] string callerPath = "", [CallerLineNumber] int callerLine = 0)
         {
             string message = $"\n[{msg.Severity}] at {DateTime.Now}\nsource: {Path.GetFileNameWithoutExtension(callerPath)}.{callerName}, line: {callerLine}\nmessage: {msg.Message}";
-            if(msg.Exception != null && !msg.Exception.Message.Contains("The SSL connection could not be established")){
+            if (msg.Exception != null && !msg.Exception.Message.Contains("The SSL connection could not be established"))
+            {
                 message += $"\nException: {msg.Exception?.Message ?? ""}\nStacktrace: {msg.Exception?.StackTrace ?? ""}";
             }
 
             Console.WriteLine(message);
         }
 
-        private Task onClientReady()
+        private static int shardsReady = 0;
+        private DateTime LastGC = default(DateTime);
+        private async Task onShardReady(DiscordSocketClient client)
         {
-            Task.Run(() => {
-                StaticBase.UpdateStatusAsync();
-                StaticBase.initTracking();
-            });
-            return Task.CompletedTask;
+            shardsReady++;
+            await MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Shard {shardsReady} is ready."));
+
+            if (shardsReady == 1)
+            {
+                Task.Run(() =>
+                {
+                    foreach(var shard in Client.Shards){
+                        failsafe.Add(new ReliabilityService(shard, ClientLog));
+                    }
+                });
+            }
+
+            if (shardsReady == Client.Shards.Count)
+            {
+                var map = new ServiceCollection().AddSingleton(Client)
+                                                 .AddSingleton(new InteractiveService(Client));
+                provider = map.BuildServiceProvider();
+
+                ReactionHandler = new ReactionHandler();
+                ReactionHandler.Install(provider);
+                Handler = new CommandHandler();
+                Handler.Install(provider).Wait();
+
+                Task.Run(() =>
+                {
+                    StaticBase.initTracking();
+                });
+            }
         }
-        
+
+        public static DiscordSocketClient GetShardFor(ulong channelId)
+        {
+            if(Client.GetChannel(channelId) != null)
+                return Client.GetShardFor((Client.GetChannel(channelId) as SocketGuildChannel).Guild);
+            return null;
+        }
+
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
                 .UseUrls("http://0.0.0.0:5000/")
@@ -101,8 +133,7 @@ namespace MopsBot
                     {
                         builder.AllowAnyOrigin()
                                .AllowAnyHeader()
-                               .AllowAnyMethod()
-                               .AllowCredentials();
+                               .AllowAnyMethod();
                     })))
                 .UseKestrel()
                 .UseContentRoot(Directory.GetCurrentDirectory())

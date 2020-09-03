@@ -20,7 +20,7 @@ namespace MopsBot
     }
     public class ReactionHandler
     {
-        private DiscordSocketClient client;
+        private DiscordShardedClient client;
         private IServiceProvider _provider;
         private Dictionary<IUserMessage, Dictionary<IEmote, Func<ReactionHandlerContext, Task>>> emojiAddedFunctions;
         private Dictionary<IUserMessage, Dictionary<IEmote, Func<ReactionHandlerContext, Task>>> emojiRemovedFunctions;
@@ -33,7 +33,7 @@ namespace MopsBot
         public void Install(IServiceProvider provider)
         {
             _provider = provider;
-            client = _provider.GetService<DiscordSocketClient>();
+            client = _provider.GetService<DiscordShardedClient>();
 
             client.ReactionAdded += Client_ReactionAdded;
             client.ReactionRemoved += Client_ReactionRemoved;
@@ -163,7 +163,12 @@ namespace MopsBot
                 }
             }
             
-            await message.AddReactionsAsync(handlers.Select(x => x.Item1).ToArray());
+            foreach(var emote in handlers.Select(x => x.Item1)){
+                if (!emote.Equals(DefaultEmote) && !message.Reactions.ContainsKey(emote))
+                {
+                    await message.AddReactionAsync(emote);
+                }
+            }
         }
 
         /// <summary>

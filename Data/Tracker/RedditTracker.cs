@@ -8,6 +8,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using MopsBot.Data.Tracker.APIResults.Reddit;
+using MongoDB.Bson.Serialization.Options;
+using MongoDB.Bson.Serialization.Attributes;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 
@@ -19,19 +21,15 @@ namespace MopsBot.Data.Tracker
     [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
     public class RedditTracker : BaseTracker
     {
-        public double lastCheck;
-
-        /// <summary>
-        /// Initialises the tracker by setting attributes and setting up a Timer with a 10 minutes interval
-        /// </summary>
-        /// <param Name="OWName"> The Name-Battletag combination of the player to track </param>
+        [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
+        public Dictionary<ulong, double> LastCheck = new Dictionary<ulong, double>();
+        public static readonly string POSTAGE = "MinPostAgeInMinutes";
         public RedditTracker() : base()
         {
         }
 
         public RedditTracker(string name) : base()
         {
-            lastCheck = (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
             Name = name;
 
             try
@@ -39,7 +37,6 @@ namespace MopsBot.Data.Tracker
                 var test = fetchPosts().Result;
                 if (test.data.children.Count == 0)
                     throw new Exception("");
-                SetTimer();
             }
             catch (Exception e)
             {
@@ -49,28 +46,56 @@ namespace MopsBot.Data.Tracker
             }
         }
 
+        public async override void PostChannelAdded(ulong channelId)
+        {
+            base.PostChannelAdded(channelId);
+
+            var config = ChannelConfig[channelId];
+            config[POSTAGE] = 0;
+            LastCheck[channelId] = (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
+        }
+
+        public override async void Conversion(object obj = null)
+        {
+            bool save = false;
+            foreach (var channel in ChannelConfig.Keys.ToList())
+            {
+                if (!LastCheck.ContainsKey(channel))
+                {
+                    LastCheck[channel] = (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
+                    save = true;
+                }
+            }
+            if (save)
+                await UpdateTracker();
+        }
+
         /// <summary>
         /// Event for the Timer, to check for changed stats
         /// </summary>
         /// <param Name="stateinfo"></param>
-        protected async override void CheckForChange_Elapsed(object stateinfo)
+        public async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
             {
                 var allThings = await fetchPosts();
-                var newPosts = allThings.data.children.TakeWhile(x => x.data.created_utc > lastCheck).ToArray();
 
-                if (newPosts.Length > 0)
+                foreach (var channel in ChannelConfig)
                 {
-                    lastCheck = newPosts.Max(x => x.data.created_utc);
-                    await UpdateTracker();
+                    var minPostAge = (int)ChannelConfig[channel.Key][POSTAGE];
+                    var newPosts = allThings.data.children.TakeWhile(x => x.data.created_utc > LastCheck[channel.Key]).ToList();
+                    newPosts.RemoveAll(x => (DateTime.UtcNow - DateTimeOffset.FromUnixTimeSeconds((long)x.data.created_utc)).TotalMinutes < minPostAge);
 
-                    newPosts = newPosts.Reverse().ToArray();
-                    foreach (var post in newPosts)
-                        foreach (ulong channel in ChannelConfig.Keys.ToList())
-                        {
-                            await OnMajorChangeTracked(channel, await createEmbed(post.data), (string)ChannelConfig[channel]["Notification"]);
-                        }
+                    if (newPosts.Count > 0)
+                    {
+                        LastCheck[channel.Key] = newPosts.Max(x => x.data.created_utc);
+                        await UpdateTracker();
+
+                        newPosts.Reverse();
+                        foreach (var post in newPosts)
+                            await OnMajorChangeTracked(channel.Key, await createEmbed(post.data), (string)ChannelConfig[channel.Key]["Notification"]);
+
+                    }
                 }
             }
             catch (Exception e)
@@ -79,17 +104,31 @@ namespace MopsBot.Data.Tracker
             }
         }
 
+        public static async Task<List<Embed>> checkReddit(string subreddit, string query = null, int limit = 1)
+        {
+            var results = await FetchJSONDataAsync<RedditResult>($"https://www.reddit.com/r/{subreddit}/" +
+                                                                        $"{(query != null ? $"search.json?sort=new&restrict_sr=on&q={query}" : "new.json?restrict_sr=on")}" + $"&limit={limit}");
+
+            List<Embed> embeds = new List<Embed>();
+            foreach (var post in results.data.children)
+            {
+                embeds.Add(await createEmbed(post.data));
+            }
+
+            return embeds;
+        }
+
         private async Task<RedditResult> fetchPosts()
         {
             return await FetchJSONDataAsync<RedditResult>($"https://www.reddit.com/r/{Name.Split(" ")[0]}/" +
-                                                                        $"{(Name.Split(" ").Length > 1 ? $"search.json?sort=new&restrict_sr=on&q={Name.Split(" ")[1]}" : "new.json?restrict_sr=on")}");
+                                                                        $"{(Name.Split(" ").Length > 1 ? $"search.json?sort=new&restrict_sr=on&q={string.Join(" ", Name.Split(" ").Skip(1))}" : "new.json?restrict_sr=on")}");
         }
 
         ///<summary>Builds an embed out of the changed stats, and sends it as a Discord message </summary>
         /// <param Name="RedditInformation">All fetched stats of the user </param>
         /// <param Name="changedStats">All changed stats of the user, together with a string presenting them </param>
         /// <param Name="mostPlayed">The most played Hero of the session, together with a string presenting them </param>
-        private async Task<Embed> createEmbed(Data2 redditPost)
+        private async static Task<Embed> createEmbed(Data2 redditPost)
         {
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(255, 49, 0);
@@ -110,7 +149,12 @@ namespace MopsBot.Data.Tracker
 
             try
             {
-                e.ImageUrl = !redditPost.thumbnail.Equals("self") && !redditPost.thumbnail.Equals("default") ? redditPost.thumbnail : null;
+                if(!string.IsNullOrEmpty(redditPost.url) && redditPost.url.Contains(".jpg", StringComparison.CurrentCultureIgnoreCase) || redditPost.url.Contains(".png", StringComparison.CurrentCultureIgnoreCase)){
+                        e.ImageUrl = redditPost.url;
+                }
+                else if(!redditPost.thumbnail.Equals("self") && !redditPost.thumbnail.Equals("default") && !string.IsNullOrEmpty(redditPost.thumbnail)){
+                        e.ImageUrl = redditPost.thumbnail;
+                }
             }
             catch (Exception)
             {
@@ -124,15 +168,17 @@ namespace MopsBot.Data.Tracker
             else if (redditPost.media != null && redditPost.media.reddit_video != null)
                 e.ImageUrl = (await Module.Information.ConvertToGifAsync(redditPost.media.reddit_video.fallback_url)).Max5MbGif;
             */
-            
+
             return e.Build();
         }
 
-        public override string TrackerUrl(){
+        public override string TrackerUrl()
+        {
             return "https://www.reddit.com/r/" + Name.Split(" ").First();
         }
 
-        public override async Task UpdateTracker(){
+        public override async Task UpdateTracker()
+        {
             await StaticBase.Trackers[TrackerType.Reddit].UpdateDBAsync(this);
         }
     }

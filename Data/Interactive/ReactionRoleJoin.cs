@@ -52,11 +52,12 @@ namespace MopsBot.Data.Interactive
                         var leave = new Tuple<IEmote, Func<ReactionHandlerContext, Task>, bool>(new Emoji("✅"), LeaveRole, true);
                         var delete = new Tuple<IEmote, Func<ReactionHandlerContext, Task>, bool>(new Emoji("🗑"), DeleteInvite, false);
 
+                        if(textmessage == null) throw new Exception("Message could not be loaded!");
                         Program.ReactionHandler.AddHandlers(textmessage, join, leave, delete).Wait();
 
                         foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("✅"), textmessage.Reactions[new Emoji("✅")].ReactionCount).FlattenAsync().Result.Where(x => !x.IsBot).Reverse())
                         {
-                            JoinRole(user.Id, textmessage);
+                            JoinRole(user.Id, textmessage).Wait();
                         }
                         /*foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("❎"), textmessage.Reactions[new Emoji("❎")].ReactionCount).First().Result.Where(x => !x.IsBot).Reverse())
                         {
@@ -64,14 +65,13 @@ namespace MopsBot.Data.Interactive
                         }*/
                         foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("🗑"), textmessage.Reactions[new Emoji("🗑")].ReactionCount).FlattenAsync().Result.Where(x => !x.IsBot).Reverse())
                         {
-                            DeleteInvite(user.Id, textmessage);
+                            DeleteInvite(user.Id, textmessage).Wait();
                         }
                     }
                     catch (Exception e)
                     {
                         Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"error for [{channel.Key}][{message}]", e)).Wait();
-                        if ((e.Message.Contains("Object reference not set to an instance of an object.") || e.Message.Contains("Value cannot be null."))
-                            && Program.Client.ConnectionState.Equals(ConnectionState.Connected))
+                        if (e.Message.Contains("Message could not be loaded") && Program.GetShardFor(channel.Key).ConnectionState.Equals(ConnectionState.Connected))
                         {
                             Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"Removing [{channel.Key}][{message}] due to missing message.")).Wait();
 
@@ -104,44 +104,11 @@ namespace MopsBot.Data.Interactive
             await StaticBase.Database.GetCollection<MongoKVP<ulong, HashSet<ulong>>>(this.GetType().Name).DeleteOneAsync(x => x.Key == key);
         }
 
-        public async Task AddInviteGerman(ITextChannel channel, SocketRole role)
-        {
-            EmbedBuilder e = new EmbedBuilder();
-            e.Title = role.Name + $" Einladung :{role.Id}";
-            e.Description = $"Um der Rolle " + (role.IsMentionable ? role.Mention : $"**{role.Name}**") + " beizutreten, oder sie zu verlassen, füge bitte das ✅ Icon unter dieser Nachricht hinzu, oder entferne es!\n" +
-                            "Falls du die Manage Role Permission besitzt, kannst du diese Einladung mit einem Druck auf den 🗑 Icon löschen.";
-            e.Color = role.Color;
-
-            var author = new EmbedAuthorBuilder();
-            e.AddField("Mitgliederanzahl der Rolle", role.Members.Count(), true);
-
-            var message = await channel.SendMessageAsync(embed: e.Build());
-
-            var join = new Tuple<IEmote, Func<ReactionHandlerContext, Task>, bool>(new Emoji("✅"), JoinRole, false);
-            var leave = new Tuple<IEmote, Func<ReactionHandlerContext, Task>, bool>(new Emoji("✅"), LeaveRole, true);
-            var delete = new Tuple<IEmote, Func<ReactionHandlerContext, Task>, bool>(new Emoji("🗑"), DeleteInvite, false);
-
-            await Program.ReactionHandler.AddHandlers(message, join, leave, delete);
-
-            if (RoleInvites.ContainsKey(channel.Id))
-            {
-                RoleInvites[channel.Id].Add(message.Id);
-                await UpdateDBAsync(channel.Id);
-            }
-            else
-            {
-                RoleInvites.Add(channel.Id, new HashSet<ulong>());
-                RoleInvites[channel.Id].Add(message.Id);
-                await InsertIntoDBAsync(channel.Id);
-            }
-        }
-
-        public async Task AddInvite(ITextChannel channel, SocketRole role)
+        public async Task AddInvite(ITextChannel channel, SocketRole role, string description)
         {
             EmbedBuilder e = new EmbedBuilder();
             e.Title = role.Name + $" Role Invite :{role.Id}";
-            e.Description = $"To join/leave the " + (role.IsMentionable ? role.Mention : $"**{role.Name}**") + " role, add/remove the ✅ Icon below this message!\n" +
-                            "If you can manage Roles, you may delete this invitation by pressing the 🗑 Icon.";
+            e.Description = description;
             e.Color = role.Color;
 
             var author = new EmbedAuthorBuilder();
@@ -226,40 +193,31 @@ namespace MopsBot.Data.Interactive
             }
         }
 
-        private async Task updateMessage(ReactionHandlerContext context, SocketRole role)
-        {
-            var e = context.Message.Embeds.First().ToEmbedBuilder();
-
-            e.Color = role.Color;
-            e.Title = e.Title.Contains("Einladung") ? $"{role.Name} Einladung :{role.Id}" : $"{role.Name} Role Invite :{role.Id}";
-            foreach (EmbedFieldBuilder field in e.Fields)
-            {
-                if (field.Name.Equals("Members in role") || field.Name.Equals("Mitgliederanzahl der Rolle"))
-                    field.Value = role.Members.Count();
-            }
-
-            await context.Message.ModifyAsync(x =>
-            {
-                x.Embed = e.Build();
-            });
-        }
-
+        private Dictionary<ulong, bool> updating = new Dictionary<ulong, bool>();
         private async Task updateMessage(IUserMessage message, SocketRole role)
         {
-            var e = message.Embeds.First().ToEmbedBuilder();
+            if(!updating.ContainsKey(message.Id)) updating.Add(message.Id, false);
 
-            e.Color = role.Color;
-            e.Title = e.Title.Contains("Einladung") ? $"{role.Name} Einladung :{role.Id}" : $"{role.Name} Role Invite :{role.Id}";
-            foreach (EmbedFieldBuilder field in e.Fields)
+            if (!updating[message.Id])
             {
-                if (field.Name.Equals("Members in role") || field.Name.Equals("Mitgliederanzahl der Rolle"))
-                    field.Value = role.Members.Count();
+                updating[message.Id] = true;
+                await Task.Delay(10000);
+                updating[message.Id] = false;
+                var e = message.Embeds.First().ToEmbedBuilder();
+
+                e.Color = role.Color;
+                e.Title = $"{role.Name} Role Invite :{role.Id}";
+                foreach (EmbedFieldBuilder field in e.Fields)
+                {
+                    if (field.Name.Equals("Members in role"))
+                        field.Value = role.Members.Count();
+                }
+
+                await message.ModifyAsync(x =>
+                {
+                    x.Embed = e.Build();
+                });
             }
-
-            await message.ModifyAsync(x =>
-            {
-                x.Embed = e.Build();
-            });
         }
 
         public async Task<List<KeyValuePair<ulong, ulong>>> TryPruneAsync(bool testing = true)
@@ -270,26 +228,38 @@ namespace MopsBot.Data.Interactive
             {
                 foreach (var message in channel.Value.ToList())
                 {
-                    var curChannel = (ITextChannel)Program.Client.GetChannel(channel.Key);
-                    if (curChannel != null)
+                    try
                     {
-                        var curMessage = curChannel.GetMessageAsync(message);
-                        if (curMessage != null) continue;
-                    }
+                        var curChannel = (ITextChannel)Program.Client.GetChannel(channel.Key);
+                        if (curChannel != null)
+                        {
+                            var curMessage = await curChannel.GetMessageAsync(message);
+                            if (curMessage != null) continue;
 
-                    pruneList.Add(KeyValuePair.Create<ulong, ulong>(channel.Key, message));
-                    if (!testing)
+                            pruneList.Add(KeyValuePair.Create<ulong, ulong>(channel.Key, message));
+                        }
+                    }
+                    catch (Exception e)
                     {
-                        if (RoleInvites[channel.Key].Count > 1)
-                        {
-                            RoleInvites[channel.Key].Remove(message);
-                            await UpdateDBAsync(channel.Key);
-                        }
-                        else
-                        {
-                            RoleInvites.Remove(channel.Key);
-                            await RemoveFromDBAsync(channel.Key);
-                        }
+                        if (e.Message.Contains("50001"))
+                            pruneList.Add(KeyValuePair.Create<ulong, ulong>(channel.Key, message));
+                    }
+                }
+            }
+
+            if (!testing)
+            {
+                foreach (var channel in pruneList)
+                {
+                    if (RoleInvites[channel.Key].Count > 1)
+                    {
+                        RoleInvites[channel.Key].Remove(channel.Value);
+                        await UpdateDBAsync(channel.Key);
+                    }
+                    else
+                    {
+                        RoleInvites.Remove(channel.Key);
+                        await RemoveFromDBAsync(channel.Key);
                     }
                 }
             }

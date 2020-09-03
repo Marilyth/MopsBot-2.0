@@ -51,24 +51,24 @@ namespace MopsBot.Data.Interactive
                         var join = new Tuple<IEmote, Func<ReactionHandlerContext, Task>, bool>(new Emoji("✅"), JoinGiveaway, false);
                         var leave = new Tuple<IEmote, Func<ReactionHandlerContext, Task>, bool>(new Emoji("✅"), LeaveGiveaway, true);
                         var draw = new Tuple<IEmote, Func<ReactionHandlerContext, Task>, bool>(new Emoji("🎁"), DrawGiveaway, false);
-                        
+
+                        if(textmessage == null) throw new Exception("Message could not be loaded!");
                         Program.ReactionHandler.AddHandlers(textmessage, join, leave, draw).Wait();
 
                         foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("✅"), textmessage.Reactions[new Emoji("✅")].ReactionCount).FlattenAsync().Result.Where(x => !x.IsBot))
                         {
-                            JoinGiveaway(user.Id, textmessage);
+                            JoinGiveaway(user.Id, textmessage).Wait();
                         }
                         foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("🎁"), textmessage.Reactions[new Emoji("🎁")].ReactionCount).FlattenAsync().Result.Where(x => !x.IsBot))
                         {
-                            DrawGiveaway(user.Id, textmessage);
+                            DrawGiveaway(user.Id, textmessage).Wait();
                         }
                     }
                     catch (Exception e)
                     {
                         Program.MopsLog(new LogMessage(LogSeverity.Error, "", $" error by [{channel.Key}][{message.Key}]", e)).Wait();
 
-                        if ((e.Message.Contains("Object reference not set to an instance of an object.") || e.Message.Contains("Value cannot be null."))
-                            && Program.Client.ConnectionState.Equals(ConnectionState.Connected))
+                        if (e.Message.Contains("Message could not be loaded") && Program.GetShardFor(channel.Key).ConnectionState.Equals(ConnectionState.Connected))
                         {
                             Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"Removing [{channel.Key}][{message.Key}] due to missing message.")).Wait();
 
@@ -116,7 +116,7 @@ namespace MopsBot.Data.Interactive
             e.Author = author;
             e.AddField("Participants", 0, true);
             e.AddField("Chance to win", Double.NaN, true);
-            
+
             Dictionary<ulong, List<ulong>> messages = new Dictionary<ulong, List<ulong>>();
             List<ulong> participants = new List<ulong>();
             participants.Add(creator.Id);
@@ -134,11 +134,11 @@ namespace MopsBot.Data.Interactive
                 Giveaways.Add(channel.Id, messages);
                 await InsertIntoDBAsync(channel.Id);
             }
-            
+
             var join = new Tuple<IEmote, Func<ReactionHandlerContext, Task>, bool>(new Emoji("✅"), JoinGiveaway, false);
             var leave = new Tuple<IEmote, Func<ReactionHandlerContext, Task>, bool>(new Emoji("✅"), LeaveGiveaway, true);
             var draw = new Tuple<IEmote, Func<ReactionHandlerContext, Task>, bool>(new Emoji("🎁"), DrawGiveaway, false);
-                        
+
             await Program.ReactionHandler.AddHandlers(message, join, leave, draw);
         }
 
@@ -182,33 +182,49 @@ namespace MopsBot.Data.Interactive
         {
             if (userId.Equals(Giveaways[message.Channel.Id][message.Id].First()))
             {
+                var limit = message.Reactions[new Emoji("✅")].ReactionCount;
+                var participants = message.GetReactionUsersAsync(new Emoji("✅"), limit).FlattenAsync().Result.Where(x => !x.IsBot);
                 await Program.ReactionHandler.ClearHandler(message);
 
                 int.TryParse(message.Embeds.First().Title.Split("x")[0], out int winnerCount);
                 string winnerDescription = "";
 
                 //Remove any duplicates to race-conditions
-                Giveaways[message.Channel.Id][message.Id] = Giveaways[message.Channel.Id][message.Id].ToHashSet().ToList();
+                var participantsDraw = participants.ToHashSet().Select(x => x.Id).ToList();
 
-                if (winnerCount == 0) winnerCount = 1;
-                if (winnerCount > Giveaways[message.Channel.Id][message.Id].Count) winnerCount = Giveaways[message.Channel.Id][message.Id].Count;
+                if (winnerCount <= 0) winnerCount = 1;
+                if (winnerCount > participantsDraw.Count) winnerCount = participantsDraw.Count;
 
                 for (int i = 0; i < winnerCount; i++)
                 {
-                    var index = Giveaways[message.Channel.Id][message.Id].Count > 1 ? StaticBase.ran.Next(1, Giveaways[message.Channel.Id][message.Id].Count) : 0;
+                    var index = StaticBase.ran.Next(0, participantsDraw.Count);
 
-                    ulong winnerId = Giveaways[message.Channel.Id][message.Id][index];
+                    ulong winnerId = participantsDraw[index];
 
                     IUser winner = await message.Channel.GetUserAsync(winnerId);
                     winnerDescription += $"{winner.Mention} won the "
                                        + $"`{message.Embeds.First().Title}`\n";
 
-                    Giveaways[message.Channel.Id][message.Id].RemoveAt(index);
+                    participantsDraw.RemoveAt(index);
                 }
 
-                await message.Channel.SendMessageAsync(winnerDescription);
+                if(string.IsNullOrEmpty(winnerDescription))
+                    winnerDescription = "No winners could be drawn.";
+                
+                var winners = winnerDescription.Split("\n");
+                var messageText = "";
+                for(int i = 0; i < winners.Count(); i++){
+                    if(messageText.Count() + winners[i].Count() <= 2000)
+                        messageText += winners[i] + "\n";
+                    else{
+                        await message.Channel.SendMessageAsync(messageText);
+                        messageText = "";
+                    }
+                }
+                if(messageText.Count() > 0)
+                    await message.Channel.SendMessageAsync(messageText);
 
-                var embed = message.Embeds.First().ToEmbedBuilder().WithDescription(winnerDescription);
+                var embed = message.Embeds.First().ToEmbedBuilder().WithDescription("Giveaway has ended");
                 await message.ModifyAsync(x => x.Embed = embed.Build());
 
                 if (Giveaways[message.Channel.Id].Count == 1)
@@ -224,34 +240,46 @@ namespace MopsBot.Data.Interactive
             }
         }
 
+        private Dictionary<ulong, bool> updating = new Dictionary<ulong, bool>();
         private async Task updateMessage(IUserMessage message)
         {
-            var e = message.Embeds.First().ToEmbedBuilder();
+            if(!updating.ContainsKey(message.Id)) updating.Add(message.Id, false);
 
-            e.Color = new Color(100, 100, 0);
-
-            foreach (EmbedFieldBuilder field in e.Fields)
+            if (!updating[message.Id])
             {
-                if (field.Name.Equals("Participants"))
-                    field.Value = Giveaways[message.Channel.Id][message.Id].Count - 1;
-                else{
-                    int.TryParse(message.Embeds.First().Title.Split("x")[0], out int winnerCount);
+                updating[message.Id] = true;
+                await Task.Delay(10000);
+                updating[message.Id] = false;
+                var e = message.Embeds.First().ToEmbedBuilder();
 
-                    if (winnerCount == 0) winnerCount = 1;
-                    if (winnerCount > Giveaways[message.Channel.Id][message.Id].Count - 1) winnerCount = Giveaways[message.Channel.Id][message.Id].Count - 1;
+                e.Color = new Color(100, 100, 0);
 
-                    double probability = 1;
-                    if(Giveaways[message.Channel.Id][message.Id].Count - 1 != 0)
-                        probability = (1.0 / (Giveaways[message.Channel.Id][message.Id].Count - 1)) * winnerCount;
+                var participants = message.GetReactionUsersAsync(new Emoji("✅"), message.Reactions[new Emoji("✅")].ReactionCount).FlattenAsync().Result.Where(x => !x.IsBot);
+                var participantsCount = participants.Count();
+                foreach (EmbedFieldBuilder field in e.Fields)
+                {
+                    if (field.Name.Equals("Participants"))
+                        field.Value = participantsCount;
+                    else
+                    {
+                        int.TryParse(message.Embeds.First().Title.Split("x")[0], out int winnerCount);
 
-                    field.Value = Math.Round(probability*100, 2) + "%";
+                        if (winnerCount == 0) winnerCount = 1;
+                        if (winnerCount > participantsCount) winnerCount = participantsCount;
+
+                        double probability = 1;
+                        if (participantsCount != 0)
+                            probability = (1.0 / participantsCount) * winnerCount;
+
+                        field.Value = Math.Round(probability * 100, 2) + "%";
+                    }
                 }
-            }
 
-            await message.ModifyAsync(x =>
-            {
-                x.Embed = e.Build();
-            });
+                await message.ModifyAsync(x =>
+                {
+                    x.Embed = e.Build();
+                });
+            }
         }
 
         public async Task<List<KeyValuePair<ulong, ulong>>> TryPruneAsync(bool testing = true)
@@ -262,83 +290,43 @@ namespace MopsBot.Data.Interactive
             {
                 foreach (var message in channel.Value.ToList())
                 {
-                    var curChannel = (ITextChannel)Program.Client.GetChannel(channel.Key);
-                    if (curChannel != null)
+                    try
                     {
-                        var curMessage = curChannel.GetMessageAsync(message.Key);
-                        if (curMessage != null) continue;
-                    }
+                        var curChannel = (ITextChannel)Program.Client.GetChannel(channel.Key);
+                        if (curChannel != null)
+                        {
+                            var curMessage = await curChannel.GetMessageAsync(message.Key);
+                            if (curMessage != null) continue;
 
-                    pruneList.Add(KeyValuePair.Create<ulong, ulong>(channel.Key, message.Key));
-                    if (!testing)
+                            pruneList.Add(KeyValuePair.Create<ulong, ulong>(channel.Key, message.Key));
+                        }
+                    }
+                    catch (Exception e)
                     {
-                        if (Giveaways[channel.Key].Count > 1)
-                        {
-                            Giveaways[channel.Key].Remove(message.Key);
-                            await UpdateDBAsync(channel.Key);
-                        }
-                        else
-                        {
-                            Giveaways.Remove(channel.Key);
-                            await RemoveFromDBAsync(channel.Key);
-                        }
+                        if (e.Message.Contains("50001"))
+                            pruneList.Add(KeyValuePair.Create<ulong, ulong>(channel.Key, message.Key));
+                    }
+                }
+            }
+
+            if (!testing)
+            {
+                foreach (var channel in pruneList)
+                {
+                    if (Giveaways[channel.Key].Count > 1)
+                    {
+                        Giveaways[channel.Key].Remove(channel.Value);
+                        await UpdateDBAsync(channel.Key);
+                    }
+                    else
+                    {
+                        Giveaways.Remove(channel.Key);
+                        await RemoveFromDBAsync(channel.Key);
                     }
                 }
             }
 
             return pruneList;
-        }
-
-        public async Task AddContent(Dictionary<string, string> args){
-            
-        }
-
-        public async Task RemoveContent(Dictionary<string, string> args){
-            
-        }
-
-        public async Task UpdateContent(Dictionary<string, Dictionary<string, string>> args){
-            
-        }
-
-        public Dictionary<string, object> GetContent(ulong userId, ulong guildId){
-            var channelList = Program.Client.GetGuild(guildId).TextChannels.Select(x => x.Id).ToList();
-            var guildGiveaways = Giveaways.Where(x => channelList.Contains(x.Key)).ToDictionary(x => x.Key, y => y.Value);
-            List<ContentScope> userGiveaways = new List<ContentScope>();
-
-            foreach(var channel in guildGiveaways){
-                foreach(var message in guildGiveaways[channel.Key]){
-                    if(message.Value.First().Equals(userId)){
-                        var curChannel = ((SocketTextChannel)Program.Client.GetChannel(channel.Key));
-                        var curMessage = curChannel.GetMessageAsync(message.Key).Result.Embeds.First().Title;
-                        int.TryParse(curMessage.Split("x")[0], out int winnerCount);
-                        userGiveaways.Add(new ContentScope(){
-                            _Id = message.Key,
-                            _Name = curMessage,
-                            _Channel = "#" + curChannel.Name + ":" + channel.Key,
-                            WinnerAmount = winnerCount == 0 ? 1 : winnerCount
-                        });
-                    }
-                }
-            }
-
-            return new Dictionary<string, object>(){
-            {"Parameters", new Dictionary<string, object>(){
-                {"Message", "Some Game"},
-                {"Channel", channelList.Select(x => "#" + ((SocketTextChannel)Program.Client.GetChannel(x)).Name)},
-                {"WinnerAmount", Enumerable.Range(1, 25)},
-                {"DrawWinner", new List<bool> {false, true}}
-            }}, 
-            {"Content", userGiveaways}, 
-            {"Permissions", 0}};
-        }
-
-        public struct ContentScope{
-            public ulong _Id;
-            public string _Name;
-            public string _Channel;
-            public int WinnerAmount;
-            public bool DrawWinner;
         }
     }
 }

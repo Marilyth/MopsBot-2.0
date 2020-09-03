@@ -44,7 +44,6 @@ namespace MopsBot.Data.Tracker
                     var checkExists = FetchJSONDataAsync<OStatsResult>($"https://owapi.net/api/v3/u/{Name}/blob").Result;
                     Task.Delay(2500).Wait();
                     var test = checkExists.eu;
-                    SetTimer();
                 }
                 catch (Exception e)
                 {
@@ -64,7 +63,7 @@ namespace MopsBot.Data.Tracker
         /// Event for the Timer, to check for changed stats
         /// </summary>
         /// <param Name="stateinfo"></param>
-        protected async override void CheckForChange_Elapsed(object stateinfo)
+        public async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
             {
@@ -83,7 +82,7 @@ namespace MopsBot.Data.Tracker
                 if (StatGraph == null)
                 {
                     StatGraph = new DatePlot(Name, "Date", "Level", "dd-MMM", false);
-                    StatGraph.AddValue("Level", await OverallStats.GetLevelAsync(Name), relative: false);
+                    StatGraph.AddValue("Level", await OverallStats.GetLevelAsync(Name));
                     await UpdateTracker();
                 }
 
@@ -98,8 +97,8 @@ namespace MopsBot.Data.Tracker
 
                 if (changedStats.Count != 0)
                 {
-                    StatGraph.AddValue("Level", StatGraph.PlotDataPoints.Last().Value.Value, relative: false);
-                    StatGraph.AddValue("Level", await OverallStats.GetLevelAsync(Name), relative: false);
+                    StatGraph.AddValue("Level", StatGraph.PlotDataPoints.Last().Value.Value);
+                    StatGraph.AddValue("Level", await OverallStats.GetLevelAsync(Name));
 
                     foreach (ulong channel in ChannelConfig.Keys.ToList())
                     {
@@ -116,9 +115,9 @@ namespace MopsBot.Data.Tracker
 
                 if (e.Message.Contains("TOO MANY REQUESTS"))
                 {
-                    var nextElapse = StaticBase.ran.Next(10000, 300000);
-                    checkForChange.Change(nextElapse, 300000);
-                    await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Trying again in {nextElapse}ms", e));
+                    //var nextElapse = StaticBase.ran.Next(10000, 300000);
+                    //checkForChange.Change(nextElapse, 300000);
+                    await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Trying again next cycle", e));
                 }
             }
         }

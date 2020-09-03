@@ -11,7 +11,7 @@ using MopsBot.Module.Preconditions;
 
 namespace MopsBot.Module
 {
-    public class DataBase : ModuleBase
+    public class DataBase : ModuleBase<ShardedCommandContext>
     {
         [Command("Hug", RunMode = RunMode.Async)]
         [Summary("Hugs the specified person")]
@@ -105,7 +105,7 @@ namespace MopsBot.Module
                 switch (stat)
                 {
                     case User.Stats.Experience:
-                        toSort = x => x.Experience;
+                        toSort = x => x.CharactersSent;
                         break;
                     case User.Stats.Hug:
                         toSort = x => x.Hugged;

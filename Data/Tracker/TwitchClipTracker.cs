@@ -28,13 +28,11 @@ namespace MopsBot.Data.Tracker
         {
             Name = streamerName;
             TrackedClips = new Dictionary<DateTime, KeyValuePair<int, double>>();
-            ViewThreshold = 2;
 
             try
             {
                 var checkExists = FetchJSONDataAsync<APIResults.Twitch.Channel>($"https://api.twitch.tv/kraken/channels/{Name}?client_id={Program.Config["Twitch"]}").Result;
-                var test = checkExists.broadcaster_language;
-                SetTimer();
+                var test = checkExists.BroadcasterLanguage;
             }
             catch (Exception e)
             {
@@ -46,27 +44,10 @@ namespace MopsBot.Data.Tracker
         public async override void PostChannelAdded(ulong channelId)
         {
             base.PostChannelAdded(channelId);
-            ChannelConfig[channelId][VIEWTHRESHOLD] = ViewThreshold;
-
-            await UpdateTracker();
+            ChannelConfig[channelId][VIEWTHRESHOLD] = (uint)2;
         }
-
-        public override async void Conversion(object obj = null)
-        {
-            bool save = false;
-            foreach (var channel in ChannelConfig.Keys.ToList())
-            {
-                if (ViewThreshold > (uint)ChannelConfig[channel][VIEWTHRESHOLD])
-                {
-                    ChannelConfig[channel][VIEWTHRESHOLD] = ViewThreshold;
-                    save = true;
-                }
-            }
-            if (save)
-                await UpdateTracker();
-        }
-
-        protected async override void CheckForChange_Elapsed(object stateinfo)
+        
+        public async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
             {
@@ -110,7 +91,7 @@ namespace MopsBot.Data.Tracker
             try
             {
                 var acceptHeader = new KeyValuePair<string, string>("Accept", "application/vnd.twitchtv.v5+json");
-                var tmpResult = await FetchJSONDataAsync<TwitchClipResult>($"https://api.twitch.tv/kraken/clips/top?client_id={Program.Config["Twitch"]}&channel={name}&period=day{(!cursor.Equals("") ? $"&cursor={cursor}" : "")}", acceptHeader);
+                var tmpResult = await FetchJSONDataAsync<TwitchClipResult>($"https://api.twitch.tv/kraken/clips/top?client_id={Program.Config["Twitch"]}&channel={name}&limit=100&period=day{(!cursor.Equals("") ? $"&cursor={cursor}" : "")}", acceptHeader);
 
                 if (tmpResult.clips != null)
                 {

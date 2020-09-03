@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 
+// Change this namespace if desired
 namespace MopsBot
 {
     // This service requires that your bot is being run by a daemon that handles
@@ -11,6 +12,10 @@ namespace MopsBot
     //
     // If you do not have your bot setup to run in a daemon, this service will just
     // terminate the process and the bot will not restart.
+    // 
+    // Links to daemons:
+    // [Powershell (Windows+Unix)] https://gitlab.com/snippets/21444
+    // [Bash (Unix)] https://stackoverflow.com/a/697064
     public class ReliabilityService
     {
         // --- Begin Configuration Section ---
@@ -24,6 +29,8 @@ namespace MopsBot
         private static readonly LogSeverity _debug = LogSeverity.Debug;
         private static readonly LogSeverity _info = LogSeverity.Info;
         private static readonly LogSeverity _critical = LogSeverity.Critical;
+
+        private static DateTime lastDisconnect;
         // --- End Configuration Section ---
 
         private readonly DiscordSocketClient _discord;
@@ -64,7 +71,8 @@ namespace MopsBot
 
             return Task.CompletedTask;
         }
-
+        
+        private object resetLock = new object();
         private async Task CheckStateAsync()
         {
             // Client reconnected, no need to reset
@@ -74,13 +82,21 @@ namespace MopsBot
                 await InfoAsync("Attempting to reset the client");
 
                 var timeout = Task.Delay(_timeout);
+
+                lock(resetLock){
+                    while((DateTime.UtcNow - lastDisconnect).TotalSeconds <= 30 || StaticBase.GetMopsRAM() > 2200)
+                        Task.Delay(30000).Wait();
+                    
+                    lastDisconnect = DateTime.UtcNow;
+                }
+                
                 var connect = _discord.StartAsync();
                 var task = await Task.WhenAny(timeout, connect);
 
                 if (task == timeout)
                 {
                     await CriticalAsync("Client reset timed out (task deadlocked?), killing process");
-                    FailFast();
+                    //FailFast();
                 }
                 else if (connect.IsFaulted)
                 {

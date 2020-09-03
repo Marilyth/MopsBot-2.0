@@ -22,6 +22,7 @@ namespace MopsBot.Data.Tracker
         public string Regex;
         public string oldMatch;
         public DatePlot DataGraph;
+        public static readonly string TRACKEMPTYSTRINGS = "TrackEmptyStrings";
 
         public HTMLTracker() : base()
         {
@@ -38,8 +39,6 @@ namespace MopsBot.Data.Tracker
                 var value = fetchData().Result;
                 if (string.IsNullOrEmpty(value))
                     throw new ArgumentException();
-
-                SetTimer();
             }
             catch (Exception e)
             {
@@ -54,13 +53,36 @@ namespace MopsBot.Data.Tracker
                 DataGraph.InitPlot("Date", "Value", format: "dd-MMM", relative: false);
         }
 
-        protected async override void CheckForChange_Elapsed(object stateinfo)
+        public async override void PostChannelAdded(ulong channelId)
+        {
+            base.PostChannelAdded(channelId);
+
+            var config = ChannelConfig[channelId];
+            config[TRACKEMPTYSTRINGS] = false;
+        }
+
+        public override async void Conversion(object obj = null)
+        {
+            bool save = false;
+            foreach (var channel in ChannelConfig.Keys.ToList())
+            {
+                if (!ChannelConfig[channel].ContainsKey(TRACKEMPTYSTRINGS))
+                {
+                    ChannelConfig[channel][TRACKEMPTYSTRINGS] = false;
+                    save = true;
+                }
+            }
+            if (save)
+                await UpdateTracker();
+        }
+
+        public async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
             {
                 var match = await fetchData();
 
-                if (!string.IsNullOrEmpty(match))
+                if (!string.IsNullOrEmpty(match) || ChannelConfig.Any(x => (bool)x.Value[TRACKEMPTYSTRINGS]))
                 {
                     bool isNumeric;
 
@@ -71,14 +93,14 @@ namespace MopsBot.Data.Tracker
 
                     if((isNumeric = Double.TryParse(oldMatch, out double value)) && DataGraph == null){
                         DataGraph = new DatePlot("HTML" + Name.GetHashCode(), "Date", "Value", "dd-MMM", false);
-                        DataGraph.AddValue("Value", value, relative: false);
+                        DataGraph.AddValue("Value", value);
                     }
 
                     if (!match.Equals(oldMatch)){
                         if(isNumeric){
-                            DataGraph.AddValue("Value", value, relative: false);
+                            DataGraph.AddValue("Value", value);
                             var success = Double.TryParse(match, out value);
-                            if(success) DataGraph.AddValue("Value", value, relative: false);
+                            if(success) DataGraph.AddValue("Value", value);
                         }
 
                         foreach (var channel in ChannelConfig.Keys.ToList())
@@ -99,14 +121,14 @@ namespace MopsBot.Data.Tracker
         {
             var html = await Module.Information.GetURLAsync(Name.Split("|||")[0]);
             var match = System.Text.RegularExpressions.Regex.Match(html, Regex, System.Text.RegularExpressions.RegexOptions.Singleline);
-            return match.Groups.Last().Value;
+            return match.Groups.Values.Last().Value;
         }
 
         public static async Task<string> FetchData(string expression)
         {
             var html = await Module.Information.GetURLAsync(expression.Split("|||")[0]);
             var match = System.Text.RegularExpressions.Regex.Match(html, expression.Split("|||")[1], System.Text.RegularExpressions.RegexOptions.Singleline);
-            return match.Groups.Last().Value;
+            return match.Groups.Values.Last().Value;
         }
 
         public static async Task<System.Text.RegularExpressions.MatchCollection> FetchAllData(string expression)

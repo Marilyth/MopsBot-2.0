@@ -34,7 +34,6 @@ namespace MopsBot.Data.Tracker
             {
                 var checkExists = fetchStats(Name).Result;
                 stats = checkExists;
-                SetTimer();
             }
             catch (Exception e)
             {
@@ -43,7 +42,7 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        protected async override void CheckForChange_Elapsed(object stateinfo)
+        public async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
             {

@@ -20,7 +20,7 @@ namespace MopsBot
     {
         private static Exception mostRecentException = null;
         public CommandService commands { get; private set; }
-        private DiscordSocketClient client;
+        private DiscordShardedClient client;
         public IServiceProvider _provider { get; private set; }
 
         /// <summary>
@@ -32,9 +32,12 @@ namespace MopsBot
         {
             // Create Command Service, inject it into Dependency Map
             _provider = provider;
-            client = _provider.GetService<DiscordSocketClient>();
+            client = _provider.GetService<DiscordShardedClient>();
 
-            commands = new CommandService();
+            commands = new CommandService(new CommandServiceConfig()
+            {
+                DefaultRunMode = RunMode.Async,
+            });
             //_map.Add(commands);
 
             commands.AddTypeReader(typeof(MopsBot.Data.Tracker.BaseTracker), new Module.TypeReader.TrackerTypeReader());
@@ -43,7 +46,7 @@ namespace MopsBot
             await loadCustomCommands();
             client.MessageReceived += HandleCommand;
             commands.CommandExecuted += CommandExecuted;
-            commands.Log += async (LogMessage log) => mostRecentException = log.Exception;
+            commands.Log += (LogMessage log) => { mostRecentException = log.Exception; return Task.CompletedTask; };
             client.UserJoined += Client_UserJoined;
         }
 
@@ -59,6 +62,8 @@ namespace MopsBot
             }
         }
 
+
+        public static Dictionary<ulong, int> MessagesPerGuild = new Dictionary<ulong, int>();
         /// <summary>
         /// Checks if message is a command, and executes it
         /// </summary>
@@ -67,8 +72,22 @@ namespace MopsBot
         {
             Task.Run(async () =>
             {
-                // Don't handle the command if it is a system message
                 var message = parameterMessage as SocketUserMessage;
+                if(!(message.Channel is IDMChannel)){
+                    var guildId = ((SocketGuildChannel)message.Channel).Guild.Id;
+                    MessagesPerGuild[guildId] = MessagesPerGuild.ContainsKey(guildId) ? MessagesPerGuild[guildId] + 1 : 1;
+                }
+
+                //Add experience the size of the message length
+                /*if(message.Channel is SocketGuildChannel channel && (!message.Author.IsBot || message.Author.Id == Program.Client.CurrentUser.Id)){
+                    if((DateTime.Now - System.Diagnostics.Process.GetCurrentProcess().StartTime).Minutes >= 2 && channel.Guild.MemberCount <= 10000){
+                        await MopsBot.Data.Entities.User.ModifyUserAsync(message.Author.Id, x => {
+                            x.CharactersSent += message.Content.Length;
+                            x.AddGraphValue(message.Content.Length);
+                        });
+                    }
+                }*/
+
                 if (message == null || (message.Author.IsBot && !message.Content.StartsWith("[ProcessBotMessage]"))) return;
 
                 // Mark where the prefix ends and the command begins
@@ -80,46 +99,48 @@ namespace MopsBot
                 else id = ((SocketGuildChannel)message.Channel).Guild.Id;
                 var prefix = await GetGuildPrefixAsync(id);
 
-                //Add experience the size of the message length
-                // if(message.Channel is SocketGuildChannel channel){
-                //     if((DateTime.Now - System.Diagnostics.Process.GetCurrentProcess().StartTime).Minutes >= 2 && channel.Guild.MemberCount <= 10000){
-                //         await MopsBot.Data.Entities.User.ModifyUserAsync(message.Author.Id, x => {
-                //             x.Experience += message.Content.Length;
-                //             x.AddGraphValue(message.Content.Length);
-                //         });
-                //     }
-                // }
-
                 // Determine if the message has a valid prefix, adjust argPos 
                 if (!message.Content.StartsWith("[ProcessBotMessage]") && !(message.HasMentionPrefix(client.CurrentUser, ref argPos) || message.HasStringPrefix(prefix, ref argPos) || message.HasCharPrefix('?', ref argPos))) return;
 
                 if (char.IsWhiteSpace(message.Content[argPos]))
                     argPos += 1;
 
+                var context = new ShardedCommandContext(client, message);
+
                 if (message.HasCharPrefix('?', ref argPos))
                 {
-                    await getCommands(parameterMessage, prefix);
+                    await commands.Commands.First(x => x.Name.Equals("help")).ExecuteAsync(context, new List<object> { $"{context.Message.Content.Substring(argPos)}" }, new List<object> { }, _provider);
                     return;
                 }
 
                 if (message.Content.StartsWith("[ProcessBotMessage]"))
                     argPos = "[ProcessBotMessage]".Length;
 
-                // Create a Command Context
-                var context = new SocketCommandContext(client, message);
-
                 //Execute if command exists
                 if (commands.Search(context, argPos).IsSuccess)
                 {
-                    await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"executed command: {parameterMessage.Content.Substring(argPos)}"));
+                    /*if((await MopsBot.Data.Entities.User.GetUserAsync(message.Author.Id)).IsBanned){
+                        await context.Channel.SendMessageAsync("You are banned from using Mops.");
+                        return;
+                    }*/
+
+                    await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"{parameterMessage.Author} ({parameterMessage.Author.Id}) executed command: {parameterMessage.Content.Substring(argPos)}"));
                     var result = await commands.ExecuteAsync(context, argPos, _provider);
                 }
 
                 //Else execute custom commands
                 else if (!message.Author.IsBot && CustomCommands.ContainsKey(context.Guild.Id) && CustomCommands[context.Guild.Id].Commands.ContainsKey(context.Message.Content.Substring(argPos).Split(" ").First()))
                 {
-                    await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"executed command: {parameterMessage.Content.Substring(argPos)}"));
-                    await commands.Commands.First(x => x.Name.Equals("UseCustomCommand")).ExecuteAsync(context, new List<object> { $"{context.Message.Content.Substring(argPos)}" }, new List<object> { }, _provider);
+                    if (CustomCommands[context.Guild.Id].CheckPermission(context.Message.Content.Substring(argPos).Split(" ").First(), (SocketGuildUser)context.User))
+                    {
+                        /*if((await MopsBot.Data.Entities.User.GetUserAsync(message.Author.Id)).IsBanned){
+                            await context.Channel.SendMessageAsync("You are banned from using Mops.");
+                            return;
+                        }*/
+
+                        await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"executed command: {parameterMessage.Content.Substring(argPos)}"));
+                        await commands.Commands.First(x => x.Name.Equals("UseCustomCommand")).ExecuteAsync(context, new List<object> { $"{context.Message.Content.Substring(argPos)}" }, new List<object> { }, _provider);
+                    }
                 }
             });
         }
@@ -127,7 +148,8 @@ namespace MopsBot
         public async Task CommandExecuted(Discord.Optional<CommandInfo> commandInfo, ICommandContext context, IResult result)
         {
             // If the command failed, notify the user
-            if (!result.IsSuccess && !result.ErrorReason.Equals("") && !context.Guild.Id.Equals(264445053596991498))
+            if (!result.IsSuccess && !result.ErrorReason.Equals("") && !context.Guild.Id.Equals(264445053596991498) && 
+                !context.Message.Content.Contains("help", StringComparison.InvariantCultureIgnoreCase) && !context.Message.Content.StartsWith("?"))
             {
                 Task.Run(async () =>
                 {
@@ -148,47 +170,28 @@ namespace MopsBot
                     }
                 });
 
-                if (result.ErrorReason.Contains("The input text has too many parameters"))
-                    await context.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}\nIf your parameter contains spaces, please wrap it around quotation marks like this: `\"A Parameter\"`.");
-                else if (!result.ErrorReason.Contains("Command not found"))
-                    await context.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}");
+                if(!context.Message.Content.Contains("help", StringComparison.InvariantCultureIgnoreCase) && !context.Message.Content.StartsWith("?")){
+                    if (result.ErrorReason.Contains("The input text has too many parameters"))
+                        await context.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}\nIf your parameter contains spaces, please wrap it around quotation marks like this: `\"A Parameter\"`.");
+                    else if (!result.ErrorReason.Contains("Command not found"))
+                        await context.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}");
+                }
             }
 
+            else if(result.IsSuccess){
+                var cmdEmbed = new EmbedBuilder().AddField("Guild", $"{context.Guild.Name} ({context.Guild.Id})", true).AddField("Channel", $"{context.Channel.Name} ({context.Channel.Id})").AddField("User", $"{context.User} ({context.User.Id})").AddField("Command", context.Message.Content);
+                await (Program.Client.GetChannel(689393210438582285) as ITextChannel).SendMessageAsync(embed: cmdEmbed.Build());
+            }
 
             else if (result.IsSuccess && context.Message.Content.Contains("track", StringComparison.InvariantCultureIgnoreCase))
             {
                 if ((await MopsBot.Data.Entities.User.GetUserAsync(context.User.Id)).IsTaCDue())
                 {
-                    await context.Channel.SendMessageAsync($"Weekly reminder:\nBy using Mops's tracking services, you agree to these terms and conditions: {Program.Config["ServerAddress"]}/Terms_And_Conditions");
+                    await context.Channel.SendMessageAsync($"Weekly reminder:\nBy using Mops' tracking services, you agree to our terms and conditions as well as our privacy policy: {Program.Config["ServerAddress"]}/Terms_And_Conditions\n{Program.Config["ServerAddress"]}/Privacy_Policy");
                     await MopsBot.Data.Entities.User.ModifyUserAsync(context.User.Id, x => x.LastTaCReminder = DateTime.UtcNow);
                 }
             }
         }
-
-        /// <summary>
-        /// Creates help message as well as command information, and sends it
-        /// </summary>
-        /// <param name="msg">The message recieved</param>
-        public async Task getCommands(SocketMessage msg, string prefix)
-        {
-            EmbedBuilder e = new EmbedBuilder();
-            e.WithDescription("For more information regarding a **specific command** or **command group***,\nplease use **?<command>** or " +
-                              $"**{prefix}help <command>**")
-             .WithColor(Discord.Color.Blue)
-             .WithAuthor(async x =>
-             {
-                 x.IconUrl = (await ((IDiscordClient)Program.Client).GetGuildAsync(435919579005321237)).IconUrl;
-                 x.Name = "Click to join the Support Server!";
-                 x.Url = "https://discord.gg/wZFE2Zs";
-             });
-
-            string message = msg.Content.Replace("?", "").ToLower();
-            Embed embed = getHelpEmbed(message, prefix, e).Build();
-
-            if (embed != null)
-                await msg.Channel.SendMessageAsync("", embed: embed);
-        }
-
 
         /// <summary>
         /// Creates the embed that is sent whenever ?command is called
@@ -230,13 +233,22 @@ namespace MopsBot
 
             if (commandName != null)
             {
-                CommandInfo curCommand = commands.Commands.First(x => x.Name.ToLower().Equals(commandName) && (moduleNames.Length > 0 ? x.Module.Name.ToLower().Equals(moduleNames.LastOrDefault()) : true));
+                var matches = commands.Commands.Where(x => x.Name.ToLower().Equals(commandName) && (moduleNames.Length > 0 ? x.Module.Name.ToLower().Equals(moduleNames.LastOrDefault()) : true));
+                var perfectMatch = matches.FirstOrDefault(match => CommandToString(match).ToLower().Equals(((moduleNames.Count() > 0 ? string.Join(" ", moduleNames) + " " : "") + commandName).ToLower()));
 
-                if (curCommand.Summary.Equals(""))
+                if (matches.Count() > 1 && perfectMatch == null)
+                {
+                    throw new Exception($"Multiple commands found, please specify between:\n```{String.Join("\n", matches.Select(x => CommandToString(x)))}```");
+                }
+
+                CommandInfo curCommand = perfectMatch;
+
+                if (curCommand?.Summary.Equals("") ?? true)
                 {
                     throw new Exception("Command not found");
                 }
-                output += $"`{prefix}{string.Join(" ", moduleNames.Append(curCommand.Name))}";
+
+                output += $"`{prefix}{CommandToString(curCommand)}";
 
                 foreach (Discord.Commands.ParameterInfo p in curCommand.Parameters)
                 {
@@ -267,7 +279,7 @@ namespace MopsBot
                     }
                 }
 
-                e = createHelpEmbed($"{string.Join(" ", moduleNames.Append(curCommand.Name))}", output, curCommand.Summary, e, preconditions);
+                e = createHelpEmbed($"{CommandToString(curCommand)}", output, curCommand.Summary, e, preconditions);
                 // if(curCommand.Parameters.Any(x=> x.IsOptional)){
                 //     output +="\n\n**Default Values**:";
                 //     foreach(var p in curCommand.Parameters.Where(x=>x.IsOptional))
@@ -287,12 +299,25 @@ namespace MopsBot
                 string moduleInformation = "";
                 moduleInformation += string.Join(", ", module.Commands.Where(x => !x.Preconditions.OfType<HideAttribute>().Any()).Select(x => $"[{x.Name}]({CommandHandler.GetCommandHelpImage($"{string.Join(" ", moduleNames)} {x.Name}")})"));
                 moduleInformation += "\n";
-                
+
                 moduleInformation += string.Join(", ", module.Submodules.Where(x => !x.Preconditions.Any(y => y is HideAttribute)).Select(x => $"[{x.Name}\\*]({CommandHandler.GetCommandHelpImage(x.Name)})"));
 
                 e.AddField($"**{module.Name}**", moduleInformation);
             }
             return e;
+        }
+
+        public static string CommandToString(CommandInfo c)
+        {
+            string output = c.Name;
+            ModuleInfo module = c.Module;
+            while (module?.IsSubmodule ?? false)
+            {
+                output = module.Name + " " + output;
+                module = module.Parent;
+            }
+
+            return output;
         }
 
         public static string GetCommandHelpImage(string command)
@@ -327,7 +352,7 @@ namespace MopsBot
             embed.AddField("Command", command.Name + " (" + string.Join(", ", command.Parameters.Select(x => $"{x.Type.ToString()} {x.Name}{(x.IsOptional ? " = " + x.DefaultValue : "")}")) + ")");
             var userPermissions = (context.User as SocketGuildUser).GetPermissions(context.Channel as IGuildChannel);
             var mopsPermissions = context.Guild.GetUser(Program.Client.CurrentUser.Id).GetPermissions(context.Channel as IGuildChannel);
-            embed.AddField("User", context.User.Username + "#" + context.User.Discriminator + "\nPerms: " +
+            embed.AddField("User", context.User.Username + "#" + context.User.Discriminator + " (" + context.User.Id + ")\nPerms: " +
                                    userPermissions.ToString(), inline: true);
             embed.AddField("Bot", Program.Client.CurrentUser.Username + "#" + Program.Client.CurrentUser.Discriminator + "\nPerms: " +
                                   mopsPermissions.ToString(), inline: true);

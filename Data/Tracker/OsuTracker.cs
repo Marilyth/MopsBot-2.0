@@ -43,7 +43,6 @@ namespace MopsBot.Data.Tracker
             {
                 var checkExists = fetchUser().Result;
                 var test = checkExists.username;
-                SetTimer();
             }
             catch (Exception e)
             {
@@ -56,17 +55,21 @@ namespace MopsBot.Data.Tracker
         {
             base.PostChannelAdded(channelId);
             ChannelConfig[channelId][PPTHRESHOLD] = 0.1;
-
-            await UpdateTracker();
         }
 
-        protected async override void CheckForChange_Elapsed(object stateinfo)
+        public async override void CheckForChange_Elapsed(object stateinfo)
         {
             try
             {
                 foreach (var pp in AllPP.ToList())
                 {
                     OsuResult userInformation = await fetchUser(pp.Key);
+                    try{
+                        if(pp.Value + ChannelConfig.Select(x => (double)x.Value[PPTHRESHOLD]).Min() >= double.Parse(userInformation.pp_raw, CultureInfo.InvariantCulture)) continue;
+                    } catch{
+                        continue;
+                    }
+                    
                     var recentScores = await fetchRecent(pp.Key);
                     RecentScore scoreInformation = recentScores.FirstOrDefault(x => !x.rank.Equals("F"));
                     Beatmap beatmapInformation = scoreInformation != null ? await fetchBeatmap(scoreInformation.beatmap_id, pp.Key, int.Parse(scoreInformation.enabled_mods)) : null;
