@@ -45,6 +45,7 @@ namespace MopsBot
                 AlwaysDownloadUsers = false,
             });
 
+            System.IO.Directory.CreateDirectory(".//mopsdata//");
             using (StreamReader sr = new StreamReader(new FileStream("mopsdata//Config.json", FileMode.Open)))
                 Config = JsonConvert.DeserializeObject<Dictionary<string, string>>(sr.ReadToEnd());
 

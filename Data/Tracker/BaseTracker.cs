@@ -14,6 +14,7 @@ using Microsoft.Win32.SafeHandles;
 using MongoDB.Bson.Serialization.Options;
 using MongoDB.Bson.Serialization.Attributes;
 using System.ServiceModel.Syndication;
+using Newtonsoft.Json.Serialization;
 
 namespace MopsBot.Data.Tracker
 {
