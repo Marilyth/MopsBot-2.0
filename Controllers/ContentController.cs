@@ -20,7 +20,7 @@ namespace MopsBot.Api.Controllers
         public IActionResult Get()
         {         
             Dictionary<string, string[]> parameters = HttpContext.Request.Query.ToDictionary(x => x.Key, x => x.Value.ToArray());
-            if(parameters.ContainsKey("name") && System.IO.File.Exists($"mopsdata//Images//{parameters["name"].First()}")){
+            if(parameters.ContainsKey("name") && !parameters["name"].First().Contains("..") && parameters["name"].First().EndsWith(".png") && System.IO.File.Exists($"mopsdata//Images//{parameters["name"].First()}")){
                 Byte[] b = System.IO.File.ReadAllBytes($"mopsdata//Images//{parameters["name"].First()}");          
                 return File(b, $"image/{(parameters["name"].First().Contains("png") ? "png" : "jpeg")}");
             } else {        
