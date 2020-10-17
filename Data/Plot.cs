@@ -441,7 +441,7 @@ namespace MopsBot.Data
                         f.Delete();
 
                     if (!path)
-                        return $"{Program.Config["ServerAddress"]}:5000/Content?name={fileName}.png&rand={StaticBase.ran.Next(0, 999999999)}";
+                        return $"{Program.Config["ServerAddress"]}:5000/api/Content?name={fileName}.png&rand={StaticBase.ran.Next(0, 999999999)}";
                     else return $"mopsdata//Images//{fileName}.png";
                 }
                 else
