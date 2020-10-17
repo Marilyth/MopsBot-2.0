@@ -9,8 +9,8 @@ RUN wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-p
 RUN dpkg -i packages-microsoft-prod.deb
 RUN apt update
 RUN apt-get install -y imagemagick
-COPY ./execute.sh ./
+COPY ./Docker/execute.sh ./
 RUN chmod +x ./execute.sh
-COPY ../bin/Debug/netcoreapp3.1/linux-x64/publish /publish
+COPY ./bin/Debug/netcoreapp3.1/linux-x64/publish /publish
 EXPOSE 5000
 CMD ["./execute.sh"]
