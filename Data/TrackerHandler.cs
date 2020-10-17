@@ -52,13 +52,10 @@ namespace MopsBot.Data
         public override void PostInitialisation()
         {
             var collection = StaticBase.Database.GetCollection<T>(typeof(T).Name).FindSync<T>(x => true).ToList();
-            //var collection = MopsJsonSave.LoadDictionary<T>(typeof(T).Name);
             IncreaseGraph = StaticBase.Database.GetCollection<DatePlot>("TrackerHandler").FindSync<DatePlot>(x => x.ID.Equals(typeof(T).Name + "Handler")).FirstOrDefault();
-            //IncreaseGraph = MopsJsonSave.LoadEntity<DatePlot>("TrackerHandler", typeof(T).Name + "Handler");
             IncreaseGraph?.InitPlot("Date", "Tracker Increase", "dd-MMM", false);
 
             trackers = collection.ToDictionary(x => x.Name);
-            MopsJsonSave.SaveDictionary<T>(trackers, typeof(T).Name);
 
             trackers = (trackers == null ? new Dictionary<string, T>() : trackers);
 
@@ -184,7 +181,6 @@ namespace MopsBot.Data
                 try
                 {
                     StaticBase.Database.GetCollection<BaseTracker>(typeof(T).Name).ReplaceOneAsync(x => x.Name.Equals(tracker.Name), tracker, new UpdateOptions { IsUpsert = true }).Wait();
-                    MopsJsonSave.SaveEntity(typeof(T).Name, tracker.Name, tracker);
                 }
                 catch (Exception e)
                 {
@@ -200,7 +196,6 @@ namespace MopsBot.Data
                 try
                 {
                     StaticBase.Database.GetCollection<T>(typeof(T).Name).DeleteOneAsync(x => x.Name.Equals(tracker.Name)).Wait();
-                    MopsJsonSave.RemoveEntity(typeof(T).Name, tracker.Name);
                 }
                 catch (Exception e)
                 {
@@ -301,7 +296,6 @@ namespace MopsBot.Data
             }
 
             await StaticBase.Database.GetCollection<DatePlot>("TrackerHandler").ReplaceOneAsync(x => x.ID.Equals(typeof(T).Name + "Handler"), IncreaseGraph, new UpdateOptions { IsUpsert = true });
-            MopsJsonSave.SaveEntity("TrackerHandler", typeof(T).Name + "Handler", IncreaseGraph);
         }
 
         public override async Task<Embed> GetEmbed()
