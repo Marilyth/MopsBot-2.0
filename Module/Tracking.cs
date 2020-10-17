@@ -106,7 +106,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
-            [TrackerLimit(30, TrackerType.Twitter)]
+            [TrackerLimit(TrackerType.Twitter)]
             public async Task trackTwitter(string twitterUser, [Remainder] string tweetNotification = "~Tweet Tweet~")
             {
                 twitterUser = twitterUser.ToLower().Replace("@", "");
@@ -234,6 +234,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
+            [TrackerLimit(TrackerType.Osu)]
             public async Task trackOsu([Remainder] string OsuUser)
             {
                 using (Context.Channel.EnterTypingState())
@@ -322,7 +323,7 @@ namespace MopsBot.Module
             [Summary("Keeps track of the specified Youtuber, in the Channel you are calling this command in.\nYoutubes Terms of Service and Googles privacy policy apply:\nhttps://www.youtube.com/t/terms \nhttp://www.google.com/policies/privacy")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
-            [TrackerLimit(30, TrackerType.Youtube)]
+            [TrackerLimit(TrackerType.Youtube)]
             public async Task trackYoutube(string channelID, [Remainder] string notificationMessage = "New Video")
             {
                 using (Context.Channel.EnterTypingState())
@@ -396,7 +397,7 @@ namespace MopsBot.Module
             [RequireBotPermission(ChannelPermission.ManageMessages)]
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
-            [TrackerLimit(50, TrackerType.Twitch)]
+            [TrackerLimit(TrackerType.Twitch)]
             public async Task trackStreamer(string streamerName, [Remainder] string notificationMessage = "Stream went live!")
             {
                 using (Context.Channel.EnterTypingState())
@@ -641,7 +642,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
-            [TrackerLimit(50, TrackerType.TwitchClip)]
+            [TrackerLimit(TrackerType.TwitchClip)]
             public async Task trackClips(string streamerName, [Remainder] string notificationMessage = "New trending clip found!")
             {
                 using (Context.Channel.EnterTypingState())
@@ -728,6 +729,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
+            [TrackerLimit(TrackerType.Reddit)]
             public async Task trackSubreddit(string subreddit, [Remainder] string query = null)
             {
                 using (Context.Channel.EnterTypingState())
@@ -822,6 +824,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
+            [TrackerLimit(TrackerType.Overwatch)]
             public async Task trackOW(string owUser)
             {
                 using (Context.Channel.EnterTypingState())
@@ -904,6 +907,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
+            [TrackerLimit(TrackerType.JSON)]
             public async Task trackJson(string source, [Remainder] string paths)
             {
                 using (Context.Channel.EnterTypingState())
@@ -920,6 +924,7 @@ namespace MopsBot.Module
                      "always:<location> adds the value to the embed, regardless of whether it changed or not.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
+            [TrackerLimit(TrackerType.JSON)]
             public async Task trackExtended(string source, string body, [Remainder] string paths)
             {
                 using (Context.Channel.EnterTypingState())
@@ -1038,6 +1043,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
+            [TrackerLimit(TrackerType.OSRS)]
             public async Task Track(string name, [Remainder] string notification = "")
             {
                 name = name.ToLower();
@@ -1131,6 +1137,7 @@ namespace MopsBot.Module
         {
             [Command("TrackRegex", RunMode = RunMode.Async)]
             [Summary("Tracks regex on a webpage. Use () around the text you want to track to signify a match.")]
+            [TrackerLimit(TrackerType.HTML)]
             public async Task TrackRegex(string website, [Remainder] string scrapeRegex)
             {
                 using (Context.Channel.EnterTypingState())
@@ -1142,6 +1149,7 @@ namespace MopsBot.Module
 
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Tracks plain text on a webpage, and notifies whenever that text changes.\nThis command will guide you through the process.")]
+            [TrackerLimit(TrackerType.HTML)]
             public async Task TrackText(string website, string textToTrack, int leftContextLength = 4, int rightContextLength = 1)
             {
                 using (Context.Channel.EnterTypingState())
@@ -1267,7 +1275,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
-            [TrackerLimit(40, TrackerType.RSS)]
+            [TrackerLimit(TrackerType.RSS)]
             public async Task TrackRSS(string url, string notification = "")
             {
                 using (Context.Channel.EnterTypingState())
@@ -1349,6 +1357,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
+            [TrackerLimit(TrackerType.Steam)]
             public async Task Track([Remainder] string SteamNameOrId)
             {
                 using (Context.Channel.EnterTypingState())

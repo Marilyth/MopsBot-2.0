@@ -127,7 +127,7 @@ namespace MopsBot.Data
             foreach (var f in files)
                 f.Delete();
 
-            return $"{Program.Config["ServerAddress"]}/Content?name={ID.Replace(" ", "%20")}barplot.png&rand={StaticBase.ran.Next(0, 999999999)}";
+            return $"{Program.Config["ServerAddress"]}:5000/api/Content?name={ID.Replace(" ", "%20")}barplot.png&rand={StaticBase.ran.Next(0, 999999999)}";
         }
 
         /// <summary>
@@ -268,7 +268,7 @@ namespace MopsBot.Data
             foreach (var f in files)
                 f.Delete();
 
-            return $"{Program.Config["ServerAddress"]}:5000/Content?name={ID.Replace(" ", "%20")}barplot.png&rand={StaticBase.ran.Next(0, 999999999)}";
+            return $"{Program.Config["ServerAddress"]}:5000/api/Content?name={ID.Replace(" ", "%20")}barplot.png&rand={StaticBase.ran.Next(0, 999999999)}";
         }
 
         /// <summary>
@@ -449,7 +449,7 @@ namespace MopsBot.Data
                     return $"mopsdata//{fileName}.pdf";
                 }
             }
-            return $"{Program.Config["ServerAddress"]}:5000/Content?name={fileName}.png&rand={StaticBase.ran.Next(0, 999999999)}";
+            return $"{Program.Config["ServerAddress"]}:5000/api/Content?name={fileName}.png&rand={StaticBase.ran.Next(0, 999999999)}";
         }
 
         public void AddValue(string name, double value, DateTime? xValue = null, bool savePlot = true, bool replace = false)

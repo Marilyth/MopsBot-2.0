@@ -74,24 +74,26 @@ namespace MopsBot
                 Tweetinvi.Logic.JsonConverters.JsonPropertyConverterRepository.JsonConverters.Add(typeof(Tweetinvi.Models.Language), new CustomJsonLanguageConverter());
 
                 Trackers = new Dictionary<BaseTracker.TrackerType, Data.TrackerWrapper>();
-                Trackers[BaseTracker.TrackerType.Twitter] = new TrackerHandler<TwitterTracker>(1800000);
-                Trackers[BaseTracker.TrackerType.Youtube] = new TrackerHandler<YoutubeTracker>(3600000);
-                Trackers[BaseTracker.TrackerType.Twitch] = new TrackerHandler<TwitchTracker>(3600000);
-                Trackers[BaseTracker.TrackerType.YoutubeLive] = new TrackerHandler<YoutubeLiveTracker>(900000);
-                Trackers[BaseTracker.TrackerType.Reddit] = new TrackerHandler<RedditTracker>();
-                Trackers[BaseTracker.TrackerType.JSON] = new TrackerHandler<JSONTracker>(updateInterval: 600000);
-                Trackers[BaseTracker.TrackerType.Osu] = new TrackerHandler<OsuTracker>();
-                Trackers[BaseTracker.TrackerType.Overwatch] = new TrackerHandler<OverwatchTracker>(3600000);
-                Trackers[BaseTracker.TrackerType.TwitchGroup] = new TrackerHandler<TwitchGroupTracker>(60000);
-                Trackers[BaseTracker.TrackerType.TwitchClip] = new TrackerHandler<TwitchClipTracker>();
-                Trackers[BaseTracker.TrackerType.OSRS] = new TrackerHandler<OSRSTracker>();
-                Trackers[BaseTracker.TrackerType.HTML] = new TrackerHandler<HTMLTracker>();
-                Trackers[BaseTracker.TrackerType.RSS] = new TrackerHandler<RSSTracker>(3600000);
-                Trackers[BaseTracker.TrackerType.Steam] = new TrackerHandler<SteamTracker>();
+                Trackers[BaseTracker.TrackerType.Twitter] = new TrackerHandler<TwitterTracker>(Program.TrackerLimits["Twitter"]["PollInterval"], Program.TrackerLimits["Twitter"]["UpdateInterval"]);
+                Trackers[BaseTracker.TrackerType.Youtube] = new TrackerHandler<YoutubeTracker>(Program.TrackerLimits["Youtube"]["PollInterval"], Program.TrackerLimits["Youtube"]["UpdateInterval"]);
+                Trackers[BaseTracker.TrackerType.Twitch] = new TrackerHandler<TwitchTracker>(Program.TrackerLimits["Twitch"]["PollInterval"], Program.TrackerLimits["Twitch"]["UpdateInterval"]);
+                Trackers[BaseTracker.TrackerType.YoutubeLive] = new TrackerHandler<YoutubeLiveTracker>(Program.TrackerLimits["YoutubeLive"]["PollInterval"], Program.TrackerLimits["YoutubeLive"]["UpdateInterval"]);
+                Trackers[BaseTracker.TrackerType.Reddit] = new TrackerHandler<RedditTracker>(Program.TrackerLimits["Reddit"]["PollInterval"], Program.TrackerLimits["Reddit"]["UpdateInterval"]);
+                Trackers[BaseTracker.TrackerType.JSON] = new TrackerHandler<JSONTracker>(Program.TrackerLimits["JSON"]["PollInterval"], Program.TrackerLimits["JSON"]["UpdateInterval"]);
+                Trackers[BaseTracker.TrackerType.Osu] = new TrackerHandler<OsuTracker>(Program.TrackerLimits["Osu"]["PollInterval"], Program.TrackerLimits["Osu"]["UpdateInterval"]);
+                Trackers[BaseTracker.TrackerType.Overwatch] = new TrackerHandler<OverwatchTracker>(Program.TrackerLimits["Overwatch"]["PollInterval"], Program.TrackerLimits["Overwatch"]["UpdateInterval"]);
+                Trackers[BaseTracker.TrackerType.TwitchGroup] = new TrackerHandler<TwitchGroupTracker>(Program.TrackerLimits["TwitchGroup"]["PollInterval"], Program.TrackerLimits["TwitchGroup"]["UpdateInterval"]);
+                Trackers[BaseTracker.TrackerType.TwitchClip] = new TrackerHandler<TwitchClipTracker>(Program.TrackerLimits["TwitchClip"]["PollInterval"], Program.TrackerLimits["TwitchClip"]["UpdateInterval"]);
+                Trackers[BaseTracker.TrackerType.OSRS] = new TrackerHandler<OSRSTracker>(Program.TrackerLimits["OSRS"]["PollInterval"], Program.TrackerLimits["OSRS"]["UpdateInterval"]);
+                Trackers[BaseTracker.TrackerType.HTML] = new TrackerHandler<HTMLTracker>(Program.TrackerLimits["HTML"]["PollInterval"], Program.TrackerLimits["HTML"]["UpdateInterval"]);
+                Trackers[BaseTracker.TrackerType.RSS] = new TrackerHandler<RSSTracker>(Program.TrackerLimits["RSS"]["PollInterval"], Program.TrackerLimits["RSS"]["UpdateInterval"]);
+                Trackers[BaseTracker.TrackerType.Steam] = new TrackerHandler<SteamTracker>(Program.TrackerLimits["Steam"]["PollInterval"], Program.TrackerLimits["Steam"]["UpdateInterval"]);
 
                 foreach (var tracker in Trackers)
                 {
                     var trackerType = tracker.Key;
+                    if(Program.TrackerLimits[trackerType.ToString()]["TrackersPerServer"] <= 0)
+                        continue;
 
                     if (tracker.Key == BaseTracker.TrackerType.Twitch)
                     {
@@ -243,6 +245,8 @@ namespace MopsBot
                         }
 
                         BaseTracker.TrackerType type = (BaseTracker.TrackerType)status++;
+                        if(Program.TrackerLimits[type.ToString()]["TrackersPerServer"] <= 0)
+                            continue;
 
                         //Skip everything after GW2, as this is hidden
                         if (type.ToString().Equals("GW2"))
