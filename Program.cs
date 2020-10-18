@@ -61,7 +61,7 @@ namespace MopsBot
                 StaticBase.UpdateStatusAsync();
             });
 
-            await Client.LoginAsync(TokenType.Bot, Config["Discord"]);
+            await Client.LoginAsync(TokenType.Bot, Config["DiscordToken"]);
             foreach(var shard in Client.Shards){
                 await shard.StartAsync();
                 do{

@@ -66,7 +66,7 @@ namespace MopsBot
                     Program.TrackerLimits["YoutubeLive"]["TrackersPerServer"] = 0;
                 }
                 
-                var twitchKeys = new List<string>(){"TwitchKey"};
+                var twitchKeys = new List<string>(){"TwitchKey", "TwitchSecret"};
                 if(twitchKeys.Any(key => !Program.Config.ContainsKey(key) || string.IsNullOrEmpty(Program.Config[key]))){
                     Program.TrackerLimits["Twitch"]["TrackersPerServer"] = 0;
                     Program.TrackerLimits["TwitchClip"]["TrackersPerServer"] = 0;
