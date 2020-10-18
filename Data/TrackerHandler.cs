@@ -95,7 +95,7 @@ namespace MopsBot.Data
 
             nextTracker = new System.Threading.Timer(LoopTrackers);
             loopQueue = trackers.Values.ToList();
-            if (trackers.FirstOrDefault().Value is BaseUpdatingTracker)
+            if (typeof(T).IsSubclassOf(typeof(BaseUpdatingTracker)))
             {
                 nextUpdate = new System.Threading.Timer(LoopTrackersUpdate);
                 loopQueue = trackers.Where(x => (x.Value as BaseUpdatingTracker).ToUpdate.Count == 0).Select(x => x.Value).ToList();
