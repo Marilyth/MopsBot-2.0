@@ -60,22 +60,24 @@ namespace MopsBot
                 if(twitterKeys.Any(key => !Program.Config.ContainsKey(key))) Program.TrackerLimits["Twitter"]["TrackersPerServer"] = 0;
                 
                 var youtubeKeys = new List<string>(){"YoutubeKey"};
-                if(youtubeKeys.Any(key => !Program.Config.ContainsKey(key))){
+                if(youtubeKeys.Any(key => !Program.Config.ContainsKey(key) || string.IsNullOrEmpty(Program.Config[key]))){
                     Program.TrackerLimits["Youtube"]["TrackersPerServer"] = 0;
                     Program.TrackerLimits["YoutubeLive"]["TrackersPerServer"] = 0;
                 }
                 
                 var twitchKeys = new List<string>(){"TwitchKey"};
-                if(twitchKeys.Any(key => !Program.Config.ContainsKey(key))){
+                if(twitchKeys.Any(key => !Program.Config.ContainsKey(key) || string.IsNullOrEmpty(Program.Config[key]))){
                     Program.TrackerLimits["Twitch"]["TrackersPerServer"] = 0;
                     Program.TrackerLimits["TwitchClip"]["TrackersPerServer"] = 0;
                 }
                 
                 var osuKeys = new List<string>(){"OsuKey"};
-                if(osuKeys.Any(key => !Program.Config.ContainsKey(key))) Program.TrackerLimits["Osu"]["TrackersPerServer"] = 0;
+                if(osuKeys.Any(key => !Program.Config.ContainsKey(key) || string.IsNullOrEmpty(Program.Config[key]))) 
+                    Program.TrackerLimits["Osu"]["TrackersPerServer"] = 0;
 
                 var steamKeys = new List<string>(){"SteamKey"};
-                if(steamKeys.Any(key => !Program.Config.ContainsKey(key))) Program.TrackerLimits["Steam"]["TrackersPerServer"] = 0;
+                if(steamKeys.Any(key => !Program.Config.ContainsKey(key) || string.IsNullOrEmpty(Program.Config[key]))) 
+                    Program.TrackerLimits["Steam"]["TrackersPerServer"] = 0;
 
 
                 HttpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)");
