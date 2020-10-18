@@ -21,14 +21,11 @@ Mainly a Tracker. Keeps track of Twitch streamers/clips, Youtubers, Twitters, Re
    
 6. Done. You can now modify the [Config.json](#config-entries) and [TrackerLimits.json](#trackerlimits-entries) in the ./mopsdata folder and start Mops with <code>docker start mopsbot</code> after you are done.
 
-# Gathering API Keys
-If you want to use a service that requires API keys, you can obtain them here:
-
-- [Twitch](https://dev.twitch.tv/dashboard/apps/create)
-- [Twitter](https://developer.twitter.com/en/account/get-started)
-- [Youtube](https://developers.google.com/youtube/v3/getting-started#before-you-start)
-- [Osu](https://osu.ppy.sh/home/account/edit#oauth), currently outdated so don't bother.
-- [Steam](https://steamcommunity.com/dev/apikey)
+# MongoDB security
+Your Database is open to the public with a pretty weak account and password!  
+To avoid being hacked, do the following:  
+1. Open the mongouser/createUser.js and change the entries for <code>user:</code> and <code>pwd:</code> to something secure.
+2. Open the mopsdata/Config.json and change the DatabaseURL to <code>mongodb://username:password@172.17.0.1:27017</code>, with your information replacing <code>username</code> and <code>password</code>
 
 # Config entries
 Make sure to always enclose both the key and values of the .json in quotation marks!  
@@ -58,8 +55,11 @@ Every type of tracker has 3 properties you can assign here.
 - UpdateInterval: How many milliseconds should pass before a live tracker should be updated.  
   Currently this includes Twitch, YoutubeLive and JSON.
 
-# MongoDB security
-Your Database is open to the public with a pretty weak account and password!  
-To avoid being hacked, do the following:  
-1. Open the mongouser/createUser.js and change the entries for <code>user:</code> and <code>pwd:</code> to something secure.
-2. Open the mopsdata/Config.json and change the DatabaseURL to <code>mongodb://username:password@172.17.0.1:27017</code>, with your information replacing <code>username</code> and <code>password</code>
+# Gathering API Keys
+If you want to use a service that requires API keys, you can obtain them here:
+
+- [Twitch](https://dev.twitch.tv/dashboard/apps/create)
+- [Twitter](https://developer.twitter.com/en/account/get-started)
+- [Youtube](https://developers.google.com/youtube/v3/getting-started#before-you-start)
+- [Osu](https://osu.ppy.sh/home/account/edit#oauth), currently outdated so don't bother.
+- [Steam](https://steamcommunity.com/dev/apikey)
