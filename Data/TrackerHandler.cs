@@ -142,7 +142,7 @@ namespace MopsBot.Data
                     loopQueue = trackers.Values.ToList();
                 }
                 var gap = trackerInterval / (loopQueue.Count > 0 ? loopQueue.Count : 1);
-                nextTracker.Change(0, gap);
+                nextTracker.Change(loopQueue.Count > 0 ? 0 : gap, gap);
                 trackerTurn = 0;
             }
         }
@@ -169,7 +169,7 @@ namespace MopsBot.Data
             else{
                 updateQueue = trackers.Where(x => (x.Value as BaseUpdatingTracker).ToUpdate.Count > 0).Select(x => x.Value).ToList();
                 var gap = updateInterval / (updateQueue.Count > 0 ? updateQueue.Count : 1);
-                nextUpdate.Change(0, gap);
+                nextUpdate.Change(updateQueue.Count > 0 ? 0 : gap, gap);
                 updateTurn = 0;
             }
         }
