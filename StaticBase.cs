@@ -57,7 +57,8 @@ namespace MopsBot
             {
                 //Disable trackers without keys provided
                 var twitterKeys = new List<string>(){"TwitterKey", "TwitterSecret", "TwitterToken", "TwitterAccessSecret"};
-                if(twitterKeys.Any(key => !Program.Config.ContainsKey(key))) Program.TrackerLimits["Twitter"]["TrackersPerServer"] = 0;
+                if(twitterKeys.Any(key => !Program.Config.ContainsKey(key) || string.IsNullOrEmpty(Program.Config[key]))) 
+                    Program.TrackerLimits["Twitter"]["TrackersPerServer"] = 0;
                 
                 var youtubeKeys = new List<string>(){"YoutubeKey"};
                 if(youtubeKeys.Any(key => !Program.Config.ContainsKey(key) || string.IsNullOrEmpty(Program.Config[key]))){
