@@ -27,7 +27,7 @@ namespace MopsBot
 {
     public class StaticBase
     {
-        public static MongoClient DatabaseClient = new MongoClient($"{Program.Config["DatabaseURLLocal"]}");
+        public static MongoClient DatabaseClient = new MongoClient($"{Program.Config["DatabaseURL"]}");
         public static IMongoDatabase Database = DatabaseClient.GetDatabase("Mops");
         public static readonly System.Net.Http.HttpClient HttpClient = new System.Net.Http.HttpClient();
         //public static AuthDiscordBotListApi DiscordBotList = new AuthDiscordBotListApi(305398845389406209, Program.Config["DiscordBotListKey"]);
@@ -55,6 +55,26 @@ namespace MopsBot
         {
             if (!init)
             {
+                //Disable trackers without keys provided
+                var twitterKeys = new List<string>(){"TwitterKey", "TwitterSecret", "TwitterToken", "TwitterAccessSecret"};
+                if(twitterKeys.Any(key => !Program.Config.ContainsKey(key))) Program.TrackerLimits["Twitter"]["TrackersPerServer"] = 0;
+                
+                var youtubeKeys = new List<string>(){"YoutubeKey"};
+                if(youtubeKeys.Any(key => !Program.Config.ContainsKey(key))){
+                    Program.TrackerLimits["Youtube"]["TrackersPerServer"] = 0;
+                    Program.TrackerLimits["YoutubeLive"]["TrackersPerServer"] = 0;
+                }
+                
+                var twitchKeys = new List<string>(){"TwitchKey"};
+                if(twitchKeys.Any(key => !Program.Config.ContainsKey(key))) Program.TrackerLimits["Twitch"]["TrackersPerServer"] = 0;
+                
+                var osuKeys = new List<string>(){"OsuKey"};
+                if(osuKeys.Any(key => !Program.Config.ContainsKey(key))) Program.TrackerLimits["Osu"]["TrackersPerServer"] = 0;
+
+                var steamKeys = new List<string>(){"SteamKey"};
+                if(steamKeys.Any(key => !Program.Config.ContainsKey(key))) Program.TrackerLimits["Steam"]["TrackersPerServer"] = 0;
+
+
                 HttpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)");
                 ServicePointManager.ServerCertificateValidationCallback = (object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) => { return true; };
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
@@ -63,15 +83,17 @@ namespace MopsBot
                 ServicePointManager.DefaultConnectionLimit = 100;
                 ServicePointManager.MaxServicePointIdleTime = 10000;
 
-                Auth.SetUserCredentials(Program.Config["TwitterKey"], Program.Config["TwitterSecret"],
-                                        Program.Config["TwitterToken"], Program.Config["TwitterAccessSecret"]);
-                TweetinviConfig.CurrentThreadSettings.TweetMode = TweetMode.Extended;
-                TweetinviConfig.ApplicationSettings.TweetMode = TweetMode.Extended;
-                Tweetinvi.ExceptionHandler.SwallowWebExceptions = false;
-                Tweetinvi.RateLimit.RateLimitTrackerMode = RateLimitTrackerMode.TrackOnly;
-                TweetinviEvents.QueryBeforeExecute += Data.Tracker.TwitterTracker.QueryBeforeExecute;
-                Tweetinvi.Logic.JsonConverters.JsonPropertyConverterRepository.JsonConverters.Remove(typeof(Tweetinvi.Models.Language));
-                Tweetinvi.Logic.JsonConverters.JsonPropertyConverterRepository.JsonConverters.Add(typeof(Tweetinvi.Models.Language), new CustomJsonLanguageConverter());
+                if(Program.TrackerLimits["Twitter"]["TrackersPerServer"] > 0){
+                    Auth.SetUserCredentials(Program.Config["TwitterKey"], Program.Config["TwitterSecret"],
+                                            Program.Config["TwitterToken"], Program.Config["TwitterAccessSecret"]);
+                    TweetinviConfig.CurrentThreadSettings.TweetMode = TweetMode.Extended;
+                    TweetinviConfig.ApplicationSettings.TweetMode = TweetMode.Extended;
+                    Tweetinvi.ExceptionHandler.SwallowWebExceptions = false;
+                    Tweetinvi.RateLimit.RateLimitTrackerMode = RateLimitTrackerMode.TrackOnly;
+                    TweetinviEvents.QueryBeforeExecute += Data.Tracker.TwitterTracker.QueryBeforeExecute;
+                    Tweetinvi.Logic.JsonConverters.JsonPropertyConverterRepository.JsonConverters.Remove(typeof(Tweetinvi.Models.Language));
+                    Tweetinvi.Logic.JsonConverters.JsonPropertyConverterRepository.JsonConverters.Add(typeof(Tweetinvi.Models.Language), new CustomJsonLanguageConverter());
+                }
 
                 Trackers = new Dictionary<BaseTracker.TrackerType, Data.TrackerWrapper>();
                 Trackers[BaseTracker.TrackerType.Twitter] = new TrackerHandler<TwitterTracker>(Program.TrackerLimits["Twitter"]["PollInterval"], Program.TrackerLimits["Twitter"]["UpdateInterval"]);
@@ -92,8 +114,10 @@ namespace MopsBot
                 foreach (var tracker in Trackers)
                 {
                     var trackerType = tracker.Key;
-                    if(Program.TrackerLimits[trackerType.ToString()]["TrackersPerServer"] <= 0)
+                    if(Program.TrackerLimits[trackerType.ToString()]["TrackersPerServer"] <= 0){
+                        Program.MopsLog(new LogMessage(LogSeverity.Error, "Handler init", $"Disabled {trackerType.ToString()}-Tracker, due to either missing API Keys or no trackers per server allowed!")).Wait();
                         continue;
+                    }
 
                     if (tracker.Key == BaseTracker.TrackerType.Twitch)
                     {

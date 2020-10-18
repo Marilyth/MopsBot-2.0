@@ -90,7 +90,7 @@ namespace MopsBot.Data.Tracker
 
         private async Task<string> fetchLivestreamId()
         {
-            var tmpResult = await FetchJSONDataAsync<Live>($"https://www.googleapis.com/youtube/v3/search?part=snippet&channelId={Name}&eventType=live&type=video&key={Program.Config["Youtube"]}");
+            var tmpResult = await FetchJSONDataAsync<Live>($"https://www.googleapis.com/youtube/v3/search?part=snippet&channelId={Name}&eventType=live&type=video&key={Program.Config["YoutubeKey"]}");
 
             if (tmpResult.items.Count > 0)
             {
@@ -130,7 +130,7 @@ namespace MopsBot.Data.Tracker
                     try
                     {
                         var currentBatch = liveTrackersList.Skip(i).Take(50).ToList();
-                        var tmpResult = await FetchJSONDataAsync<LiveVideo>($"https://www.googleapis.com/youtube/v3/videos?part=snippet%2C+liveStreamingDetails&maxResults=50&id={String.Join(",", currentBatch.Select(x => (x as YoutubeLiveTracker).VideoId))}&key={Program.Config["Youtube"]}");
+                        var tmpResult = await FetchJSONDataAsync<LiveVideo>($"https://www.googleapis.com/youtube/v3/videos?part=snippet%2C+liveStreamingDetails&maxResults=50&id={String.Join(",", currentBatch.Select(x => (x as YoutubeLiveTracker).VideoId))}&key={Program.Config["YoutubeKey"]}");
 
                         var nullValues = currentBatch.Select(x => x.Name).ToHashSet();
 
@@ -160,7 +160,7 @@ namespace MopsBot.Data.Tracker
 
         private async Task<ChannelItem> fetchChannel()
         {
-            var tmpResult = await FetchJSONDataAsync<Channel>($"https://www.googleapis.com/youtube/v3/channels?part=contentDetails,snippet&id={Name}&key={Program.Config["Youtube"]}");
+            var tmpResult = await FetchJSONDataAsync<Channel>($"https://www.googleapis.com/youtube/v3/channels?part=contentDetails,snippet&id={Name}&key={Program.Config["YoutubeKey"]}");
 
             return tmpResult.items.First();
         }
@@ -168,7 +168,7 @@ namespace MopsBot.Data.Tracker
         private async Task<List<Message>> fetchChat()
         {
             if (StreamInfo.liveStreamingDetails.activeLiveChatId == null) return new List<Message>();
-            var tmpResult = await FetchJSONDataAsync<ChatMessages>($"https://www.googleapis.com/youtube/v3/liveChat/messages?liveChatId={StreamInfo.liveStreamingDetails.activeLiveChatId}&part=snippet,authorDetails&key={Program.Config["Youtube"]}");
+            var tmpResult = await FetchJSONDataAsync<ChatMessages>($"https://www.googleapis.com/youtube/v3/liveChat/messages?liveChatId={StreamInfo.liveStreamingDetails.activeLiveChatId}&part=snippet,authorDetails&key={Program.Config["YoutubeKey"]}");
             return tmpResult.items;
         }
 

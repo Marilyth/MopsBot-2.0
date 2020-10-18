@@ -106,26 +106,26 @@ namespace MopsBot.Data.Tracker
 
         public async Task<OsuResult> fetchUser(string mode = "m=0")
         {
-            string query = await MopsBot.Module.Information.GetURLAsync($"https://osu.ppy.sh/api/get_user?u={Name}&{mode}&event_days=31&k={Program.Config["Osu"]}");
+            string query = await MopsBot.Module.Information.GetURLAsync($"https://osu.ppy.sh/api/get_user?u={Name}&{mode}&event_days=31&k={Program.Config["OsuKey"]}");
 
             return JsonConvert.DeserializeObject<OsuResult>(query.Substring(1, query.Length - 2));
         }
 
         public async Task<List<RecentScore>> fetchRecent(string mode = "m=0")
         {
-            return await FetchJSONDataAsync<List<RecentScore>>($"https://osu.ppy.sh/api/get_user_recent?u={Name}&limit=50&{mode}&k={Program.Config["Osu"]}");
+            return await FetchJSONDataAsync<List<RecentScore>>($"https://osu.ppy.sh/api/get_user_recent?u={Name}&limit=50&{mode}&k={Program.Config["OsuKey"]}");
         }
 
         public async Task<Score> fetchScore(string beatmapID, string mode = "m=0")
         {
-            var tmpResult = await FetchJSONDataAsync<List<Score>>($"https://osu.ppy.sh/api/get_scores?b={beatmapID}&{mode}&u={Name}&limit=1&k={Program.Config["Osu"]}");
+            var tmpResult = await FetchJSONDataAsync<List<Score>>($"https://osu.ppy.sh/api/get_scores?b={beatmapID}&{mode}&u={Name}&limit=1&k={Program.Config["OsuKey"]}");
 
             return tmpResult.OrderByDescending(x => DateTime.Parse(x.date)).FirstOrDefault();
         }
 
         public async Task<Beatmap> fetchBeatmap(string beatmapID, string mode = "m=0", int enabledMods = 0)
         {
-            string query = await MopsBot.Module.Information.GetURLAsync($"https://osu.ppy.sh/api/get_beatmaps?b={beatmapID}&{mode}&mods={enabledMods}&a=1&k={Program.Config["Osu"]}");
+            string query = await MopsBot.Module.Information.GetURLAsync($"https://osu.ppy.sh/api/get_beatmaps?b={beatmapID}&{mode}&mods={enabledMods}&a=1&k={Program.Config["OsuKey"]}");
 
             return JsonConvert.DeserializeObject<Beatmap>(query.Substring(1, query.Length - 2));
         }
