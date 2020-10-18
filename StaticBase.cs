@@ -66,7 +66,10 @@ namespace MopsBot
                 }
                 
                 var twitchKeys = new List<string>(){"TwitchKey"};
-                if(twitchKeys.Any(key => !Program.Config.ContainsKey(key))) Program.TrackerLimits["Twitch"]["TrackersPerServer"] = 0;
+                if(twitchKeys.Any(key => !Program.Config.ContainsKey(key))){
+                    Program.TrackerLimits["Twitch"]["TrackersPerServer"] = 0;
+                    Program.TrackerLimits["TwitchClip"]["TrackersPerServer"] = 0;
+                }
                 
                 var osuKeys = new List<string>(){"OsuKey"};
                 if(osuKeys.Any(key => !Program.Config.ContainsKey(key))) Program.TrackerLimits["Osu"]["TrackersPerServer"] = 0;
