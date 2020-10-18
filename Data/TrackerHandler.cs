@@ -133,7 +133,7 @@ namespace MopsBot.Data
 
             else
             {
-                if (trackers.FirstOrDefault().Value is BaseUpdatingTracker)
+                if (typeof(T).IsSubclassOf(typeof(BaseUpdatingTracker)))
                 {
                     loopQueue = trackers.Where(x => (x.Value as BaseUpdatingTracker).ToUpdate.Count == 0).Select(x => x.Value).ToList();
                 }
@@ -212,7 +212,7 @@ namespace MopsBot.Data
                 {
                     trackers[name].ChannelConfig.Remove(channelId);
 
-                    if (trackers.FirstOrDefault().Value is BaseUpdatingTracker)
+                    if (typeof(T).IsSubclassOf(typeof(BaseUpdatingTracker)))
                     {
                         (trackers[name] as BaseUpdatingTracker).ToUpdate.Remove(channelId);
                     }
