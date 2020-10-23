@@ -156,17 +156,17 @@ namespace MopsBot
                     //Wait for exception to reach log
                     await Task.Delay(100);
                     var embed = await CreateErrorEmbedAsync(commandInfo.Value, context as SocketCommandContext, result);
-                    if (mostRecentException != null)
+                    if (mostRecentException != null && !string.IsNullOrEmpty(Program.Config["ExceptionLogChannel"]))
                     {
                         using (var writer = File.CreateText("mopsdata//Exception.txt"))
                             writer.WriteLine(mostRecentException.ToString());
-                        await (Program.Client.GetChannel(583906837351366657) as ITextChannel).SendFileAsync("mopsdata//Exception.txt", "", embed: embed);
+                        await (Program.Client.GetChannel(ulong.Parse(Program.Config["ExceptionLogChannel"])) as ITextChannel).SendFileAsync("mopsdata//Exception.txt", "", embed: embed);
                         File.Delete("mopsdata//Exception.txt");
                         mostRecentException = null;
                     }
                     else
                     {
-                        await (Program.Client.GetChannel(583906837351366657) as ITextChannel).SendMessageAsync("", embed: embed);
+                        await (Program.Client.GetChannel(ulong.Parse(Program.Config["ExceptionLogChannel"])) as ITextChannel).SendMessageAsync("", embed: embed);
                     }
                 });
 
@@ -178,16 +178,16 @@ namespace MopsBot
                 }
             }
 
-            else if(result.IsSuccess){
+            else if(result.IsSuccess && !string.IsNullOrEmpty(Program.Config["CommandLogChannel"])){
                 var cmdEmbed = new EmbedBuilder().AddField("Guild", $"{context.Guild.Name} ({context.Guild.Id})", true).AddField("Channel", $"{context.Channel.Name} ({context.Channel.Id})").AddField("User", $"{context.User} ({context.User.Id})").AddField("Command", context.Message.Content);
-                await (Program.Client.GetChannel(689393210438582285) as ITextChannel).SendMessageAsync(embed: cmdEmbed.Build());
+                await (Program.Client.GetChannel(ulong.Parse(Program.Config["CommandLogChannel"])) as ITextChannel).SendMessageAsync(embed: cmdEmbed.Build());
             }
 
-            else if (result.IsSuccess && context.Message.Content.Contains("track", StringComparison.InvariantCultureIgnoreCase))
+            if (result.IsSuccess && context.Message.Content.Contains("track", StringComparison.InvariantCultureIgnoreCase))
             {
                 if ((await MopsBot.Data.Entities.User.GetUserAsync(context.User.Id)).IsTaCDue())
                 {
-                    await context.Channel.SendMessageAsync($"Weekly reminder:\nBy using Mops' tracking services, you agree to our terms and conditions as well as our privacy policy: {Program.Config["ServerAddress"]}/Terms_And_Conditions\n{Program.Config["ServerAddress"]}/Privacy_Policy");
+                    await context.Channel.SendMessageAsync($"Weekly reminder:\nBy using Mops' tracking services, you agree to our terms and conditions as well as our privacy policy: http://37.221.195.236/Terms_And_Conditions\nhttp://37.221.195.236/Privacy_Policy");
                     await MopsBot.Data.Entities.User.ModifyUserAsync(context.User.Id, x => x.LastTaCReminder = DateTime.UtcNow);
                 }
             }
@@ -322,7 +322,7 @@ namespace MopsBot
 
         public static string GetCommandHelpImage(string command)
         {
-            return $"{Program.Config["ServerAddress"]}/mops_example_usage/{command.ToLower()}.PNG?rand={StaticBase.ran.Next(0, 99)}".Replace(" ", "%20");
+            return $"http://37.221.195.236/mops_example_usage/{command.ToLower()}.PNG?rand={StaticBase.ran.Next(0, 99)}".Replace(" ", "%20");
         }
 
         /// <summary>

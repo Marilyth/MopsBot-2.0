@@ -75,7 +75,7 @@ namespace MopsBot.Data.Tracker
 
         private async Task<ChannelItem> fetchChannel()
         {
-            var tmpResult = await FetchJSONDataAsync<Channel>($"https://www.googleapis.com/youtube/v3/channels?part=contentDetails,snippet&id={Name}&key={Program.Config["Youtube"]}");
+            var tmpResult = await FetchJSONDataAsync<Channel>($"https://www.googleapis.com/youtube/v3/channels?part=contentDetails,snippet&id={Name}&key={Program.Config["YoutubeKey"]}");
             var channel = tmpResult.items.First();
             return channel;
         }

@@ -106,7 +106,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
-            [TrackerLimit(30, TrackerType.Twitter)]
+            [TrackerLimit(TrackerType.Twitter)]
             public async Task trackTwitter(string twitterUser, [Remainder] string tweetNotification = "~Tweet Tweet~")
             {
                 twitterUser = twitterUser.ToLower().Replace("@", "");
@@ -234,6 +234,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
+            [TrackerLimit(TrackerType.Osu)]
             public async Task trackOsu([Remainder] string OsuUser)
             {
                 using (Context.Channel.EnterTypingState())
@@ -322,7 +323,7 @@ namespace MopsBot.Module
             [Summary("Keeps track of the specified Youtuber, in the Channel you are calling this command in.\nYoutubes Terms of Service and Googles privacy policy apply:\nhttps://www.youtube.com/t/terms \nhttp://www.google.com/policies/privacy")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
-            [TrackerLimit(30, TrackerType.Youtube)]
+            [TrackerLimit(TrackerType.Youtube)]
             public async Task trackYoutube(string channelID, [Remainder] string notificationMessage = "New Video")
             {
                 using (Context.Channel.EnterTypingState())
@@ -396,7 +397,7 @@ namespace MopsBot.Module
             [RequireBotPermission(ChannelPermission.ManageMessages)]
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
-            [TrackerLimit(50, TrackerType.Twitch)]
+            [TrackerLimit(TrackerType.Twitch)]
             public async Task trackStreamer(string streamerName, [Remainder] string notificationMessage = "Stream went live!")
             {
                 using (Context.Channel.EnterTypingState())
@@ -641,7 +642,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
-            [TrackerLimit(50, TrackerType.TwitchClip)]
+            [TrackerLimit(TrackerType.TwitchClip)]
             public async Task trackClips(string streamerName, [Remainder] string notificationMessage = "New trending clip found!")
             {
                 using (Context.Channel.EnterTypingState())
@@ -728,6 +729,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
+            [TrackerLimit(TrackerType.Reddit)]
             public async Task trackSubreddit(string subreddit, [Remainder] string query = null)
             {
                 using (Context.Channel.EnterTypingState())
@@ -822,6 +824,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
+            [TrackerLimit(TrackerType.Overwatch)]
             public async Task trackOW(string owUser)
             {
                 using (Context.Channel.EnterTypingState())
@@ -904,6 +907,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
+            [TrackerLimit(TrackerType.JSON)]
             public async Task trackJson(string source, [Remainder] string paths)
             {
                 using (Context.Channel.EnterTypingState())
@@ -920,6 +924,7 @@ namespace MopsBot.Module
                      "always:<location> adds the value to the embed, regardless of whether it changed or not.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
+            [TrackerLimit(TrackerType.JSON)]
             public async Task trackExtended(string source, string body, [Remainder] string paths)
             {
                 using (Context.Channel.EnterTypingState())
@@ -1038,6 +1043,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
+            [TrackerLimit(TrackerType.OSRS)]
             public async Task Track(string name, [Remainder] string notification = "")
             {
                 name = name.ToLower();
@@ -1131,6 +1137,7 @@ namespace MopsBot.Module
         {
             [Command("TrackRegex", RunMode = RunMode.Async)]
             [Summary("Tracks regex on a webpage. Use () around the text you want to track to signify a match.")]
+            [TrackerLimit(TrackerType.HTML)]
             public async Task TrackRegex(string website, [Remainder] string scrapeRegex)
             {
                 using (Context.Channel.EnterTypingState())
@@ -1142,6 +1149,7 @@ namespace MopsBot.Module
 
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Tracks plain text on a webpage, and notifies whenever that text changes.\nThis command will guide you through the process.")]
+            [TrackerLimit(TrackerType.HTML)]
             public async Task TrackText(string website, string textToTrack, int leftContextLength = 4, int rightContextLength = 1)
             {
                 using (Context.Channel.EnterTypingState())
@@ -1267,7 +1275,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
-            [TrackerLimit(40, TrackerType.RSS)]
+            [TrackerLimit(TrackerType.RSS)]
             public async Task TrackRSS(string url, string notification = "")
             {
                 using (Context.Channel.EnterTypingState())
@@ -1349,6 +1357,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
+            [TrackerLimit(TrackerType.Steam)]
             public async Task Track([Remainder] string SteamNameOrId)
             {
                 using (Context.Channel.EnterTypingState())
@@ -1412,6 +1421,81 @@ namespace MopsBot.Module
             public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel)
             {
                 await ChangeChannelAsync(Name, FromChannel, TrackerType.Steam, Context);
+            }
+        }
+
+        [Group("YoutubeLive")]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
+        public class YoutubeLive : InteractiveBase<ShardedCommandContext>
+        {
+            [Command("Track", RunMode = RunMode.Async)]
+            [Summary("Keeps track of the specified Youtubers livestreams, in the Channel you are calling this command in.\nYoutubes Terms of Service and Googles privacy policy apply:\nhttps://www.youtube.com/t/terms \nhttp://www.google.com/policies/privacy")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [RequireBotPermission(ChannelPermission.ReadMessageHistory)]
+            [RequireBotPermission(ChannelPermission.ManageMessages)]
+            [RequireBotPermission(ChannelPermission.EmbedLinks)]
+            [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
+            [RequireUserVotepoints(0)]
+            [TrackerLimit(TrackerType.YoutubeLive)]
+            public async Task trackYoutube(string channelID, [Remainder]string notificationMessage = "New Stream")
+            {
+                using (Context.Channel.EnterTypingState())
+                {
+                    await Trackers[BaseTracker.TrackerType.YoutubeLive].AddTrackerAsync(channelID, Context.Channel.Id, notificationMessage);
+
+                    await ReplyAsync("Keeping track of " + channelID + "'s streams, from now on!");
+                }
+            }
+
+            [Command("UnTrack")]
+            [Summary("Stops keeping track of the specified Youtubers streams, in the Channel you are calling this command in.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task unTrackYoutube(BaseTracker channelID)
+            {
+                if (await Trackers[BaseTracker.TrackerType.YoutubeLive].TryRemoveTrackerAsync(channelID.Name, channelID.LastCalledChannelPerGuild[Context.Guild.Id]))
+                    await ReplyAsync("Stopped keeping track of " + channelID.Name + "'s streams!");
+            }
+
+            [Command("GetTrackers")]
+            [Summary("Returns the Youtubers that are tracked in the current channel.")]
+            public async Task getTrackers()
+            {
+                await ReplyAsync("Following Youtubers are currently being tracked:");
+                await MopsBot.Data.Interactive.MopsPaginator.CreatePagedMessage(Context.Channel.Id, StaticBase.Trackers[BaseTracker.TrackerType.YoutubeLive].GetTrackersEmbed(Context.Channel.Id, true));
+            }
+
+            [Command("SetNotification")]
+            [Summary("Sets the notification text that is used each time a new stream goes live.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task SetNotification(BaseTracker channelID, [Remainder]string notification = "")
+            {
+                channelID.ChannelConfig[channelID.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
+                await StaticBase.Trackers[BaseTracker.TrackerType.YoutubeLive].UpdateDBAsync(channelID);
+                await ReplyAsync($"Changed notification for `{channelID.Name}` to `{notification}`");
+            }
+
+            [Command("ShowConfig")]
+            [Hide]
+            [Summary("Shows all the settings for this tracker, and their values")]
+            public async Task ShowConfig(BaseTracker tracker)
+            {
+                await ReplyAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value))}```");
+            }
+
+            [Command("ChangeConfig", RunMode = RunMode.Async)]
+            [Summary("Edit the Configuration for the tracker")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task ChangeConfig(BaseTracker ChannelID)
+            {
+                await Tracking.ModifyConfig(this, ChannelID, BaseTracker.TrackerType.YoutubeLive);
+            }
+
+            [Command("ChangeChannel", RunMode = RunMode.Async)]
+            [Summary("Changes the channel of the specified tracker from #FromChannel to the current channel")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [RequireBotPermission(ChannelPermission.EmbedLinks)]
+            public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel){
+                await Tracking.ChangeChannelAsync(Name, FromChannel, TrackerType.YoutubeLive, Context);
             }
         }
 

@@ -102,7 +102,7 @@ namespace MopsBot.Data.Tracker
 
                     var test = await MopsBot.Module.Information.PostURLAsync(url, "",
                         KeyValuePair.Create("Authorization", "Bearer " + Program.Config["TwitchToken"]),
-                        KeyValuePair.Create("client-id", Program.Config["Twitch"])
+                        KeyValuePair.Create("client-id", Program.Config["TwitchKey"])
                     );
 
                     return test;
@@ -265,7 +265,7 @@ namespace MopsBot.Data.Tracker
 
         private async Task<ChannelResult> streamerInformation()
         {
-            var tmpResult = await FetchJSONDataAsync<ChannelResult>($"https://api.twitch.tv/kraken/streams/{TwitchId}?stream_type=live&client_id={Program.Config["Twitch"]}", acceptHeader);
+            var tmpResult = await FetchJSONDataAsync<ChannelResult>($"https://api.twitch.tv/kraken/streams/{TwitchId}?stream_type=live&client_id={Program.Config["TwitchKey"]}", acceptHeader);
 
             if (tmpResult.Stream == null) tmpResult.Stream = new APIResults.Twitch.Stream();
             if (tmpResult.Stream.Game == "" || tmpResult.Stream.Game == null) tmpResult.Stream.Game = "Nothing";
@@ -280,14 +280,14 @@ namespace MopsBot.Data.Tracker
 
         public static async Task<ulong> GetIdFromUsername(string name)
         {
-            var tmpResult = await FetchJSONDataAsync<dynamic>($"https://api.twitch.tv/kraken/users?login={name}&client_id={Program.Config["Twitch"]}", acceptHeader);
+            var tmpResult = await FetchJSONDataAsync<dynamic>($"https://api.twitch.tv/kraken/users?login={name}&client_id={Program.Config["TwitchKey"]}", acceptHeader);
 
             return tmpResult["users"][0]["_id"];
         }
 
         public async Task<string> GetVodAsync()
         {
-            var tmpResult = await FetchJSONDataAsync<dynamic>($"https://api.twitch.tv/kraken/channels/{TwitchId}/videos?client_id={Program.Config["Twitch"]}", acceptHeader);
+            var tmpResult = await FetchJSONDataAsync<dynamic>($"https://api.twitch.tv/kraken/channels/{TwitchId}/videos?client_id={Program.Config["TwitchKey"]}", acceptHeader);
 
             try
             {
@@ -301,12 +301,12 @@ namespace MopsBot.Data.Tracker
 
         private static async Task<RootChatObject> GetVodChat(ulong vodID, string nextCursor = null)
         {
-            return await FetchJSONDataAsync<RootChatObject>($"https://api.twitch.tv/v5/videos/" + vodID + "/comments?cursor=" + nextCursor, KeyValuePair.Create("Client-ID", $"{Program.Config["Twitch"]}"), acceptHeader);
+            return await FetchJSONDataAsync<RootChatObject>($"https://api.twitch.tv/v5/videos/" + vodID + "/comments?cursor=" + nextCursor, KeyValuePair.Create("Client-ID", $"{Program.Config["TwitchKey"]}"), acceptHeader);
         }
 
         public static async Task<RootChatObject> GetVodChat(ulong vodID, uint secsIntoVod = 0, bool fetchNexts = true)
         {
-            var result = await FetchJSONDataAsync<RootChatObject>($"https://api.twitch.tv/v5/videos/" + vodID + "/comments?content_offset_seconds=" + secsIntoVod, KeyValuePair.Create("Client-ID", $"{Program.Config["Twitch"]}"), acceptHeader);
+            var result = await FetchJSONDataAsync<RootChatObject>($"https://api.twitch.tv/v5/videos/" + vodID + "/comments?content_offset_seconds=" + secsIntoVod, KeyValuePair.Create("Client-ID", $"{Program.Config["TwitchKey"]}"), acceptHeader);
             string next = result._next;
             while (fetchNexts && next != null)
             {
@@ -413,7 +413,7 @@ namespace MopsBot.Data.Tracker
             {
                 try
                 {
-                    var result = MopsBot.Module.Information.PostURLAsync($"https://id.twitch.tv/oauth2/token?client_id={Program.Config["Twitch"]}&client_secret={Program.Config["TwitchSecret"]}&grant_type=client_credentials").Result;
+                    var result = MopsBot.Module.Information.PostURLAsync($"https://id.twitch.tv/oauth2/token?client_id={Program.Config["TwitchKey"]}&client_secret={Program.Config["TwitchSecret"]}&grant_type=client_credentials").Result;
                     Program.Config["TwitchToken"] = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(result)["access_token"].ToString();
                     Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Getting token succeeded."));
                 }
