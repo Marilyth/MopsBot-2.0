@@ -55,6 +55,32 @@ namespace MopsBot
         {
             if (!init)
             {
+                //Disable trackers without keys provided
+                var twitterKeys = new List<string>(){"TwitterKey", "TwitterSecret", "TwitterToken", "TwitterAccessSecret"};
+                if(twitterKeys.Any(key => !Program.Config.ContainsKey(key) || string.IsNullOrEmpty(Program.Config[key]))) 
+                    Program.TrackerLimits["Twitter"]["TrackersPerServer"] = 0;
+                
+                var youtubeKeys = new List<string>(){"YoutubeKey"};
+                if(youtubeKeys.Any(key => !Program.Config.ContainsKey(key) || string.IsNullOrEmpty(Program.Config[key]))){
+                    Program.TrackerLimits["Youtube"]["TrackersPerServer"] = 0;
+                    Program.TrackerLimits["YoutubeLive"]["TrackersPerServer"] = 0;
+                }
+                
+                var twitchKeys = new List<string>(){"TwitchKey", "TwitchSecret"};
+                if(twitchKeys.Any(key => !Program.Config.ContainsKey(key) || string.IsNullOrEmpty(Program.Config[key]))){
+                    Program.TrackerLimits["Twitch"]["TrackersPerServer"] = 0;
+                    Program.TrackerLimits["TwitchClip"]["TrackersPerServer"] = 0;
+                }
+                
+                var osuKeys = new List<string>(){"OsuKey"};
+                if(osuKeys.Any(key => !Program.Config.ContainsKey(key) || string.IsNullOrEmpty(Program.Config[key]))) 
+                    Program.TrackerLimits["Osu"]["TrackersPerServer"] = 0;
+
+                var steamKeys = new List<string>(){"SteamKey"};
+                if(steamKeys.Any(key => !Program.Config.ContainsKey(key) || string.IsNullOrEmpty(Program.Config[key]))) 
+                    Program.TrackerLimits["Steam"]["TrackersPerServer"] = 0;
+
+
                 HttpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)");
                 ServicePointManager.ServerCertificateValidationCallback = (object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) => { return true; };
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
@@ -63,35 +89,41 @@ namespace MopsBot
                 ServicePointManager.DefaultConnectionLimit = 100;
                 ServicePointManager.MaxServicePointIdleTime = 10000;
 
-                Auth.SetUserCredentials(Program.Config["TwitterKey"], Program.Config["TwitterSecret"],
-                                        Program.Config["TwitterToken"], Program.Config["TwitterAccessSecret"]);
-                TweetinviConfig.CurrentThreadSettings.TweetMode = TweetMode.Extended;
-                TweetinviConfig.ApplicationSettings.TweetMode = TweetMode.Extended;
-                Tweetinvi.ExceptionHandler.SwallowWebExceptions = false;
-                Tweetinvi.RateLimit.RateLimitTrackerMode = RateLimitTrackerMode.TrackOnly;
-                TweetinviEvents.QueryBeforeExecute += Data.Tracker.TwitterTracker.QueryBeforeExecute;
-                Tweetinvi.Logic.JsonConverters.JsonPropertyConverterRepository.JsonConverters.Remove(typeof(Tweetinvi.Models.Language));
-                Tweetinvi.Logic.JsonConverters.JsonPropertyConverterRepository.JsonConverters.Add(typeof(Tweetinvi.Models.Language), new CustomJsonLanguageConverter());
+                if(Program.TrackerLimits["Twitter"]["TrackersPerServer"] > 0){
+                    Auth.SetUserCredentials(Program.Config["TwitterKey"], Program.Config["TwitterSecret"],
+                                            Program.Config["TwitterToken"], Program.Config["TwitterAccessSecret"]);
+                    TweetinviConfig.CurrentThreadSettings.TweetMode = TweetMode.Extended;
+                    TweetinviConfig.ApplicationSettings.TweetMode = TweetMode.Extended;
+                    Tweetinvi.ExceptionHandler.SwallowWebExceptions = false;
+                    Tweetinvi.RateLimit.RateLimitTrackerMode = RateLimitTrackerMode.TrackOnly;
+                    TweetinviEvents.QueryBeforeExecute += Data.Tracker.TwitterTracker.QueryBeforeExecute;
+                    Tweetinvi.Logic.JsonConverters.JsonPropertyConverterRepository.JsonConverters.Remove(typeof(Tweetinvi.Models.Language));
+                    Tweetinvi.Logic.JsonConverters.JsonPropertyConverterRepository.JsonConverters.Add(typeof(Tweetinvi.Models.Language), new CustomJsonLanguageConverter());
+                }
 
                 Trackers = new Dictionary<BaseTracker.TrackerType, Data.TrackerWrapper>();
-                Trackers[BaseTracker.TrackerType.Twitter] = new TrackerHandler<TwitterTracker>(1800000);
-                Trackers[BaseTracker.TrackerType.Youtube] = new TrackerHandler<YoutubeTracker>(3600000);
-                Trackers[BaseTracker.TrackerType.Twitch] = new TrackerHandler<TwitchTracker>(3600000);
-                Trackers[BaseTracker.TrackerType.YoutubeLive] = new TrackerHandler<YoutubeLiveTracker>(900000);
-                Trackers[BaseTracker.TrackerType.Reddit] = new TrackerHandler<RedditTracker>();
-                Trackers[BaseTracker.TrackerType.JSON] = new TrackerHandler<JSONTracker>(updateInterval: 600000);
-                Trackers[BaseTracker.TrackerType.Osu] = new TrackerHandler<OsuTracker>();
-                Trackers[BaseTracker.TrackerType.Overwatch] = new TrackerHandler<OverwatchTracker>(3600000);
-                Trackers[BaseTracker.TrackerType.TwitchGroup] = new TrackerHandler<TwitchGroupTracker>(60000);
-                Trackers[BaseTracker.TrackerType.TwitchClip] = new TrackerHandler<TwitchClipTracker>();
-                Trackers[BaseTracker.TrackerType.OSRS] = new TrackerHandler<OSRSTracker>();
-                Trackers[BaseTracker.TrackerType.HTML] = new TrackerHandler<HTMLTracker>();
-                Trackers[BaseTracker.TrackerType.RSS] = new TrackerHandler<RSSTracker>(3600000);
-                Trackers[BaseTracker.TrackerType.Steam] = new TrackerHandler<SteamTracker>();
+                Trackers[BaseTracker.TrackerType.Twitter] = new TrackerHandler<TwitterTracker>(Program.TrackerLimits["Twitter"]["PollInterval"], Program.TrackerLimits["Twitter"]["UpdateInterval"]);
+                Trackers[BaseTracker.TrackerType.Youtube] = new TrackerHandler<YoutubeTracker>(Program.TrackerLimits["Youtube"]["PollInterval"], Program.TrackerLimits["Youtube"]["UpdateInterval"]);
+                Trackers[BaseTracker.TrackerType.Twitch] = new TrackerHandler<TwitchTracker>(Program.TrackerLimits["Twitch"]["PollInterval"], Program.TrackerLimits["Twitch"]["UpdateInterval"]);
+                Trackers[BaseTracker.TrackerType.YoutubeLive] = new TrackerHandler<YoutubeLiveTracker>(Program.TrackerLimits["YoutubeLive"]["PollInterval"], Program.TrackerLimits["YoutubeLive"]["UpdateInterval"]);
+                Trackers[BaseTracker.TrackerType.Reddit] = new TrackerHandler<RedditTracker>(Program.TrackerLimits["Reddit"]["PollInterval"], Program.TrackerLimits["Reddit"]["UpdateInterval"]);
+                Trackers[BaseTracker.TrackerType.JSON] = new TrackerHandler<JSONTracker>(Program.TrackerLimits["JSON"]["PollInterval"], Program.TrackerLimits["JSON"]["UpdateInterval"]);
+                Trackers[BaseTracker.TrackerType.Osu] = new TrackerHandler<OsuTracker>(Program.TrackerLimits["Osu"]["PollInterval"], Program.TrackerLimits["Osu"]["UpdateInterval"]);
+                Trackers[BaseTracker.TrackerType.Overwatch] = new TrackerHandler<OverwatchTracker>(Program.TrackerLimits["Overwatch"]["PollInterval"], Program.TrackerLimits["Overwatch"]["UpdateInterval"]);
+                Trackers[BaseTracker.TrackerType.TwitchGroup] = new TrackerHandler<TwitchGroupTracker>(Program.TrackerLimits["TwitchGroup"]["PollInterval"], Program.TrackerLimits["TwitchGroup"]["UpdateInterval"]);
+                Trackers[BaseTracker.TrackerType.TwitchClip] = new TrackerHandler<TwitchClipTracker>(Program.TrackerLimits["TwitchClip"]["PollInterval"], Program.TrackerLimits["TwitchClip"]["UpdateInterval"]);
+                Trackers[BaseTracker.TrackerType.OSRS] = new TrackerHandler<OSRSTracker>(Program.TrackerLimits["OSRS"]["PollInterval"], Program.TrackerLimits["OSRS"]["UpdateInterval"]);
+                Trackers[BaseTracker.TrackerType.HTML] = new TrackerHandler<HTMLTracker>(Program.TrackerLimits["HTML"]["PollInterval"], Program.TrackerLimits["HTML"]["UpdateInterval"]);
+                Trackers[BaseTracker.TrackerType.RSS] = new TrackerHandler<RSSTracker>(Program.TrackerLimits["RSS"]["PollInterval"], Program.TrackerLimits["RSS"]["UpdateInterval"]);
+                Trackers[BaseTracker.TrackerType.Steam] = new TrackerHandler<SteamTracker>(Program.TrackerLimits["Steam"]["PollInterval"], Program.TrackerLimits["Steam"]["UpdateInterval"]);
 
                 foreach (var tracker in Trackers)
                 {
                     var trackerType = tracker.Key;
+                    if(Program.TrackerLimits[trackerType.ToString()]["TrackersPerServer"] <= 0){
+                        Program.MopsLog(new LogMessage(LogSeverity.Error, "Handler init", $"Disabled {trackerType.ToString()}-Tracker, due to either missing API Keys or no trackers per server allowed!")).Wait();
+                        continue;
+                    }
 
                     if (tracker.Key == BaseTracker.TrackerType.Twitch)
                     {
@@ -243,6 +275,8 @@ namespace MopsBot
                         }
 
                         BaseTracker.TrackerType type = (BaseTracker.TrackerType)status++;
+                        if(Program.TrackerLimits[type.ToString()]["TrackersPerServer"] <= 0)
+                            continue;
 
                         //Skip everything after GW2, as this is hidden
                         if (type.ToString().Equals("GW2"))

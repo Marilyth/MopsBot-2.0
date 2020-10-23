@@ -11,6 +11,7 @@ using System.Runtime.InteropServices;
 using Newtonsoft.Json;
 using MopsBot.Data.Tracker;
 using MongoDB.Driver;
+using MopsBot.Data.Entities;
 
 namespace MopsBot.Data
 {
@@ -94,7 +95,7 @@ namespace MopsBot.Data
 
             nextTracker = new System.Threading.Timer(LoopTrackers);
             loopQueue = trackers.Values.ToList();
-            if (trackers.FirstOrDefault().Value is BaseUpdatingTracker)
+            if (typeof(T).IsSubclassOf(typeof(BaseUpdatingTracker)))
             {
                 nextUpdate = new System.Threading.Timer(LoopTrackersUpdate);
                 loopQueue = trackers.Where(x => (x.Value as BaseUpdatingTracker).ToUpdate.Count == 0).Select(x => x.Value).ToList();
@@ -132,7 +133,7 @@ namespace MopsBot.Data
 
             else
             {
-                if (trackers.FirstOrDefault().Value is BaseUpdatingTracker)
+                if (typeof(T).IsSubclassOf(typeof(BaseUpdatingTracker)))
                 {
                     loopQueue = trackers.Where(x => (x.Value as BaseUpdatingTracker).ToUpdate.Count == 0).Select(x => x.Value).ToList();
                 }
@@ -141,7 +142,7 @@ namespace MopsBot.Data
                     loopQueue = trackers.Values.ToList();
                 }
                 var gap = trackerInterval / (loopQueue.Count > 0 ? loopQueue.Count : 1);
-                nextTracker.Change(gap, gap);
+                nextTracker.Change(loopQueue.Count > 0 ? 0 : gap, gap);
                 trackerTurn = 0;
             }
         }
@@ -168,7 +169,7 @@ namespace MopsBot.Data
             else{
                 updateQueue = trackers.Where(x => (x.Value as BaseUpdatingTracker).ToUpdate.Count > 0).Select(x => x.Value).ToList();
                 var gap = updateInterval / (updateQueue.Count > 0 ? updateQueue.Count : 1);
-                nextUpdate.Change(gap, gap);
+                nextUpdate.Change(updateQueue.Count > 0 ? 0 : gap, gap);
                 updateTurn = 0;
             }
         }
@@ -211,7 +212,7 @@ namespace MopsBot.Data
                 {
                     trackers[name].ChannelConfig.Remove(channelId);
 
-                    if (trackers.FirstOrDefault().Value is BaseUpdatingTracker)
+                    if (typeof(T).IsSubclassOf(typeof(BaseUpdatingTracker)))
                     {
                         (trackers[name] as BaseUpdatingTracker).ToUpdate.Remove(channelId);
                     }

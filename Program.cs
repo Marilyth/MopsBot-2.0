@@ -29,6 +29,7 @@ namespace MopsBot
         }
         public static DiscordShardedClient Client;
         public static Dictionary<string, string> Config;
+        public static Dictionary<string, Dictionary<string, int>> TrackerLimits;
         public static CommandHandler Handler { get; private set; }
         public static ReactionHandler ReactionHandler { get; private set; }
         private static ServiceProvider provider;
@@ -45,8 +46,12 @@ namespace MopsBot
                 AlwaysDownloadUsers = false,
             });
 
+            System.IO.Directory.CreateDirectory(".//mopsdata//Images");
             using (StreamReader sr = new StreamReader(new FileStream("mopsdata//Config.json", FileMode.Open)))
                 Config = JsonConvert.DeserializeObject<Dictionary<string, string>>(sr.ReadToEnd());
+
+            using (StreamReader sr = new StreamReader(new FileStream("mopsdata//TrackerLimits.json", FileMode.Open)))
+                TrackerLimits = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, int>>>(sr.ReadToEnd());
 
 
             Client.Log += ClientLog;
@@ -56,7 +61,7 @@ namespace MopsBot
                 StaticBase.UpdateStatusAsync();
             });
 
-            await Client.LoginAsync(TokenType.Bot, Config["Discord"]);
+            await Client.LoginAsync(TokenType.Bot, Config["DiscordToken"]);
             foreach(var shard in Client.Shards){
                 await shard.StartAsync();
                 do{

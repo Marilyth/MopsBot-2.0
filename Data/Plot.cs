@@ -115,7 +115,7 @@ namespace MopsBot.Data
             using (var prc = new System.Diagnostics.Process())
             {
                 prc.StartInfo.FileName = "convert";
-                prc.StartInfo.Arguments = $"-set density 300 \"mopsdata//{ID}barplot.pdf\" \"//var//www//html//StreamCharts//{ID}barplot.png\"";
+                prc.StartInfo.Arguments = $"-set density 300 \"mopsdata//{ID}barplot.pdf\" \"mopsdata//Images//{ID}barplot.png\"";
 
                 prc.Start();
 
@@ -127,7 +127,7 @@ namespace MopsBot.Data
             foreach (var f in files)
                 f.Delete();
 
-            return $"{Program.Config["ServerAddress"]}/StreamCharts/{ID.Replace(" ", "%20")}barplot.png?rand={StaticBase.ran.Next(0, 999999999)}";
+            return $"{Program.Config["ServerAddress"]}:5000/api/Content?name={ID.Replace(" ", "%20")}barplot.png&rand={StaticBase.ran.Next(0, 999999999)}";
         }
 
         /// <summary>
@@ -256,7 +256,7 @@ namespace MopsBot.Data
             using (var prc = new System.Diagnostics.Process())
             {
                 prc.StartInfo.FileName = "convert";
-                prc.StartInfo.Arguments = $"-set density 300 \"mopsdata//{ID}barplot.pdf\" \"//var//www//html//StreamCharts//{ID}barplot.png\"";
+                prc.StartInfo.Arguments = $"-set density 300 \"mopsdata//{ID}barplot.pdf\" \"mopsdata//Images//{ID}barplot.png\"";
 
                 prc.Start();
 
@@ -268,7 +268,7 @@ namespace MopsBot.Data
             foreach (var f in files)
                 f.Delete();
 
-            return $"{Program.Config["ServerAddress"]}/StreamCharts/{ID.Replace(" ", "%20")}barplot.png?rand={StaticBase.ran.Next(0, 999999999)}";
+            return $"{Program.Config["ServerAddress"]}:5000/api/Content?name={ID.Replace(" ", "%20")}barplot.png&rand={StaticBase.ran.Next(0, 999999999)}";
         }
 
         /// <summary>
@@ -428,7 +428,7 @@ namespace MopsBot.Data
                     using (var prc = new System.Diagnostics.Process())
                     {
                         prc.StartInfo.FileName = "convert";
-                        prc.StartInfo.Arguments = $"-set density 300 \"mopsdata//{fileName}.pdf\" \"//var//www//html//StreamCharts//{fileName}.png\"";
+                        prc.StartInfo.Arguments = $"-set density 300 \"mopsdata//{fileName}.pdf\" \"mopsdata//Images//{fileName}.png\"";
 
                         prc.Start();
 
@@ -441,15 +441,15 @@ namespace MopsBot.Data
                         f.Delete();
 
                     if (!path)
-                        return $"{Program.Config["ServerAddress"]}/StreamCharts/{fileName}.png?rand={StaticBase.ran.Next(0, 999999999)}";
-                    else return $"//var//www//html//StreamCharts//{fileName}.png";
+                        return $"{Program.Config["ServerAddress"]}:5000/api/Content?name={fileName}.png&rand={StaticBase.ran.Next(0, 999999999)}";
+                    else return $"mopsdata//Images//{fileName}.png";
                 }
                 else
                 {
                     return $"mopsdata//{fileName}.pdf";
                 }
             }
-            return $"{Program.Config["ServerAddress"]}/StreamCharts/{fileName}.png?rand={StaticBase.ran.Next(0, 999999999)}";
+            return $"{Program.Config["ServerAddress"]}:5000/api/Content?name={fileName}.png&rand={StaticBase.ran.Next(0, 999999999)}";
         }
 
         public void AddValue(string name, double value, DateTime? xValue = null, bool savePlot = true, bool replace = false)

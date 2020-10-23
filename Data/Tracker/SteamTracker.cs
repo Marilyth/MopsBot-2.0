@@ -85,7 +85,7 @@ namespace MopsBot.Data.Tracker
             else if (gameId != null)
             {
                 summary = await GetUserSummaryAsync();
-                var name = (await FetchJSONDataAsync<GameStats>($"http://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v2/?appid={gameId}&key={Program.Config["Steam"]}")).game.gameName;
+                var name = (await FetchJSONDataAsync<GameStats>($"http://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v2/?appid={gameId}&key={Program.Config["SteamKey"]}")).game.gameName;
                 summary.gameextrainfo = name;
                 summary.gameid = gameId;
             }
@@ -195,12 +195,12 @@ namespace MopsBot.Data.Tracker
 
         public async Task<List<GameAchievement>> GetGameAchievements(string gameId)
         {
-            return (await FetchJSONDataAsync<GameStats>($"http://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v2/?appid={gameId}&key={Program.Config["Steam"]}")).game.availableGameStats.achievements;
+            return (await FetchJSONDataAsync<GameStats>($"http://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v2/?appid={gameId}&key={Program.Config["SteamKey"]}")).game.availableGameStats.achievements;
         }
 
         public async Task<bool> IsProfilePrivate()
         {
-            var response = await MopsBot.Module.Information.GetURLAsync($"https://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v1/?steamid={SteamId}&appid=736260&key={Program.Config["Steam"]}");
+            var response = await MopsBot.Module.Information.GetURLAsync($"https://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v1/?steamid={SteamId}&appid=736260&key={Program.Config["SteamKey"]}");
             return response.Contains("Profile is not public");
         }
 
@@ -211,22 +211,22 @@ namespace MopsBot.Data.Tracker
 
         public async Task<List<StatsAchievement>> GetUserAchievementsAsync(string gameId)
         {
-            return (await FetchJSONDataAsync<PlayerStats>($"http://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v1/?key={Program.Config["Steam"]}&steamid={SteamId}&appid={gameId}")).playerstats.achievements.OrderByDescending(x => x.unlocktime).ToList();
+            return (await FetchJSONDataAsync<PlayerStats>($"http://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v1/?key={Program.Config["SteamKey"]}&steamid={SteamId}&appid={gameId}")).playerstats.achievements.OrderByDescending(x => x.unlocktime).ToList();
         }
 
         public async Task<PlayerSummary> GetUserSummaryAsync()
         {
-            return (await FetchJSONDataAsync<UserSummary>($"http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key={Program.Config["Steam"]}&language=en-us&format=json&steamids={SteamId}")).response.players.FirstOrDefault();
+            return (await FetchJSONDataAsync<UserSummary>($"http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key={Program.Config["SteamKey"]}&language=en-us&format=json&steamids={SteamId}")).response.players.FirstOrDefault();
         }
 
         public async Task<List<RecentlyPlayedGame>> GetUserRecentGamesAsync()
         {
-            return (await FetchJSONDataAsync<RecentlyPlayed>($"https://api.steampowered.com/IPlayerService/GetRecentlyPlayedGames/v1/?steamid={SteamId}&count=10&key={Program.Config["Steam"]}")).response.games;
+            return (await FetchJSONDataAsync<RecentlyPlayed>($"https://api.steampowered.com/IPlayerService/GetRecentlyPlayedGames/v1/?steamid={SteamId}&count=10&key={Program.Config["SteamKey"]}")).response.games;
         }
 
         public async static Task<long> GetUserSIDAsync(string username)
         {
-            return long.Parse((await FetchJSONDataAsync<Vanity>($"https://api.steampowered.com/ISteamUser/ResolveVanityURL/v1/?vanityurl={username}&key={Program.Config["Steam"]}")).response.steamid);
+            return long.Parse((await FetchJSONDataAsync<Vanity>($"https://api.steampowered.com/ISteamUser/ResolveVanityURL/v1/?vanityurl={username}&key={Program.Config["SteamKey"]}")).response.steamid);
         }
 
         public override string TrackerUrl()

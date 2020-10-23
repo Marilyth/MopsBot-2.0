@@ -13,9 +13,9 @@ namespace MopsBot.Module.Preconditions{
         public int Limit;
         public TrackerType Type;
 
-        public TrackerLimitAttribute(int limit, TrackerType type){
-            Limit = limit;
+        public TrackerLimitAttribute(TrackerType type){
             Type = type;
+            Limit = Program.TrackerLimits[type.ToString()]["TrackersPerServer"];
         }
 
         public async override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services)
