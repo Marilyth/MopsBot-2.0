@@ -82,7 +82,7 @@ namespace MopsBot
             string message = $"\n[{msg.Severity}] at {DateTime.Now}\nsource: {Path.GetFileNameWithoutExtension(callerPath)}.{callerName}, line: {callerLine}\nmessage: {msg.Message}";
             if (msg.Exception != null && !msg.Exception.Message.Contains("The SSL connection could not be established"))
             {
-                message += $"\nException: {msg.Exception?.Message ?? ""}\nStacktrace: {msg.Exception?.StackTrace ?? ""}";
+                message += $"\nException: {msg.Exception?.ToString() ?? ""}\nStacktrace: {msg.Exception?.StackTrace ?? ""}";
             }
 
             Console.WriteLine(message);
