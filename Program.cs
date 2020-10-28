@@ -24,7 +24,6 @@ namespace MopsBot
     {
         public static void Main(string[] args)
         {
-            Task.Run(() => BuildWebHost(args).Run());
             new Program().Start().GetAwaiter().GetResult();
         }
         public static DiscordShardedClient Client;
@@ -57,13 +56,11 @@ namespace MopsBot
             if(!Config.ContainsKey("Port"))
                 Config.Add("Port", "5000");
 
-
             Client.Log += ClientLog;
             Client.ShardReady += onShardReady;
 
-            Task.Run(()=>{
-                StaticBase.UpdateStatusAsync();
-            });
+            Task.Run(() => StaticBase.UpdateStatusAsync());
+            Task.Run(() => BuildWebHost(new string[0]).Run());
 
             await Client.LoginAsync(TokenType.Bot, Config["DiscordToken"]);
             foreach(var shard in Client.Shards){
