@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Discord.Rest;
 using Newtonsoft.Json;
 using System.Net.NetworkInformation;
 using System.Net.Http;
@@ -22,11 +23,12 @@ namespace MopsBot.Module
         [Command("HowLong")]
         [Summary("Returns the date you joined the Guild")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public async Task howLong([Remainder]SocketGuildUser user = null)
+        public async Task howLong([Remainder]RestGuildUser user = null)
         {
             if (user == null)
-                user = (SocketGuildUser)Context.User;
-            await ReplyAsync(user.JoinedAt.Value.Date.ToString("d"));
+                await ReplyAsync((Context.User as SocketGuildUser).JoinedAt.Value.Date.ToString("d"));
+            else
+                await ReplyAsync(user.JoinedAt.Value.Date.ToString("d"));
         }
 
         [Command("BotInfo", RunMode = RunMode.Async)]

@@ -53,20 +53,17 @@ namespace MopsBot.Data.Interactive
                         var delete = new Tuple<IEmote, Func<ReactionHandlerContext, Task>, bool>(new Emoji("🗑"), DeleteInvite, false);
 
                         if(textmessage == null) throw new Exception("Message could not be loaded!");
+
                         Program.ReactionHandler.AddHandlers(textmessage, join, leave, delete).Wait();
 
-                        foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("✅"), textmessage.Reactions[new Emoji("✅")].ReactionCount).FlattenAsync().Result.Where(x => !x.IsBot).Reverse())
+                        /*foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("✅"), textmessage.Reactions[new Emoji("✅")].ReactionCount).FlattenAsync().Result.Where(x => !x.IsBot).Reverse())
                         {
                             JoinRole(user.Id, textmessage).Wait();
                         }
-                        /*foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("❎"), textmessage.Reactions[new Emoji("❎")].ReactionCount).First().Result.Where(x => !x.IsBot).Reverse())
-                        {
-                            LeaveRole(user.Id, textmessage);
-                        }*/
                         foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("🗑"), textmessage.Reactions[new Emoji("🗑")].ReactionCount).FlattenAsync().Result.Where(x => !x.IsBot).Reverse())
                         {
                             DeleteInvite(user.Id, textmessage).Wait();
-                        }
+                        }*/
                     }
                     catch (Exception e)
                     {
@@ -141,7 +138,8 @@ namespace MopsBot.Data.Interactive
         {
             var roleId = ulong.Parse(message.Embeds.First().Title.Split(new string[] { ":" }, StringSplitOptions.None).Last());
             var role = ((ITextChannel)message.Channel).Guild.GetRole(roleId);
-            var user = await ((ITextChannel)message.Channel).Guild.GetUserAsync(userId);
+            var user = await Program.Client.Rest.GetGuildUserAsync((message.Channel as ITextChannel).GuildId, userId);
+
             if (!user.RoleIds.Contains(roleId))
             {
                 await user.AddRoleAsync(role);
@@ -158,7 +156,8 @@ namespace MopsBot.Data.Interactive
         {
             var roleId = ulong.Parse(message.Embeds.First().Title.Split(new string[] { ":" }, StringSplitOptions.None).Last());
             var role = ((ITextChannel)message.Channel).Guild.GetRole(roleId);
-            var user = await ((ITextChannel)message.Channel).Guild.GetUserAsync(userId);
+            var user = await Program.Client.Rest.GetGuildUserAsync((message.Channel as ITextChannel).GuildId, userId);
+
             if (user.RoleIds.Contains(roleId))
             {
                 await user.RemoveRoleAsync(role);

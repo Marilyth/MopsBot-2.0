@@ -38,8 +38,7 @@ namespace MopsBot.Module
             {
                 using (Context.Channel.EnterTypingState())
                 {
-                    await Context.Guild.DownloadUsersAsync();
-                    var highestRole = ((SocketGuildUser)Context.Guild.GetUser(Context.Client.CurrentUser.Id)).Roles.OrderByDescending(x => x.Position).First();
+                    var highestRole = (Context.User as SocketGuildUser).Roles.OrderByDescending(x => x.Position).First();
                     if (description.Equals("DEFAULT")) description = "To join/leave the " + (role.IsMentionable ? role.Mention : $"**{role.Name}**") + " role, add/remove the ✅ Icon below this message!\n" + "If you can manage Roles, you may delete this invitation by pressing the 🗑 Icon";
                     if (role != null && role.Position < highestRole.Position)
                         await StaticBase.ReactRoleJoin.AddInvite((ITextChannel)Context.Channel, role, description);

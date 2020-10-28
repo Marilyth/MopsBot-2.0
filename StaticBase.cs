@@ -228,17 +228,9 @@ namespace MopsBot
             }
         }*/
 
-        public static async Task<SocketGuildUser> GetGuildUserAsync(ulong guildId, ulong userId)
-        {
-            var guild = Program.Client.GetGuild(guildId);
-            if (!guild.HasAllMembers)
-                await guild.DownloadUsersAsync();
-            return guild.GetUser(userId);
-        }
-
         public static async Task<RestUser> GetUserAsync(ulong userId)
         {
-            return await Program.Client.Shards.First().Rest.GetUserAsync(userId);
+            return await Program.Client.Rest.GetUserAsync(userId);
         }
 
         /// <summary>

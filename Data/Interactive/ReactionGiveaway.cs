@@ -53,16 +53,17 @@ namespace MopsBot.Data.Interactive
                         var draw = new Tuple<IEmote, Func<ReactionHandlerContext, Task>, bool>(new Emoji("🎁"), DrawGiveaway, false);
 
                         if(textmessage == null) throw new Exception("Message could not be loaded!");
+
                         Program.ReactionHandler.AddHandlers(textmessage, join, leave, draw).Wait();
 
-                        foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("✅"), textmessage.Reactions[new Emoji("✅")].ReactionCount).FlattenAsync().Result.Where(x => !x.IsBot))
+                        /*foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("✅"), textmessage.Reactions[new Emoji("✅")].ReactionCount).FlattenAsync().Result.Where(x => !x.IsBot))
                         {
                             JoinGiveaway(user.Id, textmessage).Wait();
                         }
                         foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("🎁"), textmessage.Reactions[new Emoji("🎁")].ReactionCount).FlattenAsync().Result.Where(x => !x.IsBot))
                         {
                             DrawGiveaway(user.Id, textmessage).Wait();
-                        }
+                        }*/
                     }
                     catch (Exception e)
                     {
@@ -150,7 +151,7 @@ namespace MopsBot.Data.Interactive
         private async Task JoinGiveaway(ulong userId, IUserMessage message)
         {
             if (!Giveaways[message.Channel.Id][message.Id].First().Equals(userId)
-               && !Giveaways[message.Channel.Id][message.Id].Contains(userId))
+                && !Giveaways[message.Channel.Id][message.Id].Contains(userId))
             {
                 Giveaways[message.Channel.Id][message.Id].Add(userId);
                 await UpdateDBAsync(message.Channel.Id);
@@ -201,7 +202,7 @@ namespace MopsBot.Data.Interactive
 
                     ulong winnerId = participantsDraw[index];
 
-                    IUser winner = await message.Channel.GetUserAsync(winnerId);
+                    var winner = await Program.Client.Rest.GetUserAsync(winnerId);
                     winnerDescription += $"{winner.Mention} won the "
                                        + $"`{message.Embeds.First().Title}`\n";
 
