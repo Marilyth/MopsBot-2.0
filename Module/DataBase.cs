@@ -75,7 +75,7 @@ namespace MopsBot.Module
         [Command("GetStats", RunMode = RunMode.Async)]
         [Summary("Returns your or another persons experience and all that stuff")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public async Task GetStats([Remainder]Discord.Rest.RestUser user = null)
+        public async Task GetStats([Remainder]RestGuildUser user = null)
         {
             using (Context.Channel.EnterTypingState())
             {
