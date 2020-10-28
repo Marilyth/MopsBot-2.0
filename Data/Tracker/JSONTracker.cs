@@ -98,8 +98,7 @@ namespace MopsBot.Data.Tracker
 
                 if (PastInformation == null) PastInformation = newInformation;
 
-                var embed = createEmbed(newInformation, PastInformation, out bool changed);
-                if (changed)
+                if (hasChanged(newInformation, PastInformation))
                 {
                     var graphMembers = newInformation.Where(x => x.Key.Contains("graph:"));
 
@@ -135,7 +134,7 @@ namespace MopsBot.Data.Tracker
 
                     foreach (var channel in ChannelConfig.Keys.ToList())
                     {
-                        await OnMajorChangeTracked(channel, DataGraph == null ? embed : createEmbed(newInformation, PastInformation, out changed), (string)ChannelConfig[channel]["Notification"]);
+                        await OnMajorChangeTracked(channel, createEmbed(newInformation, PastInformation), (string)ChannelConfig[channel]["Notification"]);
                     }
                     if (!ChannelConfig.Any(x => (bool)x.Value[UPDATEUNTILNULL])) ToUpdate = new Dictionary<ulong, ulong>();
 
@@ -242,7 +241,7 @@ namespace MopsBot.Data.Tracker
             return result;
         }
 
-        private Embed createEmbed(Dictionary<string, string> newInformation, Dictionary<string, string> oldInformation, out bool changed)
+        private Embed createEmbed(Dictionary<string, string> newInformation, Dictionary<string, string> oldInformation)
         {
             var embed = new EmbedBuilder();
             embed.WithColor(255, 227, 21);
@@ -253,7 +252,6 @@ namespace MopsBot.Data.Tracker
                 x.IconUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/JSON_vector_logo.svg/160px-JSON_vector_logo.svg.png";
             });
 
-            changed = false;
             foreach (var kvp in newInformation)
             {
                 string oldS = oldInformation.ContainsKey(kvp.Key) ? oldInformation[kvp.Key] : "No Value Found";
@@ -262,7 +260,6 @@ namespace MopsBot.Data.Tracker
 
                 if (!newS.Equals(oldS))
                 {
-                    changed = true;
                     embed.AddField(keyName, $"{oldS} -> {newS}", true);
                 }
                 else if (kvp.Key.Contains("always:"))
@@ -276,9 +273,25 @@ namespace MopsBot.Data.Tracker
                 }
             }
 
-            if (DataGraph != null && changed) embed.ImageUrl = DataGraph.DrawPlot();
+            if (DataGraph != null) embed.ImageUrl = DataGraph.DrawPlot();
 
             return embed.Build();
+        }
+
+        private bool hasChanged(Dictionary<string, string> newInformation, Dictionary<string, string> oldInformation){
+            foreach (var kvp in newInformation)
+            {
+                string oldS = oldInformation.ContainsKey(kvp.Key) ? oldInformation[kvp.Key] : "No Value Found";
+                string newS = kvp.Value;
+                var keyName = kvp.Key.Contains("as:") ? kvp.Key.Split(":").Last() : kvp.Key.Split("->").Last();
+
+                if (!newS.Equals(oldS))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public override string TrackerUrl()
