@@ -40,6 +40,7 @@ namespace MopsBot
             Client = new DiscordShardedClient(new DiscordSocketConfig()
             {
                 LogLevel = LogSeverity.Info,
+                GatewayIntents = GatewayIntents.GuildMessageReactions | GatewayIntents.GuildMessages | GatewayIntents.Guilds,
                 //TotalShards = 2,
                 LargeThreshold = 50,
                 MessageCacheSize = 0,
