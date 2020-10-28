@@ -54,6 +54,9 @@ namespace MopsBot
             using (StreamReader sr = new StreamReader(new FileStream("mopsdata//TrackerLimits.json", FileMode.Open)))
                 TrackerLimits = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, int>>>(sr.ReadToEnd());
 
+            if(!Config.ContainsKey("Port"))
+                Config.Add("Port", "5000");
+
 
             Client.Log += ClientLog;
             Client.ShardReady += onShardReady;
@@ -133,7 +136,7 @@ namespace MopsBot
 
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
-                .UseUrls("http://0.0.0.0:5000/")
+                .UseUrls($"http://0.0.0.0:{Program.Config["Port"]}/")
                 .ConfigureServices(x => x.AddCors(options => options.AddPolicy("AllowAll",
                     builder =>
                     {

@@ -58,7 +58,7 @@ namespace MopsBot.Data.Tracker
         {
             try
             {
-                var callBackUrl = $"{Program.Config["ServerAddress"]}:5000/api/webhook/youtube";
+                var callBackUrl = $"{Program.Config["ServerAddress"]}:{Program.Config["Port"]}/api/webhook/youtube";
                 var topicUrl = $"https://www.youtube.com/xml/feeds/videos.xml?channel_id={channelId}";
                 var subscribeUrl = "https://pubsubhubbub.appspot.com/subscribe";
                 string postDataStr = $"?hub.mode={(subscribe ? "subscribe" : "unsubscribe")}&" +
