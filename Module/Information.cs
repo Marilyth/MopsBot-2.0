@@ -103,7 +103,7 @@ namespace MopsBot.Module
             }
         }
 
-        /*[Command("Invite")]
+        [Command("Invite")]
         [Summary("Provides a link to make me join your Server")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public async Task joinServer()
@@ -111,7 +111,7 @@ namespace MopsBot.Module
             await ReplyAsync($"https://discordapp.com/oauth2/authorize?client_id={Context.Client.CurrentUser.Id}&permissions=271969344&scope=bot");
         }
 
-        [Command("Vote")]
+        /*[Command("Vote")]
         [Summary("Provides link to vote for me!")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public async Task Vote()
