@@ -18,14 +18,14 @@ namespace MopsBot.Module
         [Summary("Hugs the specified person")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         [Ratelimit(5, 1, Measure.Hours)]
-        public async Task hug([Remainder]RestGuildUser person)
+        public async Task hug([Remainder]User person)
         {
             using (Context.Channel.EnterTypingState())
             {
                 if (!person.Id.Equals(Context.User.Id))
                 {
                     await User.ModifyUserAsync(person.Id, x => x.Hugged++);
-                    await ReplyAsync($"Aww, **{person.Username}** got hugged by **{Context.User.Username}**.\n" +
+                    await ReplyAsync($"Aww, **{(await person.GetRestUserAsync()).Username}** got hugged by **{Context.User.Username}**.\n" +
                                      $"They have already been hugged {(await User.GetUserAsync(person.Id)).Hugged} times!");
                 }
                 else
@@ -37,14 +37,14 @@ namespace MopsBot.Module
         [Summary("Smooches the specified person")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         [Ratelimit(5, 1, Measure.Hours)]
-        public async Task kiss([Remainder]RestGuildUser person)
+        public async Task kiss([Remainder]User person)
         {
             using (Context.Channel.EnterTypingState())
             {
                 if (!person.Id.Equals(Context.User.Id))
                 {
                     await User.ModifyUserAsync(person.Id, x => x.Kissed++);
-                    await ReplyAsync($"Mwaaah, **{person.Username}** got kissed by **{Context.User.Username}**.\n" +
+                    await ReplyAsync($"Mwaaah, **{(await person.GetRestUserAsync()).Username}** got kissed by **{Context.User.Username}**.\n" +
                                      $"They have already been kissed {(await User.GetUserAsync(person.Id)).Kissed} times!");
                 }
                 else
@@ -56,14 +56,14 @@ namespace MopsBot.Module
         [Summary("Punches the specified person")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         [Ratelimit(5, 1, Measure.Hours)]
-        public async Task punch([Remainder]RestGuildUser person)
+        public async Task punch([Remainder]User person)
         {
             using (Context.Channel.EnterTypingState())
             {
                 if (!person.Id.Equals(Context.User.Id))
                 {
                     await User.ModifyUserAsync(person.Id, x => x.Punched++);
-                    await ReplyAsync($"DAAMN! **{person.Username}** just got punched by **{Context.User.Username}**.\n" +
+                    await ReplyAsync($"DAAMN! **{(await person.GetRestUserAsync()).Username}** just got punched by **{Context.User.Username}**.\n" +
                                      $"They have been punched {(await User.GetUserAsync(person.Id)).Punched} times.");
                 }
                 else
@@ -75,11 +75,11 @@ namespace MopsBot.Module
         [Command("GetStats", RunMode = RunMode.Async)]
         [Summary("Returns your or another persons experience and all that stuff")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public async Task GetStats([Remainder]RestGuildUser user = null)
+        public async Task GetStats([Remainder]User user = null)
         {
             using (Context.Channel.EnterTypingState())
             {
-                await ReplyAsync("", embed: await (await User.GetUserAsync(user?.Id ?? Context.User.Id)).StatEmbed());
+                await ReplyAsync("", embed: await (user ?? await User.GetUserAsync(Context.User.Id)).StatEmbed());
             }
         }
 

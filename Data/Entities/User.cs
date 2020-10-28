@@ -186,6 +186,9 @@ namespace MopsBot.Data.Entities
             return e.Build();
         }
 
+        public async Task<Discord.Rest.RestUser> GetRestUserAsync() => await Program.Client.Rest.GetUserAsync(Id);
+        public async Task<Discord.Rest.RestGuildUser> GetRestGuildUserAsync(ulong guildId) => await Program.Client.Rest.GetGuildUserAsync(guildId, Id);
+
         public enum Stats {Punch, Hug, Kiss, Experience, Level, Votepoints}
     }
 }

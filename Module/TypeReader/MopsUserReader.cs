@@ -11,15 +11,13 @@ using static MopsBot.Data.Tracker.BaseTracker;
 
 namespace MopsBot.Module.TypeReader
 {
-    public class RestUserReader : Discord.Commands.TypeReader
+    public class MopsUserReader : Discord.Commands.TypeReader
     {
         public override async Task<TypeReaderResult> ReadAsync(ICommandContext context, string input, IServiceProvider services)
         {
-            var command = context.Message.Content;
-            var prefix = await StaticBase.GetGuildPrefixAsync(context.Guild.Id);
             var id = context.Message.MentionedUserIds.ToList().FirstOrDefault();
 
-            return TypeReaderResult.FromSuccess(Program.Client.Rest.GetGuildUserAsync(context.Guild.Id, id));
+            return TypeReaderResult.FromSuccess(await MopsBot.Data.Entities.User.GetUserAsync(id));
         }
     }
 }

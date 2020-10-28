@@ -40,8 +40,8 @@ namespace MopsBot
             });
             //_map.Add(commands);
 
-            commands.AddTypeReader(typeof(MopsBot.Data.Tracker.BaseTracker), new Module.TypeReader.TrackerTypeReader());
-            commands.AddTypeReader(typeof(Discord.Rest.RestGuildUser), new Module.TypeReader.RestUserReader());
+            commands.AddTypeReader<MopsBot.Data.Tracker.BaseTracker>(new Module.TypeReader.TrackerTypeReader(), true);
+            commands.AddTypeReader<MopsBot.Data.Entities.User>(new Module.TypeReader.MopsUserReader(), true);
             await commands.AddModulesAsync(Assembly.GetEntryAssembly(), provider);
 
             await loadCustomCommands();

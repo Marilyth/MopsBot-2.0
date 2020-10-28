@@ -23,12 +23,12 @@ namespace MopsBot.Module
         [Command("HowLong")]
         [Summary("Returns the date you joined the Guild")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public async Task howLong([Remainder]RestGuildUser user = null)
+        public async Task howLong([Remainder]MopsBot.Data.Entities.User user = null)
         {
             if (user == null)
                 await ReplyAsync((Context.User as SocketGuildUser).JoinedAt.Value.Date.ToString("d"));
             else
-                await ReplyAsync(user.JoinedAt.Value.Date.ToString("d"));
+                await ReplyAsync((await user.GetRestGuildUserAsync(Context.Guild.Id)).JoinedAt.Value.Date.ToString("d"));
         }
 
         [Command("BotInfo", RunMode = RunMode.Async)]
