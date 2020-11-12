@@ -71,7 +71,7 @@ namespace MopsBot.Data.Interactive
             }
 
             if(doPrune){
-                TryPruneAsync().Wait();
+                TryPruneAsync(false).Wait();
             }
         }
 
