@@ -154,17 +154,17 @@ namespace MopsBot
 
                 try{
                     ChannelJanitors = MopsBot.Data.Entities.ChannelJanitor.GetJanitors().Result;
-                    Program.MopsLog(new LogMessage(LogSeverity.Error, "React init", $"Janitors started")).Wait();
+                    Program.MopsLog(new LogMessage(LogSeverity.Info, "React init", $"Janitors started")).Wait();
                     WelcomeMessages = Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").FindSync(x => true).ToEnumerable().ToDictionary(x => x.GuildId);
-                    Program.MopsLog(new LogMessage(LogSeverity.Error, "React init", $"Welcome messages loaded")).Wait();
+                    Program.MopsLog(new LogMessage(LogSeverity.Info, "React init", $"Welcome messages loaded")).Wait();
                     ReactRoleJoin = new ReactionRoleJoin();
-                    Program.MopsLog(new LogMessage(LogSeverity.Error, "React init", $"React role joins loaded")).Wait();
+                    Program.MopsLog(new LogMessage(LogSeverity.Info, "React init", $"React role joins loaded")).Wait();
                     ReactGiveaways = new ReactionGiveaway();
-                    Program.MopsLog(new LogMessage(LogSeverity.Error, "React init", $"React giveaways loaded")).Wait();
+                    Program.MopsLog(new LogMessage(LogSeverity.Info, "React init", $"React giveaways loaded")).Wait();
                     Poll = new ReactionPoll();
-                    Program.MopsLog(new LogMessage(LogSeverity.Error, "React init", $"React polls loaded")).Wait();
+                    Program.MopsLog(new LogMessage(LogSeverity.Info, "React init", $"React polls loaded")).Wait();
                 } catch (Exception e){
-                    Program.MopsLog(new LogMessage(LogSeverity.Error, "React init", $"Weird thing happened", e)).Wait();
+                    Program.MopsLog(new LogMessage(LogSeverity.Info, "React init", $"Weird thing happened", e)).Wait();
                 }
                 
                 init = true;
