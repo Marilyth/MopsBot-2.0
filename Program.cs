@@ -66,7 +66,7 @@ namespace MopsBot
             foreach(var shard in Client.Shards){
                 await shard.StartAsync();
                 do{
-                    await Task.Delay(30000);
+                    await Task.Delay(5000);
                 } while(StaticBase.GetMopsRAM() > 2200);
             }
 
