@@ -69,7 +69,6 @@ namespace MopsBot.Module
         [RequireBotPermission(ChannelPermission.AddReactions)]
         [RequireBotPermission(ChannelPermission.ManageMessages)]
         [RequireBotPermission(ChannelPermission.ReadMessageHistory)]
-        [Disable("We need to implement a way to automatically remove old polls before we enable it again.")]
         public class Poll : ModuleBase<ShardedCommandContext>
         {
             [Command("Create", RunMode = RunMode.Async), Summary("Creates a poll\nExample: !poll \"What should I play\" \"Dark Souls\" \"Osu!\" \"WoW\"")]

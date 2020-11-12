@@ -48,6 +48,26 @@ namespace MopsBot.Data.Interactive
                         var textmessage = (IUserMessage)((ITextChannel)Program.Client.GetChannel(channel.Key)).GetMessageAsync(poll.MessageID).Result;
                         if (textmessage == null) throw new Exception("Message could not be loaded!");
 
+                        //Remove old polls
+                        else
+                        {
+                            var daysSinceEdit = (DateTime.UtcNow - (textmessage.EditedTimestamp.HasValue ? textmessage.EditedTimestamp.Value : textmessage.Timestamp).UtcDateTime).TotalDays;
+                            if (daysSinceEdit > 30)
+                            {
+                                Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"Removing [{channel.Key}][{poll.MessageID}] due to inactivity for {daysSinceEdit} days.")).Wait();
+                                if (Polls[channel.Key].Count > 1)
+                                {
+                                    Polls[channel.Key].RemoveAll(x => x.MessageID == textmessage.Id);
+                                    UpdateDBAsync(channel.Key).Wait();
+                                }
+                                else
+                                {
+                                    Polls.Remove(channel.Key);
+                                    RemoveFromDBAsync(channel.Key).Wait();
+                                }
+                            }
+                        }
+
                         for (int i = 0; i < poll.Options.Length; i++)
                         {
                             var option = poll.Options[i];
@@ -168,18 +188,10 @@ namespace MopsBot.Data.Interactive
                 }
             }
         }
-
+        
         private async Task updateMessage(ReactionHandlerContext context, Poll poll)
         {
-            var e = context.Message.Embeds.First().ToEmbedBuilder();
-
-            e.WithImageUrl(poll.GetChartURI());
-
-
-            await context.Message.ModifyAsync(x =>
-            {
-                x.Embed = e.Build();
-            });
+            await updateMessage(context.Message, poll);
         }
 
         private Dictionary<ulong, bool> updating = new Dictionary<ulong, bool>();
@@ -218,7 +230,11 @@ namespace MopsBot.Data.Interactive
                         if (curChannel != null)
                         {
                             var curMessage = await curChannel.GetMessageAsync(message.MessageID);
-                            if (curMessage != null) continue;
+                            if (curMessage != null)
+                            {
+                                var daysSinceEdit = (DateTime.UtcNow - (curMessage.EditedTimestamp.HasValue ? curMessage.EditedTimestamp.Value : curMessage.Timestamp).UtcDateTime).TotalDays;
+                                if (daysSinceEdit <= 30) continue;
+                            }
 
                             pruneList.Add(KeyValuePair.Create<ulong, ulong>(channel.Key, message.MessageID));
                         }

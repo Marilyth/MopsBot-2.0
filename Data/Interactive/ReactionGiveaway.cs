@@ -297,7 +297,10 @@ namespace MopsBot.Data.Interactive
                         if (curChannel != null)
                         {
                             var curMessage = await curChannel.GetMessageAsync(message.Key);
-                            if (curMessage != null) continue;
+                            if (curMessage != null){
+                                var daysSinceEdit = (DateTime.UtcNow - (curMessage.EditedTimestamp.HasValue ? curMessage.EditedTimestamp.Value : curMessage.Timestamp).UtcDateTime).TotalDays;
+                                if(daysSinceEdit <= 30) continue;
+                            }
 
                             pruneList.Add(KeyValuePair.Create<ulong, ulong>(channel.Key, message.Key));
                         }

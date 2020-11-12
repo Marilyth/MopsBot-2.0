@@ -161,6 +161,8 @@ namespace MopsBot
                     Program.MopsLog(new LogMessage(LogSeverity.Error, "React init", $"React role joins loaded")).Wait();
                     ReactGiveaways = new ReactionGiveaway();
                     Program.MopsLog(new LogMessage(LogSeverity.Error, "React init", $"React giveaways loaded")).Wait();
+                    Poll = new ReactionPoll();
+                    Program.MopsLog(new LogMessage(LogSeverity.Error, "React init", $"React polls loaded")).Wait();
                 } catch (Exception e){
                     Program.MopsLog(new LogMessage(LogSeverity.Error, "React init", $"Weird thing happened", e)).Wait();
                 }
