@@ -79,11 +79,11 @@ namespace MopsBot.Data.Interactive
                     catch (Exception e)
                     {
                         Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"[{channel.Key}][{poll.MessageID}] could not be loaded", e)).Wait();
-                        if (e.Message.Contains("Message could not be loaded") && Program.GetShardFor(channel.Key).ConnectionState.Equals(ConnectionState.Connected))
+                        if (e.Message.Contains("Message could not be loaded") && Program.Client.Shards.All(x => x.ConnectionState.Equals(ConnectionState.Connected)))
                         {
                             Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"Removing [{channel.Key}][{poll.MessageID}] due to missing message.")).Wait();
                         } 
-                        else if(Program.GetShardFor(channel.Key).ConnectionState.Equals(ConnectionState.Connected)){
+                        else if(Program.Client.Shards.All(x => x.ConnectionState.Equals(ConnectionState.Connected))){
                             Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"Removing [{channel.Key}][{poll.MessageID}] due to missing channel.")).Wait();
                             if (channel.Value.Count > 1){
                                 channel.Value.Remove(poll);
@@ -246,7 +246,7 @@ namespace MopsBot.Data.Interactive
                         if (e.Message.Contains("50001"))
                             pruneList.Add(KeyValuePair.Create<ulong, ulong>(channel.Key, message.MessageID));
 
-                        else if(Program.GetShardFor(channel.Key).ConnectionState.Equals(ConnectionState.Connected))
+                        else if(Program.Client.Shards.All(x => x.ConnectionState.Equals(ConnectionState.Connected)))
                             pruneList.Add(KeyValuePair.Create<ulong, ulong>(channel.Key, message.MessageID));
                     }
                 }

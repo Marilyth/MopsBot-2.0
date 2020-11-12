@@ -69,7 +69,7 @@ namespace MopsBot.Data.Interactive
                     {
                         Program.MopsLog(new LogMessage(LogSeverity.Error, "", $" error by [{channel.Key}][{message.Key}]", e)).Wait();
 
-                        if (e.Message.Contains("Message could not be loaded") && Program.GetShardFor(channel.Key).ConnectionState.Equals(ConnectionState.Connected))
+                        if (e.Message.Contains("Message could not be loaded") && Program.Client.Shards.All(x => x.ConnectionState.Equals(ConnectionState.Connected)))
                         {
                             Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"Removing [{channel.Key}][{message.Key}] due to missing message.")).Wait();
 
@@ -310,7 +310,7 @@ namespace MopsBot.Data.Interactive
                         if (e.Message.Contains("50001"))
                             pruneList.Add(KeyValuePair.Create<ulong, ulong>(channel.Key, message.Key));
 
-                        else if(Program.GetShardFor(channel.Key).ConnectionState.Equals(ConnectionState.Connected))
+                        else if(Program.Client.Shards.All(x => x.ConnectionState.Equals(ConnectionState.Connected)))
                             pruneList.Add(KeyValuePair.Create<ulong, ulong>(channel.Key, message.Key));
                     }
                 }
