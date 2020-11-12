@@ -41,6 +41,8 @@ namespace MopsBot.Data.Interactive
             {
                 RoleInvites = new Dictionary<ulong, HashSet<ulong>>();
             }
+
+            bool doPrune = false;
             foreach (var channel in RoleInvites.ToList())
             {
                 foreach (var message in channel.Value.ToList())
@@ -67,22 +69,18 @@ namespace MopsBot.Data.Interactive
                     }
                     catch (Exception e)
                     {
+                        doPrune = true;
                         Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"error for [{channel.Key}][{message}]", e)).Wait();
                         if (e.Message.Contains("Message could not be loaded") && Program.Client.Shards.All(x => x.ConnectionState.Equals(ConnectionState.Connected)))
                         {
                             Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"Removing [{channel.Key}][{message}] due to missing message.")).Wait();
-
-                            /*if (channel.Value.Count > 1){
-                                channel.Value.Remove(message);
-                                UpdateDBAsync(channel.Key).Wait();
-                            }
-                            else{
-                                RoleInvites.Remove(channel.Key);
-                                RemoveFromDBAsync(channel.Key).Wait();
-                            }*/
                         }
                     }
                 }
+            }
+
+            if(doPrune){
+                TryPruneAsync().Wait();
             }
         }
 
@@ -235,6 +233,9 @@ namespace MopsBot.Data.Interactive
                             var curMessage = await curChannel.GetMessageAsync(message);
                             if (curMessage != null) continue;
 
+                            pruneList.Add(KeyValuePair.Create<ulong, ulong>(channel.Key, message));
+                            
+                        } else if(Program.Client.Shards.All(x => x.ConnectionState.Equals(ConnectionState.Connected))){
                             pruneList.Add(KeyValuePair.Create<ulong, ulong>(channel.Key, message));
                         }
                     }

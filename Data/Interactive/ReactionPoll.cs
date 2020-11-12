@@ -38,6 +38,7 @@ namespace MopsBot.Data.Interactive
             //}
 
             Polls = Polls ?? new Dictionary<ulong, List<Poll>>();
+            bool doPrune = false;
 
             foreach (var channel in Polls.ToList())
             {
@@ -78,24 +79,18 @@ namespace MopsBot.Data.Interactive
                     }
                     catch (Exception e)
                     {
+                        doPrune = true;
                         Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"[{channel.Key}][{poll.MessageID}] could not be loaded", e)).Wait();
                         if (e.Message.Contains("Message could not be loaded") && Program.Client.Shards.All(x => x.ConnectionState.Equals(ConnectionState.Connected)))
                         {
                             Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"Removing [{channel.Key}][{poll.MessageID}] due to missing message.")).Wait();
-                        } 
-                        else if(Program.Client.Shards.All(x => x.ConnectionState.Equals(ConnectionState.Connected))){
-                            Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"Removing [{channel.Key}][{poll.MessageID}] due to missing channel.")).Wait();
-                            if (channel.Value.Count > 1){
-                                channel.Value.Remove(poll);
-                                UpdateDBAsync(channel.Key).Wait();
-                            }
-                            else{
-                                Polls.Remove(channel.Key);
-                                RemoveFromDBAsync(channel.Key).Wait();
-                            }
                         }
                     }
                 }
+            }
+
+            if(doPrune){
+                TryPruneAsync().Wait();
             }
         }
 
@@ -237,8 +232,9 @@ namespace MopsBot.Data.Interactive
                                 var daysSinceEdit = (DateTime.UtcNow - (curMessage.EditedTimestamp.HasValue ? curMessage.EditedTimestamp.Value : curMessage.Timestamp).UtcDateTime).TotalDays;
                                 if (daysSinceEdit <= 30) continue;
                             }
-
-                            pruneList.Add(KeyValuePair.Create<ulong, ulong>(channel.Key, message.MessageID));
+                            else if(Program.Client.Shards.All(x => x.ConnectionState.Equals(ConnectionState.Connected))){
+                                pruneList.Add(KeyValuePair.Create<ulong, ulong>(channel.Key, message.MessageID));
+                            }
                         }
                     }
                     catch (Exception e)

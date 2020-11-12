@@ -39,6 +39,7 @@ namespace MopsBot.Data.Interactive
             }
             //}
             Giveaways = Giveaways ?? new Dictionary<ulong, Dictionary<ulong, List<ulong>>>();
+            bool doPrune = false;
 
             foreach (var channel in Giveaways.ToList())
             {
@@ -55,35 +56,22 @@ namespace MopsBot.Data.Interactive
                         if(textmessage == null) throw new Exception("Message could not be loaded!");
 
                         Program.ReactionHandler.AddHandlers(textmessage, join, leave, draw).Wait();
-
-                        /*foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("✅"), textmessage.Reactions[new Emoji("✅")].ReactionCount).FlattenAsync().Result.Where(x => !x.IsBot))
-                        {
-                            JoinGiveaway(user.Id, textmessage).Wait();
-                        }
-                        foreach (var user in textmessage.GetReactionUsersAsync(new Emoji("🎁"), textmessage.Reactions[new Emoji("🎁")].ReactionCount).FlattenAsync().Result.Where(x => !x.IsBot))
-                        {
-                            DrawGiveaway(user.Id, textmessage).Wait();
-                        }*/
                     }
                     catch (Exception e)
                     {
+                        doPrune = true;
                         Program.MopsLog(new LogMessage(LogSeverity.Error, "", $" error by [{channel.Key}][{message.Key}]", e)).Wait();
 
                         if (e.Message.Contains("Message could not be loaded") && Program.Client.Shards.All(x => x.ConnectionState.Equals(ConnectionState.Connected)))
                         {
                             Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"Removing [{channel.Key}][{message.Key}] due to missing message.")).Wait();
-
-                            /*if (channel.Value.Count > 1){
-                                channel.Value.Remove(message.Key);
-                                UpdateDBAsync(channel.Key).Wait();
-                            }
-                            else{
-                                Giveaways.Remove(channel.Key);
-                                RemoveFromDBAsync(channel.Key).Wait();
-                            }*/
                         }
                     }
                 }
+            }
+
+            if(doPrune){
+                TryPruneAsync().Wait();
             }
         }
 
@@ -301,8 +289,9 @@ namespace MopsBot.Data.Interactive
                                 var daysSinceEdit = (DateTime.UtcNow - (curMessage.EditedTimestamp.HasValue ? curMessage.EditedTimestamp.Value : curMessage.Timestamp).UtcDateTime).TotalDays;
                                 if(daysSinceEdit <= 30) continue;
                             }
-
-                            pruneList.Add(KeyValuePair.Create<ulong, ulong>(channel.Key, message.Key));
+                            else if(Program.Client.Shards.All(x => x.ConnectionState.Equals(ConnectionState.Connected))){
+                                pruneList.Add(KeyValuePair.Create<ulong, ulong>(channel.Key, message.Key));
+                            }
                         }
                     }
                     catch (Exception e)
