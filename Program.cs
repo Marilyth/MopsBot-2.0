@@ -128,7 +128,7 @@ namespace MopsBot
         {
             if(Client.GetChannel(channelId) != null)
                 return Client.GetShardFor((Client.GetChannel(channelId) as SocketGuildChannel).Guild);
-            return null;
+            return Client.Shards.FirstOrDefault();
         }
 
         public static IWebHost BuildWebHost(string[] args) =>
