@@ -82,15 +82,17 @@ namespace MopsBot.Data.Interactive
                         if (e.Message.Contains("Message could not be loaded") && Program.GetShardFor(channel.Key).ConnectionState.Equals(ConnectionState.Connected))
                         {
                             Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"Removing [{channel.Key}][{poll.MessageID}] due to missing message.")).Wait();
-
-                            /*if (channel.Value.Count > 1){
+                        } 
+                        else if(Program.GetShardFor(channel.Key).ConnectionState.Equals(ConnectionState.Connected)){
+                            Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"Removing [{channel.Key}][{poll.MessageID}] due to missing channel.")).Wait();
+                            if (channel.Value.Count > 1){
                                 channel.Value.Remove(poll);
                                 UpdateDBAsync(channel.Key).Wait();
                             }
                             else{
                                 Polls.Remove(channel.Key);
                                 RemoveFromDBAsync(channel.Key).Wait();
-                            }*/
+                            }
                         }
                     }
                 }
@@ -242,6 +244,9 @@ namespace MopsBot.Data.Interactive
                     catch (Exception e)
                     {
                         if (e.Message.Contains("50001"))
+                            pruneList.Add(KeyValuePair.Create<ulong, ulong>(channel.Key, message.MessageID));
+
+                        else if(Program.GetShardFor(channel.Key).ConnectionState.Equals(ConnectionState.Connected))
                             pruneList.Add(KeyValuePair.Create<ulong, ulong>(channel.Key, message.MessageID));
                     }
                 }

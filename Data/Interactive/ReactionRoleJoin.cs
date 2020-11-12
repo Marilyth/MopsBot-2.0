@@ -242,6 +242,9 @@ namespace MopsBot.Data.Interactive
                     {
                         if (e.Message.Contains("50001"))
                             pruneList.Add(KeyValuePair.Create<ulong, ulong>(channel.Key, message));
+
+                        else if(Program.GetShardFor(channel.Key).ConnectionState.Equals(ConnectionState.Connected))
+                            pruneList.Add(KeyValuePair.Create<ulong, ulong>(channel.Key, message));
                     }
                 }
             }
