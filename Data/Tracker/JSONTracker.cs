@@ -21,7 +21,7 @@ namespace MopsBot.Data.Tracker
         public List<string> ToTrack;
         public DatePlot DataGraph;
         public string Content;
-        public static readonly string INTERVAL = "IntervalInMs", UPDATEUNTILNULL = "UpdateUntilNull";
+        public static readonly string INTERVAL = "IntervalInMs", INLINE = "IsInline", UPDATEUNTILNULL = "UpdateUntilNull";
         public JSONTracker() : base()
         {
         }
@@ -52,9 +52,9 @@ namespace MopsBot.Data.Tracker
             bool save = false;
             foreach (var channel in ChannelConfig.Keys.ToList())
             {
-                if (!ChannelConfig[channel].ContainsKey(UPDATEUNTILNULL))
+                if (!ChannelConfig[channel].ContainsKey(INLINE))
                 {
-                    ChannelConfig[channel][UPDATEUNTILNULL] = false;
+                    ChannelConfig[channel][INLINE] = false;
                     save = true;
                 }
             }
@@ -68,6 +68,7 @@ namespace MopsBot.Data.Tracker
 
             var config = ChannelConfig[channelId];
             config[INTERVAL] = 600000;
+            config[INLINE] = true;
             config[UPDATEUNTILNULL] = false;
         }
 
@@ -134,7 +135,7 @@ namespace MopsBot.Data.Tracker
 
                     foreach (var channel in ChannelConfig.Keys.ToList())
                     {
-                        await OnMajorChangeTracked(channel, createEmbed(newInformation, PastInformation), (string)ChannelConfig[channel]["Notification"]);
+                        await OnMajorChangeTracked(channel, createEmbed(newInformation, PastInformation, (bool)ChannelConfig[channel][INLINE]), (string)ChannelConfig[channel]["Notification"]);
                     }
                     if (!ChannelConfig.Any(x => (bool)x.Value[UPDATEUNTILNULL])) ToUpdate = new Dictionary<ulong, ulong>();
 
@@ -241,7 +242,7 @@ namespace MopsBot.Data.Tracker
             return result;
         }
 
-        private Embed createEmbed(Dictionary<string, string> newInformation, Dictionary<string, string> oldInformation)
+        private Embed createEmbed(Dictionary<string, string> newInformation, Dictionary<string, string> oldInformation, bool isInline = true)
         {
             var embed = new EmbedBuilder();
             embed.WithColor(255, 227, 21);
@@ -260,16 +261,19 @@ namespace MopsBot.Data.Tracker
 
                 if (!newS.Equals(oldS))
                 {
-                    embed.AddField(keyName, $"{oldS} -> {newS}", true);
+                    embed.AddField(keyName, $"{oldS} -> {newS}", isInline);
                 }
                 else if (kvp.Key.Contains("always:"))
                 {
-                    embed.AddField(keyName, newS, true);
+                    embed.AddField(keyName, newS, isInline);
                 }
 
                 if (kvp.Key.Contains("image:"))
                 {
-                    embed.ThumbnailUrl = newS;
+                    if(DataGraph != null)
+                        embed.ThumbnailUrl = newS;
+                    else
+                        embed.ImageUrl = newS;
                 }
             }
 

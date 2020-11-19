@@ -94,6 +94,7 @@ namespace MopsBot.Data.Tracker
                     if((isNumeric = Double.TryParse(oldMatch, out double value)) && DataGraph == null){
                         DataGraph = new DatePlot("HTML" + Name.GetHashCode(), "Date", "Value", "dd-MMM", false);
                         DataGraph.AddValue("Value", value);
+                        await UpdateTracker();
                     }
 
                     if (!match.Equals(oldMatch)){
