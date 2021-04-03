@@ -21,6 +21,8 @@ Mainly a Tracker. Keeps track of Twitch streamers/clips, Youtubers, Twitters, Re
    
 6. Done. You can now modify the [Config.json](#config-entries) and [TrackerLimits.json](#trackerlimits-entries) in the ./mopsdata folder and start Mops with <code>docker start mopsbot</code> after you are done.
 
+7. By running `setup.bat update` or `sudo ./setup.sh` your mopsbot will be updated to the latest version on dockerhub.
+
 # MongoDB security
 Your Database is open to the public with a pretty weak account and password!  
 To avoid being hacked, do the following:  
