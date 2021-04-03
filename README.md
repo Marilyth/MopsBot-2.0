@@ -8,20 +8,20 @@ Mainly a Tracker. Keeps track of Twitch streamers/clips, Youtubers, Twitters, Re
 
 2. Unpack it at a location you want to have Mops running in.
 
-3. Make sure [Docker](https://docs.docker.com/engine/install/) is installed on your system, so that calling "docker" in your terminal yields a result.
+3. Make sure [Docker](https://docs.docker.com/engine/install/) is installed on your system, so that calling `docker` in your terminal yields a result.
    Also make sure the port 5000 (mops webhooks) is open and forwarded.
 
 4. Please make sure your database will be secure, by following these [steps](#mongodb-security).
 
-5. On Windows, run "setup.bat" inside the folder the .bat resides in.
+5. On Windows, run `setup.bat` inside the folder the .bat resides in.
 
-   On Linux, run "sudo ./setup.sh" inside the folder the .sh resides in. Make it executable first via "chmod +x ./setup.sh".
+   On Linux, run `sudo ./setup.sh` inside the folder the .sh resides in. Make it executable first via `chmod +x ./setup.sh`.
 
    On Raspbian, not yet supported/tested!
    
 6. Done. You can now modify the [Config.json](#config-entries) and [TrackerLimits.json](#trackerlimits-entries) in the ./mopsdata folder and start Mops with <code>docker start mopsbot</code> after you are done.
 
-7. By running `setup.bat update` or `sudo ./setup.sh` your mopsbot will be updated to the latest version on dockerhub.
+7. By running `setup.bat update` or `sudo ./setup.sh update` your mopsbot will be updated to the latest version on dockerhub.
 
 # MongoDB security
 Your Database is open to the public with a pretty weak account and password!  
