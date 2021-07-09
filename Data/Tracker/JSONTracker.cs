@@ -259,7 +259,7 @@ namespace MopsBot.Data.Tracker
                 string newS = kvp.Value;
                 var keyName = kvp.Key.Contains("as:") ? kvp.Key.Split(":").Last() : kvp.Key.Split("->").Last();
 
-                if (!newS.Equals(oldS))
+                if (!newS.Equals(oldS) && !kvp.Key.Contains("image:"))
                 {
                     embed.AddField(keyName, $"{oldS} -> {newS}", isInline);
                 }
@@ -289,7 +289,7 @@ namespace MopsBot.Data.Tracker
                 string newS = kvp.Value;
                 var keyName = kvp.Key.Contains("as:") ? kvp.Key.Split(":").Last() : kvp.Key.Split("->").Last();
 
-                if (!newS.Equals(oldS))
+                if (!newS.Equals(oldS) && !kvp.Key.Contains("image:"))
                 {
                     return true;
                 }
