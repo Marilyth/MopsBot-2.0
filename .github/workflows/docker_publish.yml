@@ -1,0 +1,27 @@
+name: Update Image
+
+on:
+ workflow_dispatch:
+
+env:
+  IMAGE_PATH: marilyth
+  IMAGE_NAME: mopsbot
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        
+      - name: Build image
+        run: |
+          chmod 777 ./Docker/CreateDocker.sh \
+          && ./Docker/CreateDocker.sh \
+          && docker tag mopsbot:latest $IMAGE_PATH/$IMAGE_NAME:latest
+        
+      - name: Log into dockerhub
+        run: echo "${{ secrets.DOCKERHUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKERHUB_ACCOUNT }} --password-stdin
+
+      - name: Push image
+        run: docker push $IMAGE_PATH/$IMAGE_NAME:latest

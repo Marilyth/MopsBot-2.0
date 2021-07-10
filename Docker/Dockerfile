@@ -14,7 +14,7 @@ RUN apt-get update \
  && sed -i '/disable ghostscript format types/,+6d' /etc/ImageMagick-6/policy.xml
 
 # Copy Mops code to image
-COPY ../ /MopsCode
+COPY ./ /MopsCode
 
 # Install dotnet, compile Mops, deinstall dotnet again
 RUN cd /MopsCode \
