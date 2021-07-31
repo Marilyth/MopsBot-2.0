@@ -34,7 +34,7 @@ namespace MopsBot.Module
             {"OSRS",("name of the OSRS player","https://cdn.discordapp.com/attachments/158166244493623296/681856581159223326/unknown.png")},
             {"RSS", ("URL to the RSS-feed", "https://cdn.discordapp.com/attachments/158166244493623296/681856139331371028/unknown.png")},
             {"Steam", ("steam-id64 of the user (you can find it here https://steamidfinder.com/ )", "https://cdn.discordapp.com/attachments/158166244493623296/681856888874598465/unknown.png")},
-            {"Mixer", ("name of the Mixer streamer", "https://cdn.discordapp.com/attachments/158166244493623296/681855363691053133/unknown.png")}
+            {"TikTok", ("TikTok username", "https://cdn.discordapp.com/attachments/158166244493623296/870925608367063040/unknown.png")},
         };
 
         [Command("Setup", RunMode = RunMode.Async)]
@@ -1496,6 +1496,91 @@ namespace MopsBot.Module
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
             public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel){
                 await Tracking.ChangeChannelAsync(Name, FromChannel, TrackerType.YoutubeLive, Context);
+            }
+        }
+
+        [Group("TikTok")]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
+        public class TikTok : InteractiveBase<ShardedCommandContext>
+        {
+            [Command("Track", RunMode = RunMode.Async)]
+            [Summary("Keeps track of the specified TikTok channels videos, in the channel you are calling this command in.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [RequireBotPermission(ChannelPermission.ReadMessageHistory)]
+            [RequireBotPermission(ChannelPermission.ManageMessages)]
+            [RequireBotPermission(ChannelPermission.EmbedLinks)]
+            [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
+            [TrackerLimit(TrackerType.TikTok)]
+            public async Task trackYoutube(string username, [Remainder]string notificationMessage = "New Video")
+            {
+                using (Context.Channel.EnterTypingState())
+                {
+                    username = username.ToLower().Replace("@", "");
+                    await Trackers[BaseTracker.TrackerType.TikTok].AddTrackerAsync(username, Context.Channel.Id, notificationMessage);
+
+                    await ReplyAsync("Keeping track of " + username + "'s videos, from now on!");
+                }
+            }
+
+            [Command("UnTrack")]
+            [Summary("Stops keeping track of the specified TikTok channels videos, in the Channel you are calling this command in.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task unTrackYoutube(BaseTracker username)
+            {
+                if (await Trackers[BaseTracker.TrackerType.TikTok].TryRemoveTrackerAsync(username.Name, username.LastCalledChannelPerGuild[Context.Guild.Id]))
+                    await ReplyAsync("Stopped keeping track of " + username.Name + "'s videos!");
+            }
+
+            [Command("GetTrackers")]
+            [Summary("Returns the TikTok channels that are tracked in the current channel.")]
+            public async Task getTrackers()
+            {
+                await ReplyAsync("Following TikTok channels are currently being tracked:");
+                await MopsBot.Data.Interactive.MopsPaginator.CreatePagedMessage(Context.Channel.Id, StaticBase.Trackers[BaseTracker.TrackerType.TikTok].GetTrackersEmbed(Context.Channel.Id, true));
+            }
+
+            [Command("SetNotification")]
+            [Summary("Sets the notification text that is used each time a new video gets detected.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task SetNotification(BaseTracker username, [Remainder]string notification = "")
+            {
+                username.ChannelConfig[username.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
+                await StaticBase.Trackers[BaseTracker.TrackerType.TikTok].UpdateDBAsync(username);
+                await ReplyAsync($"Changed notification for `{username.Name}` to `{notification}`");
+            }
+
+            [Command("Check")]
+            [Summary("Gets the first few videos from the TikTok channel.")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task Check(string username, int amount=5)
+            {
+                username = username.ToLower().Replace("@", "");
+                var videos = (await TikTokTracker.GetClips(username)).Take(amount).Select(x => x.Last() + "\n" + x.First()).ToList();
+                await ReplyAsync(string.Join("\n", videos));
+            }
+
+            [Command("ShowConfig")]
+            [Hide]
+            [Summary("Shows all the settings for this tracker, and their values")]
+            public async Task ShowConfig(BaseTracker username)
+            {
+                await ReplyAsync($"```yaml\n{string.Join("\n", username.ChannelConfig[username.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value))}```");
+            }
+
+            [Command("ChangeConfig", RunMode = RunMode.Async)]
+            [Summary("Edit the Configuration for the tracker")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task ChangeConfig(BaseTracker ChannelID)
+            {
+                await Tracking.ModifyConfig(this, ChannelID, BaseTracker.TrackerType.TikTok);
+            }
+
+            [Command("ChangeChannel", RunMode = RunMode.Async)]
+            [Summary("Changes the channel of the specified tracker from #FromChannel to the current channel")]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            [RequireBotPermission(ChannelPermission.EmbedLinks)]
+            public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel){
+                await Tracking.ChangeChannelAsync(Name, FromChannel, TrackerType.TikTok, Context);
             }
         }
 

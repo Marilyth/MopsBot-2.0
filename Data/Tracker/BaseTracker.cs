@@ -2,19 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Discord;
-using Discord.WebSocket;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using MopsBot.Data.Tracker.APIResults;
-using OxyPlot;
 using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 using MongoDB.Bson.Serialization.Options;
 using MongoDB.Bson.Serialization.Attributes;
 using System.ServiceModel.Syndication;
-using Newtonsoft.Json.Serialization;
 
 namespace MopsBot.Data.Tracker
 {
@@ -24,7 +21,7 @@ namespace MopsBot.Data.Tracker
         //Avoid ratelimit by placing a gap between all trackers.
         public static int ExistingTrackers = 0;
         public DateTime LastActivity;
-        public enum TrackerType { Twitch, TwitchGroup, TwitchClip, Twitter, Youtube, YoutubeLive, Reddit, Steam, Osu, Overwatch, OSRS, JSON, HTML, RSS };
+        public enum TrackerType { TikTok, Twitch, TwitchGroup, TwitchClip, Twitter, Youtube, YoutubeLive, Reddit, Steam, Osu, Overwatch, OSRS, JSON, HTML, RSS };
         public static List<TrackerType> CapSensitive = new List<TrackerType>{TrackerType.HTML, TrackerType.Reddit, TrackerType.JSON, TrackerType.Overwatch, TrackerType.RSS, TrackerType.Youtube, TrackerType.YoutubeLive};
         private bool disposed = false;
         private SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
@@ -78,6 +75,25 @@ namespace MopsBot.Data.Tracker
             };
 
             return JsonConvert.DeserializeObject<T>(query, _jsonWriter);
+        }
+
+        public static async Task<(List<List<string>>, List<string>)> FetchHTMLDataAsync(string url, params KeyValuePair<string, string>[] headers)
+        {
+            string query = await MopsBot.Module.Information.GetURLAsync(url, headers);
+            var plainText = new Regex(@"<([^<>]+?)> *?([^<>]+) *?<", RegexOptions.Multiline);
+            var links = new Regex("(https?://[w\\.]*[^<>\"\']+)", RegexOptions.IgnoreCase | RegexOptions.Multiline);
+            var test = plainText.Matches(query);
+            var textGroup = plainText.Matches(query).Select(x => x.Groups.Values.Skip(1).Select(x => x.Value).ToList()).ToList();
+            var linkGroup = links.Matches(query).Select(x => x.Groups.Values.Last().Value).ToList();
+            return (textGroup, linkGroup);
+        }
+
+        public static async Task<List<List<string>>> FetchHTMLDataAsync(string url, string pattern, params KeyValuePair<string, string>[] headers)
+        {
+            string query = await MopsBot.Module.Information.GetURLAsync(url, headers);
+            var reg = new Regex(pattern, RegexOptions.Multiline);
+            var result = reg.Matches(query).Select(x => x.Groups.Values.Skip(1).Select(y => y.Value).ToList()).ToList();
+            return result;
         }
 
         public async static Task<SyndicationFeed> FetchRSSData(string url, params KeyValuePair<string, string>[] headers)

@@ -187,7 +187,11 @@ namespace MopsBot.Data.Tracker
                     //New livestream
                     else
                     {
-                        while (StreamInfo == null) await Task.Delay(60000);
+                        for(int i = 0; i < 5; i++){
+                            if(StreamInfo != null) break;
+                            if(i == 4) return;
+                            await Task.Delay(60000);
+                        }
 
                         ViewerGraph = new DatePlot(Name, "Time since start", "Viewers");
 

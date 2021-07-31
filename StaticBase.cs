@@ -1,24 +1,17 @@
 ﻿using System;
 using Discord;
-using Discord.WebSocket;
-using Discord.Commands;
 using Discord.Rest;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using System.IO;
 using Newtonsoft.Json;
 using MopsBot.Data;
 using MopsBot.Data.Tracker;
 using MopsBot.Data.Interactive;
 using Tweetinvi;
-using Tweetinvi.Logic;
 using MongoDB.Driver;
 using MongoDB.Bson.Serialization.Options;
 using MongoDB.Bson.Serialization.Attributes;
-using DiscordBotsList.Api;
-using DiscordBotsList.Api.Objects;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Net.Security;
@@ -56,28 +49,30 @@ namespace MopsBot
             if (!init)
             {
                 //Disable trackers without keys provided
-                var twitterKeys = new List<string>(){"TwitterKey", "TwitterSecret", "TwitterToken", "TwitterAccessSecret"};
-                if(twitterKeys.Any(key => !Program.Config.ContainsKey(key) || string.IsNullOrEmpty(Program.Config[key]))) 
+                var twitterKeys = new List<string>() { "TwitterKey", "TwitterSecret", "TwitterToken", "TwitterAccessSecret" };
+                if (twitterKeys.Any(key => !Program.Config.ContainsKey(key) || string.IsNullOrEmpty(Program.Config[key])))
                     Program.TrackerLimits["Twitter"]["TrackersPerServer"] = 0;
-                
-                var youtubeKeys = new List<string>(){"YoutubeKey"};
-                if(youtubeKeys.Any(key => !Program.Config.ContainsKey(key) || string.IsNullOrEmpty(Program.Config[key]))){
+
+                var youtubeKeys = new List<string>() { "YoutubeKey" };
+                if (youtubeKeys.Any(key => !Program.Config.ContainsKey(key) || string.IsNullOrEmpty(Program.Config[key])))
+                {
                     Program.TrackerLimits["Youtube"]["TrackersPerServer"] = 0;
                     Program.TrackerLimits["YoutubeLive"]["TrackersPerServer"] = 0;
                 }
-                
-                var twitchKeys = new List<string>(){"TwitchKey", "TwitchSecret"};
-                if(twitchKeys.Any(key => !Program.Config.ContainsKey(key) || string.IsNullOrEmpty(Program.Config[key]))){
+
+                var twitchKeys = new List<string>() { "TwitchKey", "TwitchSecret" };
+                if (twitchKeys.Any(key => !Program.Config.ContainsKey(key) || string.IsNullOrEmpty(Program.Config[key])))
+                {
                     Program.TrackerLimits["Twitch"]["TrackersPerServer"] = 0;
                     Program.TrackerLimits["TwitchClip"]["TrackersPerServer"] = 0;
                 }
-                
-                var osuKeys = new List<string>(){"OsuKey"};
-                if(osuKeys.Any(key => !Program.Config.ContainsKey(key) || string.IsNullOrEmpty(Program.Config[key]))) 
+
+                var osuKeys = new List<string>() { "OsuKey" };
+                if (osuKeys.Any(key => !Program.Config.ContainsKey(key) || string.IsNullOrEmpty(Program.Config[key])))
                     Program.TrackerLimits["Osu"]["TrackersPerServer"] = 0;
 
-                var steamKeys = new List<string>(){"SteamKey"};
-                if(steamKeys.Any(key => !Program.Config.ContainsKey(key) || string.IsNullOrEmpty(Program.Config[key]))) 
+                var steamKeys = new List<string>() { "SteamKey" };
+                if (steamKeys.Any(key => !Program.Config.ContainsKey(key) || string.IsNullOrEmpty(Program.Config[key])))
                     Program.TrackerLimits["Steam"]["TrackersPerServer"] = 0;
 
 
@@ -89,7 +84,8 @@ namespace MopsBot
                 ServicePointManager.DefaultConnectionLimit = 100;
                 ServicePointManager.MaxServicePointIdleTime = 10000;
 
-                if(Program.TrackerLimits["Twitter"]["TrackersPerServer"] > 0){
+                if (Program.TrackerLimits["Twitter"]["TrackersPerServer"] > 0)
+                {
                     Auth.SetUserCredentials(Program.Config["TwitterKey"], Program.Config["TwitterSecret"],
                                             Program.Config["TwitterToken"], Program.Config["TwitterAccessSecret"]);
                     TweetinviConfig.CurrentThreadSettings.TweetMode = TweetMode.Extended;
@@ -102,25 +98,26 @@ namespace MopsBot
                 }
 
                 Trackers = new Dictionary<BaseTracker.TrackerType, Data.TrackerWrapper>();
-                Trackers[BaseTracker.TrackerType.Twitter] = new TrackerHandler<TwitterTracker>(Program.TrackerLimits["Twitter"]["PollInterval"], Program.TrackerLimits["Twitter"]["UpdateInterval"]);
-                Trackers[BaseTracker.TrackerType.Youtube] = new TrackerHandler<YoutubeTracker>(Program.TrackerLimits["Youtube"]["PollInterval"], Program.TrackerLimits["Youtube"]["UpdateInterval"]);
-                Trackers[BaseTracker.TrackerType.Twitch] = new TrackerHandler<TwitchTracker>(Program.TrackerLimits["Twitch"]["PollInterval"], Program.TrackerLimits["Twitch"]["UpdateInterval"]);
-                Trackers[BaseTracker.TrackerType.YoutubeLive] = new TrackerHandler<YoutubeLiveTracker>(Program.TrackerLimits["YoutubeLive"]["PollInterval"], Program.TrackerLimits["YoutubeLive"]["UpdateInterval"]);
-                Trackers[BaseTracker.TrackerType.Reddit] = new TrackerHandler<RedditTracker>(Program.TrackerLimits["Reddit"]["PollInterval"], Program.TrackerLimits["Reddit"]["UpdateInterval"]);
-                Trackers[BaseTracker.TrackerType.JSON] = new TrackerHandler<JSONTracker>(Program.TrackerLimits["JSON"]["PollInterval"], Program.TrackerLimits["JSON"]["UpdateInterval"]);
-                Trackers[BaseTracker.TrackerType.Osu] = new TrackerHandler<OsuTracker>(Program.TrackerLimits["Osu"]["PollInterval"], Program.TrackerLimits["Osu"]["UpdateInterval"]);
-                Trackers[BaseTracker.TrackerType.Overwatch] = new TrackerHandler<OverwatchTracker>(Program.TrackerLimits["Overwatch"]["PollInterval"], Program.TrackerLimits["Overwatch"]["UpdateInterval"]);
-                Trackers[BaseTracker.TrackerType.TwitchGroup] = new TrackerHandler<TwitchGroupTracker>(Program.TrackerLimits["TwitchGroup"]["PollInterval"], Program.TrackerLimits["TwitchGroup"]["UpdateInterval"]);
-                Trackers[BaseTracker.TrackerType.TwitchClip] = new TrackerHandler<TwitchClipTracker>(Program.TrackerLimits["TwitchClip"]["PollInterval"], Program.TrackerLimits["TwitchClip"]["UpdateInterval"]);
-                Trackers[BaseTracker.TrackerType.OSRS] = new TrackerHandler<OSRSTracker>(Program.TrackerLimits["OSRS"]["PollInterval"], Program.TrackerLimits["OSRS"]["UpdateInterval"]);
-                Trackers[BaseTracker.TrackerType.HTML] = new TrackerHandler<HTMLTracker>(Program.TrackerLimits["HTML"]["PollInterval"], Program.TrackerLimits["HTML"]["UpdateInterval"]);
-                Trackers[BaseTracker.TrackerType.RSS] = new TrackerHandler<RSSTracker>(Program.TrackerLimits["RSS"]["PollInterval"], Program.TrackerLimits["RSS"]["UpdateInterval"]);
-                Trackers[BaseTracker.TrackerType.Steam] = new TrackerHandler<SteamTracker>(Program.TrackerLimits["Steam"]["PollInterval"], Program.TrackerLimits["Steam"]["UpdateInterval"]);
+                foreach (var tracker in Enum.GetValues(typeof(BaseTracker.TrackerType)).Cast<BaseTracker.TrackerType>())
+                {
+                    if(!Program.TrackerLimits.ContainsKey(tracker.ToString())){
+                        Program.TrackerLimits[tracker.ToString()] = new Dictionary<string, int>();
+                        Program.TrackerLimits[tracker.ToString()]["PollInterval"] = 900000;
+                        Program.TrackerLimits[tracker.ToString()]["UpdateInterval"] = 120000;
+                        Program.TrackerLimits[tracker.ToString()]["TrackersPerServer"] = 20;
+                    }
+                    var trackerType = Type.GetType($"MopsBot.Data.Tracker.{tracker}Tracker");
+                    var wrapperType = typeof(TrackerHandler<>).MakeGenericType(trackerType);
+                    var pollInterval = Program.TrackerLimits[tracker.ToString()]["PollInterval"];
+                    var updateInterval = Program.TrackerLimits[tracker.ToString()]["UpdateInterval"];
+                    Trackers[tracker] = (TrackerWrapper)Activator.CreateInstance(wrapperType, new object[] { pollInterval, updateInterval });
+                }
 
                 foreach (var tracker in Trackers)
                 {
                     var trackerType = tracker.Key;
-                    if(Program.TrackerLimits[trackerType.ToString()]["TrackersPerServer"] <= 0){
+                    if (Program.TrackerLimits[trackerType.ToString()]["TrackersPerServer"] <= 0)
+                    {
                         Program.MopsLog(new LogMessage(LogSeverity.Error, "Handler init", $"Disabled {trackerType.ToString()}-Tracker, due to either missing API Keys or no trackers per server allowed!")).Wait();
                         continue;
                     }
@@ -152,7 +149,8 @@ namespace MopsBot
                     Task.Delay((int)(60000 / Trackers.Count)).Wait();
                 }
 
-                try{
+                try
+                {
                     ChannelJanitors = MopsBot.Data.Entities.ChannelJanitor.GetJanitors().Result;
                     Program.MopsLog(new LogMessage(LogSeverity.Info, "React init", $"Janitors started")).Wait();
                     WelcomeMessages = Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").FindSync(x => true).ToEnumerable().ToDictionary(x => x.GuildId);
@@ -163,10 +161,12 @@ namespace MopsBot
                     Program.MopsLog(new LogMessage(LogSeverity.Info, "React init", $"React giveaways loaded")).Wait();
                     Poll = new ReactionPoll();
                     Program.MopsLog(new LogMessage(LogSeverity.Info, "React init", $"React polls loaded")).Wait();
-                } catch (Exception e){
+                }
+                catch (Exception e)
+                {
                     Program.MopsLog(new LogMessage(LogSeverity.Info, "React init", $"Weird thing happened", e)).Wait();
                 }
-                
+
                 init = true;
 
             }
@@ -194,7 +194,8 @@ namespace MopsBot
         /// <returns>A Task that sets the activity</returns>
         public static async Task UpdateServerCount()
         {
-            if(Program.Client.LoginState == LoginState.LoggedIn){
+            if (Program.Client.LoginState == LoginState.LoggedIn)
+            {
                 await Program.Client.SetActivityAsync(new Game($"{Program.Client.Guilds.Count} servers", ActivityType.Watching));
 
                 /*try
@@ -245,7 +246,7 @@ namespace MopsBot
             {
                 try
                 {
-                    if(Program.Client.LoginState == LoginState.LoggedIn)
+                    if (Program.Client.LoginState == LoginState.LoggedIn)
                         await Program.Client.SetActivityAsync(new Game("Currently Restarting!", ActivityType.Playing));
 
                     await SendHeartbeat();
@@ -269,7 +270,7 @@ namespace MopsBot
                         }
 
                         BaseTracker.TrackerType type = (BaseTracker.TrackerType)status++;
-                        if(Program.TrackerLimits[type.ToString()]["TrackersPerServer"] <= 0)
+                        if (Program.TrackerLimits[type.ToString()]["TrackersPerServer"] <= 0)
                             continue;
 
                         //Skip everything after GW2, as this is hidden
@@ -281,7 +282,7 @@ namespace MopsBot
 
                         var trackerCount = Trackers[type].GetTrackers().Count;
 
-                        if(Program.Client.LoginState == LoginState.LoggedIn)
+                        if (Program.Client.LoginState == LoginState.LoggedIn)
                             await Program.Client.SetActivityAsync(new Game($"{trackerCount} {type.ToString()} Trackers", ActivityType.Watching));
                     }
                     catch
