@@ -113,7 +113,7 @@ namespace MopsBot.Data.Tracker
             }
             else
             {
-                videoSegment = videoSegment.Split("/watch?v=", 2).LastOrDefault();
+                videoSegment = videoSegment.Split("videoId\":\"", 2).LastOrDefault();
                 var videoId = videoSegment.Split("\"").FirstOrDefault();
                 return videoId;
             }
@@ -228,8 +228,10 @@ namespace MopsBot.Data.Tracker
 
                     ToUpdate = new Dictionary<ulong, ulong>();
 
-                    foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][OFFLINE]).ToList())
-                        await OnMinorChangeTracked(channel, $"{StreamInfo?.snippet?.channelTitle ?? "Streamer"} went Offline!");
+                    if(StreamInfo != null){
+                        foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][OFFLINE]).ToList())
+                            await OnMinorChangeTracked(channel, $"{StreamInfo?.snippet?.channelTitle ?? "Streamer"} went Offline!");
+                    }
 
                     StreamInfo = null;
 
