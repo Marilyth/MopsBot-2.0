@@ -1,0 +1,91 @@
+{
+    "Twitter": {
+        "TrackersPerServer": 30,
+        "PollInterval": 1800000,
+        "UpdateInterval": 120000
+    },
+
+    "Youtube": {
+        "TrackersPerServer": 30,
+        "PollInterval": 3600000,
+        "UpdateInterval": 120000
+    },
+
+    "Twitch": {
+        "TrackersPerServer": 50,
+        "PollInterval": 3600000,
+        "UpdateInterval": 120000
+    },
+
+    "YoutubeLive": {
+        "TrackersPerServer": 3,
+        "PollInterval": 900000,
+        "UpdateInterval": 120000
+    },
+
+    "Reddit": {
+        "TrackersPerServer": 10,
+        "PollInterval": 900000,
+        "UpdateInterval": 120000
+    },
+
+    "JSON": {
+        "TrackersPerServer": 10,
+        "PollInterval": 900000,
+        "UpdateInterval": 600000
+    },
+
+    "Osu": {
+        "TrackersPerServer": 10,
+        "PollInterval": 900000,
+        "UpdateInterval": 120000
+    },
+
+    "Overwatch": {
+        "TrackersPerServer": 10,
+        "PollInterval": 3600000,
+        "UpdateInterval": 120000
+    },
+
+    "TwitchGroup": {
+        "TrackersPerServer": 1,
+        "PollInterval": 60000,
+        "UpdateInterval": 120000
+    },
+
+    "TwitchClip": {
+        "TrackersPerServer": 50,
+        "PollInterval": 900000,
+        "UpdateInterval": 120000
+    },
+
+    "OSRS": {
+        "TrackersPerServer": 10,
+        "PollInterval": 900000,
+        "UpdateInterval": 120000
+    },
+
+    "HTML": {
+        "TrackersPerServer": 10,
+        "PollInterval": 900000,
+        "UpdateInterval": 120000
+    },
+
+    "RSS": {
+        "TrackersPerServer": 40,
+        "PollInterval": 3600000,
+        "UpdateInterval": 120000
+    },
+
+    "Steam": {
+        "TrackersPerServer": 10,
+        "PollInterval": 900000,
+        "UpdateInterval": 120000
+    },
+
+    "TikTok": {
+        "TrackersPerServer": 10,
+        "PollInterval": 900000,
+        "UpdateInterval": 120000
+    }
+}

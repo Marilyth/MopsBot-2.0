@@ -1,0 +1,27 @@
+{
+  "DiscordToken": "",
+  "DatabaseURL": "mongodb://mops:123321@172.17.0.1:27017",
+  "ExceptionLogChannel": "",
+  "CommandLogChannel": "",
+  "ServerAddress": "http://localhost",
+
+  "TwitchKey": "",
+  "TwitchSecret": "",
+
+  "TwitterKey": "",
+  "TwitterSecret": "",
+  "TwitterToken": "",
+  "TwitterAccessSecret": "",
+
+  "YoutubeKey": "",
+
+  "SteamKey": "",
+
+  "OsuKey": "",
+
+  "BotManager": "",
+
+  "Wordnik": "",
+
+  "WolframAlpha": ""
+}
