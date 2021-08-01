@@ -40,7 +40,9 @@ namespace MopsBot.Data.Tracker
             {
                 var clips = await getClips();
                 var difference = clips.TakeWhile(x => x.First() != TrackedVideos.FirstOrDefault()).ToList();
-                TrackedVideos = clips.Select(x => x.First()).ToList();
+
+                if(difference.Count > 0)
+                    TrackedVideos = clips.Select(x => x.First()).ToList();
 
                 foreach (var clip in difference)
                 {
