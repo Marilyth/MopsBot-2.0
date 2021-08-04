@@ -227,15 +227,15 @@ namespace MopsBot.Data.Tracker
                         await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $" error sending graph by {Name}", e));
                     }
 
-                    ViewerGraph?.Dispose();
-                    ViewerGraph = null;
-
                     ToUpdate = new Dictionary<ulong, ulong>();
 
-                    if(StreamInfo != null){
+                    if((ViewerGraph?.PlotDataPoints?.Count ?? 0) > 0){
                         foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][OFFLINE]).ToList())
                             await OnMinorChangeTracked(channel, $"{StreamInfo?.snippet?.channelTitle ?? "Streamer"} went Offline!");
                     }
+
+                    ViewerGraph?.Dispose();
+                    ViewerGraph = null;
 
                     StreamInfo = null;
 

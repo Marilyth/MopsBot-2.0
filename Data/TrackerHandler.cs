@@ -39,7 +39,7 @@ namespace MopsBot.Data
     /// </summary>
     public class TrackerHandler<T> : TrackerWrapper where T : Tracker.BaseTracker
     {
-        public Dictionary<string, T> trackers;
+        public Dictionary<string, T> trackers = new Dictionary<string, T>();
         public DatePlot IncreaseGraph;
         private int trackerInterval, updateInterval;
         private System.Threading.Timer nextTracker, nextUpdate;
