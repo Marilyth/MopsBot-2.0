@@ -22,7 +22,7 @@ namespace MopsBot
     {
         public static MongoClient DatabaseClient = new MongoClient($"{Program.Config["DatabaseURL"]}");
         public static IMongoDatabase Database = DatabaseClient.GetDatabase("Mops");
-        public static readonly System.Net.Http.HttpClient HttpClient = new System.Net.Http.HttpClient();
+        public static System.Net.Http.HttpClient HttpClient = new System.Net.Http.HttpClient();
         //public static AuthDiscordBotListApi DiscordBotList = new AuthDiscordBotListApi(305398845389406209, Program.Config["DiscordBotListKey"]);
         public static Random ran = new Random();
         public static List<string> Playlist = new List<string>();
@@ -74,7 +74,6 @@ namespace MopsBot
                 var steamKeys = new List<string>() { "SteamKey" };
                 if (steamKeys.Any(key => !Program.Config.ContainsKey(key) || string.IsNullOrEmpty(Program.Config[key])))
                     Program.TrackerLimits["Steam"]["TrackersPerServer"] = 0;
-
 
                 HttpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)");
                 ServicePointManager.ServerCertificateValidationCallback = (object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) => { return true; };
@@ -169,6 +168,21 @@ namespace MopsBot
 
                 init = true;
 
+            }
+        }
+
+        private static DateTime lastReset = DateTime.UtcNow;
+        public static async Task ResetHttpClient(){
+            //Youtube uses some kind of session information to block all further requests from a bot. 
+            //It must be reset completely.
+            if((DateTime.UtcNow - lastReset).TotalHours > 0){
+                lastReset = DateTime.UtcNow;
+                await Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"Client is blocked by YouTube, resetting (evil)."));
+                HttpClient.Dispose();
+                HttpClient = new System.Net.Http.HttpClient();
+                HttpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)");
+                HttpClient.DefaultRequestHeaders.ConnectionClose = true;
+                HttpClient.Timeout = TimeSpan.FromSeconds(10);
             }
         }
 

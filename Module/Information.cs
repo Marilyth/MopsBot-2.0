@@ -234,25 +234,30 @@ namespace MopsBot.Module
                 using (var request = new HttpRequestMessage(HttpMethod.Get, URL))
                 {
                     //Temporary fix for YouTube cookie consent
-                    if(URL.Contains("youtube.com")) request.Headers.Add("Cookie", $"CONSENT=YES+cb.20210810-12-p0.it+FX+{StaticBase.ran.Next(100, 1000)}");
+                    if(URL.Contains("youtube.com")) request.Headers.Add("Cookie", $"CONSENT=YES+{StaticBase.ran.Next(1, 1000)}");
                     
                     foreach (var kvp in headers)
                         request.Headers.TryAddWithoutValidation(kvp.Key, kvp.Value);
-                    using (var response = await StaticBase.HttpClient.SendAsync(request))
-                    {
-                        using (var content = response.Content)
+                    for(int i = 0; i < 2; i++){
+                        using (var response = await StaticBase.HttpClient.SendAsync(request))
                         {
-                            string value = "";
-                            if ((content?.Headers?.ContentType?.CharSet?.ToLower().Contains("utf8") ?? false) || (content?.Headers?.ContentType?.CharSet?.ToLower().Contains("utf-8") ?? false))
-                                value = System.Text.Encoding.UTF8.GetString(await content.ReadAsByteArrayAsync());
-                            else
-                                value = await content.ReadAsStringAsync();
+                            using (var content = response.Content)
+                            {
+                                string value = "";
+                                if ((content?.Headers?.ContentType?.CharSet?.ToLower().Contains("utf8") ?? false) || (content?.Headers?.ContentType?.CharSet?.ToLower().Contains("utf-8") ?? false))
+                                    value = System.Text.Encoding.UTF8.GetString(await content.ReadAsByteArrayAsync());
+                                else
+                                    value = await content.ReadAsStringAsync();
 
-                            SucceededRequests++;
-                            SucceededRequestsTotal++;
-                            return value;
+                                SucceededRequests++;
+                                SucceededRequestsTotal++;
+                                if(!value.Contains("https://www.gstatic.com/ac/cb/scene_cookie_wall_youtube.svg") || i == 1)
+                                    return value;
+                                await StaticBase.ResetHttpClient();
+                            }
                         }
                     }
+                    return "";
                 }
             }
             catch (Exception e)
