@@ -133,7 +133,7 @@ namespace MopsBot
 
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
-                .UseUrls($"http://0.0.0.0:{Program.Config["Port"]}/")
+                .UseUrls($"http://0.0.0.0:{Program.Config["Port"]}/", "https://0.0.0.0/")
                 .ConfigureServices(x => x.AddCors(options => options.AddPolicy("AllowAll",
                     builder =>
                     {

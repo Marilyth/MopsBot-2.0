@@ -20,28 +20,6 @@ namespace MopsBot.Api.Controllers
 
         }
 
-        [HttpGet("twitch")]
-        public async Task<IActionResult> ReplyChallenge()
-        {
-            Dictionary<string, string[]> parameters = Request.Query.ToDictionary(x => x.Key, x => x.Value.ToArray());
-            if (parameters.ContainsKey("hub.challenge"))
-            {
-                await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Received a Twitch challenge, containing {string.Join("\n", parameters.Select(x => x.Key + ": " + string.Join(", ", x.Value)))}"));
-                ulong id = ulong.Parse(parameters["hub.topic"].FirstOrDefault().Split("user_id=").LastOrDefault());
-                if(!parameters["hub.mode"].FirstOrDefault().Contains("unsubscribe")){
-                    TwitchTracker tracker = StaticBase.Trackers[Data.Tracker.BaseTracker.TrackerType.Twitch].GetTrackers().First(x => (x.Value as TwitchTracker).TwitchId == id).Value as TwitchTracker;
-                    tracker.WebhookExpire = DateTime.Now.AddHours(18);
-                    await tracker.UpdateTracker();
-                }
-                return new OkObjectResult(parameters["hub.challenge"].FirstOrDefault());
-            }
-            else
-            {
-                await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Received a bad Twitch challenge, containing {string.Join("\n", parameters.Select(x => x.Key + ": " + string.Join(", ", x.Value)))}"));
-                return new BadRequestResult();
-            }
-        }
-
         [HttpGet("youtube")]
         public async Task<IActionResult> ReplyChallengeYT()
         {
@@ -71,6 +49,9 @@ namespace MopsBot.Api.Controllers
 
             await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Received a webhook message\n" + body));
             var update = JsonConvert.DeserializeObject<dynamic>(body);
+            if(update.ContainsKey("challenge")){
+                return new OkObjectResult(update["challenge"]);
+            }
             try
             {
                 string name = update["data"][0]["user_name"].ToString().ToLower();

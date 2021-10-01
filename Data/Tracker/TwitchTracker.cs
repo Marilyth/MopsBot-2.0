@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Discord;
 using Discord.WebSocket;
-using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using MopsBot.Data.Tracker.APIResults.Twitch;
@@ -94,19 +93,30 @@ namespace MopsBot.Data.Tracker
             {
                 if (Program.Config.ContainsKey("TwitchToken") && !Program.Config["TwitchToken"].Equals(""))
                 {
-                    var url = "https://api.twitch.tv/helix/webhooks/hub" +
-                              $"?hub.topic=https://api.twitch.tv/helix/streams?user_id={TwitchId}" +
-                              "&hub.lease_seconds=64800" +
-                              $"&hub.callback={Program.Config["ServerAddress"]}:{Program.Config["Port"]}/api/webhook/twitch" +
-                              $"&hub.mode={(subscribe ? "subscribe" : "unsubscribe")}";
+                    var url = "https://api.twitch.tv/helix/eventsub/subscriptions";
+                    Dictionary<string, object> body = new Dictionary<string, object>(){
+                        {"type", "stream.online"},
+                        {"version", "1"},
+                        {"condition", new Dictionary<string, string>(){
+                            {"broadcaster_user_id", TwitchId.ToString()}
+                        }},
+                        {"transport", new Dictionary<string, string>(){
+                            {"method", "webhook"},
+                            {"callback", Program.Config["ServerAddress"].Replace("http:", "https:") + "/api/webhook/twitch"},
+                            //"https://webhook.site/148373a3-2e5c-44b0-839c-1887aebb9be8"},
+                            {"secret", Program.Config["TwitchSecret"]} //Not recommended
+                        }},
+                    };
 
-                    var test = await MopsBot.Module.Information.PostURLAsync(url, "",
+                    var test = await MopsBot.Module.Information.PostURLAsync(url, JsonConvert.SerializeObject(body),
                         KeyValuePair.Create("Authorization", "Bearer " + Program.Config["TwitchToken"]),
-                        KeyValuePair.Create("client-id", Program.Config["TwitchKey"])
+                        KeyValuePair.Create("Client-Id", Program.Config["TwitchKey"]),
+                        KeyValuePair.Create("Content-Type", "application/json")
                     );
 
                     return test;
                 }
+
                 return "Failed";
             }
             catch (Exception e)
