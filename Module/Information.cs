@@ -221,7 +221,7 @@ namespace MopsBot.Module
             }
         }
 
-        public static async Task<string> GetURLAsync(string URL, params KeyValuePair<string, string>[] headers)
+        public static async Task<string> GetURLAsync(string URL, HttpMethod method, params KeyValuePair<string, string>[] headers)
         {
             if (FailedRequests >= 10 && SucceededRequests / FailedRequests < 1)
             {
@@ -231,7 +231,7 @@ namespace MopsBot.Module
 
             try
             {
-                using (var request = new HttpRequestMessage(HttpMethod.Get, URL))
+                using (var request = new HttpRequestMessage(method, URL))
                 {
                     //Temporary fix for YouTube cookie consent
                     if(URL.Contains("youtube.com")) request.Headers.Add("Cookie", $"CONSENT=YES+{StaticBase.ran.Next(1, 1000)}");
@@ -272,6 +272,11 @@ namespace MopsBot.Module
                     await Program.MopsLog(new LogMessage(LogSeverity.Debug, "", $"Osu API messed up again: {URL}"));
                 throw e;
             }
+        }
+
+        public static async Task<string> GetURLAsync(string URL, params KeyValuePair<string, string>[] headers)
+        {
+            return await GetURLAsync(URL, HttpMethod.Get, headers);
         }
     }
 }

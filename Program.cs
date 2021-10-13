@@ -6,17 +6,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Discord;
 using Discord.WebSocket;
-using Discord.Commands;
-using Discord.Rest;
-using System.Threading;
-using System.Net;
 using Newtonsoft.Json;
 using Discord.Addons.Interactive;
+using System.Security.Cryptography;
 
 namespace MopsBot
 {
@@ -31,6 +26,7 @@ namespace MopsBot
         public static Dictionary<string, Dictionary<string, int>> TrackerLimits;
         public static CommandHandler Handler { get; private set; }
         public static ReactionHandler ReactionHandler { get; private set; }
+        public static string Tunnel;
         private static ServiceProvider provider;
         private static List<ReliabilityService> failsafe = new List<ReliabilityService>();
 
@@ -70,12 +66,17 @@ namespace MopsBot
                 } while(StaticBase.GetMopsRAM() > 2200);
             }
 
-            await Task.Delay(-1);
+            await StartTunnelAsync();
         }
 
         public static async Task ClientLog(LogMessage msg)
         {
             await MopsLog(msg, "", msg.Source, -1);
+        }
+
+        public static async Task MopsLog(string msg, [CallerMemberName] string callerName = "", [CallerFilePath] string callerPath = "", [CallerLineNumber] int callerLine = 0)
+        {
+            await MopsLog(new LogMessage(LogSeverity.Info, "", msg), callerName, callerPath, callerLine);
         }
 
         public static async Task MopsLog(LogMessage msg, [CallerMemberName] string callerName = "", [CallerFilePath] string callerPath = "", [CallerLineNumber] int callerLine = 0)
@@ -131,9 +132,56 @@ namespace MopsBot
             return Client.Shards.FirstOrDefault();
         }
 
+        public static async Task StartTunnelAsync(int port=-1){
+            while(true){
+                if(port == -1) port = int.Parse(Config["Port"]);
+
+                foreach (var process in System.Diagnostics.Process.GetProcessesByName("Localtunnel.Cli"))
+                {
+                    process.Kill();
+                }
+                
+                using (var prc = new System.Diagnostics.Process())
+                {
+                    prc.StartInfo.FileName = "localtunnel";
+                    string id = "";
+                    using (HashAlgorithm algorithm = SHA256.Create()){
+                        var bytes = algorithm.ComputeHash(System.Text.Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(Config)));
+                        foreach(var b in bytes.Take(18)){
+                            id += b.ToString("X2").ToLower();
+                        }
+                    }
+                    prc.StartInfo.Arguments = $"--port {port} --no-dashboard --verbose --subdomain mopsbot-{id} http";
+                    prc.StartInfo.RedirectStandardError = true;
+                    prc.StartInfo.RedirectStandardOutput = true;
+                    prc.StartInfo.UseShellExecute = false;
+                    prc.StartInfo.CreateNoWindow = true;
+
+                    prc.OutputDataReceived += (s, e) => {
+                        if(e.Data?.Contains("URI: https") ?? false){
+                            Tunnel = e.Data.Split("URI: ").Last().Replace(")", "");
+                            MopsLog($"Mops tunnel available at {Tunnel}").Wait();
+                        }
+                        MopsLog(e.Data).Wait();
+                    };
+                    prc.ErrorDataReceived += (s, e) => MopsLog(e.Data).Wait();
+
+                    prc.Start();
+                    prc.BeginOutputReadLine();
+                    prc.BeginErrorReadLine();
+
+                    prc.WaitForExit();
+                    prc.Kill();
+                }
+
+                await MopsLog(new LogMessage(LogSeverity.Error, "", "Localtunnel exited"));
+                await Task.Delay(30000);
+            }
+        }
+
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
-                .UseUrls($"http://0.0.0.0:{Program.Config["Port"]}/", "https://0.0.0.0/")
+                .UseUrls($"http://0.0.0.0:{Program.Config["Port"]}/")
                 .ConfigureServices(x => x.AddCors(options => options.AddPolicy("AllowAll",
                     builder =>
                     {

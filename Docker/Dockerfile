@@ -9,7 +9,8 @@ RUN apt-get update \
  && apt-get update \
  && apt-get install -y apt-transport-https \
  && apt-get install -y imagemagick \
- && apt-get install -y dotnet-sdk-3.1 \
+ && apt-get install -y dotnet-sdk-5.0 \
+ && dotnet tool install -g Localtunnel.Cli \
  && rm -rf /var/lib/apt/lists/* \
  && sed -i '/disable ghostscript format types/,+6d' /etc/ImageMagick-6/policy.xml
 
