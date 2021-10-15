@@ -147,7 +147,7 @@ namespace MopsBot
                     string id = "";
                     using (HashAlgorithm algorithm = SHA256.Create()){
                         var bytes = algorithm.ComputeHash(System.Text.Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(Config)));
-                        foreach(var b in bytes.Take(18)){
+                        foreach(var b in bytes.Take(20)){
                             id += b.ToString("X2").ToLower();
                         }
                     }

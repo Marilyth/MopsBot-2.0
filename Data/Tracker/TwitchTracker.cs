@@ -87,7 +87,6 @@ namespace MopsBot.Data.Tracker
 
             if (Program.Tunnel is not null && (!Callback?.Contains(Program.Tunnel) ?? true))
             {
-                var test = await GetAllSubscriptions();
                 await SubscribeWebhookAsync(false);
                 await SubscribeWebhookAsync();
             }
