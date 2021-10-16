@@ -108,7 +108,7 @@ namespace MopsBot.Data.Tracker
                             }},
                             {"transport", new Dictionary<string, string>(){
                                 {"method", "webhook"},
-                                {"callback", Program.Tunnel + "api/webhook/twitch"},
+                                {"callback", Program.Tunnel + "/api/webhook/twitch"},
                                 {"secret", Program.Config["TwitchSecret"]} //Not recommended
                             }},
                         };
