@@ -26,7 +26,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- dotnet tool install -g Localtunnel.Cli -->
     <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.3" />
   </ItemGroup>
 

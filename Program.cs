@@ -12,6 +12,7 @@ using Discord.WebSocket;
 using Newtonsoft.Json;
 using Discord.Addons.Interactive;
 using System.Security.Cryptography;
+using System.Runtime.InteropServices;
 
 namespace MopsBot
 {
@@ -133,34 +134,44 @@ namespace MopsBot
         }
 
         public static async Task StartTunnelAsync(int port=-1){
-            while(true){
-                if(port == -1) port = int.Parse(Config["Port"]);
+            if(port == -1) port = int.Parse(Config["Port"]);
 
-                foreach (var process in System.Diagnostics.Process.GetProcessesByName("Localtunnel.Cli"))
-                {
-                    process.Kill();
+            string id = "";
+            using (HashAlgorithm algorithm = SHA256.Create()){
+                var bytes = algorithm.ComputeHash(System.Text.Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(Config)));
+                foreach(var b in bytes.Take(20)){
+                    id += b.ToString("X2").ToLower();
                 }
-                
+            }
+
+            while(true){
                 using (var prc = new System.Diagnostics.Process())
                 {
-                    prc.StartInfo.FileName = "localtunnel";
-                    string id = "";
-                    using (HashAlgorithm algorithm = SHA256.Create()){
-                        var bytes = algorithm.ComputeHash(System.Text.Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(Config)));
-                        foreach(var b in bytes.Take(20)){
-                            id += b.ToString("X2").ToLower();
-                        }
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    {
+                        prc.StartInfo.FileName = "cmd.exe";
+                        prc.StartInfo.Arguments = $"/C lt --port {port} --print-requests --subdomain mopsbot-{id}";
+                    } else {
+                        prc.StartInfo.FileName = "/bin/bash";
+                        prc.StartInfo.Arguments = $"-c \"lt --port {port} --print-requests --subdomain mopsbot-{id}\"";
                     }
-                    prc.StartInfo.Arguments = $"--port {port} --no-dashboard --verbose --subdomain mopsbot-{id} http";
+
                     prc.StartInfo.RedirectStandardError = true;
                     prc.StartInfo.RedirectStandardOutput = true;
                     prc.StartInfo.UseShellExecute = false;
                     prc.StartInfo.CreateNoWindow = true;
 
                     prc.OutputDataReceived += (s, e) => {
-                        if(e.Data?.Contains("URI: https") ?? false){
-                            Tunnel = e.Data.Split("URI: ").Last().Replace(")", "");
+                        if(e.Data?.Contains("your url is: ") ?? false){
+                            Tunnel = e.Data.Split("your url is: ").Last();
                             MopsLog($"Mops tunnel available at {Tunnel}").Wait();
+
+                            // Set ServerAddress to localtunnel if set to localhost
+                            if(Config["ServerAddress"].Contains("localhost") || Config["ServerAddress"].Contains("127.0.0.1")){
+                                MopsLog("ServerAddress was localhost, resetting to tunnel").Wait();
+                                Config["ServerAddress"] = Tunnel;
+                                Config["Port"] = "443";
+                            }
                         }
                         MopsLog(e.Data).Wait();
                     };
