@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Discord;
 using Discord.WebSocket;
-using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using MopsBot.Data.Tracker.APIResults.Twitch;
@@ -29,11 +28,10 @@ namespace MopsBot.Data.Tracker
         public DatePlot ViewerGraph;
         private ChannelResult StreamerStatus;
         public Boolean IsOnline;
-        public string CurGame, VodUrl;
+        public string CurGame, VodUrl, Callback, CallbackId;
         public bool IsHosting;
         public int TimeoutCount;
         public ulong TwitchId;
-        public DateTime WebhookExpire = DateTime.Now;
         public static readonly string GAMECHANGE = "NotifyOnGameChange", HOST = "NotifyOnHost", ONLINE = "NotifyOnOnline", OFFLINE = "NotifyOnOffline", SHOWEMBED = "ShowEmbed", SHOWCHAT = "ShowChat", SHOWVOD = "ShowVod", THUMBNAIL = "LargeThumbnail", SHOWGRAPH = "ShowGraph", SENDPDF = "SendGraphPDFAfterOffline", TRACKRERUN = "TrackReRun";
 
         public TwitchTracker() : base()
@@ -82,8 +80,14 @@ namespace MopsBot.Data.Tracker
             if (ViewerGraph != null)
                 ViewerGraph.InitPlot();
 
-            if ((WebhookExpire - DateTime.Now).TotalMinutes < 60)
+            int counter = 0;
+            while((Program.Tunnel is null || !Program.Config.ContainsKey("TwitchToken")) && counter++ < 5){
+                await Task.Delay(30000);
+            }
+
+            if (Program.Tunnel is not null && (!Callback?.Contains(Program.Tunnel) ?? true))
             {
+                await SubscribeWebhookAsync(false);
                 await SubscribeWebhookAsync();
             }
         }
@@ -94,19 +98,37 @@ namespace MopsBot.Data.Tracker
             {
                 if (Program.Config.ContainsKey("TwitchToken") && !Program.Config["TwitchToken"].Equals(""))
                 {
-                    var url = "https://api.twitch.tv/helix/webhooks/hub" +
-                              $"?hub.topic=https://api.twitch.tv/helix/streams?user_id={TwitchId}" +
-                              "&hub.lease_seconds=64800" +
-                              $"&hub.callback={Program.Config["ServerAddress"]}:{Program.Config["Port"]}/api/webhook/twitch" +
-                              $"&hub.mode={(subscribe ? "subscribe" : "unsubscribe")}";
+                    var url = "https://api.twitch.tv/helix/eventsub/subscriptions";
+                    if(subscribe){
+                        Dictionary<string, object> body = new Dictionary<string, object>(){
+                            {"type", "stream.online"},
+                            {"version", "1"},
+                            {"condition", new Dictionary<string, string>(){
+                                {"broadcaster_user_id", TwitchId.ToString()}
+                            }},
+                            {"transport", new Dictionary<string, string>(){
+                                {"method", "webhook"},
+                                {"callback", Program.Tunnel + "/api/webhook/twitch"},
+                                {"secret", Program.Config["TwitchSecret"]} //Not recommended
+                            }},
+                        };
 
-                    var test = await MopsBot.Module.Information.PostURLAsync(url, "",
-                        KeyValuePair.Create("Authorization", "Bearer " + Program.Config["TwitchToken"]),
-                        KeyValuePair.Create("client-id", Program.Config["TwitchKey"])
-                    );
+                        var response = await MopsBot.Module.Information.PostURLAsync(url, JsonConvert.SerializeObject(body),
+                            KeyValuePair.Create("Authorization", "Bearer " + Program.Config["TwitchToken"]),
+                            KeyValuePair.Create("Client-Id", Program.Config["TwitchKey"]),
+                            KeyValuePair.Create("Content-Type", "application/json")
+                        );
 
-                    return test;
+                        return response;
+                    } else {
+                        var response = await MopsBot.Module.Information.GetURLAsync(url + $"?id={CallbackId}", System.Net.Http.HttpMethod.Delete,
+                            KeyValuePair.Create("Authorization", "Bearer " + Program.Config["TwitchToken"]),
+                            KeyValuePair.Create("Client-Id", Program.Config["TwitchKey"]));
+
+                        return response;
+                    }
                 }
+
                 return "Failed";
             }
             catch (Exception e)
@@ -120,8 +142,9 @@ namespace MopsBot.Data.Tracker
         {
             try
             {
-                if ((WebhookExpire - DateTime.Now).TotalMinutes < 60)
+                if (Program.Tunnel is not null && (!Callback?.Contains(Program.Tunnel) ?? true))
                 {
+                    await SubscribeWebhookAsync(false);
                     await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Tried subscribing {Name} to Twitch webhooks:\n" + await SubscribeWebhookAsync()));
                 }
 
@@ -142,7 +165,7 @@ namespace MopsBot.Data.Tracker
                 bool isStreaming = StreamerStatus.Stream.Channel != null && (StreamerStatus.Stream.BroadcastPlatform.Contains("other") ? ChannelConfig.Any(x => (bool)x.Value[TRACKRERUN]) : true);
                 bool isRerun = StreamerStatus.Stream?.BroadcastPlatform?.Contains("other") ?? false;
 
-                if (!timerChanged && !IsOnline && (WebhookExpire - DateTime.Now).TotalMinutes >= 60)
+                if (!timerChanged && !IsOnline)
                 {
                     //SetTimer(3600000, StaticBase.ran.Next(5000, 3600000));
                     timerChanged = true;
@@ -423,6 +446,13 @@ namespace MopsBot.Data.Tracker
                 }
                 await Task.Delay(30000);
             }
+        }
+
+        public static async Task<string> GetAllSubscriptions(){
+            var result = await MopsBot.Module.Information.GetURLAsync("https://api.twitch.tv/helix/eventsub/subscriptions", 
+                KeyValuePair.Create("Authorization", "Bearer " + Program.Config["TwitchToken"]),
+                KeyValuePair.Create("Client-Id", Program.Config["TwitchKey"]));
+            return result;
         }
 
         public override void Dispose()

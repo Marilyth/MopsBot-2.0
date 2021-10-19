@@ -6,17 +6,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Discord;
 using Discord.WebSocket;
-using Discord.Commands;
-using Discord.Rest;
-using System.Threading;
-using System.Net;
 using Newtonsoft.Json;
 using Discord.Addons.Interactive;
+using System.Security.Cryptography;
+using System.Runtime.InteropServices;
 
 namespace MopsBot
 {
@@ -31,6 +27,7 @@ namespace MopsBot
         public static Dictionary<string, Dictionary<string, int>> TrackerLimits;
         public static CommandHandler Handler { get; private set; }
         public static ReactionHandler ReactionHandler { get; private set; }
+        public static string Tunnel;
         private static ServiceProvider provider;
         private static List<ReliabilityService> failsafe = new List<ReliabilityService>();
 
@@ -70,12 +67,17 @@ namespace MopsBot
                 } while(StaticBase.GetMopsRAM() > 2200);
             }
 
-            await Task.Delay(-1);
+            await StartTunnelAsync();
         }
 
         public static async Task ClientLog(LogMessage msg)
         {
             await MopsLog(msg, "", msg.Source, -1);
+        }
+
+        public static async Task MopsLog(string msg, [CallerMemberName] string callerName = "", [CallerFilePath] string callerPath = "", [CallerLineNumber] int callerLine = 0)
+        {
+            await MopsLog(new LogMessage(LogSeverity.Info, "", msg), callerName, callerPath, callerLine);
         }
 
         public static async Task MopsLog(LogMessage msg, [CallerMemberName] string callerName = "", [CallerFilePath] string callerPath = "", [CallerLineNumber] int callerLine = 0)
@@ -129,6 +131,63 @@ namespace MopsBot
             if(Client.GetChannel(channelId) != null)
                 return Client.GetShardFor((Client.GetChannel(channelId) as SocketGuildChannel).Guild);
             return Client.Shards.FirstOrDefault();
+        }
+
+        public static async Task StartTunnelAsync(int port=-1){
+            if(port == -1) port = int.Parse(Config["Port"]);
+
+            string id = "";
+            using (HashAlgorithm algorithm = SHA256.Create()){
+                var bytes = algorithm.ComputeHash(System.Text.Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(Config)));
+                foreach(var b in bytes.Take(20)){
+                    id += b.ToString("X2").ToLower();
+                }
+            }
+
+            while(true){
+                using (var prc = new System.Diagnostics.Process())
+                {
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    {
+                        prc.StartInfo.FileName = "cmd.exe";
+                        prc.StartInfo.Arguments = $"/C lt --port {port} --print-requests --subdomain mopsbot-{id}";
+                    } else {
+                        prc.StartInfo.FileName = "/bin/bash";
+                        prc.StartInfo.Arguments = $"-c \"lt --port {port} --print-requests --subdomain mopsbot-{id}\"";
+                    }
+
+                    prc.StartInfo.RedirectStandardError = true;
+                    prc.StartInfo.RedirectStandardOutput = true;
+                    prc.StartInfo.UseShellExecute = false;
+                    prc.StartInfo.CreateNoWindow = true;
+
+                    prc.OutputDataReceived += (s, e) => {
+                        if(e.Data?.Contains("your url is: ") ?? false){
+                            Tunnel = e.Data.Split("your url is: ").Last();
+                            MopsLog($"Mops tunnel available at {Tunnel}").Wait();
+
+                            // Set ServerAddress to localtunnel if set to localhost
+                            if(Config["ServerAddress"].Contains("localhost") || Config["ServerAddress"].Contains("127.0.0.1")){
+                                MopsLog("ServerAddress was localhost, resetting to tunnel").Wait();
+                                Config["ServerAddress"] = Tunnel;
+                                Config["Port"] = "443";
+                            }
+                        }
+                        MopsLog(e.Data).Wait();
+                    };
+                    prc.ErrorDataReceived += (s, e) => MopsLog(e.Data).Wait();
+
+                    prc.Start();
+                    prc.BeginOutputReadLine();
+                    prc.BeginErrorReadLine();
+
+                    prc.WaitForExit();
+                    prc.Kill();
+                }
+
+                await MopsLog(new LogMessage(LogSeverity.Error, "", "Localtunnel exited"));
+                await Task.Delay(30000);
+            }
         }
 
         public static IWebHost BuildWebHost(string[] args) =>
