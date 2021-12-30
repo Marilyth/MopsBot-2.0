@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Discord.Interactions;
 using MopsBot.Data.Tracker;
 using static MopsBot.Data.Tracker.BaseTracker;
 
@@ -48,6 +49,24 @@ namespace MopsBot.Module.TypeReader
             
             await MopsBot.Data.Interactive.MopsPaginator.CreatePagedMessage(context.Channel.Id, StaticBase.Trackers[type].GetTrackersEmbed(context.Channel.Id, true, input));
             return TypeReaderResult.FromError(CommandError.ParseFailed, $"Multiple trackers for {input} across multiple channels.\nPlease repeat the command in the channel containing the tracker you meant.");    
+        }
+    }
+
+    public class TrackerTypeConverter : Discord.Interactions.TypeConverter{
+        public override async Task<Discord.Interactions.TypeConverterResult> ReadAsync(IInteractionContext context, IApplicationCommandInteractionDataOption input, IServiceProvider services)
+        {
+            //context.Interaction.Data.ToString();
+            return TypeConverterResult.FromError(new Exception("Eh"));
+        }
+
+        public override bool CanConvertTo(Type type)
+        {
+            return true;
+        }
+
+        public override ApplicationCommandOptionType GetDiscordType()
+        {
+            return ApplicationCommandOptionType.String;
         }
     }
 }

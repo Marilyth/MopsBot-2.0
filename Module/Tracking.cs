@@ -1,4 +1,4 @@
-using Discord.Commands;
+/*using Discord.Commands;
 using Discord.WebSocket;
 using Discord;
 using System;
@@ -38,7 +38,7 @@ namespace MopsBot.Module
         };
 
         [Command("Setup", RunMode = RunMode.Async)]
-        [Hide]
+        [HideHelp]
         [Summary("Helps the user set up the tracker they want.")]
         [RequireUserPermission(ChannelPermission.ManageChannels)]
         [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
@@ -171,7 +171,7 @@ namespace MopsBot.Module
             }
 
             [Command("ShowConfig")]
-            [Hide]
+            [HideHelp]
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig(BaseTracker tracker)
             {
@@ -196,7 +196,7 @@ namespace MopsBot.Module
             }
 
             [Command("Prune")]
-            [Hide]
+            [HideHelp]
             [RequireBotManage]
             public async Task PruneTrackers(int failThreshold, bool testing = true)
             {
@@ -290,7 +290,7 @@ namespace MopsBot.Module
             }
 
             [Command("ShowConfig")]
-            [Hide]
+            [HideHelp]
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig(BaseTracker tracker)
             {
@@ -362,7 +362,7 @@ namespace MopsBot.Module
             }
 
             [Command("ShowConfig")]
-            [Hide]
+            [HideHelp]
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig(BaseTracker tracker)
             {
@@ -437,7 +437,7 @@ namespace MopsBot.Module
             }
 
             [Command("ShowConfig")]
-            [Hide]
+            [HideHelp]
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig(BaseTracker tracker)
             {
@@ -694,7 +694,7 @@ namespace MopsBot.Module
             }
 
             [Command("ShowConfig")]
-            [Hide]
+            [HideHelp]
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig(BaseTracker tracker)
             {
@@ -790,7 +790,7 @@ namespace MopsBot.Module
             }
 
             [Command("ShowConfig")]
-            [Hide]
+            [HideHelp]
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig([Remainder] BaseTracker tracker)
             {
@@ -871,7 +871,7 @@ namespace MopsBot.Module
             }
 
             [Command("ShowConfig")]
-            [Hide]
+            [HideHelp]
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig(BaseTracker tracker)
             {
@@ -918,7 +918,7 @@ namespace MopsBot.Module
             }
 
             [Command("TrackExtended", RunMode = RunMode.Async)]
-            [Hide]
+            [HideHelp]
             [Summary("Keeps track of the Json, as a POST request with body, using the specified locations.\n" +
                      "graph:<location> adds the numeric value to a time/value graph\n" +
                      "always:<location> adds the value to the embed, regardless of whether it changed or not.")]
@@ -985,7 +985,7 @@ namespace MopsBot.Module
             }
 
             [Command("CheckExtended", RunMode = RunMode.Async)]
-            [Hide]
+            [HideHelp]
             [Summary("Checks the json for the specified paths, and returns the values")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task CheckExtended(string Url, string body, [Remainder] string paths)
@@ -1009,7 +1009,7 @@ namespace MopsBot.Module
             }
 
             [Command("ShowConfig")]
-            [Hide]
+            [HideHelp]
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig(BaseTracker tracker)
             {
@@ -1103,7 +1103,7 @@ namespace MopsBot.Module
             }
 
             [Command("ShowConfig")]
-            [Hide]
+            [HideHelp]
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig(BaseTracker tracker)
             {
@@ -1323,7 +1323,7 @@ namespace MopsBot.Module
             }
 
             [Command("ShowConfig")]
-            [Hide]
+            [HideHelp]
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig(BaseTracker tracker)
             {
@@ -1399,7 +1399,7 @@ namespace MopsBot.Module
             }
 
             [Command("ShowConfig")]
-            [Hide]
+            [HideHelp]
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig(BaseTracker tracker)
             {
@@ -1475,7 +1475,7 @@ namespace MopsBot.Module
             }
 
             [Command("ShowConfig")]
-            [Hide]
+            [HideHelp]
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig(BaseTracker tracker)
             {
@@ -1560,7 +1560,7 @@ namespace MopsBot.Module
             }
 
             [Command("ShowConfig")]
-            [Hide]
+            [HideHelp]
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig(BaseTracker username)
             {
@@ -1587,7 +1587,7 @@ namespace MopsBot.Module
 
         [Command("PurgeTrackers", RunMode = RunMode.Async)]
         [RequireBotManage()]
-        [Hide]
+        [HideHelp]
         public async Task PurgeTrackers(bool testing = true)
         {
             using (Context.Channel.EnterTypingState())
@@ -1628,7 +1628,7 @@ namespace MopsBot.Module
 
         [Command("PruneTrackers", RunMode = RunMode.Async)]
         [RequireBotManage()]
-        [Hide]
+        [HideHelp]
         public async Task PruneTrackers(int days = 45, bool testing = true)
         {
             using (Context.Channel.EnterTypingState())
@@ -1679,7 +1679,7 @@ namespace MopsBot.Module
 
         [Command("GetAllTrackers", RunMode = RunMode.Async)]
         [Summary("Returns an embed containing all trackers of all channels of this server.")]
-        [Hide]
+        [HideHelp]
         [RequireUserPermission(ChannelPermission.ManageChannels)]
         [Ratelimit(1, 1, Measure.Minutes, RatelimitFlags.GuildwideLimit)]
         public async Task GetAllTrackers()
@@ -1808,4 +1808,4 @@ namespace MopsBot.Module
             await Context.Channel.SendMessageAsync($"Successfully changed the channel of {tracker.Name} from {((ITextChannel)FromChannel).Mention} to {((ITextChannel)Context.Channel).Mention}");
         }
     }
-}
+}*/

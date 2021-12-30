@@ -5,7 +5,7 @@ using System;
 
 namespace MopsBot.Module.Preconditions{
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
-    public class HideAttribute : PreconditionAttribute
+    public class HideHelpAttribute : PreconditionAttribute
     {
         public async override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services)
         {
