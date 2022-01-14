@@ -84,7 +84,11 @@ namespace MopsBot.Api.Controllers
             await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Received a YT webhook message\n" + body));
             try
             {
-                var data = ConvertAtomToSyndication(bodyStream);
+                MopsBot.Data.Tracker.APIResults.Youtube.YoutubeNotification data;
+
+                if(body.Contains("at:deleted-entry")) data = ConvertAtomToSyndicationTemporaryFix(body);
+                else data = ConvertAtomToSyndication(bodyStream);
+                
                 MopsBot.Data.Tracker.YoutubeTracker tracker = StaticBase.Trackers[Data.Tracker.BaseTracker.TrackerType.Youtube].GetTrackers()[data.ChannelId] as MopsBot.Data.Tracker.YoutubeTracker;
                 await tracker.CheckInfoAsync(data);
             }
@@ -162,6 +166,18 @@ namespace MopsBot.Api.Controllers
                     Updated = item.LastUpdatedTime
                 };
             }
+        }
+
+        public static MopsBot.Data.Tracker.APIResults.Youtube.YoutubeNotification ConvertAtomToSyndicationTemporaryFix(string body)
+        {
+            return new MopsBot.Data.Tracker.APIResults.Youtube.YoutubeNotification()
+            {
+                ChannelId = body.Split("<uri>https://www.youtube.com/channel/", 2).Last().Split("<", 2).First(),
+                VideoId = body.Split("ref=\"yt:video:", 2).Last().Split("\"", 2).First(),
+                Title = "Unknown",
+                Published = DateTimeOffset.Parse(body.Split("when=\"", 2).Last().Split("\"", 2).First()),
+                Updated = DateTimeOffset.Parse(body.Split("when=\"", 2).Last().Split("\"", 2).First())
+            };
         }
 
         public static string GetElementExtensionValueByOuterName(SyndicationItem item, string outerName)
