@@ -50,8 +50,7 @@ namespace MopsBot
             slashCommands.AddTypeConverter<MopsBot.Data.Entities.User>(new Module.TypeReader.MopsUserConverter());
 
             //await slashCommands.AddModulesAsync(Assembly.GetEntryAssembly(), provider);
-            slashCommands.Log += async (LogMessage log) => Console.WriteLine(log.Message);
-            await slashCommands.AddModuleAsync(typeof(MopsBot.Module.Moderation), provider);
+            await slashCommands.AddModuleAsync(typeof(MopsBot.Module.Slash), provider);
             await slashCommands.RegisterCommandsGloballyAsync();
             await slashCommands.RegisterCommandsToGuildAsync(155336736111591425);
             await commands.AddModulesAsync(Assembly.GetEntryAssembly(), provider);
@@ -62,6 +61,7 @@ namespace MopsBot
             commands.CommandExecuted += CommandExecuted;
             slashCommands.SlashCommandExecuted += SlashCommandExecuted;
             commands.Log += (LogMessage log) => { mostRecentException = log.Exception; return Task.CompletedTask; };
+            slashCommands.Log += async (LogMessage log) => mostRecentException = log.Exception;
             client.UserJoined += Client_UserJoined;
         }
 
@@ -80,8 +80,7 @@ namespace MopsBot
         public async Task HandleInteraction(SocketInteraction interaction){
             await interaction.RespondAsync("Executing...", ephemeral: true);
             var ctx = new ShardedInteractionContext(client, interaction);
-            await slashCommands.ExecuteCommandAsync(ctx, _provider);
-            await interaction.ModifyOriginalResponseAsync(x => x.Content = "Done");
+            var command = await slashCommands.ExecuteCommandAsync(ctx, _provider);
         }
 
         public static Dictionary<ulong, int> MessagesPerGuild = new Dictionary<ulong, int>();
@@ -221,6 +220,7 @@ namespace MopsBot
             if (!result.IsSuccess && !result.ErrorReason.Equals("") && !context.Guild.Id.Equals(264445053596991498) && 
                 !slashCommand.CommandName.Contains("help", StringComparison.InvariantCultureIgnoreCase))
             {
+                await slashCommand.ModifyOriginalResponseAsync(x => x.Content = ((result as Discord.Interactions.ExecuteResult?).Value.Exception.InnerException.Message));
                 Task.Run(async () =>
                 {
                     //Wait for exception to reach log
@@ -254,6 +254,9 @@ namespace MopsBot
                     await MopsBot.Data.Entities.User.ModifyUserAsync(context.User.Id, x => x.LastTaCReminder = DateTime.UtcNow);
                 }
             }
+
+            else if (result.IsSuccess)
+                await slashCommand.ModifyOriginalResponseAsync(x => x.Content = "Done");
         }
 
         /// <summary>

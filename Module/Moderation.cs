@@ -1,6 +1,6 @@
-﻿using Discord.WebSocket;
+﻿﻿using Discord.Commands;
+using Discord.WebSocket;
 using Discord;
-using Discord.Interactions;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using System;
 using System.Collections.Generic;
@@ -18,24 +18,24 @@ using MopsBot.Data.Entities;
 
 namespace MopsBot.Module
 {
-    public class Moderation : InteractionModuleBase<IInteractionContext>
+    public class Moderation : ModuleBase<ShardedCommandContext>
     {
         public static Dictionary<ulong, ulong> CustomCaller = new Dictionary<ulong, ulong>();
 
-        [Group("role", "Commands for role invitations")]
+        [Group("Role")]
         [RequireBotPermission(ChannelPermission.ManageRoles)]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public class Role : InteractionModuleBase<IInteractionContext>
+        public class Role : ModuleBase<ShardedCommandContext>
         {
-            [SlashCommand("create_invite", "Creates a reaction-invite message for the specified Role.", runMode: RunMode.Async)]
+            [Command("CreateInvite", RunMode = RunMode.Async)]
+            [Summary("Creates a reaction-invite message for the specified Role.\nPeople will be able to invite themselves into the role.")]
             [RequireBotPermission(ChannelPermission.AddReactions)]
             [RequireBotPermission(ChannelPermission.ManageMessages)]
             [RequireBotPermission(ChannelPermission.ReadMessageHistory)]
             [RequireUserPermission(ChannelPermission.ManageRoles)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.ApplyPerChannel)]
-            public async Task createInvite(SocketRole role, string description = "DEFAULT")
+            public async Task createInvite(SocketRole role, [Remainder]string description = "DEFAULT")
             {
-                throw new Exception("as");
                 using (Context.Channel.EnterTypingState())
                 {
                     var highestRole = (Context.User as SocketGuildUser).Roles.OrderByDescending(x => x.Position).First();
@@ -43,11 +43,11 @@ namespace MopsBot.Module
                     if (role != null && role.Position < highestRole.Position)
                         await StaticBase.ReactRoleJoin.AddInvite((ITextChannel)Context.Channel, role, description);
                     else
-                        await FollowupAsync($"**Error**: Role `{role.Name}` could either not be found, or was beyond Mops' permissions.");
+                        await ReplyAsync($"**Error**: Role `{role.Name}` could either not be found, or was beyond Mops' permissions.");
                 }
             }
 
-            [SlashCommand("prune", "Remove all inactive role invites", runMode: RunMode.Async)]
+            [Command("Prune", RunMode = RunMode.Async)]
             [RequireBotManage]
             [HideHelp]
             public async Task Prune(bool testing = true)
@@ -57,21 +57,21 @@ namespace MopsBot.Module
                     var pruned = await StaticBase.ReactRoleJoin.TryPruneAsync(testing);
                     var result = $"{"Channel",-20}{"Message"}\n{string.Join("\n", pruned.Select(x => $"{x.Key,-20}{x.Value,-20}"))}";
                     if (result.Length < 2048)
-                        await RespondAsync($"```{result}```");
+                        await ReplyAsync($"```{result}```");
                     else
-                        await RespondAsync($"Pruned {pruned.Count} objects");
+                        await ReplyAsync($"Pruned {pruned.Count} objects");
                 }
             }
         }
 
-        [Group("poll", "Commands for poll creation")]
+        [Group("Poll")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         [RequireBotPermission(ChannelPermission.AddReactions)]
         [RequireBotPermission(ChannelPermission.ManageMessages)]
         [RequireBotPermission(ChannelPermission.ReadMessageHistory)]
-        public class Poll : InteractionModuleBase<IInteractionContext>
+        public class Poll : ModuleBase<ShardedCommandContext>
         {
-            [SlashCommand("create", "Creates a poll\nExample: !poll create \"What should I play\" \"Dark Souls\" \"Osu!\" \"WoW\"", runMode: RunMode.Async)]
+            [Command("Create", RunMode = RunMode.Async), Summary("Creates a poll\nExample: !poll \"What should I play\" \"Dark Souls\" \"Osu!\" \"WoW\"")]
             [RequireUserPermission(ChannelPermission.ManageMessages)]
             [Ratelimit(1, 60, Measure.Seconds, RatelimitFlags.ApplyPerChannel)]
             public async Task Create(string title, params string[] options)
@@ -84,18 +84,19 @@ namespace MopsBot.Module
                         await StaticBase.Poll.AddPoll((ITextChannel)Context.Channel, poll);
                     }
                     else
-                        await RespondAsync("Can't have more than 10 options per poll.");
+                        await ReplyAsync("Can't have more than 10 options per poll.");
                 }
             }
 
-            [SlashCommand("get", "Returns a list of all open polls, and a link to their corresponding message.")]
+            [Command("Get")]
+            [Summary("Returns a list of all open polls, and a link to their corresponding message.")]
             public async Task Get()
             {
                 var infoEmbed = new EmbedBuilder().WithDescription(String.Join("\n", StaticBase.Poll.Polls[Context.Channel.Id].Select(x => $"[{x.Question}](https://discordapp.com/channels/{Context.Guild.Id}/{Context.Channel.Id}/{x.MessageID})")));
-                await RespondAsync(embed: infoEmbed.Build());
+                await ReplyAsync(embed: infoEmbed.Build());
             }
 
-            [SlashCommand("prune", "Delete inactive polls", runMode: RunMode.Async)]
+            [Command("Prune", RunMode = RunMode.Async)]
             [RequireBotManage]
             [HideHelp]
             public async Task Prune(bool testing = true)
@@ -105,23 +106,24 @@ namespace MopsBot.Module
                     var pruned = await StaticBase.Poll.TryPruneAsync(testing);
                     var result = $"{"Channel",-20}{"Message"}\n{string.Join("\n", pruned.Select(x => $"{x.Key,-20}{x.Value,-20}"))}";
                     if (result.Length < 2048)
-                        await RespondAsync($"```{result}```");
+                        await ReplyAsync($"```{result}```");
                     else
-                        await RespondAsync($"Pruned {pruned.Count} objects");
+                        await ReplyAsync($"Pruned {pruned.Count} objects");
                 }
             }
         }
 
-        [Group("giveaway", "Commands for giveaway creation")]
+        [Group("Giveaway")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         [RequireBotPermission(ChannelPermission.AddReactions)]
         [RequireBotPermission(ChannelPermission.ManageMessages)]
         [RequireBotPermission(ChannelPermission.ReadMessageHistory)]
-        public class Giveaway : InteractionModuleBase<IInteractionContext>
+        public class Giveaway : ModuleBase<ShardedCommandContext>
         {
-            [SlashCommand("create", "Creates a giveaway", runMode: RunMode.Async)]
+            [Command("Create", RunMode = RunMode.Async)]
+            [Summary("Creates giveaway.")]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.ApplyPerChannel)]
-            public async Task Create(string game)
+            public async Task Create([Remainder]string game)
             {
                 using (Context.Channel.EnterTypingState())
                 {
@@ -129,7 +131,8 @@ namespace MopsBot.Module
                 }
             }
 
-            [SlashCommand("get", "Returns message links to all active giveaways", runMode: RunMode.Async)]
+            [Command("Get", RunMode = RunMode.Async)]
+            [Summary("Returns message links to all active giveaways.")]
             public async Task Get()
             {
                 using (Context.Channel.EnterTypingState())
@@ -137,11 +140,11 @@ namespace MopsBot.Module
                     var allEmbeds = ReactGiveaways.Giveaways[Context.Channel.Id].Select(x => Tuple.Create(Context.Channel.GetMessageAsync(x.Key).Result.Embeds.First(), x.Key));
                     var infoEmbed = new EmbedBuilder().WithDescription(String.Join("\n", allEmbeds.Select(x => $"[{x.Item1.Title} by {x.Item1.Author.Value.Name}](https://discordapp.com/channels/{Context.Guild.Id}/{Context.Channel.Id}/{x.Item2})")));
 
-                    await RespondAsync(embed: infoEmbed.Build());
+                    await ReplyAsync(embed: infoEmbed.Build());
                 }
             }
 
-            [SlashCommand("prune", "Remove all inactive giveaways", runMode: RunMode.Async)]
+            [Command("Prune", RunMode = RunMode.Async)]
             [RequireBotManage]
             [HideHelp]
             public async Task Prune(bool testing = true)
@@ -151,24 +154,47 @@ namespace MopsBot.Module
                     var pruned = await StaticBase.ReactGiveaways.TryPruneAsync(testing);
                     var result = $"{"Channel",-20}{"Message"}\n{string.Join("\n", pruned.Select(x => $"{x.Key,-20}{x.Value,-20}"))}";
                     if (result.Length < 2048)
-                        await RespondAsync($"```{result}```");
+                        await ReplyAsync($"```{result}```");
                     else
-                        await RespondAsync($"Pruned {pruned.Count} objects");
+                        await ReplyAsync($"Pruned {pruned.Count} objects");
                 }
             }
         }
 
-        [Group("janitor", "Commands for Janitor creation")]
-        public class Janitor : InteractionModuleBase<IInteractionContext>
+        [Command("SetPrefix", RunMode = RunMode.Async)]
+        [Summary("Changes the prefix of Mops in the current Guild")]
+        [RequireUserPermission(ChannelPermission.ManageChannels)]
+        public async Task setPrefix([Remainder]string prefix)
         {
-            [SlashCommand("set", "Adds a janitor service, which removes messages older than `messageDuration`")]
+            using (Context.Channel.EnterTypingState())
+            {
+                if (prefix.StartsWith("?"))
+                {
+                    await ReplyAsync($"`?` is required for Mops functionality. Cannot change prefix to `{prefix}`");
+                    return;
+                }
+
+                string oldPrefix = await GetGuildPrefixAsync(Context.Guild.Id);
+
+                await InsertOrUpdatePrefixAsync(Context.Guild.Id, prefix);
+
+                await ReplyAsync($"Changed prefix from `{oldPrefix}` to `{prefix}`");
+            }
+        }
+
+        [Group("Janitor")]
+        public class Janitor : ModuleBase<ShardedCommandContext>
+        {
+            [Command("Set")]
+            [Alias("AutoRemove")]
+            [Summary("Adds a janitor service, which removes messages older than `messageDuration`\nOnly checks the past 100 messages")]
             [RequireBotPermission(ChannelPermission.ManageMessages)]
             [RequireUserPermission(ChannelPermission.ManageMessages)]
-            public async Task SetJanitor(TimeSpan messageDuration)
+            public async Task SetJanitor([Remainder]TimeSpan messageDuration)
             {
                 if (messageDuration < TimeSpan.FromMinutes(1))
                 {
-                    await RespondAsync("Duration must be at least 1 minute long!");
+                    await ReplyAsync("Duration must be at least 1 minute long!");
                     return;
                 }
 
@@ -180,7 +206,7 @@ namespace MopsBot.Module
                         await ChannelJanitor.InsertToDBAsync(janitor);
                         StaticBase.ChannelJanitors.Add(Context.Channel.Id, janitor);
 
-                        await RespondAsync($"Added janitor with timespan: {messageDuration.ToString(@"d\d\ h\h\ m\m\ s\s")}\n**This will only check the most recent 100 messages starting from now!**");
+                        await ReplyAsync($"Added janitor with timespan: {messageDuration.ToString(@"d\d\ h\h\ m\m\ s\s")}\n**This will only check the most recent 100 messages starting from now!**");
                     }
                     else
                     {
@@ -188,11 +214,12 @@ namespace MopsBot.Module
                         janitor.MessageDuration = messageDuration;
                         janitor.NextCheck = DateTime.UtcNow.AddMinutes(1);
                         await janitor.SetTimer();
-                        await RespondAsync($"Replaced janitor timespan: {messageDuration.ToString(@"d\d\ h\h\ m\m\ s\s")}");
+                        await ReplyAsync($"Replaced janitor timespan: {messageDuration.ToString(@"d\d\ h\h\ m\m\ s\s")}");
                     }
                 }
             }
-            [SlashCommand("remove", "Stops the janitor service in this channel")]
+            [Command("Remove")]
+            [Summary("Stops the janitor service in this channel")]
             [RequireUserPermission(ChannelPermission.ManageMessages)]
             public async Task RemoveJanitor()
             {
@@ -204,16 +231,16 @@ namespace MopsBot.Module
                     {
                         await ChannelJanitor.RemoveFromDBAsync(janitor);
                         StaticBase.ChannelJanitors.Remove(Context.Channel.Id);
-                        await RespondAsync("Removed janitor for this channel.");
+                        await ReplyAsync("Removed janitor for this channel.");
                     }
                     else
                     {
-                        await RespondAsync("Could not find a janitor service for this channel.");
+                        await ReplyAsync("Could not find a janitor service for this channel.");
                     }
                 }
             }
 
-            [SlashCommand("prune", "Removes all inactive janitors", runMode: RunMode.Async)]
+            [Command("Prune", RunMode = RunMode.Async)]
             [RequireBotManage]
             [HideHelp]
             public async Task Prune(bool testing = true)
@@ -234,18 +261,21 @@ namespace MopsBot.Module
                             }
                         }
                     }
-                    await RespondAsync($"Pruned {toPrune.Where(x => x.Item2).Count()} objects");
+                    await ReplyAsync($"Pruned {toPrune.Where(x => x.Item2).Count()} objects");
                 }
             }
         }
 
-        [Group("welcome_message", "Commands for welcome message creation")]
+        [Group("WelcomeMessage")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public class WelcomeMessage : InteractionModuleBase<IInteractionContext>
+        public class WelcomeMessage : ModuleBase<ShardedCommandContext>
         {
-            [SlashCommand("create", "Makes Mops greet people, in the channel you are calling this command in", runMode: RunMode.Async)]
+            [Command("Create", RunMode = RunMode.Async)]
+            [Summary("Makes Mops greet people, in the channel you are calling this command in.\n" +
+                     "Name of user: **{User.Username}**\n" +
+                     "Mention of user: **{User.Mention}**")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task WelcomeCreate(string WelcomeMessage)
+            public async Task WelcomeCreate([Remainder] string WelcomeMessage)
             {
                 using (Context.Channel.EnterTypingState())
                 {
@@ -253,7 +283,7 @@ namespace MopsBot.Module
                     {
                         StaticBase.WelcomeMessages.Add(Context.Guild.Id, new Data.Entities.WelcomeMessage(Context.Guild.Id, Context.Channel.Id, WelcomeMessage));
                         await Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").InsertOneAsync(StaticBase.WelcomeMessages[Context.Guild.Id]);
-                        await RespondAsync($"Created welcome message:\n{WelcomeMessage}");
+                        await ReplyAsync($"Created welcome message:\n{WelcomeMessage}");
                     }
 
                     else
@@ -273,12 +303,16 @@ namespace MopsBot.Module
                         handler.ChannelId = Context.Channel.Id;
                         handler.Notification = WelcomeMessage;
                         await Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").ReplaceOneAsync(x => x.GuildId == Context.Guild.Id, StaticBase.WelcomeMessages[Context.Guild.Id]);
-                        await RespondAsync($"Replaced welcome message with:\n{WelcomeMessage}");
+                        await ReplyAsync($"Replaced welcome message with:\n{WelcomeMessage}");
                     }
                 }
             }
 
-            [SlashCommand("create_webhook", "Makes Mops greet people, in the channel you are calling this command in.", runMode: RunMode.Async)]
+            [Command("CreateWebhook", RunMode = RunMode.Async)]
+            [Summary("Makes Mops greet people, in the channel you are calling this command in.\n" +
+                     "Additionally, avatar and name of the notification account can be set.\n" +
+                     "Name of user: **{User.Username}**\n" +
+                     "Mention of user: **{User.Mention}**")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.ManageWebhooks)]
             public async Task WelcomeCreateWebhook(string WelcomeMessage, string Name = null, string AvatarUrl = null)
@@ -290,7 +324,7 @@ namespace MopsBot.Module
                         var webhook = await ((SocketTextChannel)Context.Channel).CreateWebhookAsync($"{Name ?? "Mops"} - Welcome Messages");
                         StaticBase.WelcomeMessages.Add(Context.Guild.Id, new Data.Entities.WelcomeMessage(Context.Guild.Id, Context.Channel.Id, WelcomeMessage, webhook.Id, webhook.Token, Name, AvatarUrl));
                         await Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").InsertOneAsync(StaticBase.WelcomeMessages[Context.Guild.Id]);
-                        await RespondAsync($"Created welcome message:\n{WelcomeMessage}");
+                        await ReplyAsync($"Created welcome message:\n{WelcomeMessage}");
                     }
 
                     else
@@ -312,12 +346,13 @@ namespace MopsBot.Module
                         handler.AvatarUrl = AvatarUrl;
                         handler.Notification = WelcomeMessage;
                         await Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").ReplaceOneAsync(x => x.GuildId == Context.Guild.Id, StaticBase.WelcomeMessages[Context.Guild.Id]);
-                        await RespondAsync($"Replaced welcome message with:\n{WelcomeMessage}");
+                        await ReplyAsync($"Replaced welcome message with:\n{WelcomeMessage}");
                     }
                 }
             }
 
-            [SlashCommand("delete", "Stops Mops from sending welcome messages.", runMode: RunMode.Async)]
+            [Command("Delete", RunMode = RunMode.Async)]
+            [Summary("Stops Mops from sending welcome messages.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task WelcomeDelete()
             {
@@ -329,12 +364,12 @@ namespace MopsBot.Module
 
                         StaticBase.WelcomeMessages.Remove(Context.Guild.Id);
                         await Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").DeleteOneAsync(x => x.GuildId == Context.Guild.Id);
-                        await RespondAsync($"Removed welcome message!");
+                        await ReplyAsync($"Removed welcome message!");
                     }
                 }
             }
 
-            [SlashCommand("prune", "Removes all inactive welcome messages", runMode: RunMode.Async)]
+            [Command("Prune", RunMode = RunMode.Async)]
             [RequireBotManage]
             [HideHelp]
             public async Task Prune(bool testing = true)
@@ -357,18 +392,17 @@ namespace MopsBot.Module
                             }
                         }
                     }
-                    await RespondAsync($"Pruned {toPrune.Where(x => x.Item2).Count()} objects");
+                    await ReplyAsync($"Pruned {toPrune.Where(x => x.Item2).Count()} objects");
                 }
             }
 
         }
 
-        /*
-        [Group("Command", "Custom command creation")]
+        [Group("Command")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public class Command : InteractionModuleBase<IInteractionContext>
+        public class Command : ModuleBase<ShardedCommandContext>
         {
-            [SlashCommand("Create", runMode: RunMode.Async)]
+            [Command("Create", RunMode = RunMode.Async)]
             [Summary("Allows you to create a simple response command.\n" +
                   "Name of user: {User.Username}\n" +
                   "Mention of user: {User.Mention}\n" +
@@ -386,13 +420,13 @@ namespace MopsBot.Module
 
                     await StaticBase.CustomCommands[Context.Guild.Id].AddCommandAsync(command, responseText);
 
-                    await RespondAsync($"Command **{command}** has been created.");
+                    await ReplyAsync($"Command **{command}** has been created.");
                 }
                 else
-                    await RespondAsync("A command can only wrap a maximum of 1 other command!\nThis is for the safety of Mops.");
+                    await ReplyAsync("A command can only wrap a maximum of 1 other command!\nThis is for the safety of Mops.");
             }
 
-            [SlashCommand("Remove", runMode: RunMode.Async)]
+            [Command("Remove", RunMode = RunMode.Async)]
             [Summary("Removes the specified custom command.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task RemoveCommand(string command)
@@ -400,15 +434,15 @@ namespace MopsBot.Module
                 if (StaticBase.CustomCommands.ContainsKey(Context.Guild.Id))
                 {
                     await StaticBase.CustomCommands[Context.Guild.Id].RemoveCommandAsync(command);
-                    await RespondAsync($"Removed command **{command}**.");
+                    await ReplyAsync($"Removed command **{command}**.");
                 }
                 else
                 {
-                    await RespondAsync($"Command **{command}** not found.");
+                    await ReplyAsync($"Command **{command}** not found.");
                 }
             }
 
-            [SlashCommand("AddRestriction", runMode: RunMode.Async)]
+            [Command("AddRestriction", RunMode = RunMode.Async)]
             [Summary("Only users with the `role` will be able to use the command.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task AddRestriction(string command, [Remainder]SocketRole role)
@@ -416,15 +450,15 @@ namespace MopsBot.Module
                 if (StaticBase.CustomCommands.ContainsKey(Context.Guild.Id))
                 {
                     await StaticBase.CustomCommands[Context.Guild.Id].AddRestriction(command, role);
-                    await RespondAsync($"Command **{command}** is now only usable by roles:\n{string.Join("\n", StaticBase.CustomCommands[Context.Guild.Id].RoleRestrictions[SlashCommand].Select(x => Context.Guild.GetRole(x).Name))}");
+                    await ReplyAsync($"Command **{command}** is now only usable by roles:\n{string.Join("\n", StaticBase.CustomCommands[Context.Guild.Id].RoleRestrictions[command].Select(x => Context.Guild.GetRole(x).Name))}");
                 }
                 else
                 {
-                    await RespondAsync($"Command **{command}** not found.");
+                    await ReplyAsync($"Command **{command}** not found.");
                 }
             }
 
-            [SlashCommand("RemoveRestriction", runMode: RunMode.Async)]
+            [Command("RemoveRestriction", RunMode = RunMode.Async)]
             [Summary("Removes the restriction of `role` for the command.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task RemoveRestriction(string command, [Remainder]SocketRole role)
@@ -432,24 +466,24 @@ namespace MopsBot.Module
                 if (StaticBase.CustomCommands.ContainsKey(Context.Guild.Id))
                 {
                     await StaticBase.CustomCommands[Context.Guild.Id].RemoveRestriction(command, role);
-                    await RespondAsync($"Command **{command}** is not restricted to {role.Name} anymore.");
+                    await ReplyAsync($"Command **{command}** is not restricted to {role.Name} anymore.");
                 }
                 else
                 {
-                    await RespondAsync($"Command **{command}** not found.");
+                    await ReplyAsync($"Command **{command}** not found.");
                 }
             }
         }
 
-        [SlashCommand("UseCustomCommand", runMode: RunMode.Async)]
+        /*[Command("UseCustomCommand", RunMode = RunMode.Async)]
         [Hide()]
         public async Task UseCustomCommand(string command){
-            var script = CSharpScript.Create($"return $\"{StaticBase.CustomCommands[Context.Guild.Id][SlashCommand]}\";", globalsType: typeof(CustomContext));
+            var script = CSharpScript.Create($"return $\"{StaticBase.CustomCommands[Context.Guild.Id][command]}\";", globalsType: typeof(CustomContext));
             var result = await script.RunAsync(new CustomContext {User = Context.User});
-            await RespondAsync(result.ReturnValue.ToString());
-        }
+            await ReplyAsync(result.ReturnValue.ToString());
+        }*/
 
-        [SlashCommand("UseCustomCommand", runMode: RunMode.Async)]
+        [Command("UseCustomCommand", RunMode = RunMode.Async)]
         [HideHelp]
         public async Task UseCustomCommand(string command)
         {
@@ -457,7 +491,7 @@ namespace MopsBot.Module
             {
                 if (command.Contains("{Command:"))
                 {
-                    await RespondAsync("Command arguments were probably an injection. Stopping execution.");
+                    await ReplyAsync("Command arguments were probably an injection. Stopping execution.");
                     return;
                 }
 
@@ -465,7 +499,7 @@ namespace MopsBot.Module
                 var commandName = commandParams.First();
                 var commandArgs = commandParams.Skip(1);
 
-                var reply = StaticBase.CustomCommands[Context.Guild.Id].Commands[SlashCommandName];
+                var reply = StaticBase.CustomCommands[Context.Guild.Id].Commands[commandName];
 
                 //Replace regular code
                 reply = reply.Replace("{User.Username}", $"{Context.User.Username}")
@@ -510,15 +544,15 @@ namespace MopsBot.Module
                     CustomCaller[Context.Channel.Id] = Context.User.Id;
                     commandName = reply.Split("{Command:").Last().Split("}").First();
                     reply = reply.Replace("{Command:" + commandName + "}", "");
-                    await (await RespondAsync("[ProcessBotMessage]" + commandName)).DeleteAsync();
+                    await (await ReplyAsync("[ProcessBotMessage]" + commandName)).DeleteAsync();
                 }
 
                 if (!reply.Equals(string.Empty))
-                    await RespondAsync(reply);
+                    await ReplyAsync(reply);
             }
         }
 
-        [SlashCommand("kill")]
+        [Command("kill")]
         // [Summary("Stops Mops to adapt to any new changes in code.")]
         [RequireBotManage()]
         [HideHelp]
@@ -528,21 +562,21 @@ namespace MopsBot.Module
             return Task.CompletedTask;
         }
 
-        [SlashCommand("openfiles", runMode: RunMode.Async)]
+        [Command("openfiles", RunMode = RunMode.Async)]
         [RequireBotManage()]
         [HideHelp]
         public async Task openfiles()
         {
             using (Context.Channel.EnterTypingState())
             {
-                await RespondAsync(DateTime.Now + $" open files were {System.Diagnostics.Process.GetCurrentProcess().HandleCount}");
+                await ReplyAsync(DateTime.Now + $" open files were {System.Diagnostics.Process.GetCurrentProcess().HandleCount}");
             }
-        }*/
+        }
 
-        [SlashCommand("eval", "Compile and run code on Mops", runMode: RunMode.Async)]
+        [Command("eval", RunMode = RunMode.Async)]
         [RequireBotManage]
         [HideHelp]
-        public async Task eval(string expression)
+        public async Task eval([Remainder]string expression)
         {
             using (Context.Channel.EnterTypingState())
             {
@@ -561,22 +595,23 @@ namespace MopsBot.Module
                 embed.AddField("Execution time", $"{postExecutionTime - preExecutionTime}ms", true);
                 embed.AddField("Return value", result.ReturnValue?.ToString() ?? "`null or void`");
 
-                await RespondAsync("", embed: embed.Build());
+                await ReplyAsync("", embed: embed.Build());
             }
         }
 
-        [SlashCommand("ban", "Bans someone from using Mops")]
+        [Command("ban")]
         [HideHelp]
         [RequireBotManage]
         public async Task ban(ulong userId){
             await MopsBot.Data.Entities.User.ModifyUserAsync(userId, x => x.IsBanned = true);
-            await RespondAsync($"Banned user with id {userId} indefinitely.");
+            await ReplyAsync($"Banned user with id {userId} indefinitely.");
         }
 
-        [SlashCommand("help", "Displays help on specific modules")]
+        [Command("help")]
+        [Alias("commands")]
         [HideHelp]
         [Ratelimit(1, 2, Measure.Seconds, RatelimitFlags.ChannelwideLimit)]
-        public async Task help(string helpModule = null)
+        public async Task help([Remainder]string helpModule = null)
         {
             try
             {
@@ -597,17 +632,17 @@ namespace MopsBot.Module
 
                 if (helpModule == null)
                 {
-                    foreach (var module in Program.Handler.commands.Modules.Where(x => !x.Preconditions.OfType<HideAttribute>().Any()))
+                    foreach (var module in Program.Handler.commands.Modules.Where(x => !x.Preconditions.OfType<HideHelpAttribute>().Any()))
                     {
                         if (!module.IsSubmodule)
                         {
                             string moduleInformation = "";
                             bool isTracking = module.Name.Contains("Tracking");
-                            moduleInformation += string.Join(", ", module.Commands.Where(x => !x.Preconditions.Any(y => y is HideAttribute)).Select(x => $"[{x.Name}]({CommandHandler.GetCommandHelpImage(x.Name)})"));
+                            moduleInformation += string.Join(", ", module.Commands.Where(x => !x.Preconditions.Any(y => y is HideHelpAttribute)).Select(x => $"[{x.Name}]({CommandHandler.GetCommandHelpImage(x.Name)})"));
                             moduleInformation += "\n";
 
                             moduleInformation += string.Join(", ", module.Submodules.Where(x => (!isTracking || Program.TrackerLimits[x.Name]["TrackersPerServer"] > 0) &&
-                                                                                               !x.Preconditions.Any(y => y is HideAttribute)).Select(x => $"[{x.Name}\\*]({CommandHandler.GetCommandHelpImage(x.Name)})"));
+                                                                                               !x.Preconditions.Any(y => y is HideHelpAttribute)).Select(x => $"[{x.Name}\\*]({CommandHandler.GetCommandHelpImage(x.Name)})"));
                             var modulesections = moduleInformation.Length / 1024 + 1;
                             if (modulesections > 1)
                             {
@@ -652,7 +687,7 @@ namespace MopsBot.Module
                     e = Program.Handler.getHelpEmbed(helpModule.ToLower(), prefix, e);
                 }
 
-                await RespondAsync("", embed: e.Build());
+                await ReplyAsync("", embed: e.Build());
             }
             catch
             {
