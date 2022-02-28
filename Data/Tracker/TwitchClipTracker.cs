@@ -95,7 +95,7 @@ namespace MopsBot.Data.Tracker
                     await UpdateTracker();
                 }
 
-                var tmpResult = await FetchJSONDataAsync<TwitchClipResult>($"https://api.twitch.tv/helix/clips?broadcaster_id={TwitchId}&first=100&started_at={JsonConvert.SerializeObject(DateTime.UtcNow.AddDays(-1))}{(!cursor.Equals("") ? $"&after={cursor}" : "")}", TwitchTracker.GetHelixHeaders());
+                var tmpResult = await FetchJSONDataAsync<TwitchClipResult>($"https://api.twitch.tv/helix/clips?broadcaster_id={TwitchId}&first=100&started_at={JsonConvert.SerializeObject(DateTime.UtcNow.AddDays(-1)).Replace("\"", "")}{(!cursor.Equals("") ? $"&after={cursor}" : "")}", TwitchTracker.GetHelixHeaders());
 
                 if (tmpResult.data != null)
                 {
