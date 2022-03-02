@@ -106,7 +106,7 @@ namespace MopsBot.Data.Tracker
                         
                         await UpdateTracker();
                     }
-                    if (!tmpResult.pagination.cursor.Equals(""))
+                    if (!tmpResult.pagination.cursor?.Equals("") ?? false)
                     {
                         return await NextPage(name, clips, tmpResult.pagination.cursor);
                     }
