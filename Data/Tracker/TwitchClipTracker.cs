@@ -18,7 +18,7 @@ namespace MopsBot.Data.Tracker
     public class TwitchClipTracker : BaseTracker
     {
         [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
-        public Dictionary<string, DateTime> TrackedClips;
+        public Dictionary<string, DateTime> MatchedClips;
         public static readonly string VIEWTHRESHOLD = "ViewerThreshold";
         public ulong TwitchId;
         public TwitchClipTracker() : base()
@@ -28,7 +28,7 @@ namespace MopsBot.Data.Tracker
         public TwitchClipTracker(string streamerName) : base()
         {
             Name = streamerName;
-            TrackedClips = new Dictionary<string, DateTime>();
+            MatchedClips = new Dictionary<string, DateTime>();
 
             try
             {
@@ -52,10 +52,10 @@ namespace MopsBot.Data.Tracker
             try
             {
                 TwitchClipResult clips = await getClips();
-                foreach (var clipId in TrackedClips.Keys.ToList())
+                foreach (var clipId in MatchedClips.Keys.ToList())
                 {
-                    if (TrackedClips[clipId].AddMinutes(30) <= DateTime.UtcNow){
-                        TrackedClips.Remove(clipId);
+                    if (MatchedClips[clipId].AddMinutes(30) <= DateTime.UtcNow){
+                        MatchedClips.Remove(clipId);
                         await UpdateTracker();
                     }
                 }
@@ -99,9 +99,9 @@ namespace MopsBot.Data.Tracker
 
                 if (tmpResult.data != null)
                 {
-                    foreach (var clip in tmpResult.data.Where(p => !TrackedClips.ContainsKey(p.id) && p.created_at > DateTime.UtcNow.AddMinutes(-30)))
+                    foreach (var clip in tmpResult.data.Where(p => !MatchedClips.ContainsKey(p.id) && p.created_at > DateTime.UtcNow.AddMinutes(-30)))
                     {
-                        TrackedClips.Add(clip.id, clip.created_at);
+                        MatchedClips.Add(clip.id, clip.created_at);
                         clips.data.Add(clip);
                         
                         await UpdateTracker();
