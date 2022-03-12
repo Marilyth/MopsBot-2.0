@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.IO;
 using System.Runtime.InteropServices;
-using Microsoft.Win32.SafeHandles;
 using MongoDB.Bson.Serialization.Options;
 using MongoDB.Bson.Serialization.Attributes;
 using System.ServiceModel.Syndication;
@@ -24,7 +23,6 @@ namespace MopsBot.Data.Tracker
         public enum TrackerType { TikTok, Twitch, TwitchGroup, TwitchClip, Twitter, Youtube, YoutubeLive, Reddit, Steam, Osu, Overwatch, OSRS, JSON, HTML, RSS };
         public static List<TrackerType> CapSensitive = new List<TrackerType>{TrackerType.HTML, TrackerType.Reddit, TrackerType.JSON, TrackerType.Overwatch, TrackerType.RSS, TrackerType.Youtube, TrackerType.YoutubeLive};
         private bool disposed = false;
-        private SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
         //protected System.Threading.Timer checkForChange;
         public event MainEventHandler OnMajorEventFired;
         public event MinorEventHandler OnMinorEventFired;
@@ -165,11 +163,10 @@ namespace MopsBot.Data.Tracker
             if (disposed)
                 return;
 
-            if (disposing)
+            /*if (disposing)
             {
-                handle.Dispose();
-                //checkForChange.Dispose();
-            }
+                checkForChange.Dispose();
+            }*/
 
             disposed = true;
         }
