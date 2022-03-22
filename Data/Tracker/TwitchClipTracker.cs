@@ -41,6 +41,11 @@ namespace MopsBot.Data.Tracker
             }
         }
 
+        public async override void PostInitialisation(object info = null)
+        {
+            if(MatchedClips is null) MatchedClips = new Dictionary<string, DateTime>();
+        }
+
         public async override void PostChannelAdded(ulong channelId)
         {
             base.PostChannelAdded(channelId);
