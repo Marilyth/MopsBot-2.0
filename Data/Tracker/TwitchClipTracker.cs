@@ -41,6 +41,11 @@ namespace MopsBot.Data.Tracker
             }
         }
 
+        public async override void PostInitialisation(object info = null)
+        {
+            if(MatchedClips is null) MatchedClips = new Dictionary<string, DateTime>();
+        }
+
         public async override void PostChannelAdded(ulong channelId)
         {
             base.PostChannelAdded(channelId);
@@ -141,7 +146,7 @@ namespace MopsBot.Data.Tracker
 
             e.ImageUrl = clip.thumbnail_url;
 
-            string game = GetGameById(clip.game_id).Result;
+            string game = clip.game_id?.Length > 0 ? GetGameById(clip.game_id).Result : "Unknown";
             e.AddField("Length", clip.duration + " seconds", true);
             e.AddField("Views", clip.view_count, true);
             e.AddField("Game", (clip.game_id == null || game.Equals("")) ? "Nothing" : game, true);
