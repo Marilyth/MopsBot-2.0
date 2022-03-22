@@ -18,7 +18,7 @@ namespace MopsBot.Data.Tracker
     public class TwitchClipTracker : BaseTracker
     {
         [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
-        public Dictionary<string, DateTime> MatchedClips;
+        public Dictionary<string, DateTime> MatchedClips = new Dictionary<string, DateTime>();
         public static readonly string VIEWTHRESHOLD = "ViewerThreshold";
         public ulong TwitchId;
         public TwitchClipTracker() : base()
@@ -141,7 +141,7 @@ namespace MopsBot.Data.Tracker
 
             e.ImageUrl = clip.thumbnail_url;
 
-            string game = GetGameById(clip.game_id).Result;
+            string game = clip.game_id?.Length > 0 ? GetGameById(clip.game_id).Result : "Unknown";
             e.AddField("Length", clip.duration + " seconds", true);
             e.AddField("Views", clip.view_count, true);
             e.AddField("Game", (clip.game_id == null || game.Equals("")) ? "Nothing" : game, true);
