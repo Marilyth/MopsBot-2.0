@@ -191,7 +191,7 @@ namespace MopsBot.Module
 
         public static async Task<string> PostURLAsync(string URL, string body = "", params KeyValuePair<string, string>[] headers)
         {
-            if (FailedRequests >= 10 && SucceededRequests / FailedRequests < 1)
+            if (FailedRequests >= 30 && SucceededRequests / FailedRequests < 1)
             {
                 await Program.MopsLog(new LogMessage(LogSeverity.Warning, "HttpRequests", $"More Failed requests {FailedRequests} than succeeded ones {SucceededRequests}. Waiting"));
                 return "";
@@ -223,7 +223,7 @@ namespace MopsBot.Module
 
         public static async Task<string> GetURLAsync(string URL, HttpMethod method, params KeyValuePair<string, string>[] headers)
         {
-            if (FailedRequests >= 10 && SucceededRequests / FailedRequests < 1)
+            if (FailedRequests >= 30 && SucceededRequests / FailedRequests < 1)
             {
                 await Program.MopsLog(new LogMessage(LogSeverity.Warning, "HttpRequests", $"More Failed requests {FailedRequests} than succeeded ones {SucceededRequests}. Waiting"));
                 return "";
