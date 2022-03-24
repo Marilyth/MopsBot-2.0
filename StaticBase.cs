@@ -22,7 +22,33 @@ namespace MopsBot
     {
         public static MongoClient DatabaseClient = new MongoClient($"{Program.Config["DatabaseURL"]}");
         public static IMongoDatabase Database = DatabaseClient.GetDatabase("Mops");
-        public static System.Net.Http.HttpClient HttpClient = new System.Net.Http.HttpClient();
+        public static System.Net.Http.HttpClient HttpClient = new System.Net.Http.HttpClient(new System.Net.Http.SocketsHttpHandler()
+        {
+            ConnectCallback = async (context, cancellationToken) =>
+            {
+                // Use DNS to look up the IP address(es) of the target host
+                IPHostEntry ipHostEntry = await Dns.GetHostEntryAsync(context.DnsEndPoint.Host);
+
+                // Filter for IPv4 addresses only
+                IPAddress ipAddress = ipHostEntry
+                    .AddressList
+                    .FirstOrDefault(i => i.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
+
+                // Fail the connection if there aren't any IPV4 addresses
+                if (ipAddress == null)
+                {
+                    throw new Exception($"No IP4 address for {context.DnsEndPoint.Host}");
+                }
+
+                // Open the connection to the target host/port
+                System.Net.Sockets.TcpClient tcp = new();
+                await tcp.ConnectAsync(ipAddress, context.DnsEndPoint.Port, cancellationToken);
+
+                // Return the NetworkStream to the caller
+                return tcp.GetStream();
+            }
+        });
+
         //public static AuthDiscordBotListApi DiscordBotList = new AuthDiscordBotListApi(305398845389406209, Program.Config["DiscordBotListKey"]);
         public static Random ran = new Random();
         public static List<string> Playlist = new List<string>();
@@ -99,7 +125,8 @@ namespace MopsBot
                 Trackers = new Dictionary<BaseTracker.TrackerType, Data.TrackerWrapper>();
                 foreach (var tracker in Enum.GetValues(typeof(BaseTracker.TrackerType)).Cast<BaseTracker.TrackerType>())
                 {
-                    if(!Program.TrackerLimits.ContainsKey(tracker.ToString())){
+                    if (!Program.TrackerLimits.ContainsKey(tracker.ToString()))
+                    {
                         Program.TrackerLimits[tracker.ToString()] = new Dictionary<string, int>();
                         Program.TrackerLimits[tracker.ToString()]["PollInterval"] = 900000;
                         Program.TrackerLimits[tracker.ToString()]["UpdateInterval"] = 120000;
@@ -172,14 +199,41 @@ namespace MopsBot
         }
 
         private static DateTime lastReset = DateTime.UtcNow;
-        public static async Task ResetHttpClient(){
+        public static async Task ResetHttpClient()
+        {
             //Youtube uses some kind of session information to block all further requests from a bot. 
             //It must be reset completely.
-            if((DateTime.UtcNow - lastReset).TotalHours > 0){
+            if ((DateTime.UtcNow - lastReset).TotalHours > 0)
+            {
                 lastReset = DateTime.UtcNow;
                 await Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"Client is blocked by YouTube, resetting (evil)."));
                 HttpClient.Dispose();
-                HttpClient = new System.Net.Http.HttpClient();
+                HttpClient = new System.Net.Http.HttpClient(new System.Net.Http.SocketsHttpHandler()
+                {
+                    ConnectCallback = async (context, cancellationToken) =>
+                    {
+                        // Use DNS to look up the IP address(es) of the target host
+                        IPHostEntry ipHostEntry = await Dns.GetHostEntryAsync(context.DnsEndPoint.Host);
+
+                        // Filter for IPv4 addresses only
+                        IPAddress ipAddress = ipHostEntry
+                            .AddressList
+                            .FirstOrDefault(i => i.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
+
+                        // Fail the connection if there aren't any IPV4 addresses
+                        if (ipAddress == null)
+                        {
+                            throw new Exception($"No IP4 address for {context.DnsEndPoint.Host}");
+                        }
+
+                        // Open the connection to the target host/port
+                        System.Net.Sockets.TcpClient tcp = new();
+                        await tcp.ConnectAsync(ipAddress, context.DnsEndPoint.Port, cancellationToken);
+
+                        // Return the NetworkStream to the caller
+                        return tcp.GetStream();
+                    }
+                });
                 HttpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)");
                 HttpClient.DefaultRequestHeaders.ConnectionClose = true;
                 HttpClient.Timeout = TimeSpan.FromSeconds(60);
