@@ -18,6 +18,8 @@ namespace MopsBot.Data.Tracker
     public class TwitchTracker : BaseUpdatingTracker
     {
         private static KeyValuePair<string, string> acceptHeader = new KeyValuePair<string, string>("Accept", "application/vnd.twitchtv.v5+json");
+        private static KeyValuePair<string, string> authHeader = new KeyValuePair<string, string>("Authorization", "Bearer ");
+        private static KeyValuePair<string, string> clientIdHeader = new KeyValuePair<string, string>("Client-Id", Program.Config["TwitchKey"]);
         public event HostingEventHandler OnHosting;
         public event StatusEventHandler OnLive;
         public event StatusEventHandler OnOffline;
@@ -26,7 +28,7 @@ namespace MopsBot.Data.Tracker
         private List<Comment> comments = new List<Comment>();
         public List<Tuple<string, DateTime>> GameChanges = new List<Tuple<string, DateTime>>();
         public DatePlot ViewerGraph;
-        private ChannelResult StreamerStatus;
+        private TwitchStreamResult StreamerStatus;
         public Boolean IsOnline;
         public string CurGame, VodUrl, Callback, CallbackId;
         public bool IsHosting;
@@ -92,6 +94,15 @@ namespace MopsBot.Data.Tracker
             }
         }
 
+        public static KeyValuePair<string, string>[] GetHelixHeaders(){
+            var acceptHeader = KeyValuePair.Create("Accept", "application/vnd.twitchtv.v5+json");
+            var authHeader = KeyValuePair.Create("Authorization", "Bearer " + Program.Config["TwitchToken"]);
+            var clientIdHeader = KeyValuePair.Create("Client-Id", Program.Config["TwitchKey"]);
+            var contentTypeHeader = KeyValuePair.Create("Content-Type", "application/json");
+
+            return new KeyValuePair<string, string>[]{acceptHeader, authHeader, clientIdHeader, contentTypeHeader};
+        } 
+
         public async Task<string> SubscribeWebhookAsync(bool subscribe = true)
         {
             try
@@ -113,17 +124,11 @@ namespace MopsBot.Data.Tracker
                             }},
                         };
 
-                        var response = await MopsBot.Module.Information.PostURLAsync(url, JsonConvert.SerializeObject(body),
-                            KeyValuePair.Create("Authorization", "Bearer " + Program.Config["TwitchToken"]),
-                            KeyValuePair.Create("Client-Id", Program.Config["TwitchKey"]),
-                            KeyValuePair.Create("Content-Type", "application/json")
-                        );
+                        var response = await MopsBot.Module.Information.PostURLAsync(url, JsonConvert.SerializeObject(body), GetHelixHeaders());
 
                         return response;
                     } else {
-                        var response = await MopsBot.Module.Information.GetURLAsync(url + $"?id={CallbackId}", System.Net.Http.HttpMethod.Delete,
-                            KeyValuePair.Create("Authorization", "Bearer " + Program.Config["TwitchToken"]),
-                            KeyValuePair.Create("Client-Id", Program.Config["TwitchKey"]));
+                        var response = await MopsBot.Module.Information.GetURLAsync(url + $"?id={CallbackId}", System.Net.Http.HttpMethod.Delete, GetHelixHeaders());
 
                         return response;
                     }
@@ -162,8 +167,8 @@ namespace MopsBot.Data.Tracker
             try
             {
                 StreamerStatus = await streamerInformation();
-                bool isStreaming = StreamerStatus.Stream.Channel != null && (StreamerStatus.Stream.BroadcastPlatform.Contains("other") ? ChannelConfig.Any(x => (bool)x.Value[TRACKRERUN]) : true);
-                bool isRerun = StreamerStatus.Stream?.BroadcastPlatform?.Contains("other") ?? false;
+                bool isStreaming = StreamerStatus.data.FirstOrDefault().type != null && StreamerStatus.data.FirstOrDefault().type.Equals("live");
+                bool isRerun = false; //StreamerStatus.Stream?.BroadcastPlatform?.Contains("other") ?? false;
 
                 if (!timerChanged && !IsOnline)
                 {
@@ -228,9 +233,9 @@ namespace MopsBot.Data.Tracker
                         ViewerGraph = new DatePlot(Name, "Time since start", "Viewers");
                         IsOnline = true;
                         IsHosting = false;
-                        CurGame = StreamerStatus.Stream.Game;
-                        ViewerGraph.AddValue(CurGame, 0, StreamerStatus.Stream.CreatedAt.UtcDateTime);
-                        GameChanges.Add(Tuple.Create(StreamerStatus.Stream.Game, StreamerStatus.Stream.CreatedAt.UtcDateTime));
+                        CurGame = StreamerStatus.data.FirstOrDefault().game_name;
+                        ViewerGraph.AddValue(CurGame, 0, StreamerStatus.data.FirstOrDefault().started_at.ToUniversalTime());
+                        GameChanges.Add(Tuple.Create(StreamerStatus.data.FirstOrDefault().game_name, StreamerStatus.data.FirstOrDefault().started_at.ToUniversalTime()));
 
                         if (OnLive != null) await OnLive.Invoke(this);
                         foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][ONLINE] && (isRerun ? (bool)ChannelConfig[x][TRACKRERUN] : true)).ToList())
@@ -248,10 +253,10 @@ namespace MopsBot.Data.Tracker
                     if (VodUrl == null)
                         VodUrl = await GetVodAsync();
 
-                    if (CurGame.ToLower().CompareTo(StreamerStatus.Stream.Game.ToLower()) != 0)
+                    if (CurGame.ToLower().CompareTo(StreamerStatus.data.FirstOrDefault().game_name.ToLower()) != 0)
                     {
-                        CurGame = StreamerStatus.Stream.Game;
-                        GameChanges.Add(Tuple.Create(StreamerStatus.Stream.Game, DateTime.UtcNow));
+                        CurGame = StreamerStatus.data.FirstOrDefault().game_name;
+                        GameChanges.Add(Tuple.Create(StreamerStatus.data.FirstOrDefault().game_name, DateTime.UtcNow));
                         await UpdateTracker();
 
                         foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][GAMECHANGE] && (isRerun ? (bool)ChannelConfig[x][TRACKRERUN] : true)).ToList())
@@ -259,7 +264,7 @@ namespace MopsBot.Data.Tracker
                     }
 
                     if (ChannelConfig.Any(x => (bool)x.Value[SHOWGRAPH]))
-                        await ModifyAsync(x => x.ViewerGraph.AddValue(CurGame, StreamerStatus.Stream.Viewers));
+                        await ModifyAsync(x => x.ViewerGraph.AddValue(CurGame, StreamerStatus.data.FirstOrDefault().viewer_count));
 
                     foreach (ulong channel in ChannelConfig.Keys.Where(x => (bool)ChannelConfig[x][SHOWEMBED] && (isRerun ? (bool)ChannelConfig[x][TRACKRERUN] : true)).ToList())
                         await OnMajorChangeTracked(channel, createEmbed((bool)ChannelConfig[channel][THUMBNAIL], (bool)ChannelConfig[channel][SHOWCHAT], (bool)ChannelConfig[channel][SHOWVOD], (bool)ChannelConfig[channel][SHOWGRAPH]));
@@ -286,12 +291,12 @@ namespace MopsBot.Data.Tracker
                 await UpdateTracker();
         }
 
-        private async Task<ChannelResult> streamerInformation()
+        private async Task<TwitchStreamResult> streamerInformation()
         {
-            var tmpResult = await FetchJSONDataAsync<ChannelResult>($"https://api.twitch.tv/kraken/streams/{TwitchId}?stream_type=live&client_id={Program.Config["TwitchKey"]}", acceptHeader);
+            var tmpResult = await FetchJSONDataAsync<TwitchStreamResult>($"https://api.twitch.tv/helix/streams?user_id={TwitchId}", GetHelixHeaders());
 
-            if (tmpResult.Stream == null) tmpResult.Stream = new APIResults.Twitch.Stream();
-            if (tmpResult.Stream.Game == "" || tmpResult.Stream.Game == null) tmpResult.Stream.Game = "Nothing";
+            if (tmpResult.data.Count == 0) tmpResult.data.Add(new APIResults.Twitch.TwitchStreamInfo());
+            if (tmpResult.data.FirstOrDefault().game_name == null) tmpResult.data.FirstOrDefault().game_name = "Nothing";
 
             return tmpResult;
         }
@@ -303,18 +308,18 @@ namespace MopsBot.Data.Tracker
 
         public static async Task<ulong> GetIdFromUsername(string name)
         {
-            var tmpResult = await FetchJSONDataAsync<dynamic>($"https://api.twitch.tv/kraken/users?login={name}&client_id={Program.Config["TwitchKey"]}", acceptHeader);
+            var tmpResult = await FetchJSONDataAsync<dynamic>($"https://api.twitch.tv/helix/users?login={name}", GetHelixHeaders());
 
-            return tmpResult["users"][0]["_id"];
+            return tmpResult["data"][0]["id"];
         }
 
         public async Task<string> GetVodAsync()
         {
-            var tmpResult = await FetchJSONDataAsync<dynamic>($"https://api.twitch.tv/kraken/channels/{TwitchId}/videos?client_id={Program.Config["TwitchKey"]}", acceptHeader);
+            var tmpResult = await FetchJSONDataAsync<dynamic>($"https://api.twitch.tv/helix/videos?user_id={TwitchId}", GetHelixHeaders());
 
             try
             {
-                return tmpResult["videos"][0]["url"];
+                return tmpResult["data"][0]["url"];
             }
             catch (Exception e)
             {
@@ -344,14 +349,13 @@ namespace MopsBot.Data.Tracker
 
         public Embed createEmbed(bool largeThumbnail = false, bool showChat = false, bool showVod = false, bool showGraph = false)
         {
-            Channel streamer = StreamerStatus.Stream.Channel;
             if (showGraph)
                 ViewerGraph.SetMaximumLine();
 
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0x6441A4);
-            e.Title = streamer.Status;
-            e.Url = streamer.Url.ToString();
+            e.Title = StreamerStatus.data.FirstOrDefault().title;
+            e.Url = TrackerUrl();
             e.WithCurrentTimestamp();
 
             if (VodUrl != null)
@@ -369,9 +373,10 @@ namespace MopsBot.Data.Tracker
                     e.AddField("VOD Segments", String.IsNullOrEmpty(vods) ? "/" : vods);
                 }
 
+                // Does not work in helix
                 if (showChat)
                 {
-                    var streamDuration = DateTime.UtcNow - OxyPlot.Axes.DateTimeAxis.ToDateTime(ViewerGraph.PlotDataPoints[0].Value.Key);
+                    /*var streamDuration = DateTime.UtcNow - OxyPlot.Axes.DateTimeAxis.ToDateTime(ViewerGraph.PlotDataPoints[0].Value.Key);
                     var chat = GetVodChat(ulong.Parse(VodUrl.Split("/").Last()), (uint)streamDuration.TotalSeconds - 10).Result;
 
                     if (chat.comments.Count >= 5) comments = chat.comments.Take(5).ToList();
@@ -388,14 +393,15 @@ namespace MopsBot.Data.Tracker
                     if (chatPreview.Equals("```asciidoc\n")) chatPreview += "Could not fetch chat messages.\nFollowers/Subs only, or empty?";
                     chatPreview += "```";
 
-                    e.AddField("Chat Preview", chatPreview);
+                    e.AddField("Chat Preview", chatPreview);*/
                 }
             }
 
             EmbedAuthorBuilder author = new EmbedAuthorBuilder();
             author.Name = Name;
-            author.Url = streamer.Url.ToString();
-            author.IconUrl = streamer.Logo.ToString();
+            author.Url = TrackerUrl();
+
+            author.IconUrl = GetBroadcasterLogoUrl(TwitchId.ToString()).Result;
             e.Author = author;
 
             EmbedFooterBuilder footer = new EmbedFooterBuilder();
@@ -405,20 +411,20 @@ namespace MopsBot.Data.Tracker
 
             if (largeThumbnail)
             {
-                e.ImageUrl = $"{StreamerStatus.Stream.Preview.Medium}?rand={StaticBase.ran.Next(0, 99999999)}";
+                e.ImageUrl = $"{StreamerStatus.data.FirstOrDefault().thumbnail_url.Replace("{height}", "180").Replace("{width}", "320")}?rand={StaticBase.ran.Next(0, 99999999)}";
                 if (showGraph)
                     e.ThumbnailUrl = ViewerGraph.DrawPlot();
             }
             else
             {
-                e.ThumbnailUrl = $"{StreamerStatus.Stream.Preview.Medium}?rand={StaticBase.ran.Next(0, 99999999)}";
+                e.ThumbnailUrl = $"{StreamerStatus.data.FirstOrDefault().thumbnail_url.Replace("{height}", "180").Replace("{width}", "320")}?rand={StaticBase.ran.Next(0, 99999999)}";
                 if (showGraph)
                     e.ImageUrl = ViewerGraph.DrawPlot();
             }
             if (!showGraph)
             {
-                e.AddField("Viewers", StreamerStatus.Stream.Viewers, true);
-                e.AddField("Game", StreamerStatus.Stream.Game, true);
+                e.AddField("Viewers", StreamerStatus.data.FirstOrDefault().viewer_count, true);
+                e.AddField("Game", StreamerStatus.data.FirstOrDefault().game_name, true);
             }
 
             return e.Build();
@@ -438,6 +444,7 @@ namespace MopsBot.Data.Tracker
                 {
                     var result = MopsBot.Module.Information.PostURLAsync($"https://id.twitch.tv/oauth2/token?client_id={Program.Config["TwitchKey"]}&client_secret={Program.Config["TwitchSecret"]}&grant_type=client_credentials").Result;
                     Program.Config["TwitchToken"] = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(result)["access_token"].ToString();
+                    authHeader = new KeyValuePair<string, string>("Authorization", "Bearer " + Program.Config["TwitchToken"]);
                     Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Getting token succeeded."));
                 }
                 catch (Exception)
@@ -453,6 +460,12 @@ namespace MopsBot.Data.Tracker
                 KeyValuePair.Create("Authorization", "Bearer " + Program.Config["TwitchToken"]),
                 KeyValuePair.Create("Client-Id", Program.Config["TwitchKey"]));
             return result;
+        }
+
+        private static Dictionary<string, string> broadcasterLogoUrls = new Dictionary<string, string>();
+        public static async Task<string> GetBroadcasterLogoUrl(string broadcasterId){
+            if(!broadcasterLogoUrls.ContainsKey(broadcasterId)) broadcasterLogoUrls[broadcasterId] = (await FetchJSONDataAsync<dynamic>($"https://api.twitch.tv/helix/users?id={broadcasterId}", GetHelixHeaders()))["data"][0]["profile_image_url"];
+            return broadcasterLogoUrls[broadcasterId];
         }
 
         public override void Dispose()

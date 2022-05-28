@@ -207,7 +207,7 @@ namespace MopsBot
             {
                 if ((await MopsBot.Data.Entities.User.GetUserAsync(context.User.Id)).IsTaCDue())
                 {
-                    await context.Channel.SendMessageAsync($"Weekly reminder:\nBy using Mops' tracking services, you agree to our terms and conditions as well as our privacy policy: http://37.221.195.236/Terms_And_Conditions\nhttp://37.221.195.236/Privacy_Policy");
+                    await context.Channel.SendMessageAsync($"Weekly reminder:\nBy using Mops' tracking services, you agree to our terms and conditions as well as our privacy policy: http://46.38.235.165/Terms_And_Conditions\nhttp://46.38.235.165/Privacy_Policy");
                     await MopsBot.Data.Entities.User.ModifyUserAsync(context.User.Id, x => x.LastTaCReminder = DateTime.UtcNow);
                 }
             }
@@ -401,7 +401,7 @@ namespace MopsBot
 
         public static string GetCommandHelpImage(string command)
         {
-            return $"http://37.221.195.236/mops_example_usage/{command.ToLower()}.PNG?rand={StaticBase.ran.Next(0, 99)}".Replace(" ", "%20");
+            return $"http://46.38.235.165/mops_example_usage/{command.ToLower()}.PNG?rand={StaticBase.ran.Next(0, 99)}".Replace(" ", "%20");
         }
 
         /// <summary>
