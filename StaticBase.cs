@@ -175,7 +175,7 @@ namespace MopsBot
                     Task.Delay((int)(60000 / Trackers.Count)).Wait();
                 }
 
-                try
+                /*try
                 {
                     ChannelJanitors = MopsBot.Data.Entities.ChannelJanitor.GetJanitors().Result;
                     Program.MopsLog(new LogMessage(LogSeverity.Info, "React init", $"Janitors started")).Wait();
@@ -191,7 +191,7 @@ namespace MopsBot
                 catch (Exception e)
                 {
                     Program.MopsLog(new LogMessage(LogSeverity.Info, "React init", $"Weird thing happened", e)).Wait();
-                }
+                }*/
 
                 init = true;
 
