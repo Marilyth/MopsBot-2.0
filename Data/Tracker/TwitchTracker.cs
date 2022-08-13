@@ -502,9 +502,10 @@ namespace MopsBot.Data.Tracker
                 }
 
                 var subscriptions = await GetAllSubscriptions();
+                var foundSubscriptions = new HashSet<ulong>();
 
                 // https://dev.twitch.tv/docs/api/reference#get-eventsub-subscriptions
-                foreach(var subscription in subscriptions["data"]){
+                foreach(var subscription in subscriptions){
                     ulong twitchId = subscription["condition"]["broadcaster_user_id"];
                     string subscriptionId = subscription["id"];
                     string callbackUrl = subscription["transport"]["callback"];
@@ -517,29 +518,52 @@ namespace MopsBot.Data.Tracker
                         await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Bad Twitch subscription for {twitchId}, removing."));
                         var response = await UnsubscribeWebhookAsync(subscriptionId);
 
-                        if(response != "Failed"){
-                            if(tracker is not null){
-                                tracker.Callback = null;
-                                tracker.CallbackId = null;
-                                await tracker.UpdateTracker();
-                                // Will resubscribe itself on next CheckForChange_Elapsed.
-                            }
+                        if(response.Equals("Failed")){
+                            foundSubscriptions.Add(twitchId);
                         }
 
                         // Try not to spam the endpoint too much.
                         await Task.Delay(100);
+                    } else {
+                        foundSubscriptions.Add(twitchId);
+
+                        // Update tracker data if it isn't accurate.
+                        if(tracker is not null && (!tracker.Callback.Equals(callbackUrl) || !tracker.CallbackId.Equals(subscriptionId))){
+                            tracker.Callback = callbackUrl;
+                            tracker.CallbackId = subscriptionId;
+                            await tracker.UpdateTracker();
+                        }
                     }
+                }
+
+                // Remove subscription information for trackers not found or removed in the Twitch response.
+                foreach(var missingTracker in StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTrackers().Where(x => !foundSubscriptions.Contains((x.Value as TwitchTracker).TwitchId))){
+                    TwitchTracker tracker = (TwitchTracker)missingTracker.Value;
+                    tracker.Callback = null;
+                    tracker.CallbackId = null;
+                    await tracker.UpdateTracker();
+                    // Will resubscribe itself on next CheckForChange_Elapsed.
                 }
             } catch (Exception ex){
                 await Program.MopsLog(new LogMessage(LogSeverity.Critical, "", $"Getting subscriptions failed.", ex));
             }
         }
 
-        public static async Task<dynamic> GetAllSubscriptions(){
+        public static async Task<List<dynamic>> GetAllSubscriptions(){
             var result = await FetchJSONDataAsync<dynamic>("https://api.twitch.tv/helix/eventsub/subscriptions", 
                 KeyValuePair.Create("Authorization", "Bearer " + Program.Config["TwitchToken"]),
                 KeyValuePair.Create("Client-Id", Program.Config["TwitchKey"]));
-            return result;
+            
+            List<dynamic> data = new List<dynamic>(result["data"]);
+            while(result["pagination"]["cursor"] is not null){
+                var currentCursor = result["pagination"]["cursor"];
+                result = await FetchJSONDataAsync<dynamic>($"https://api.twitch.tv/helix/eventsub/subscriptions?after={currentCursor}", 
+                    KeyValuePair.Create("Authorization", "Bearer " + Program.Config["TwitchToken"]),
+                    KeyValuePair.Create("Client-Id", Program.Config["TwitchKey"]));
+                data.AddRange(result["data"]);
+            }
+
+            return data;
         }
 
         private static Dictionary<string, string> broadcasterLogoUrls = new Dictionary<string, string>();
