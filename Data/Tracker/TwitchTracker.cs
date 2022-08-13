@@ -103,44 +103,78 @@ namespace MopsBot.Data.Tracker
             return new KeyValuePair<string, string>[]{acceptHeader, authHeader, clientIdHeader, contentTypeHeader};
         } 
 
-        public async Task<string> SubscribeWebhookAsync(bool subscribe = true)
-        {
+        /// <summary>
+        /// Unsubscribes the specified callback from the Twitch EventSub.
+        /// </summary>
+        /// <param name="callbackId"></param>
+        /// <returns>Twitch's response, or "Failed" if unsuccessful.</returns>
+        public static async Task<string> UnsubscribeWebhookAsync(string callbackId){
             try
             {
                 if (Program.Config.ContainsKey("TwitchToken") && !Program.Config["TwitchToken"].Equals(""))
                 {
                     var url = "https://api.twitch.tv/helix/eventsub/subscriptions";
-                    if(subscribe){
-                        Dictionary<string, object> body = new Dictionary<string, object>(){
-                            {"type", "stream.online"},
-                            {"version", "1"},
-                            {"condition", new Dictionary<string, string>(){
-                                {"broadcaster_user_id", TwitchId.ToString()}
-                            }},
-                            {"transport", new Dictionary<string, string>(){
-                                {"method", "webhook"},
-                                {"callback", Program.Tunnel + "/api/webhook/twitch"},
-                                {"secret", Program.Config["TwitchSecret"]} //Not recommended
-                            }},
-                        };
+                    var response = await MopsBot.Module.Information.GetURLAsync(url + $"?id={callbackId}", System.Net.Http.HttpMethod.Delete, GetHelixHeaders());
 
-                        var response = await MopsBot.Module.Information.PostURLAsync(url, JsonConvert.SerializeObject(body), GetHelixHeaders());
-
-                        return response;
-                    } else {
-                        var response = await MopsBot.Module.Information.GetURLAsync(url + $"?id={CallbackId}", System.Net.Http.HttpMethod.Delete, GetHelixHeaders());
-
-                        return response;
-                    }
+                    return response;
                 }
 
                 return "Failed";
             }
             catch (Exception e)
             {
-                await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $" error by {Name}", e));
+                await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $" error unsubscribing Twitch webhook {callbackId}", e));
                 return "Failed";
             }
+        }
+
+        /// <summary>
+        /// Subscribes the specified twitchId to the Twitch EventSub endpoints.
+        /// Callback is set to the localtunnel Url.
+        /// </summary>
+        /// <param name="twitchId"></param>
+        /// <returns>Twitch's response, or "Failed" if unsuccessful.</returns>
+        public static async Task<string> SubscribeWebhookAsync(ulong twitchId){
+            try
+            {
+                if (Program.Config.ContainsKey("TwitchToken") && !Program.Config["TwitchToken"].Equals("") && Program.Tunnel is not null)
+                {
+                    var url = "https://api.twitch.tv/helix/eventsub/subscriptions";
+                    Dictionary<string, object> body = new Dictionary<string, object>(){
+                        {"type", "stream.online"},
+                        {"version", "1"},
+                        {"condition", new Dictionary<string, string>(){
+                            {"broadcaster_user_id", twitchId.ToString()}
+                        }},
+                        {"transport", new Dictionary<string, string>(){
+                            {"method", "webhook"},
+                            {"callback", Program.Tunnel + "/api/webhook/twitch"},
+                            {"secret", Program.Config["TwitchSecret"]} //Not recommended
+                        }},
+                    };
+
+                    var response = await MopsBot.Module.Information.PostURLAsync(url, JsonConvert.SerializeObject(body), GetHelixHeaders());
+
+                    return response;
+                }
+
+                return "Failed";
+            }
+            catch (Exception e)
+            {
+                await Program.MopsLog(new LogMessage(LogSeverity.Error, "", $" error subscribing Twitch Id {twitchId}", e));
+                return "Failed";
+            }
+        }
+
+        /// <summary>
+        /// Subscribes or unsubscribes the current Twitch tracker, depending on the flag.
+        /// </summary>
+        /// <param name="subscribe"></param>
+        /// <returns>Twitch's response, or "Failed" if unsuccessful.</returns>
+        public async Task<string> SubscribeWebhookAsync(bool subscribe = true)
+        {
+            return subscribe ? await SubscribeWebhookAsync(TwitchId) : await UnsubscribeWebhookAsync(CallbackId);
         }
 
         public async override void CheckForChange_Elapsed(object stateinfo)
@@ -446,6 +480,7 @@ namespace MopsBot.Data.Tracker
                     Program.Config["TwitchToken"] = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(result)["access_token"].ToString();
                     authHeader = new KeyValuePair<string, string>("Authorization", "Bearer " + Program.Config["TwitchToken"]);
                     Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Getting token succeeded."));
+                    RemoveBadSubscriptionsAsync();
                 }
                 catch (Exception)
                 {
@@ -455,8 +490,53 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public static async Task<string> GetAllSubscriptions(){
-            var result = await MopsBot.Module.Information.GetURLAsync("https://api.twitch.tv/helix/eventsub/subscriptions", 
+        /// <summary>
+        /// Iterates through the list of all subscriptions and deletes them if they are untracked, broken or stale.
+        /// </summary>
+        /// <returns></returns>
+        public static async Task RemoveBadSubscriptionsAsync(){
+            try{
+                // Wait for localtunnel to establish a connection.
+                while(Program.Tunnel is null){
+                   await Task.Delay(10000);
+                }
+
+                var subscriptions = await GetAllSubscriptions();
+
+                // https://dev.twitch.tv/docs/api/reference#get-eventsub-subscriptions
+                foreach(var subscription in subscriptions["data"]){
+                    ulong twitchId = subscription["condition"]["broadcaster_user_id"];
+                    string subscriptionId = subscription["id"];
+                    string callbackUrl = subscription["transport"]["callback"];
+                    string status = subscription["status"];
+
+                    TwitchTracker tracker = (TwitchTracker)StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTrackers().FirstOrDefault(x => (x.Value as TwitchTracker).TwitchId.Equals(twitchId)).Value;
+
+                    if(!callbackUrl.Equals(Program.Tunnel + "/api/webhook/twitch") || !status.Equals("enabled") || tracker is null){
+                        // Bad subscription, remove it.
+                        await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Bad Twitch subscription for {twitchId}, removing."));
+                        var response = await UnsubscribeWebhookAsync(subscriptionId);
+
+                        if(response != "Failed"){
+                            if(tracker is not null){
+                                tracker.Callback = null;
+                                tracker.CallbackId = null;
+                                await tracker.UpdateTracker();
+                                // Will resubscribe itself on next CheckForChange_Elapsed.
+                            }
+                        }
+
+                        // Try not to spam the endpoint too much.
+                        await Task.Delay(100);
+                    }
+                }
+            } catch (Exception ex){
+                await Program.MopsLog(new LogMessage(LogSeverity.Critical, "", $"Getting subscriptions failed.", ex));
+            }
+        }
+
+        public static async Task<dynamic> GetAllSubscriptions(){
+            var result = await FetchJSONDataAsync<dynamic>("https://api.twitch.tv/helix/eventsub/subscriptions", 
                 KeyValuePair.Create("Authorization", "Bearer " + Program.Config["TwitchToken"]),
                 KeyValuePair.Create("Client-Id", Program.Config["TwitchKey"]));
             return result;
