@@ -69,7 +69,7 @@ namespace MopsBot.Module.TypeReader
                 return TypeConverterResult.FromSuccess(result);
             }
             
-            result = StaticBase.Trackers[type].GetGuildTrackers(context.Guild.Id).FirstOrDefault(x => x.Name.Equals(input));
+            result = StaticBase.Trackers[type].GetGuildTrackers(context.Guild.Id).FirstOrDefault(x => x.Name.Equals(streamerName));
 
             if(result == null){
                 return TypeConverterResult.FromError(InteractionCommandError.ParseFailed, $"Could not find a {module}-tracker for {streamerName}.\nPlease use `/{module} gettrackers` to see available trackers.");
