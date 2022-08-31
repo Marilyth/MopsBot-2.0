@@ -18,7 +18,7 @@ namespace MopsBot.Data.Tracker
     public class TwitchClipTracker : BaseTracker
     {
         [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
-        public Dictionary<string, DateTime> MatchedClips;
+        public Dictionary<string, DateTime> MatchedClips = new Dictionary<string, DateTime>();
         public static readonly string VIEWTHRESHOLD = "ViewerThreshold";
         public ulong TwitchId;
         public TwitchClipTracker() : base()
