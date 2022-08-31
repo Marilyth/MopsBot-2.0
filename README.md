@@ -37,7 +37,7 @@ Make sure to always enclose both the key and values of the .json in quotation ma
 - CommandLogChannel (optional): The numeric ID of the Discord channel you want executed commands to be logged in.
 - **ServerAddress** (optional, but important): The http URL under which your Server can be reached. Replace localhost with your servers IP or name.  
   Non-localhost is required for any webhook Trackers and graphs.  
-  For example, the entry looks like <code>http://37.221.195.236</code> for Mops.
+  For example, the entry looks like <code>http://46.38.235.165</code> for Mops.
 - TwitchKey/TwitchSecret (optional): The API Key and Secret to be used in Twitch API calls.
 - TwitterKey/TwitterSecret/TwitterToken/TwitterAccessSecret (optional): The API Information to be used in Twitter API calls.
 - YoutubeKey (optional): The API Key to be used in Youtube API calls.

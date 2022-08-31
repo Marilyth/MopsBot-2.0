@@ -18,8 +18,9 @@ namespace MopsBot.Data.Tracker
     public class TwitchClipTracker : BaseTracker
     {
         [BsonDictionaryOptions(DictionaryRepresentation.ArrayOfDocuments)]
-        public Dictionary<DateTime, KeyValuePair<int, double>> TrackedClips;
+        public Dictionary<string, DateTime> MatchedClips = new Dictionary<string, DateTime>();
         public static readonly string VIEWTHRESHOLD = "ViewerThreshold";
+        public ulong TwitchId;
         public TwitchClipTracker() : base()
         {
         }
@@ -27,18 +28,22 @@ namespace MopsBot.Data.Tracker
         public TwitchClipTracker(string streamerName) : base()
         {
             Name = streamerName;
-            TrackedClips = new Dictionary<DateTime, KeyValuePair<int, double>>();
+            MatchedClips = new Dictionary<string, DateTime>();
 
             try
             {
-                var checkExists = FetchJSONDataAsync<APIResults.Twitch.Channel>($"https://api.twitch.tv/kraken/channels/{Name}?client_id={Program.Config["TwitchKey"]}").Result;
-                var test = checkExists.BroadcasterLanguage;
+                TwitchId = TwitchTracker.GetIdFromUsername(streamerName).Result;
             }
             catch (Exception e)
             {
                 Dispose();
                 throw new Exception($"Streamer {TrackerUrl()} could not be found on Twitch!", e);
             }
+        }
+
+        public async override void PostInitialisation(object info = null)
+        {
+            if(MatchedClips is null) MatchedClips = new Dictionary<string, DateTime>();
         }
 
         public async override void PostChannelAdded(ulong channelId)
@@ -52,20 +57,20 @@ namespace MopsBot.Data.Tracker
             try
             {
                 TwitchClipResult clips = await getClips();
-                foreach (var datetime in TrackedClips.Keys.ToList())
+                foreach (var clipId in MatchedClips.Keys.ToList())
                 {
-                    if (datetime.AddMinutes(30) <= DateTime.UtcNow){
-                        TrackedClips.Remove(datetime);
+                    if (MatchedClips[clipId].AddMinutes(30) <= DateTime.UtcNow){
+                        MatchedClips.Remove(clipId);
                         await UpdateTracker();
                     }
                 }
 
-                foreach (Clip clip in clips?.clips ?? new List<Clip>())
+                foreach (TwitchClipInfo clip in clips?.data ?? new List<TwitchClipInfo>())
                 {
                     var embed = createEmbed(clip);
                     foreach (ulong channel in ChannelConfig.Keys.ToList())
                     {
-                        if(clip.views >= (uint)ChannelConfig[channel][VIEWTHRESHOLD])
+                        if(clip.view_count >= (uint)ChannelConfig[channel][VIEWTHRESHOLD])
                             await OnMajorChangeTracked(channel, embed, (string)ChannelConfig[channel]["Notification"]);
                     }
                 }
@@ -86,41 +91,29 @@ namespace MopsBot.Data.Tracker
             if (clips == null)
             {
                 clips = new TwitchClipResult();
-                clips.clips = new List<Clip>();
+                clips.data = new List<TwitchClipInfo>();
             }
             try
             {
-                var acceptHeader = new KeyValuePair<string, string>("Accept", "application/vnd.twitchtv.v5+json");
-                var tmpResult = await FetchJSONDataAsync<TwitchClipResult>($"https://api.twitch.tv/kraken/clips/top?client_id={Program.Config["TwitchKey"]}&channel={name}&limit=100&period=day{(!cursor.Equals("") ? $"&cursor={cursor}" : "")}", acceptHeader);
+                if(TwitchId == 0){
+                    TwitchId = await TwitchTracker.GetIdFromUsername(name);
+                    await UpdateTracker();
+                }
 
-                if (tmpResult.clips != null)
+                var tmpResult = await FetchJSONDataAsync<TwitchClipResult>($"https://api.twitch.tv/helix/clips?broadcaster_id={TwitchId}&first=100&started_at={JsonConvert.SerializeObject(DateTime.UtcNow.AddDays(-1)).Replace("\"", "")}{(!cursor.Equals("") ? $"&after={cursor}" : "")}", TwitchTracker.GetHelixHeaders());
+
+                if (tmpResult.data != null)
                 {
-                    foreach (var clip in tmpResult.clips.Where(p => !TrackedClips.ContainsKey(p.created_at) && p.created_at > DateTime.UtcNow.AddMinutes(-30)))
+                    foreach (var clip in tmpResult.data.Where(p => !MatchedClips.ContainsKey(p.id) && p.created_at > DateTime.UtcNow.AddMinutes(-30)))
                     {
-                        if(clip.vod != null && !TrackedClips.Any(x => {
-                                double matchingDuration = 0;
-
-                                if(clip.vod.offset < x.Value.Key)
-                                    matchingDuration = (clip.vod.offset + clip.duration > x.Value.Key + x.Value.Value) ? x.Value.Value : clip.vod.offset + clip.duration - x.Value.Key;
-                                else
-                                    matchingDuration = (x.Value.Key + x.Value.Value > clip.vod.offset + clip.duration) ? clip.duration : x.Value.Key + x.Value.Value - clip.vod.offset;
-
-                                double matchingPercentage = matchingDuration / clip.duration;
-                                return matchingPercentage > 0.2;
-                            })){
-
-                            TrackedClips.Add(clip.created_at, new KeyValuePair<int, double>(clip.vod.offset, clip.duration));
-                            clips.clips.Add(clip);
-                        } else if (clip.vod == null){
-                            TrackedClips.Add(clip.created_at, new KeyValuePair<int, double>(-60, clip.duration));
-                            clips.clips.Add(clip);
-                        }
+                        MatchedClips.Add(clip.id, clip.created_at);
+                        clips.data.Add(clip);
                         
                         await UpdateTracker();
                     }
-                    if (!tmpResult._cursor.Equals(""))
+                    if (!tmpResult.pagination.cursor?.Equals("") ?? false)
                     {
-                        return await NextPage(name, clips, tmpResult._cursor);
+                        return await NextPage(name, clips, tmpResult.pagination.cursor);
                     }
                 }
                 return clips;
@@ -132,7 +125,7 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        private Embed createEmbed(Clip clip)
+        private Embed createEmbed(TwitchClipInfo clip)
         {
             EmbedBuilder e = new EmbedBuilder();
             e.Color = new Color(0x6441A4);
@@ -142,8 +135,8 @@ namespace MopsBot.Data.Tracker
 
             EmbedAuthorBuilder author = new EmbedAuthorBuilder();
             author.Name = Name;
-            author.Url = clip.broadcaster.channel_url;
-            author.IconUrl = clip.broadcaster.logo;
+            author.Url = $"https://www.twitch.tv/{clip.broadcaster_name}";
+            author.IconUrl = TwitchTracker.GetBroadcasterLogoUrl(clip.broadcaster_id).Result;
             e.Author = author;
 
             EmbedFooterBuilder footer = new EmbedFooterBuilder();
@@ -151,14 +144,21 @@ namespace MopsBot.Data.Tracker
             footer.Text = "Twitch";
             e.Footer = footer;
 
-            e.ImageUrl = clip.thumbnails.medium;
+            e.ImageUrl = clip.thumbnail_url;
 
+            string game = clip.game_id?.Length > 0 ? GetGameById(clip.game_id).Result : "Unknown";
             e.AddField("Length", clip.duration + " seconds", true);
-            e.AddField("Views", clip.views, true);
-            e.AddField("Game", (clip.game == null || clip.game.Equals("")) ? "Nothing" : clip.game, true);
-            e.AddField("Creator", $"[{clip.curator.name}]({clip.curator.channel_url})", true);
+            e.AddField("Views", clip.view_count, true);
+            e.AddField("Game", (clip.game_id == null || game.Equals("")) ? "Nothing" : game, true);
+            e.AddField("Creator", $"[{clip.creator_name}](https://www.twitch.tv/{clip.creator_name})", true);
 
             return e.Build();
+        }
+
+        private static Dictionary<string, string> GameNameCache = new Dictionary<string, string>();
+        public async static Task<string> GetGameById(string gameId){
+            if(!GameNameCache.ContainsKey(gameId)) GameNameCache[gameId] = (await FetchJSONDataAsync<TwitchGameResult>($"https://api.twitch.tv/helix/games?id={gameId}", TwitchTracker.GetHelixHeaders())).data.First().name;
+            return GameNameCache[gameId];
         }
 
         public override string TrackerUrl(){

@@ -21,7 +21,7 @@ namespace MopsBot.Data.Tracker
     {
         public DateTime WebhookExpire = DateTime.Now;
         private string channelThumbnailUrl, uploadPlaylistId;
-        private HashSet<string> pastVideoIds = new HashSet<string>();
+        public Dictionary<string, DateTime> PastVideoIds = new Dictionary<string, DateTime>();
 
         public YoutubeTracker() : base()
         {
@@ -82,12 +82,13 @@ namespace MopsBot.Data.Tracker
 
         public async Task CheckInfoAsync(YoutubeNotification push)
         {
-            if (push.IsNewVideo && !pastVideoIds.Contains(push.VideoId))
+            if (push.IsNewVideo && !PastVideoIds.ContainsKey(push.VideoId))
             {
+                PastVideoIds[push.VideoId] = DateTime.UtcNow;
+                PastVideoIds = PastVideoIds.Where(x => (DateTime.UtcNow - x.Value).Days <= 3).ToDictionary(x => x.Key, x => x.Value);
+
                 foreach (ulong channel in ChannelConfig.Keys.ToList())
                     await OnMinorChangeTracked(channel, (string)ChannelConfig[channel]["Notification"] + "\nhttps://www.youtube.com/watch?v=" + push.VideoId);
-
-                pastVideoIds.Add(push.VideoId);
             }
         }
 

@@ -52,7 +52,6 @@ namespace MopsBot
             //await slashCommands.AddModulesAsync(Assembly.GetEntryAssembly(), provider);
             await slashCommands.AddModuleAsync(typeof(MopsBot.Module.Slash), provider);
             await slashCommands.RegisterCommandsGloballyAsync();
-            await slashCommands.RegisterCommandsToGuildAsync(155336736111591425);
             await commands.AddModulesAsync(Assembly.GetEntryAssembly(), provider);
 
             await loadCustomCommands();
@@ -207,7 +206,7 @@ namespace MopsBot
             {
                 if ((await MopsBot.Data.Entities.User.GetUserAsync(context.User.Id)).IsTaCDue())
                 {
-                    await context.Channel.SendMessageAsync($"Weekly reminder:\nBy using Mops' tracking services, you agree to our terms and conditions as well as our privacy policy: http://37.221.195.236/Terms_And_Conditions\nhttp://37.221.195.236/Privacy_Policy");
+                    await context.Channel.SendMessageAsync($"Weekly reminder:\nBy using Mops' tracking services, you agree to our terms and conditions as well as our privacy policy: http://46.38.235.165/Terms_And_Conditions\nhttp://46.38.235.165/Privacy_Policy");
                     await MopsBot.Data.Entities.User.ModifyUserAsync(context.User.Id, x => x.LastTaCReminder = DateTime.UtcNow);
                 }
             }
@@ -220,7 +219,7 @@ namespace MopsBot
             if (!result.IsSuccess && !result.ErrorReason.Equals("") && !context.Guild.Id.Equals(264445053596991498) && 
                 !slashCommand.CommandName.Contains("help", StringComparison.InvariantCultureIgnoreCase))
             {
-                await slashCommand.ModifyOriginalResponseAsync(x => x.Content = ((result as Discord.Interactions.ExecuteResult?).Value.Exception.InnerException.Message));
+                await slashCommand.ModifyOriginalResponseAsync(x => x.Content = result.ErrorReason);
                 Task.Run(async () =>
                 {
                     //Wait for exception to reach log
@@ -314,7 +313,7 @@ namespace MopsBot
                     throw new Exception("Command not found");
                 }
 
-                output += $"`{prefix}{CommandToString(curCommand)}";
+                output += $"`@Mops {CommandToString(curCommand)}";
 
                 foreach (Discord.Commands.ParameterInfo p in curCommand.Parameters)
                 {
@@ -401,7 +400,7 @@ namespace MopsBot
 
         public static string GetCommandHelpImage(string command)
         {
-            return $"http://37.221.195.236/mops_example_usage/{command.ToLower()}.PNG?rand={StaticBase.ran.Next(0, 99)}".Replace(" ", "%20");
+            return $"http://46.38.235.165/mops_example_usage/{command.ToLower()}.PNG?rand={StaticBase.ran.Next(0, 99)}".Replace(" ", "%20");
         }
 
         /// <summary>

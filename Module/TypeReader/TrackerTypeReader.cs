@@ -55,8 +55,34 @@ namespace MopsBot.Module.TypeReader
     public class TrackerTypeConverter : Discord.Interactions.TypeConverter{
         public override async Task<Discord.Interactions.TypeConverterResult> ReadAsync(IInteractionContext context, IApplicationCommandInteractionDataOption input, IServiceProvider services)
         {
-            //context.Interaction.Data.ToString();
-            return TypeConverterResult.FromError(new Exception("Eh"));
+            var module = (context.Interaction.Data as Discord.WebSocket.SocketSlashCommandData).Name;
+            var worked = Enum.TryParse<TrackerType>(module, true, out TrackerType type);
+            var streamerName = input.Value.ToString();
+
+            if(!CapSensitive.Any(x => x == type))
+                streamerName = streamerName.ToLower();
+
+            var result = StaticBase.Trackers[type].GetTracker(context.Channel.Id, streamerName);
+
+            if (result != null){
+                result.LastCalledChannelPerGuild[context.Guild.Id] = context.Channel.Id;
+                return TypeConverterResult.FromSuccess(result);
+            }
+            
+            result = StaticBase.Trackers[type].GetGuildTrackers(context.Guild.Id).FirstOrDefault(x => x.Name.Equals(input));
+
+            if(result == null){
+                return TypeConverterResult.FromError(InteractionCommandError.ParseFailed, $"Could not find a {module}-tracker for {streamerName}.\nPlease use `/{module} gettrackers` to see available trackers.");
+            }
+
+            var guildChannels = (await context.Guild.GetTextChannelsAsync()).Select(x => x.Id);
+            var channelMatches = result.ChannelConfig.Keys.Where(x => guildChannels.Any(y => y.Equals(x)));
+            if(channelMatches.Count() == 1){
+                result.LastCalledChannelPerGuild[context.Guild.Id] = channelMatches.First();
+                return TypeConverterResult.FromSuccess(result);
+            }
+            
+            return TypeConverterResult.FromError(InteractionCommandError.ParseFailed, $"Multiple trackers for {streamerName} across multiple channels.\nPlease repeat the command in the channel containing the tracker you meant.\nUse `/{module} gettrackers` to see available trackers.");
         }
 
         public override bool CanConvertTo(Type type)
