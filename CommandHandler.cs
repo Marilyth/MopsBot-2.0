@@ -52,7 +52,6 @@ namespace MopsBot
             //await slashCommands.AddModulesAsync(Assembly.GetEntryAssembly(), provider);
             await slashCommands.AddModuleAsync(typeof(MopsBot.Module.Slash), provider);
             await slashCommands.RegisterCommandsGloballyAsync();
-            await slashCommands.RegisterCommandsToGuildAsync(155336736111591425);
             await commands.AddModulesAsync(Assembly.GetEntryAssembly(), provider);
 
             await loadCustomCommands();
@@ -220,7 +219,7 @@ namespace MopsBot
             if (!result.IsSuccess && !result.ErrorReason.Equals("") && !context.Guild.Id.Equals(264445053596991498) && 
                 !slashCommand.CommandName.Contains("help", StringComparison.InvariantCultureIgnoreCase))
             {
-                await slashCommand.ModifyOriginalResponseAsync(x => x.Content = ((result as Discord.Interactions.ExecuteResult?).Value.Exception.InnerException.Message));
+                await slashCommand.ModifyOriginalResponseAsync(x => x.Content = result.ErrorReason);
                 Task.Run(async () =>
                 {
                     //Wait for exception to reach log
@@ -314,7 +313,7 @@ namespace MopsBot
                     throw new Exception("Command not found");
                 }
 
-                output += $"`{prefix}{CommandToString(curCommand)}";
+                output += $"`@Mops {CommandToString(curCommand)}";
 
                 foreach (Discord.Commands.ParameterInfo p in curCommand.Parameters)
                 {

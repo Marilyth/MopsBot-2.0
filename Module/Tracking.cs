@@ -13,7 +13,6 @@ using static MopsBot.StaticBase;
 using MopsBot.Data.Tracker;
 using MopsBot.Data;
 using MopsBot.Data.Entities;
-using Discord.Addons.Interactive;
 using static MopsBot.Data.Tracker.BaseTracker;
 using MopsBot.Module.Preconditions;
 

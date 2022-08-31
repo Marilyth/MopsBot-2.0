@@ -8,7 +8,6 @@ using MongoDB.Driver;
 using MongoDB.Bson.Serialization.Options;
 using MongoDB.Bson.Serialization.Attributes;
 using Discord;
-using DiscordBotsList.Api.Objects;
 using MopsBot.Data.Tracker;
 
 namespace MopsBot.Data.Entities
