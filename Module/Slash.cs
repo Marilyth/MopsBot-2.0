@@ -78,7 +78,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task ChangeConfig(BaseTracker streamerName)
             {
-                string currentConfig = string.Join("\n", streamerName.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value));
+                string currentConfig = string.Join("\n", streamerName.ChannelConfig[streamerName.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value));
                 var reply = await CommandHandler.SendAndAwaitModalAsync(Context, MopsBot.Module.Modals.ModalBuilders.GetConfigModal(currentConfig));
 
                 await ModifyConfig(this, streamerName, TrackerType.TwitchClip, reply["new_config"]);
