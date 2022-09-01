@@ -74,12 +74,14 @@ namespace MopsBot.Module
             }
 
             [SlashCommand("changeconfig", "Edit the Configuration for the tracker. Use showconfig to see what options you have.")]
+            [Modal]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task ChangeConfig(BaseTracker streamerName)
             {
                 string currentConfig = string.Join("\n", streamerName.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value));
-                var modal = MopsBot.Module.Modals.ModalBuilders.GetConfigModal($"Change config", streamerName.Name, currentConfig, TrackerType.Twitch);
-                await Context.Interaction.RespondWithModalAsync(modal);
+                var reply = await CommandHandler.SendAndAwaitModalAsync(Context, MopsBot.Module.Modals.ModalBuilders.GetConfigModal(currentConfig));
+
+                await ModifyConfig(this, streamerName, TrackerType.TwitchClip, reply["new_config"]);
             }
 
             [SlashCommand("changechannel", "Changes the channel of the specified tracker from #FromChannel to the current channel.")]
@@ -1175,63 +1177,6 @@ namespace MopsBot.Module
         #endregion TikTok
 
         #region Statics
-        [ModalInteraction("config_*", true)]
-        public async Task ChangeConfig(string trackerTypeName, MopsBot.Module.Modals.ModalBuilders.ConfigModal modal){
-            var trackerName = modal.Name;
-            var newConfig = modal.NewConfig;
-            var worked = Enum.TryParse<TrackerType>(trackerTypeName, true, out TrackerType trackerType);
-            var tracker = Trackers[trackerType].GetTracker(Context.Channel.Id, trackerName);
-            bool forAllChannels = false;
-            if(tracker is null){
-                forAllChannels = true;
-                tracker = Trackers[trackerType].GetGuildTrackers(Context.Guild.Id).FirstOrDefault(x => x.Name.Equals(trackerName));
-            }
-            
-            foreach(var channel in tracker.ChannelConfig.Where(x => forAllChannels ? Context.Guild.GetChannelAsync(x.Key) is not null : x.Key.Equals(Context.Channel.Id))){
-                var settings = tracker.ChannelConfig[channel.Key].ToDictionary(x => x.Key, x => x.Value);
-
-                foreach (var line in newConfig.Split("\n"))
-                {
-                    var kv = line.Split(":", 2);
-                    if (kv.Length != 2)
-                    {
-                        await FollowupAsync($"Skipping `{line}` due to no value.", ephemeral: true);
-                        continue;
-                    }
-
-                    var option = kv[0];
-                    if (!settings.Keys.Contains(option))
-                    {
-                        await FollowupAsync($"Skipping `{line}` due to unkown option.", ephemeral: true);
-                        continue;
-                    }
-
-                    var value = kv[1].Trim();
-                    var hasWorked = TryCastUserConfig(settings[option], value, out var result);
-
-                    if (!hasWorked)
-                    {
-                        await FollowupAsync($"Skipping `{line}` due to false value type, must be `{settings[option].GetType().ToString()}`", ephemeral: true);
-                    }
-                    else
-                    {
-                        settings[option] = result;
-                    }
-                }
-
-                if (!tracker.IsConfigValid(settings, out string reason))
-                {
-                    await FollowupAsync($"Updating failed due to:\n{reason}", ephemeral: true);
-                }
-                else
-                {
-                    tracker.ChannelConfig[channel.Key] = settings;
-                    await StaticBase.Trackers[trackerType].UpdateDBAsync(tracker);
-                    await FollowupAsync($"New Config:\n```yaml\n{string.Join("\n", tracker.ChannelConfig[channel.Key].Select(x => x.Key + ": " + x.Value))}```", ephemeral: true);
-                }
-            }
-        }
-
         public static async Task ChangeChannelAsync(string Name, SocketGuildChannel FromChannel, TrackerType currentType, IInteractionContext Context)
         {
             var tracker = StaticBase.Trackers[currentType].GetTracker(FromChannel.Id, BaseTracker.CapSensitive.Any(x => x == currentType) ? Name : Name.ToLower());

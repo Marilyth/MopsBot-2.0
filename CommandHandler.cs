@@ -59,6 +59,7 @@ namespace MopsBot
             client.InteractionCreated += HandleInteraction;
             commands.CommandExecuted += CommandExecuted;
             slashCommands.SlashCommandExecuted += SlashCommandExecuted;
+            client.ModalSubmitted += ModalSubmitted;
             commands.Log += (LogMessage log) => { mostRecentException = log.Exception; return Task.CompletedTask; };
             slashCommands.Log += async (LogMessage log) => mostRecentException = log.Exception;
             client.UserJoined += Client_UserJoined;
@@ -77,7 +78,22 @@ namespace MopsBot
         }
 
         public async Task HandleInteraction(SocketInteraction interaction){
-            await interaction.RespondAsync("Executing...", ephemeral: true);
+            // Find out command info of current interaction.
+            var commandData = (interaction as SocketSlashCommand).Data as SocketSlashCommandData;
+            string commandName = commandData.Name;
+            SocketSlashCommandDataOption lastOption = commandData.Options.FirstOrDefault(x => x.Type == ApplicationCommandOptionType.SubCommand || x.Type == ApplicationCommandOptionType.SubCommandGroup);
+            while(lastOption is not null) {
+                commandName += $" {lastOption.Name}";
+                lastOption = lastOption.Options.FirstOrDefault(x => x.Type == ApplicationCommandOptionType.SubCommand || x.Type == ApplicationCommandOptionType.SubCommandGroup);
+            }
+            
+            // If command is marked as modal, do not respond to the interaction. Modals are responses.
+            var commandInfo = slashCommands.SlashCommands.FirstOrDefault(x => x.ToString().Equals(commandName));
+            if(commandInfo is null || !commandInfo.Attributes.Any(x => x is ModalAttribute)){
+                await interaction.RespondAsync("Executing...", ephemeral: true);
+            }
+
+            var test = slashCommands.SlashCommands;
             var ctx = new ShardedInteractionContext(client, interaction);
             var command = await slashCommands.ExecuteCommandAsync(ctx, _provider);
         }
@@ -254,8 +270,59 @@ namespace MopsBot
                 }
             }
 
-            else if (result.IsSuccess)
-                await slashCommand.ModifyOriginalResponseAsync(x => x.Content = "Done");
+            else if (result.IsSuccess){
+                if(await slashCommand.GetOriginalResponseAsync() is not null)
+                    await slashCommand.ModifyOriginalResponseAsync(x => x.Content = "Done");
+                else
+                    await slashCommand.DeferAsync(ephemeral: true);
+            }
+        }
+
+        /// <summary>
+        /// Sends a modal, waits up to 10 minutes for it to be submitted, and returns its components back to the caller as a Dictionary.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="modal">The modal to be sent.</param>
+        /// <returns>A Dictionary containing the submitted component ids and their values.</returns>
+        public static async Task<Dictionary<string, string>> SendAndAwaitModalAsync(IInteractionContext context, Modal modal){
+            string interactionId = Guid.NewGuid().ToString();
+            modal.CustomId = interactionId;
+            Dictionary<string, string> data = null;
+
+            // Set data when component is submitted by user.
+            ModalWaiters.Add(modal.CustomId, x => data = x);
+            await context.Interaction.RespondWithModalAsync(modal);
+
+            int timeoutMs = 60000;
+            while(data is null && timeoutMs > 0){
+                await Task.Delay(1000);
+                timeoutMs -= 1000;
+            }
+
+            if(data is null)
+                throw new Exception("Modal timeout expired.");
+
+            return data;
+        }
+
+        private static Dictionary<string, Action<Dictionary<string, string>>> ModalWaiters = new Dictionary<string, Action<Dictionary<string, string>>>();
+        /// <summary>
+        /// Receives the submitted modal and converts its components to a Dictionary, before sending it to the corresponding ModalWaiter.
+        /// </summary>
+        /// <param name="modal"></param>
+        /// <returns></returns>
+        public async Task ModalSubmitted(SocketModal modal)
+        {
+            if(ModalWaiters.ContainsKey(modal.Data.CustomId)){
+
+                Dictionary<string, string> componentValues = new Dictionary<string, string>();
+                foreach(var component in modal.Data.Components){
+                    componentValues.Add(component.CustomId, component.Value);
+                }
+
+                ModalWaiters[modal.Data.CustomId](componentValues);
+                await modal.DeferAsync(ephemeral: true);
+            }
         }
 
         /// <summary>
