@@ -336,7 +336,7 @@ namespace MopsBot.Module
 
             [SlashCommand("untrack", "Stops keeping track of the specified Osu player, in the Channel you are calling this command in.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task unTrackOsu( BaseTracker OsuUser)
+            public async Task unTrackOsu([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker OsuUser)
             {
                 if (await Trackers[BaseTracker.TrackerType.Osu].TryRemoveTrackerAsync(OsuUser.Name, OsuUser.LastCalledChannelPerGuild[Context.Guild.Id]))
                     await FollowupAsync("Stopped keeping track of " + OsuUser.Name + "'s plays!", ephemeral: true);
@@ -484,7 +484,7 @@ namespace MopsBot.Module
 
             [SlashCommand("untrack", "Stops tracking the specified Subreddit.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task unTrackSubreddit( BaseTracker subreddit)
+            public async Task unTrackSubreddit([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker subreddit)
             {
                 if (await Trackers[BaseTracker.TrackerType.Reddit].TryRemoveTrackerAsync(subreddit.Name, subreddit.LastCalledChannelPerGuild[Context.Guild.Id]))
                     await FollowupAsync("Stopped keeping track of " + subreddit.Name + "'s posts!", ephemeral: true);
@@ -528,7 +528,7 @@ namespace MopsBot.Module
             }
 
             [SlashCommand("showconfig", "Shows all the settings for this tracker, and their values")]
-            public async Task ShowConfig( BaseTracker tracker)
+            public async Task ShowConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker tracker)
             {
                 await FollowupAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value))}```", ephemeral: true);
             }
