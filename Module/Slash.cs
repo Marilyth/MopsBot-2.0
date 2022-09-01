@@ -45,7 +45,7 @@ namespace MopsBot.Module
 
             [SlashCommand("untrack", "Stops tracking the specified streamer.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task unTrackStreamer(BaseTracker streamerName)
+            public async Task unTrackStreamer([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker streamerName)
             {
                 if (await Trackers[BaseTracker.TrackerType.Twitch].TryRemoveTrackerAsync(streamerName.Name, streamerName.LastCalledChannelPerGuild[Context.Guild.Id]))
                     await FollowupAsync("Stopped keeping track of " + streamerName.Name + "'s streams!", ephemeral: true);
@@ -60,7 +60,7 @@ namespace MopsBot.Module
 
             [SlashCommand("setnotification", "Sets the notification text that is used each time a streamer goes live.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(BaseTracker streamer, string notification = "")
+            public async Task SetNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker streamer, string notification = "")
             {
                 streamer.ChannelConfig[streamer.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.Twitch].UpdateDBAsync(streamer);
@@ -68,7 +68,7 @@ namespace MopsBot.Module
             }
 
             [SlashCommand("showconfig", "Shows all the settings for this tracker, and their values")]
-            public async Task ShowConfig(BaseTracker tracker)
+            public async Task ShowConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker tracker)
             {
                 await FollowupAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value))}```", ephemeral: true);
             }
@@ -76,7 +76,7 @@ namespace MopsBot.Module
             [SlashCommand("changeconfig", "Edit the Configuration for the tracker. Use showconfig to see what options you have.")]
             [Modal]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task ChangeConfig(BaseTracker streamerName)
+            public async Task ChangeConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker streamerName)
             {
                 string currentConfig = string.Join("\n", streamerName.ChannelConfig[streamerName.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value));
                 var reply = await CommandHandler.SendAndAwaitModalAsync(Context, MopsBot.Module.Modals.ModalBuilders.GetConfigModal(currentConfig));
@@ -139,7 +139,7 @@ namespace MopsBot.Module
 
             [SlashCommand("untrack", "Stops tracking the specified streamer's clips.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task unTrackStreamer(BaseTracker streamerName)
+            public async Task unTrackStreamer([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker streamerName)
             {
                 if (await Trackers[BaseTracker.TrackerType.TwitchClip].TryRemoveTrackerAsync(streamerName.Name, streamerName.LastCalledChannelPerGuild[Context.Guild.Id]))
                     await FollowupAsync("Stopped keeping track of " + streamerName.Name + "'s streams!", ephemeral: true);
@@ -154,7 +154,7 @@ namespace MopsBot.Module
 
             [SlashCommand("setnotification", "Sets the notification text that is used each time a new clip is found.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(BaseTracker streamer, string notification = "")
+            public async Task SetNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker streamer, string notification = "")
             {
                 streamer.ChannelConfig[streamer.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.TwitchClip].UpdateDBAsync(streamer);
@@ -163,7 +163,7 @@ namespace MopsBot.Module
 
             [SlashCommand("setviewthreshold", "Sets the minimum views a top clip must have to be shown.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetViewThreshold(BaseTracker streamer, uint threshold)
+            public async Task SetViewThreshold([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker streamer, uint threshold)
             {
                 var tracker = (TwitchClipTracker)streamer;
 
@@ -173,14 +173,14 @@ namespace MopsBot.Module
             }
 
             [SlashCommand("showconfig", "Shows all the settings for this tracker, and their values")]
-            public async Task ShowConfig(BaseTracker tracker)
+            public async Task ShowConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker tracker)
             {
                 await FollowupAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value))}```", ephemeral: true);
             }
 
             [SlashCommand("changeconfig", "Edit the Configuration for the tracker. Use showconfig to see what options you have.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task ChangeConfig(BaseTracker streamerName, string config)
+            public async Task ChangeConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker streamerName, string config)
             {
                 await ModifyConfig(this, streamerName, TrackerType.TwitchClip, config);
             }
@@ -218,7 +218,7 @@ namespace MopsBot.Module
 
             [SlashCommand("untrack", "Stops keeping track of the specified TwitterUser, in the Channel you are calling this command in.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task unTrackTwitter(BaseTracker twitterUser)
+            public async Task unTrackTwitter([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker twitterUser)
             {
                 if (await Trackers[BaseTracker.TrackerType.Twitter].TryRemoveTrackerAsync(twitterUser.Name, twitterUser.LastCalledChannelPerGuild[Context.Guild.Id]))
                     await FollowupAsync("Stopped keeping track of " + twitterUser.Name + "'s tweets!", ephemeral: true);
@@ -233,7 +233,7 @@ namespace MopsBot.Module
 
             [SlashCommand("setnotification", "Sets the notification text that is used each time a new Main-Tweet is found.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(BaseTracker TwitterName, string notification = "")
+            public async Task SetNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker TwitterName, string notification = "")
             {
                 TwitterName.GetLastCalledConfig(Context.Guild.Id)["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.Twitter].UpdateDBAsync(TwitterName);
@@ -242,7 +242,7 @@ namespace MopsBot.Module
 
             [SlashCommand("setnonmainnotification", "Sets the notification text that is used each time a new retweet or reply is found.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNonMainNotification(BaseTracker TwitterName, string notification = "")
+            public async Task SetNonMainNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker TwitterName, string notification = "")
             {
                 var config = TwitterName.GetLastCalledConfig(Context.Guild.Id);
                 config[TwitterTracker.REPLYNOTIFICATION] = notification;
@@ -254,7 +254,7 @@ namespace MopsBot.Module
             }
 
             [SlashCommand("disablenonmain", "Disables tracking for the retweets and replies of the specified Twitter account.")]
-            public async Task DisableRetweets(BaseTracker TwitterName)
+            public async Task DisableRetweets([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker TwitterName)
             {
                 TwitterName.GetLastCalledConfig(Context.Guild.Id)[TwitterTracker.SHOWREPLIES] = false;
                 TwitterName.GetLastCalledConfig(Context.Guild.Id)[TwitterTracker.SHOWRETWEETS] = false;
@@ -263,14 +263,14 @@ namespace MopsBot.Module
             }
 
             [SlashCommand("showconfig", "Shows all the settings for this tracker, and their values")]
-            public async Task ShowConfig(BaseTracker tracker)
+            public async Task ShowConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker tracker)
             {
                 await FollowupAsync($"```yaml\n{string.Join("\n", tracker.GetLastCalledConfig(Context.Guild.Id).Select(x => x.Key + ": " + x.Value))}```", ephemeral: true);
             }
 
             [SlashCommand("changeconfig", "Edit the Configuration for the tracker. Use showconfig to see what options you have.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task ChangeConfig(BaseTracker TwitterName, string config)
+            public async Task ChangeConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker TwitterName, string config)
             {
                 await ModifyConfig(this, TwitterName, TrackerType.Twitter, config);
             }
@@ -351,7 +351,7 @@ namespace MopsBot.Module
 
             [SlashCommand("setppbounds", "Sets the lower bounds of pp gain that must be reached, to show a notification.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetPPBounds(BaseTracker osuUser, double threshold)
+            public async Task SetPPBounds([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker osuUser, double threshold)
             {
                 var tracker = osuUser as OsuTracker;
                 if (threshold > 0.1)
@@ -366,7 +366,7 @@ namespace MopsBot.Module
 
             [SlashCommand("setnotification", "Sets the notification text that is used each time a player gained pp.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(BaseTracker osuUser, string notification = "")
+            public async Task SetNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker osuUser, string notification = "")
             {
                 osuUser.ChannelConfig[osuUser.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.Osu].UpdateDBAsync(osuUser);
@@ -374,14 +374,14 @@ namespace MopsBot.Module
             }
 
             [SlashCommand("showconfig", "Shows all the settings for this tracker, and their values")]
-            public async Task ShowConfig(BaseTracker tracker)
+            public async Task ShowConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker tracker)
             {
                 await FollowupAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value))}```", ephemeral: true);
             }
 
             [SlashCommand("changeconfig", "Edit the Configuration for the tracker. Use showconfig to see what options you have.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task ChangeConfig(BaseTracker osuUser, string config)
+            public async Task ChangeConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker osuUser, string config)
             {
                 await ModifyConfig(this, osuUser, TrackerType.Osu, config);
             }
@@ -417,7 +417,7 @@ namespace MopsBot.Module
 
             [SlashCommand("untrack", "Stops keeping track of the specified Youtuber, in the Channel you are calling this command in.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task unTrackYoutube(BaseTracker channelID)
+            public async Task unTrackYoutube([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker channelID)
             {
                 if (await Trackers[BaseTracker.TrackerType.Youtube].TryRemoveTrackerAsync(channelID.Name, channelID.LastCalledChannelPerGuild[Context.Guild.Id]))
                     await FollowupAsync("Stopped keeping track of " + channelID.Name + "'s videos!", ephemeral: true);
@@ -432,7 +432,7 @@ namespace MopsBot.Module
 
             [SlashCommand("setnotification", "Sets the notification text that is used each time a new video appears.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(BaseTracker channelID,  string notification = "")
+            public async Task SetNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker channelID,  string notification = "")
             {
                 channelID.ChannelConfig[channelID.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.Youtube].UpdateDBAsync(channelID);
@@ -440,14 +440,14 @@ namespace MopsBot.Module
             }
 
             [SlashCommand("showconfig", "Shows all the settings for this tracker, and their values")]
-            public async Task ShowConfig(BaseTracker tracker)
+            public async Task ShowConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker tracker)
             {
                 await FollowupAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value))}```", ephemeral: true);
             }
 
             [SlashCommand("changeconfig", "Edit the Configuration for the tracker. Use showconfig to see what options you have.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task ChangeConfig(BaseTracker channelID, string config)
+            public async Task ChangeConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker channelID, string config)
             {
                 await ModifyConfig(this, channelID, TrackerType.Youtube, config);
             }
@@ -505,7 +505,7 @@ namespace MopsBot.Module
 
             [SlashCommand("setnotification", "Sets the notification text that is used each time a new post was found.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(BaseTracker subreddit, string notification = "")
+            public async Task SetNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker subreddit, string notification = "")
             {
                 if (await StaticBase.Trackers[BaseTracker.TrackerType.Reddit].TrySetNotificationAsync(subreddit.Name, subreddit.LastCalledChannelPerGuild[Context.Guild.Id], notification))
                 {
@@ -577,7 +577,7 @@ namespace MopsBot.Module
 
             [SlashCommand("untrack", "Stops tracking jsons.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task unTrackNews(BaseTracker JsonSource)
+            public async Task unTrackNews([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker JsonSource)
             {
                 if (await Trackers[BaseTracker.TrackerType.JSON].TryRemoveTrackerAsync(JsonSource.Name, JsonSource.LastCalledChannelPerGuild[Context.Guild.Id]))
                     await FollowupAsync($"Stopped keeping track of {JsonSource.Name}", ephemeral: true);
@@ -592,7 +592,7 @@ namespace MopsBot.Module
 
             [SlashCommand("setnotification", "Sets the notification text that is used each time a change in the json was found.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(BaseTracker jsonSource, string notification = "")
+            public async Task SetNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker jsonSource, string notification = "")
             {
                 jsonSource.ChannelConfig[jsonSource.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.JSON].UpdateDBAsync(jsonSource);
@@ -644,7 +644,7 @@ namespace MopsBot.Module
             }
 
             [SlashCommand("showconfig", "Shows all the settings for this tracker, and their values")]
-            public async Task ShowConfig(BaseTracker tracker)
+            public async Task ShowConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker tracker)
             {
                 await FollowupAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value))}```", ephemeral: true);
             }
@@ -681,7 +681,7 @@ namespace MopsBot.Module
 
             [SlashCommand("untrack", "Stops tracking the player with the specified name.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task UnTrack(BaseTracker name)
+            public async Task UnTrack([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker name)
             {
                 if (await Trackers[BaseTracker.TrackerType.OSRS].TryRemoveTrackerAsync(name.Name, name.LastCalledChannelPerGuild[Context.Guild.Id]))
                     await FollowupAsync($"Stopped keeping track of {name.Name}!", ephemeral: true);
@@ -714,7 +714,7 @@ namespace MopsBot.Module
 
             [SlashCommand("setnotification", "Sets the notification text that is used each time a level up takes place.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(BaseTracker name, string notification = "")
+            public async Task SetNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker name, string notification = "")
             {
                 name.ChannelConfig[name.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.OSRS].UpdateDBAsync(name);
@@ -722,14 +722,14 @@ namespace MopsBot.Module
             }
 
             [SlashCommand("showconfig", "Shows all the settings for this tracker, and their values")]
-            public async Task ShowConfig(BaseTracker tracker)
+            public async Task ShowConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker tracker)
             {
                 await FollowupAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value))}```", ephemeral: true);
             }
 
             [SlashCommand("changeconfig", "Edit the Configuration for the tracker. Use showconfig to see your options.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task ChangeConfig(BaseTracker name, string config)
+            public async Task ChangeConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker name, string config)
             {
                 await ModifyConfig(this, name, TrackerType.OSRS, config);
             }
@@ -906,7 +906,7 @@ namespace MopsBot.Module
 
             [SlashCommand("untrack", "Stops tracking the specified RSS feed.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task UnTrackFeed(BaseTracker url)
+            public async Task UnTrackFeed([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker url)
             {
                 if (await Trackers[BaseTracker.TrackerType.RSS].TryRemoveTrackerAsync(url.Name, url.LastCalledChannelPerGuild[Context.Guild.Id]))
                     await FollowupAsync("Stopped keeping track of " + url.Name + " 's feed!", ephemeral: true);
@@ -921,7 +921,7 @@ namespace MopsBot.Module
 
             [SlashCommand("setnotification", "Sets the notification text that is used each time a new post was found.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(BaseTracker url, string notification = "")
+            public async Task SetNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker url, string notification = "")
             {
                 url.ChannelConfig[url.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.RSS].UpdateDBAsync(url);
@@ -937,14 +937,14 @@ namespace MopsBot.Module
             }
 
             [SlashCommand("showconfig", "Shows all the settings for this tracker, and their values")]
-            public async Task ShowConfig(BaseTracker tracker)
+            public async Task ShowConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker tracker)
             {
                 await FollowupAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value))}```", ephemeral: true);
             }
 
             [SlashCommand("changeconfig", "Edit the Configuration for the tracker. Use showconfig to see your options.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task ChangeConfig(BaseTracker url, string config)
+            public async Task ChangeConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker url, string config)
             {
                 await ModifyConfig(this, url, TrackerType.RSS, config);
             }
@@ -984,7 +984,7 @@ namespace MopsBot.Module
 
             [SlashCommand("untrack", "Stops keeping track of the specified Steam user, in the Channel you are calling this command in.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task unTrackOsu(BaseTracker SteamNameOrId)
+            public async Task unTrackOsu([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker SteamNameOrId)
             {
                 if (await Trackers[BaseTracker.TrackerType.Steam].TryRemoveTrackerAsync(SteamNameOrId.Name, SteamNameOrId.LastCalledChannelPerGuild[Context.Guild.Id]))
                     await FollowupAsync("Stopped keeping track of " + SteamNameOrId.Name + "'s Steam data!", ephemeral: true);
@@ -999,7 +999,7 @@ namespace MopsBot.Module
 
             [SlashCommand("setnotification", "Sets the notification text that is used each time a new achievement was achieved.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(BaseTracker SteamNameOrId, string notification = "")
+            public async Task SetNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker SteamNameOrId, string notification = "")
             {
                 SteamNameOrId.ChannelConfig[SteamNameOrId.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.Steam].UpdateDBAsync(SteamNameOrId);
@@ -1007,14 +1007,14 @@ namespace MopsBot.Module
             }
 
             [SlashCommand("showconfig", "Shows all the settings for this tracker, and their values")]
-            public async Task ShowConfig(BaseTracker tracker)
+            public async Task ShowConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker tracker)
             {
                 await FollowupAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value))}```", ephemeral: true);
             }
 
             [SlashCommand("changeconfig", "Edit the Configuration for the tracker")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task ChangeConfig(BaseTracker SteamNameOrId, string config)
+            public async Task ChangeConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker SteamNameOrId, string config)
             {
                 await ModifyConfig(this, SteamNameOrId, TrackerType.Steam, config);
             }
@@ -1054,7 +1054,7 @@ namespace MopsBot.Module
 
             [SlashCommand("untrack", "Stops keeping track of the specified Youtubers, in the Channel you are calling this command in.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task unTrackYoutube(BaseTracker channelID)
+            public async Task unTrackYoutube([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker channelID)
             {
                 if (await Trackers[BaseTracker.TrackerType.YoutubeLive].TryRemoveTrackerAsync(channelID.Name, channelID.LastCalledChannelPerGuild[Context.Guild.Id]))
                     await FollowupAsync("Stopped keeping track of " + channelID.Name + "'s streams!", ephemeral: true);
@@ -1069,7 +1069,7 @@ namespace MopsBot.Module
 
             [SlashCommand("setnotification", "Sets the notification text that is used each time a new stream goes live.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(BaseTracker channelID, string notification = "")
+            public async Task SetNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker channelID, string notification = "")
             {
                 channelID.ChannelConfig[channelID.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.YoutubeLive].UpdateDBAsync(channelID);
@@ -1077,14 +1077,14 @@ namespace MopsBot.Module
             }
 
             [SlashCommand("showconfig", "Shows all the settings for this tracker, and their values")]
-            public async Task ShowConfig(BaseTracker tracker)
+            public async Task ShowConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker tracker)
             {
                 await FollowupAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value))}```", ephemeral: true);
             }
 
             [SlashCommand("changeconfig", "Edit the Configuration for the tracker. Use showconfig to see your options.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task ChangeConfig(BaseTracker ChannelID, string config)
+            public async Task ChangeConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker ChannelID, string config)
             {
                 await ModifyConfig(this, ChannelID, BaseTracker.TrackerType.YoutubeLive, config);
             }
@@ -1123,7 +1123,7 @@ namespace MopsBot.Module
 
             [SlashCommand("untrack", "Stops keeping track of the specified TikTok channels videos.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task unTrackYoutube(BaseTracker username)
+            public async Task unTrackYoutube([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker username)
             {
                 if (await Trackers[BaseTracker.TrackerType.TikTok].TryRemoveTrackerAsync(username.Name, username.LastCalledChannelPerGuild[Context.Guild.Id]))
                     await FollowupAsync("Stopped keeping track of " + username.Name + "'s videos!", ephemeral: true);
@@ -1138,7 +1138,7 @@ namespace MopsBot.Module
 
             [SlashCommand("setnotification", "Sets the notification text that is used each time a new video gets detected.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification(BaseTracker username, string notification = "")
+            public async Task SetNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker username, string notification = "")
             {
                 username.ChannelConfig[username.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.TikTok].UpdateDBAsync(username);
@@ -1155,14 +1155,14 @@ namespace MopsBot.Module
             }
 
             [SlashCommand("showconfig", "Shows all the settings for this tracker, and their values")]
-            public async Task ShowConfig(BaseTracker username)
+            public async Task ShowConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker username)
             {
                 await FollowupAsync($"```yaml\n{string.Join("\n", username.ChannelConfig[username.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value))}```", ephemeral: true);
             }
 
             [SlashCommand("changeconfig", "Edit the Configuration for the tracker. Use showconfig to see your options.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task ChangeConfig(BaseTracker ChannelID, string config)
+            public async Task ChangeConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker ChannelID, string config)
             {
                 await ModifyConfig(this, ChannelID, BaseTracker.TrackerType.TikTok, config);
             }

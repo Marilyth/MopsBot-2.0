@@ -79,21 +79,22 @@ namespace MopsBot
 
         public async Task HandleInteraction(SocketInteraction interaction){
             // Find out command info of current interaction.
-            var commandData = (interaction as SocketSlashCommand).Data as SocketSlashCommandData;
-            string commandName = commandData.Name;
-            SocketSlashCommandDataOption lastOption = commandData.Options.FirstOrDefault(x => x.Type == ApplicationCommandOptionType.SubCommand || x.Type == ApplicationCommandOptionType.SubCommandGroup);
-            while(lastOption is not null) {
-                commandName += $" {lastOption.Name}";
-                lastOption = lastOption.Options.FirstOrDefault(x => x.Type == ApplicationCommandOptionType.SubCommand || x.Type == ApplicationCommandOptionType.SubCommandGroup);
-            }
-            
-            // If command is marked as modal, do not respond to the interaction. Modals are responses.
-            var commandInfo = slashCommands.SlashCommands.FirstOrDefault(x => x.ToString().Equals(commandName));
-            if(commandInfo is null || !commandInfo.Attributes.Any(x => x is ModalAttribute)){
-                await interaction.RespondAsync("Executing...", ephemeral: true);
+            if(interaction is SocketSlashCommand){
+                var commandData = (interaction as SocketSlashCommand).Data as SocketSlashCommandData;
+                string commandName = commandData.Name;
+                SocketSlashCommandDataOption lastOption = commandData.Options.FirstOrDefault(x => x.Type == ApplicationCommandOptionType.SubCommand || x.Type == ApplicationCommandOptionType.SubCommandGroup);
+                while(lastOption is not null) {
+                    commandName += $" {lastOption.Name}";
+                    lastOption = lastOption.Options.FirstOrDefault(x => x.Type == ApplicationCommandOptionType.SubCommand || x.Type == ApplicationCommandOptionType.SubCommandGroup);
+                }
+                
+                // If command is marked as modal, do not respond to the interaction. Modals are responses.
+                var commandInfo = slashCommands.SlashCommands.FirstOrDefault(x => x.ToString().Equals(commandName));
+                if(commandInfo is null || !commandInfo.Attributes.Any(x => x is ModalAttribute)){
+                    await interaction.RespondAsync("Executing...", ephemeral: true);
+                }
             }
 
-            var test = slashCommands.SlashCommands;
             var ctx = new ShardedInteractionContext(client, interaction);
             var command = await slashCommands.ExecuteCommandAsync(ctx, _provider);
         }
