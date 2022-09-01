@@ -74,10 +74,14 @@ namespace MopsBot.Module
             }
 
             [SlashCommand("changeconfig", "Edit the Configuration for the tracker. Use showconfig to see what options you have.")]
+            [Modal]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task ChangeConfig(BaseTracker streamerName, string config)
+            public async Task ChangeConfig(BaseTracker streamerName)
             {
-                await ModifyConfig(this, streamerName, TrackerType.Twitch, config);
+                string currentConfig = string.Join("\n", streamerName.ChannelConfig[Context.Channel.Id].Select(x => x.Key + ": " + x.Value));
+                var reply = await CommandHandler.SendAndAwaitModalAsync(Context, MopsBot.Module.Modals.ModalBuilders.GetConfigModal(currentConfig));
+
+                await ModifyConfig(this, streamerName, TrackerType.TwitchClip, reply["new_config"]);
             }
 
             [SlashCommand("changechannel", "Changes the channel of the specified tracker from #FromChannel to the current channel.")]

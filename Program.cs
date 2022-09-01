@@ -112,7 +112,7 @@ namespace MopsBot
             if (shardsReady == Client.Shards.Count)
             {
                 var map = new ServiceCollection().AddSingleton(Client)
-                                                 .AddSingleton(new InteractionService(Client, new InteractionServiceConfig() { DefaultRunMode = RunMode.Async }));
+                                                 .AddSingleton(new InteractionService(Client, new InteractionServiceConfig() { DefaultRunMode = RunMode.Async, UseCompiledLambda = true }));
                 provider = map.BuildServiceProvider();
 
                 ReactionHandler = new ReactionHandler();
