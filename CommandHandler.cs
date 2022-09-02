@@ -300,6 +300,8 @@ namespace MopsBot
                 timeoutMs -= 1000;
             }
 
+            ModalWaiters.Remove(interactionId);
+
             if(data is null)
                 throw new Exception("Modal timeout expired.");
 
