@@ -59,12 +59,17 @@ namespace MopsBot.Module
             }
 
             [SlashCommand("setnotification", "Sets the notification text that is used each time a streamer goes live.")]
+            [Modal]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker streamer, string notification = "")
+            public async Task SetNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker streamer)
             {
-                streamer.ChannelConfig[streamer.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
+                var currentNotification = (string)streamer.ChannelConfig[streamer.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"];
+                var reply = await CommandHandler.SendAndAwaitModalAsync(Context, MopsBot.Module.Modals.ModalBuilders.GetNotificationModal(currentNotification));
+
+                streamer.ChannelConfig[streamer.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = reply["new_notification"];
                 await StaticBase.Trackers[BaseTracker.TrackerType.Twitch].UpdateDBAsync(streamer);
-                await FollowupAsync($"Changed notification for `{streamer.Name}` to `{notification}`", ephemeral: true);
+
+                await FollowupAsync($"Changed notification for `{streamer.Name}` to `{reply["new_notification"]}`", ephemeral: true);
             }
 
             [SlashCommand("showconfig", "Shows all the settings for this tracker, and their values")]
@@ -81,13 +86,13 @@ namespace MopsBot.Module
                 string currentConfig = string.Join("\n", streamerName.ChannelConfig[streamerName.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value));
                 var reply = await CommandHandler.SendAndAwaitModalAsync(Context, MopsBot.Module.Modals.ModalBuilders.GetConfigModal(currentConfig));
 
-                await ModifyConfig(this, streamerName, TrackerType.TwitchClip, reply["new_config"]);
+                await ModifyConfig(this, streamerName, TrackerType.Twitch, reply["new_config"]);
             }
 
             [SlashCommand("changechannel", "Changes the channel of the specified tracker from #FromChannel to the current channel.")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
-            public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel)
+            public async Task ChangeChannel([Autocomplete(typeof(TrackerAutocompleteHandler))] string Name, SocketGuildChannel FromChannel)
             {
                 await ChangeChannelAsync(Name, FromChannel, TrackerType.Twitch, Context);
                 await FollowupAsync($"Successfully changed the channel of {Name} from {((ITextChannel)FromChannel).Mention} to {((ITextChannel)Context.Channel).Mention}", ephemeral: true);
@@ -179,16 +184,20 @@ namespace MopsBot.Module
             }
 
             [SlashCommand("changeconfig", "Edit the Configuration for the tracker. Use showconfig to see what options you have.")]
+            [Modal]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task ChangeConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker streamerName, string config)
+            public async Task ChangeConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker streamerName)
             {
-                await ModifyConfig(this, streamerName, TrackerType.TwitchClip, config);
+                string currentConfig = string.Join("\n", streamerName.ChannelConfig[streamerName.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value));
+                var reply = await CommandHandler.SendAndAwaitModalAsync(Context, MopsBot.Module.Modals.ModalBuilders.GetConfigModal(currentConfig));
+
+                await ModifyConfig(this, streamerName, TrackerType.TwitchClip, reply["new_config"]);
             }
 
             [SlashCommand("changechannel", "Changes the channel of the specified tracker from #FromChannel to the current channel")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
-            public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel)
+            public async Task ChangeChannel([Autocomplete(typeof(TrackerAutocompleteHandler))] string Name, SocketGuildChannel FromChannel)
             {
                 await ChangeChannelAsync(Name, FromChannel, TrackerType.TwitchClip, Context);
             }
@@ -269,16 +278,20 @@ namespace MopsBot.Module
             }
 
             [SlashCommand("changeconfig", "Edit the Configuration for the tracker. Use showconfig to see what options you have.")]
+            [Modal]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task ChangeConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker TwitterName, string config)
+            public async Task ChangeConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker TwitterName)
             {
-                await ModifyConfig(this, TwitterName, TrackerType.Twitter, config);
+                string currentConfig = string.Join("\n", TwitterName.ChannelConfig[TwitterName.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value));
+                var reply = await CommandHandler.SendAndAwaitModalAsync(Context, MopsBot.Module.Modals.ModalBuilders.GetConfigModal(currentConfig));
+
+                await ModifyConfig(this, TwitterName, TrackerType.Twitter, reply["new_config"]);
             }
 
             [SlashCommand("changechannel", "Changes the channel of the specified tracker from #FromChannel to the current channel")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
-            public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel)
+            public async Task ChangeChannel([Autocomplete(typeof(TrackerAutocompleteHandler))] string Name, SocketGuildChannel FromChannel)
             {
                 await ChangeChannelAsync(Name, FromChannel, TrackerType.Twitter, Context);
             }
@@ -380,16 +393,20 @@ namespace MopsBot.Module
             }
 
             [SlashCommand("changeconfig", "Edit the Configuration for the tracker. Use showconfig to see what options you have.")]
+            [Modal]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task ChangeConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker osuUser, string config)
+            public async Task ChangeConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker osuUser)
             {
-                await ModifyConfig(this, osuUser, TrackerType.Osu, config);
+                string currentConfig = string.Join("\n", osuUser.ChannelConfig[osuUser.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value));
+                var reply = await CommandHandler.SendAndAwaitModalAsync(Context, MopsBot.Module.Modals.ModalBuilders.GetConfigModal(currentConfig));
+
+                await ModifyConfig(this, osuUser, TrackerType.Osu, reply["new_config"]);
             }
 
             [SlashCommand("changechannel", "Changes the channel of the specified tracker from #FromChannel to the current channel")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
-            public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel)
+            public async Task ChangeChannel([Autocomplete(typeof(TrackerAutocompleteHandler))] string Name, SocketGuildChannel FromChannel)
             {
                 await ChangeChannelAsync(Name, FromChannel, TrackerType.Osu, Context);
             }
@@ -446,15 +463,19 @@ namespace MopsBot.Module
             }
 
             [SlashCommand("changeconfig", "Edit the Configuration for the tracker. Use showconfig to see what options you have.")]
+            [Modal]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task ChangeConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker channelID, string config)
+            public async Task ChangeConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker channelID)
             {
-                await ModifyConfig(this, channelID, TrackerType.Youtube, config);
+                string currentConfig = string.Join("\n", channelID.ChannelConfig[channelID.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value));
+                var reply = await CommandHandler.SendAndAwaitModalAsync(Context, MopsBot.Module.Modals.ModalBuilders.GetConfigModal(currentConfig));
+
+                await ModifyConfig(this, channelID, TrackerType.Youtube, reply["new_config"]);
             }
 
             [SlashCommand("changechannel", "Changes the channel of the specified tracker from #FromChannel to the current channel")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel)
+            public async Task ChangeChannel([Autocomplete(typeof(TrackerAutocompleteHandler))] string Name, SocketGuildChannel FromChannel)
             {
                 await ChangeChannelAsync(Name, FromChannel, TrackerType.Youtube, Context);
             }
@@ -536,7 +557,7 @@ namespace MopsBot.Module
             [SlashCommand("changechannel", "Changes the channel of the specified tracker from #FromChannel to the current channel")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
-            public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel)
+            public async Task ChangeChannel([Autocomplete(typeof(TrackerAutocompleteHandler))] string Name, SocketGuildChannel FromChannel)
             {
                 await ChangeChannelAsync(Name, FromChannel, TrackerType.Reddit, Context);
             }
@@ -652,7 +673,7 @@ namespace MopsBot.Module
             [SlashCommand("changechannel", "Changes the channel of the specified tracker from #FromChannel to the current channel")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
-            public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel)
+            public async Task ChangeChannel([Autocomplete(typeof(TrackerAutocompleteHandler))] string Name, SocketGuildChannel FromChannel)
             {
                 await ChangeChannelAsync(Name, FromChannel, TrackerType.JSON, Context);
             }
@@ -728,16 +749,20 @@ namespace MopsBot.Module
             }
 
             [SlashCommand("changeconfig", "Edit the Configuration for the tracker. Use showconfig to see your options.")]
+            [Modal]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task ChangeConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker name, string config)
+            public async Task ChangeConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker name)
             {
-                await ModifyConfig(this, name, TrackerType.OSRS, config);
+                string currentConfig = string.Join("\n", name.ChannelConfig[name.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value));
+                var reply = await CommandHandler.SendAndAwaitModalAsync(Context, MopsBot.Module.Modals.ModalBuilders.GetConfigModal(currentConfig));
+
+                await ModifyConfig(this, name, TrackerType.OSRS, reply["new_config"]);
             }
 
             [SlashCommand("changechannel", "Changes the channel of the specified tracker from #FromChannel to the current channel")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
-            public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel)
+            public async Task ChangeChannel([Autocomplete(typeof(TrackerAutocompleteHandler))] string Name, SocketGuildChannel FromChannel)
             {
                 await ChangeChannelAsync(Name, FromChannel, TrackerType.OSRS, Context);
             }
@@ -943,16 +968,20 @@ namespace MopsBot.Module
             }
 
             [SlashCommand("changeconfig", "Edit the Configuration for the tracker. Use showconfig to see your options.")]
+            [Modal]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task ChangeConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker url, string config)
+            public async Task ChangeConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker url)
             {
-                await ModifyConfig(this, url, TrackerType.RSS, config);
+                string currentConfig = string.Join("\n", url.ChannelConfig[url.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value));
+                var reply = await CommandHandler.SendAndAwaitModalAsync(Context, MopsBot.Module.Modals.ModalBuilders.GetConfigModal(currentConfig));
+
+                await ModifyConfig(this, url, TrackerType.RSS, reply["new_config"]);
             }
 
             [SlashCommand("changechannel", "Changes the channel of the specified tracker from #FromChannel to the current channel")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
-            public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel)
+            public async Task ChangeChannel([Autocomplete(typeof(TrackerAutocompleteHandler))] string Name, SocketGuildChannel FromChannel)
             {
                 await ChangeChannelAsync(Name, FromChannel, TrackerType.RSS, Context);
             }
@@ -1013,16 +1042,20 @@ namespace MopsBot.Module
             }
 
             [SlashCommand("changeconfig", "Edit the Configuration for the tracker")]
+            [Modal]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task ChangeConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker SteamNameOrId, string config)
+            public async Task ChangeConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker SteamNameOrId)
             {
-                await ModifyConfig(this, SteamNameOrId, TrackerType.Steam, config);
+                string currentConfig = string.Join("\n", SteamNameOrId.ChannelConfig[SteamNameOrId.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value));
+                var reply = await CommandHandler.SendAndAwaitModalAsync(Context, MopsBot.Module.Modals.ModalBuilders.GetConfigModal(currentConfig));
+
+                await ModifyConfig(this, SteamNameOrId, TrackerType.Steam, reply["new_config"]);
             }
 
             [SlashCommand("changechannel", "Changes the channel of the specified tracker from #FromChannel to the current channel")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
-            public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel)
+            public async Task ChangeChannel([Autocomplete(typeof(TrackerAutocompleteHandler))] string Name, SocketGuildChannel FromChannel)
             {
                 await ChangeChannelAsync(Name, FromChannel, TrackerType.Steam, Context);
             }
@@ -1083,16 +1116,20 @@ namespace MopsBot.Module
             }
 
             [SlashCommand("changeconfig", "Edit the Configuration for the tracker. Use showconfig to see your options.")]
+            [Modal]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task ChangeConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker ChannelID, string config)
+            public async Task ChangeConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker ChannelID)
             {
-                await ModifyConfig(this, ChannelID, BaseTracker.TrackerType.YoutubeLive, config);
+                string currentConfig = string.Join("\n", ChannelID.ChannelConfig[ChannelID.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value));
+                var reply = await CommandHandler.SendAndAwaitModalAsync(Context, MopsBot.Module.Modals.ModalBuilders.GetConfigModal(currentConfig));
+
+                await ModifyConfig(this, ChannelID, TrackerType.YoutubeLive, reply["new_config"]);
             }
 
             [SlashCommand("changechannel", "Changes the channel of the specified tracker from #FromChannel to the current channel")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
-            public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel){
+            public async Task ChangeChannel([Autocomplete(typeof(TrackerAutocompleteHandler))] string Name, SocketGuildChannel FromChannel){
                 await ChangeChannelAsync(Name, FromChannel, TrackerType.YoutubeLive, Context);
             }
         }
@@ -1161,16 +1198,20 @@ namespace MopsBot.Module
             }
 
             [SlashCommand("changeconfig", "Edit the Configuration for the tracker. Use showconfig to see your options.")]
+            [Modal]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task ChangeConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker ChannelID, string config)
+            public async Task ChangeConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker ChannelID)
             {
-                await ModifyConfig(this, ChannelID, BaseTracker.TrackerType.TikTok, config);
+                string currentConfig = string.Join("\n", ChannelID.ChannelConfig[ChannelID.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value));
+                var reply = await CommandHandler.SendAndAwaitModalAsync(Context, MopsBot.Module.Modals.ModalBuilders.GetConfigModal(currentConfig));
+
+                await ModifyConfig(this, ChannelID, TrackerType.TikTok, reply["new_config"]);
             }
 
             [SlashCommand("changechannel", "Changes the channel of the specified tracker from #FromChannel to the current channel")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
-            public async Task ChangeChannel(string Name, SocketGuildChannel FromChannel){
+            public async Task ChangeChannel([Autocomplete(typeof(TrackerAutocompleteHandler))] string Name, SocketGuildChannel FromChannel){
                 await ChangeChannelAsync(Name, FromChannel, TrackerType.TikTok, Context);
             }
         }

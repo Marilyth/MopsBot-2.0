@@ -15,5 +15,11 @@ namespace MopsBot.Module.Modals
             builder.AddTextInput("New config", "new_config", TextInputStyle.Paragraph, "The new config to be used", required: true, value: initialConfig);
             return builder.Build();
         }
+
+        public static Modal GetNotificationModal(string initialNotification){
+            var builder = new ModalBuilder().WithTitle("Change notification").WithCustomId("notification");
+            builder.AddTextInput("New notification", "new_notification", TextInputStyle.Paragraph, "The new notification to be used", required: true, value: initialNotification);
+            return builder.Build();
+        }
     }
 }
