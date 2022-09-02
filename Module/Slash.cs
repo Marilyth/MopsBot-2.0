@@ -64,12 +64,12 @@ namespace MopsBot.Module
             public async Task SetNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker streamer)
             {
                 var currentNotification = (string)streamer.ChannelConfig[streamer.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"];
-                var reply = await CommandHandler.SendAndAwaitModalAsync(Context, MopsBot.Module.Modals.ModalBuilders.GetNotificationModal(currentNotification));
+                string notification = (await CommandHandler.SendAndAwaitModalAsync(Context, MopsBot.Module.Modals.ModalBuilders.GetNotificationModal(currentNotification)))["new_notification"];
 
-                streamer.ChannelConfig[streamer.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = reply["new_notification"];
+                streamer.ChannelConfig[streamer.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.Twitch].UpdateDBAsync(streamer);
 
-                await FollowupAsync($"Changed notification for `{streamer.Name}` to `{reply["new_notification"]}`", ephemeral: true);
+                await FollowupAsync($"Changed notification for `{streamer.Name}` to `{notification}`", ephemeral: true);
             }
 
             [SlashCommand("showconfig", "Shows all the settings for this tracker, and their values")]
@@ -158,9 +158,13 @@ namespace MopsBot.Module
             }
 
             [SlashCommand("setnotification", "Sets the notification text that is used each time a new clip is found.")]
+            [Modal]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker streamer, string notification = "")
+            public async Task SetNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker streamer)
             {
+                var currentNotification = (string)streamer.ChannelConfig[streamer.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"];
+                string notification = (await CommandHandler.SendAndAwaitModalAsync(Context, MopsBot.Module.Modals.ModalBuilders.GetNotificationModal(currentNotification)))["new_notification"];
+
                 streamer.ChannelConfig[streamer.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.TwitchClip].UpdateDBAsync(streamer);
                 await FollowupAsync($"Changed notification for `{streamer.Name}` to `{notification}`", ephemeral: true);
@@ -241,18 +245,26 @@ namespace MopsBot.Module
             }
 
             [SlashCommand("setnotification", "Sets the notification text that is used each time a new Main-Tweet is found.")]
+            [Modal]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker TwitterName, string notification = "")
+            public async Task SetNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker TwitterName)
             {
+                var currentNotification = (string)TwitterName.ChannelConfig[TwitterName.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"];
+                string notification = (await CommandHandler.SendAndAwaitModalAsync(Context, MopsBot.Module.Modals.ModalBuilders.GetNotificationModal(currentNotification)))["new_notification"];
+
                 TwitterName.GetLastCalledConfig(Context.Guild.Id)["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.Twitter].UpdateDBAsync(TwitterName);
                 await FollowupAsync($"Set notification for main tweets, for `{TwitterName.Name}`, to {notification}!", ephemeral: true);
             }
 
             [SlashCommand("setnonmainnotification", "Sets the notification text that is used each time a new retweet or reply is found.")]
+            [Modal]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNonMainNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker TwitterName, string notification = "")
+            public async Task SetNonMainNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker TwitterName)
             {
+                var currentNotification = (string)TwitterName.ChannelConfig[TwitterName.LastCalledChannelPerGuild[Context.Guild.Id]][TwitterTracker.REPLYNOTIFICATION];
+                string notification = (await CommandHandler.SendAndAwaitModalAsync(Context, MopsBot.Module.Modals.ModalBuilders.GetNotificationModal(currentNotification)))["new_notification"];
+
                 var config = TwitterName.GetLastCalledConfig(Context.Guild.Id);
                 config[TwitterTracker.REPLYNOTIFICATION] = notification;
                 config[TwitterTracker.RETWEETNOTIFICATION] = notification;
@@ -378,9 +390,13 @@ namespace MopsBot.Module
             }
 
             [SlashCommand("setnotification", "Sets the notification text that is used each time a player gained pp.")]
+            [Modal]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker osuUser, string notification = "")
+            public async Task SetNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker osuUser)
             {
+                var currentNotification = (string)osuUser.ChannelConfig[osuUser.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"];
+                string notification = (await CommandHandler.SendAndAwaitModalAsync(Context, MopsBot.Module.Modals.ModalBuilders.GetNotificationModal(currentNotification)))["new_notification"];
+
                 osuUser.ChannelConfig[osuUser.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.Osu].UpdateDBAsync(osuUser);
                 await FollowupAsync($"Changed notification for `{osuUser.Name}` to `{notification}`", ephemeral: true);
@@ -448,9 +464,13 @@ namespace MopsBot.Module
             }
 
             [SlashCommand("setnotification", "Sets the notification text that is used each time a new video appears.")]
+            [Modal]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker channelID,  string notification = "")
+            public async Task SetNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker channelID)
             {
+                var currentNotification = (string)channelID.ChannelConfig[channelID.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"];
+                string notification = (await CommandHandler.SendAndAwaitModalAsync(Context, MopsBot.Module.Modals.ModalBuilders.GetNotificationModal(currentNotification)))["new_notification"];
+
                 channelID.ChannelConfig[channelID.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.Youtube].UpdateDBAsync(channelID);
                 await FollowupAsync($"Changed notification for `{channelID.Name}` to `{notification}`", ephemeral: true);
@@ -525,9 +545,13 @@ namespace MopsBot.Module
             }
 
             [SlashCommand("setnotification", "Sets the notification text that is used each time a new post was found.")]
+            [Modal]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker subreddit, string notification = "")
+            public async Task SetNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker subreddit)
             {
+                var currentNotification = (string)subreddit.ChannelConfig[subreddit.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"];
+                string notification = (await CommandHandler.SendAndAwaitModalAsync(Context, MopsBot.Module.Modals.ModalBuilders.GetNotificationModal(currentNotification)))["new_notification"];
+
                 if (await StaticBase.Trackers[BaseTracker.TrackerType.Reddit].TrySetNotificationAsync(subreddit.Name, subreddit.LastCalledChannelPerGuild[Context.Guild.Id], notification))
                 {
                     await FollowupAsync($"Changed notification for `{subreddit.Name}` to `{notification}`", ephemeral: true);
@@ -612,9 +636,13 @@ namespace MopsBot.Module
             }
 
             [SlashCommand("setnotification", "Sets the notification text that is used each time a change in the json was found.")]
+            [Modal]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker jsonSource, string notification = "")
+            public async Task SetNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker jsonSource)
             {
+                var currentNotification = (string)jsonSource.ChannelConfig[jsonSource.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"];
+                string notification = (await CommandHandler.SendAndAwaitModalAsync(Context, MopsBot.Module.Modals.ModalBuilders.GetNotificationModal(currentNotification)))["new_notification"];
+
                 jsonSource.ChannelConfig[jsonSource.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.JSON].UpdateDBAsync(jsonSource);
                 await FollowupAsync($"Changed notification for `{jsonSource.Name}` to `{notification}`", ephemeral: true);
@@ -734,9 +762,13 @@ namespace MopsBot.Module
             }
 
             [SlashCommand("setnotification", "Sets the notification text that is used each time a level up takes place.")]
+            [Modal]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker name, string notification = "")
+            public async Task SetNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker name)
             {
+                var currentNotification = (string)name.ChannelConfig[name.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"];
+                string notification = (await CommandHandler.SendAndAwaitModalAsync(Context, MopsBot.Module.Modals.ModalBuilders.GetNotificationModal(currentNotification)))["new_notification"];
+
                 name.ChannelConfig[name.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.OSRS].UpdateDBAsync(name);
                 await FollowupAsync($"Changed notification for `{name.Name}` to `{notification}`", ephemeral: true);
@@ -945,9 +977,13 @@ namespace MopsBot.Module
             }
 
             [SlashCommand("setnotification", "Sets the notification text that is used each time a new post was found.")]
+            [Modal]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker url, string notification = "")
+            public async Task SetNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker url)
             {
+                var currentNotification = (string)url.ChannelConfig[url.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"];
+                string notification = (await CommandHandler.SendAndAwaitModalAsync(Context, MopsBot.Module.Modals.ModalBuilders.GetNotificationModal(currentNotification)))["new_notification"];
+
                 url.ChannelConfig[url.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.RSS].UpdateDBAsync(url);
                 await FollowupAsync($"Changed notification for `{url.Name}` to `{notification}`", ephemeral: true);
@@ -1027,9 +1063,13 @@ namespace MopsBot.Module
             }
 
             [SlashCommand("setnotification", "Sets the notification text that is used each time a new achievement was achieved.")]
+            [Modal]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker SteamNameOrId, string notification = "")
+            public async Task SetNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker SteamNameOrId)
             {
+                var currentNotification = (string)SteamNameOrId.ChannelConfig[SteamNameOrId.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"];
+                string notification = (await CommandHandler.SendAndAwaitModalAsync(Context, MopsBot.Module.Modals.ModalBuilders.GetNotificationModal(currentNotification)))["new_notification"];
+
                 SteamNameOrId.ChannelConfig[SteamNameOrId.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.Steam].UpdateDBAsync(SteamNameOrId);
                 await FollowupAsync($"Changed notification for `{SteamNameOrId.Name}` to `{notification}`", ephemeral: true);
@@ -1101,9 +1141,13 @@ namespace MopsBot.Module
             }
 
             [SlashCommand("setnotification", "Sets the notification text that is used each time a new stream goes live.")]
+            [Modal]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker channelID, string notification = "")
+            public async Task SetNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker channelID)
             {
+                var currentNotification = (string)channelID.ChannelConfig[channelID.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"];
+                string notification = (await CommandHandler.SendAndAwaitModalAsync(Context, MopsBot.Module.Modals.ModalBuilders.GetNotificationModal(currentNotification)))["new_notification"];
+
                 channelID.ChannelConfig[channelID.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.YoutubeLive].UpdateDBAsync(channelID);
                 await FollowupAsync($"Changed notification for `{channelID.Name}` to `{notification}`", ephemeral: true);
@@ -1174,9 +1218,13 @@ namespace MopsBot.Module
             }
 
             [SlashCommand("setnotification", "Sets the notification text that is used each time a new video gets detected.")]
+            [Modal]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task SetNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker username, string notification = "")
+            public async Task SetNotification([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker username)
             {
+                var currentNotification = (string)username.ChannelConfig[username.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"];
+                string notification = (await CommandHandler.SendAndAwaitModalAsync(Context, MopsBot.Module.Modals.ModalBuilders.GetNotificationModal(currentNotification)))["new_notification"];
+
                 username.ChannelConfig[username.LastCalledChannelPerGuild[Context.Guild.Id]]["Notification"] = notification;
                 await StaticBase.Trackers[BaseTracker.TrackerType.TikTok].UpdateDBAsync(username);
                 await FollowupAsync($"Changed notification for `{username.Name}` to `{notification}`", ephemeral: true);
