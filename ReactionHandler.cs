@@ -49,17 +49,17 @@ namespace MopsBot
         /// <param name="channel"></param>
         /// <param name="reaction"></param>
         /// <returns></returns>
-        private async Task Client_ReactionAdded(Cacheable<IUserMessage, ulong> messageCache, ISocketMessageChannel channel, SocketReaction reaction)
+        private async Task Client_ReactionAdded(Cacheable<IUserMessage, ulong> messageCache, Cacheable<IMessageChannel, ulong> channel, SocketReaction reaction)
         {
-            await HandleReaction(messageCache, channel, reaction, false);
+            await HandleReaction(messageCache, await channel.GetOrDownloadAsync(), reaction, false);
         }
 
-        private async Task Client_ReactionRemoved(Cacheable<IUserMessage, ulong> messageCache, ISocketMessageChannel channel, SocketReaction reaction)
+        private async Task Client_ReactionRemoved(Cacheable<IUserMessage, ulong> messageCache, Cacheable<IMessageChannel, ulong> channel, SocketReaction reaction)
         {
-            await HandleReaction(messageCache, channel, reaction, true);
+            await HandleReaction(messageCache, await channel.GetOrDownloadAsync(), reaction, true);
         }
 
-        public async Task HandleReaction(Cacheable<IUserMessage, ulong> messageCache, ISocketMessageChannel channel, SocketReaction reaction, bool wasRemoved)
+        public async Task HandleReaction(Cacheable<IUserMessage, ulong> messageCache, IMessageChannel channel, SocketReaction reaction, bool wasRemoved)
         {
             Task.Run(() =>
             {
@@ -72,7 +72,7 @@ namespace MopsBot
 
                         IUserMessage message = messageCache.GetOrDownloadAsync().Result;
                         ReactionHandlerContext context = new ReactionHandlerContext();
-                        context.Channel = channel;
+                        context.Channel = channel as ISocketMessageChannel;
                         context.MessageCache = messageCache;
                         context.Emote = reaction.Emote;
                         context.Reaction = reaction;

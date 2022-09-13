@@ -181,8 +181,8 @@ namespace MopsBot
                     //Program.MopsLog(new LogMessage(LogSeverity.Info, "React init", $"Janitors started")).Wait();
                     //WelcomeMessages = Database.GetCollection<Data.Entities.WelcomeMessage>("WelcomeMessages").FindSync(x => true).ToEnumerable().ToDictionary(x => x.GuildId);
                     //Program.MopsLog(new LogMessage(LogSeverity.Info, "React init", $"Welcome messages loaded")).Wait();
-                    ReactRoleJoin = new ReactionRoleJoin();
-                    Program.MopsLog(new LogMessage(LogSeverity.Info, "React init", $"React role joins loaded")).Wait();
+                    //ReactRoleJoin = new ReactionRoleJoin();
+                    //Program.MopsLog(new LogMessage(LogSeverity.Info, "React init", $"React role joins loaded")).Wait();
                     //ReactGiveaways = new ReactionGiveaway();
                     //Program.MopsLog(new LogMessage(LogSeverity.Info, "React init", $"React giveaways loaded")).Wait();
                     //Poll = new ReactionPoll();

@@ -10,7 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Discord;
 using Discord.WebSocket;
 using Newtonsoft.Json;
-using Discord.Addons.Interactive;
+using Discord.Interactions;
 using System.Security.Cryptography;
 using System.Runtime.InteropServices;
 
@@ -66,8 +66,9 @@ namespace MopsBot
                     await Task.Delay(5000);
                 } while(StaticBase.GetMopsRAM() > 2200);
             }
-
-            await StartTunnelAsync();
+            
+            await Task.Delay(-1);
+            //await StartTunnelAsync();
         }
 
         public static async Task ClientLog(LogMessage msg)
@@ -111,7 +112,7 @@ namespace MopsBot
             if (shardsReady == Client.Shards.Count)
             {
                 var map = new ServiceCollection().AddSingleton(Client)
-                                                 .AddSingleton(new InteractiveService(Client));
+                                                 .AddSingleton(new InteractionService(Client, new InteractionServiceConfig() { DefaultRunMode = RunMode.Async, UseCompiledLambda = true }));
                 provider = map.BuildServiceProvider();
 
                 ReactionHandler = new ReactionHandler();

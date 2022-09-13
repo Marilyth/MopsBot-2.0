@@ -13,13 +13,12 @@ using static MopsBot.StaticBase;
 using MopsBot.Data.Tracker;
 using MopsBot.Data;
 using MopsBot.Data.Entities;
-using Discord.Addons.Interactive;
 using static MopsBot.Data.Tracker.BaseTracker;
 using MopsBot.Module.Preconditions;
 
 namespace MopsBot.Module
 {
-    public class Tracking : InteractiveBase<ShardedCommandContext>
+    public class Tracking : ModuleBase<ShardedCommandContext>
     {
         public static readonly Dictionary<string, (string, string)> Names = new Dictionary<string, (string, string)>{
             {"Twitter", ("Twitter username, without the @ in the beginning!", "https://cdn.discordapp.com/attachments/158166244493623296/681834842240974867/unknown.png")},
@@ -36,9 +35,9 @@ namespace MopsBot.Module
             {"Steam", ("steam-id64 of the user (you can find it here https://steamidfinder.com/ )", "https://cdn.discordapp.com/attachments/158166244493623296/681856888874598465/unknown.png")},
             {"TikTok", ("TikTok username", "https://cdn.discordapp.com/attachments/158166244493623296/870925608367063040/unknown.png")},
         };
-
+        /*
         [Command("Setup", RunMode = RunMode.Async)]
-        [Hide]
+        [HideHelp]
         [Summary("Helps the user set up the tracker they want.")]
         [RequireUserPermission(ChannelPermission.ManageChannels)]
         [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
@@ -95,11 +94,11 @@ namespace MopsBot.Module
             }
 
             await ReplyAsync($"And we are all done!");
-        }
+        } */
 
         [Group("Twitter")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public class Twitter : InteractiveBase<ShardedCommandContext>
+        public class Twitter : ModuleBase<ShardedCommandContext>
         {
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified TwitterUser, in the Channel you are calling this command in.")]
@@ -171,7 +170,7 @@ namespace MopsBot.Module
             }
 
             [Command("ShowConfig")]
-            [Hide]
+            [HideHelp]
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig(BaseTracker tracker)
             {
@@ -181,9 +180,9 @@ namespace MopsBot.Module
             [Command("ChangeConfig", RunMode = RunMode.Async)]
             [Summary("Edit the Configuration for the tracker")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task ChangeConfig(BaseTracker TwitterName)
+            public async Task ChangeConfig(BaseTracker TwitterName, [Remainder]string config)
             {
-                await ModifyConfig(this, TwitterName, TrackerType.Twitter);
+                await ModifyConfig(this, TwitterName, TrackerType.Twitter, config);
             }
 
             [Command("ChangeChannel", RunMode = RunMode.Async)]
@@ -196,7 +195,7 @@ namespace MopsBot.Module
             }
 
             [Command("Prune")]
-            [Hide]
+            [HideHelp]
             [RequireBotManage]
             public async Task PruneTrackers(int failThreshold, bool testing = true)
             {
@@ -227,7 +226,7 @@ namespace MopsBot.Module
 
         [Group("Osu")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public class Osu : InteractiveBase<ShardedCommandContext>
+        public class Osu : ModuleBase<ShardedCommandContext>
         {
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified Osu player, in the Channel you are calling this command in.")]
@@ -290,7 +289,7 @@ namespace MopsBot.Module
             }
 
             [Command("ShowConfig")]
-            [Hide]
+            [HideHelp]
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig(BaseTracker tracker)
             {
@@ -300,9 +299,9 @@ namespace MopsBot.Module
             [Command("ChangeConfig", RunMode = RunMode.Async)]
             [Summary("Edit the Configuration for the tracker")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task ChangeConfig(BaseTracker osuUser)
+            public async Task ChangeConfig(BaseTracker osuUser, [Remainder]string config)
             {
-                await ModifyConfig(this, osuUser, TrackerType.Osu);
+                await ModifyConfig(this, osuUser, TrackerType.Osu, config);
             }
 
             [Command("ChangeChannel", RunMode = RunMode.Async)]
@@ -317,7 +316,7 @@ namespace MopsBot.Module
 
         [Group("Youtube")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public class Youtube : InteractiveBase<ShardedCommandContext>
+        public class Youtube : ModuleBase<ShardedCommandContext>
         {
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified Youtuber, in the Channel you are calling this command in.\nYoutubes Terms of Service and Googles privacy policy apply:\nhttps://www.youtube.com/t/terms \nhttp://www.google.com/policies/privacy")]
@@ -362,7 +361,7 @@ namespace MopsBot.Module
             }
 
             [Command("ShowConfig")]
-            [Hide]
+            [HideHelp]
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig(BaseTracker tracker)
             {
@@ -372,9 +371,9 @@ namespace MopsBot.Module
             [Command("ChangeConfig", RunMode = RunMode.Async)]
             [Summary("Edit the Configuration for the tracker")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task ChangeConfig(BaseTracker channelID)
+            public async Task ChangeConfig(BaseTracker channelID, [Remainder]string config)
             {
-                await ModifyConfig(this, channelID, TrackerType.Youtube);
+                await ModifyConfig(this, channelID, TrackerType.Youtube, config);
             }
 
             [Command("ChangeChannel", RunMode = RunMode.Async)]
@@ -388,7 +387,7 @@ namespace MopsBot.Module
 
         [Group("Twitch")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public class Twitch : InteractiveBase<ShardedCommandContext>
+        public class Twitch : ModuleBase<ShardedCommandContext>
         {
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified Streamer, in the Channel you are calling this command in.")]
@@ -437,7 +436,7 @@ namespace MopsBot.Module
             }
 
             [Command("ShowConfig")]
-            [Hide]
+            [HideHelp]
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig(BaseTracker tracker)
             {
@@ -447,9 +446,9 @@ namespace MopsBot.Module
             [Command("ChangeConfig", RunMode = RunMode.Async)]
             [Summary("Edit the Configuration for the tracker")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task ChangeConfig(BaseTracker streamerName)
+            public async Task ChangeConfig(BaseTracker streamerName, [Remainder]string config)
             {
-                await ModifyConfig(this, streamerName, TrackerType.Twitch);
+                await ModifyConfig(this, streamerName, TrackerType.Twitch, config);
             }
 
             [Command("ChangeChannel", RunMode = RunMode.Async)]
@@ -485,7 +484,7 @@ namespace MopsBot.Module
             }
 
             [Group("Guild")]
-            public class Guild : InteractiveBase<ShardedCommandContext>
+            public class Guild : ModuleBase<ShardedCommandContext>
             {
 
                 [Command("SetHostNotificationChannel")]
@@ -635,7 +634,7 @@ namespace MopsBot.Module
 
         [Group("TwitchClip")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public class TwitchClip : InteractiveBase<ShardedCommandContext>
+        public class TwitchClip : ModuleBase<ShardedCommandContext>
         {
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified streamer's top clips every 30 minutes, in the Channel you are calling this command in.")]
@@ -694,7 +693,7 @@ namespace MopsBot.Module
             }
 
             [Command("ShowConfig")]
-            [Hide]
+            [HideHelp]
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig(BaseTracker tracker)
             {
@@ -704,9 +703,9 @@ namespace MopsBot.Module
             [Command("ChangeConfig", RunMode = RunMode.Async)]
             [Summary("Edit the Configuration for the tracker")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task ChangeConfig(BaseTracker streamerName)
+            public async Task ChangeConfig(BaseTracker streamerName, [Remainder]string config)
             {
-                await ModifyConfig(this, streamerName, TrackerType.TwitchClip);
+                await ModifyConfig(this, streamerName, TrackerType.TwitchClip, config);
             }
 
             [Command("ChangeChannel", RunMode = RunMode.Async)]
@@ -721,7 +720,7 @@ namespace MopsBot.Module
 
         [Group("Reddit")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public class Reddit : InteractiveBase<ShardedCommandContext>
+        public class Reddit : ModuleBase<ShardedCommandContext>
         {
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified Subreddit, in the Channel you are calling this command in."
@@ -790,20 +789,20 @@ namespace MopsBot.Module
             }
 
             [Command("ShowConfig")]
-            [Hide]
+            [HideHelp]
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig([Remainder] BaseTracker tracker)
             {
                 await ReplyAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value))}```");
             }
 
-            [Command("ChangeConfig", RunMode = RunMode.Async)]
+            /*[Command("ChangeConfig", RunMode = RunMode.Async)]
             [Summary("Edit the Configuration for the tracker")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task ChangeConfig([Remainder] BaseTracker subreddit)
             {
                 await ModifyConfig(this, subreddit, TrackerType.Reddit);
-            }
+            }*/
 
             [Command("ChangeChannel", RunMode = RunMode.Async)]
             [Summary("Changes the channel of the specified tracker from #FromChannel to the current channel")]
@@ -817,7 +816,7 @@ namespace MopsBot.Module
 
         [Group("Overwatch")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public class Overwatch : InteractiveBase<ShardedCommandContext>
+        public class Overwatch : ModuleBase<ShardedCommandContext>
         {
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified Overwatch player, in the Channel you are calling this command right now.\nParameter: Username-Battletag")]
@@ -871,7 +870,7 @@ namespace MopsBot.Module
             }
 
             [Command("ShowConfig")]
-            [Hide]
+            [HideHelp]
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig(BaseTracker tracker)
             {
@@ -881,9 +880,9 @@ namespace MopsBot.Module
             [Command("ChangeConfig", RunMode = RunMode.Async)]
             [Summary("Edit the Configuration for the tracker")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task ChangeConfig(BaseTracker owUser)
+            public async Task ChangeConfig(BaseTracker owUser, [Remainder]string config)
             {
-                await ModifyConfig(this, owUser, TrackerType.Overwatch);
+                await ModifyConfig(this, owUser, TrackerType.Overwatch, config);
             }
 
             [Command("ChangeChannel", RunMode = RunMode.Async)]
@@ -898,7 +897,7 @@ namespace MopsBot.Module
 
         [Group("JSON")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public class JSON : InteractiveBase<ShardedCommandContext>
+        public class JSON : ModuleBase<ShardedCommandContext>
         {
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the Json, using the specified locations.\n" +
@@ -918,7 +917,7 @@ namespace MopsBot.Module
             }
 
             [Command("TrackExtended", RunMode = RunMode.Async)]
-            [Hide]
+            [HideHelp]
             [Summary("Keeps track of the Json, as a POST request with body, using the specified locations.\n" +
                      "graph:<location> adds the numeric value to a time/value graph\n" +
                      "always:<location> adds the value to the embed, regardless of whether it changed or not.")]
@@ -985,7 +984,7 @@ namespace MopsBot.Module
             }
 
             [Command("CheckExtended", RunMode = RunMode.Async)]
-            [Hide]
+            [HideHelp]
             [Summary("Checks the json for the specified paths, and returns the values")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task CheckExtended(string Url, string body, [Remainder] string paths)
@@ -1009,20 +1008,20 @@ namespace MopsBot.Module
             }
 
             [Command("ShowConfig")]
-            [Hide]
+            [HideHelp]
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig(BaseTracker tracker)
             {
                 await ReplyAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value))}```");
             }
 
-            [Command("ChangeConfig", RunMode = RunMode.Async)]
+            /*[Command("ChangeConfig", RunMode = RunMode.Async)]
             [Summary("Edit the Configuration for the tracker")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task ChangeConfig([Remainder] BaseTracker jsonSource)
             {
                 await ModifyConfig(this, jsonSource, TrackerType.JSON);
-            }
+            }*/
 
             [Command("ChangeChannel", RunMode = RunMode.Async)]
             [Summary("Changes the channel of the specified tracker from #FromChannel to the current channel")]
@@ -1036,7 +1035,7 @@ namespace MopsBot.Module
 
         [Group("OSRS")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public class OSRS : InteractiveBase<ShardedCommandContext>
+        public class OSRS : ModuleBase<ShardedCommandContext>
         {
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the stats of the OSRS player.")]
@@ -1103,7 +1102,7 @@ namespace MopsBot.Module
             }
 
             [Command("ShowConfig")]
-            [Hide]
+            [HideHelp]
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig(BaseTracker tracker)
             {
@@ -1113,9 +1112,9 @@ namespace MopsBot.Module
             [Command("ChangeConfig", RunMode = RunMode.Async)]
             [Summary("Edit the Configuration for the tracker")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task ChangeConfig(BaseTracker name)
+            public async Task ChangeConfig(BaseTracker name, [Remainder]string config)
             {
-                await ModifyConfig(this, name, TrackerType.OSRS);
+                await ModifyConfig(this, name, TrackerType.OSRS, config);
             }
 
             [Command("ChangeChannel", RunMode = RunMode.Async)]
@@ -1133,7 +1132,7 @@ namespace MopsBot.Module
         [RequireBotPermission(ChannelPermission.SendMessages)]
         [RequireBotPermission(ChannelPermission.EmbedLinks)]
         [Ratelimit(1, 60, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
-        public class HTML : InteractiveBase<ShardedCommandContext>
+        public class HTML : ModuleBase<ShardedCommandContext>
         {
             [Command("TrackRegex", RunMode = RunMode.Async)]
             [Summary("Tracks regex on a webpage. Use () around the text you want to track to signify a match.")]
@@ -1147,6 +1146,7 @@ namespace MopsBot.Module
                 }
             }
 
+            /*
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Tracks plain text on a webpage, and notifies whenever that text changes.\nThis command will guide you through the process.")]
             [TrackerLimit(TrackerType.HTML)]
@@ -1194,7 +1194,7 @@ namespace MopsBot.Module
                         await TrackRegex(website, scrapeRegex);
                     }
                 }
-            }
+            }*/
 
             [Command("TestRegex", RunMode = RunMode.Async)]
             [Summary("Tests the regex and returns it's value. Handy if you want to check your regex before tracking with it!")]
@@ -1206,6 +1206,7 @@ namespace MopsBot.Module
                 }
             }
 
+            /*
             [Command("UnTrack", RunMode = RunMode.Async)]
             [Summary("Creates a paginator of all trackers, out of which you have to choose one.")]
             public async Task UnTrack()
@@ -1220,7 +1221,7 @@ namespace MopsBot.Module
                     if (await Trackers[BaseTracker.TrackerType.HTML].TryRemoveTrackerAsync(trackers[page].Name, Context.Channel.Id))
                         await ReplyAsync($"Stopped keeping track of result {page + 1} of paginator!");
                 }
-            }
+            }*/
 
             [Command("UnTrackAll")]
             [Summary("Untracks all trackers in the current channel.")]
@@ -1233,6 +1234,7 @@ namespace MopsBot.Module
                 }
             }
 
+            /*
             [Command("SetNotification", RunMode = RunMode.Async)]
             [Summary("Sets the notification for when the text of a regex match changes.\nRequires only the notification, paginator will guide you.")]
             public async Task SetNotification([Remainder] string notification = "")
@@ -1263,12 +1265,12 @@ namespace MopsBot.Module
                     int page = int.Parse((await NextMessageAsync(timeout: new TimeSpan(0, 5, 0))).Content) - 1;
                     await ModifyConfig(this, trackers[page], TrackerType.HTML);
                 }
-            }
+            }*/
         }
 
         [Group("RSS")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public class RSS : InteractiveBase<ShardedCommandContext>
+        public class RSS : ModuleBase<ShardedCommandContext>
         {
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified RSS feed url")]
@@ -1323,7 +1325,7 @@ namespace MopsBot.Module
             }
 
             [Command("ShowConfig")]
-            [Hide]
+            [HideHelp]
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig(BaseTracker tracker)
             {
@@ -1333,9 +1335,9 @@ namespace MopsBot.Module
             [Command("ChangeConfig", RunMode = RunMode.Async)]
             [Summary("Edit the Configuration for the tracker")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task ChangeConfig(BaseTracker url)
+            public async Task ChangeConfig(BaseTracker url, [Remainder]string config)
             {
-                await ModifyConfig(this, url, TrackerType.RSS);
+                await ModifyConfig(this, url, TrackerType.RSS, config);
             }
 
             [Command("ChangeChannel", RunMode = RunMode.Async)]
@@ -1350,7 +1352,7 @@ namespace MopsBot.Module
 
         [Group("Steam")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public class Steam : InteractiveBase<ShardedCommandContext>
+        public class Steam : ModuleBase<ShardedCommandContext>
         {
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified steam user, in the Channel you are calling this command in.\nWill notify on game changes and achievements.")]
@@ -1399,7 +1401,7 @@ namespace MopsBot.Module
             }
 
             [Command("ShowConfig")]
-            [Hide]
+            [HideHelp]
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig(BaseTracker tracker)
             {
@@ -1409,9 +1411,9 @@ namespace MopsBot.Module
             [Command("ChangeConfig", RunMode = RunMode.Async)]
             [Summary("Edit the Configuration for the tracker")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task ChangeConfig(BaseTracker SteamNameOrId)
+            public async Task ChangeConfig(BaseTracker SteamNameOrId, [Remainder]string config)
             {
-                await ModifyConfig(this, SteamNameOrId, TrackerType.Steam);
+                await ModifyConfig(this, SteamNameOrId, TrackerType.Steam, config);
             }
 
             [Command("ChangeChannel", RunMode = RunMode.Async)]
@@ -1426,7 +1428,7 @@ namespace MopsBot.Module
 
         [Group("YoutubeLive")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public class YoutubeLive : InteractiveBase<ShardedCommandContext>
+        public class YoutubeLive : ModuleBase<ShardedCommandContext>
         {
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified Youtubers livestreams, in the Channel you are calling this command in.\nYoutubes Terms of Service and Googles privacy policy apply:\nhttps://www.youtube.com/t/terms \nhttp://www.google.com/policies/privacy")]
@@ -1475,7 +1477,7 @@ namespace MopsBot.Module
             }
 
             [Command("ShowConfig")]
-            [Hide]
+            [HideHelp]
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig(BaseTracker tracker)
             {
@@ -1485,9 +1487,9 @@ namespace MopsBot.Module
             [Command("ChangeConfig", RunMode = RunMode.Async)]
             [Summary("Edit the Configuration for the tracker")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task ChangeConfig(BaseTracker ChannelID)
+            public async Task ChangeConfig(BaseTracker ChannelID, [Remainder]string config)
             {
-                await Tracking.ModifyConfig(this, ChannelID, BaseTracker.TrackerType.YoutubeLive);
+                await Tracking.ModifyConfig(this, ChannelID, BaseTracker.TrackerType.YoutubeLive, config);
             }
 
             [Command("ChangeChannel", RunMode = RunMode.Async)]
@@ -1501,7 +1503,7 @@ namespace MopsBot.Module
 
         [Group("TikTok")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
-        public class TikTok : InteractiveBase<ShardedCommandContext>
+        public class TikTok : ModuleBase<ShardedCommandContext>
         {
             [Command("Track", RunMode = RunMode.Async)]
             [Summary("Keeps track of the specified TikTok channels videos, in the channel you are calling this command in.")]
@@ -1560,7 +1562,7 @@ namespace MopsBot.Module
             }
 
             [Command("ShowConfig")]
-            [Hide]
+            [HideHelp]
             [Summary("Shows all the settings for this tracker, and their values")]
             public async Task ShowConfig(BaseTracker username)
             {
@@ -1570,9 +1572,9 @@ namespace MopsBot.Module
             [Command("ChangeConfig", RunMode = RunMode.Async)]
             [Summary("Edit the Configuration for the tracker")]
             [RequireUserPermission(ChannelPermission.ManageChannels)]
-            public async Task ChangeConfig(BaseTracker ChannelID)
+            public async Task ChangeConfig(BaseTracker ChannelID, [Remainder]string config)
             {
-                await Tracking.ModifyConfig(this, ChannelID, BaseTracker.TrackerType.TikTok);
+                await Tracking.ModifyConfig(this, ChannelID, BaseTracker.TrackerType.TikTok, config);
             }
 
             [Command("ChangeChannel", RunMode = RunMode.Async)]
@@ -1587,7 +1589,7 @@ namespace MopsBot.Module
 
         [Command("PurgeTrackers", RunMode = RunMode.Async)]
         [RequireBotManage()]
-        [Hide]
+        [HideHelp]
         public async Task PurgeTrackers(bool testing = true)
         {
             using (Context.Channel.EnterTypingState())
@@ -1628,7 +1630,7 @@ namespace MopsBot.Module
 
         [Command("PruneTrackers", RunMode = RunMode.Async)]
         [RequireBotManage()]
-        [Hide]
+        [HideHelp]
         public async Task PruneTrackers(int days = 45, bool testing = true)
         {
             using (Context.Channel.EnterTypingState())
@@ -1679,7 +1681,7 @@ namespace MopsBot.Module
 
         [Command("GetAllTrackers", RunMode = RunMode.Async)]
         [Summary("Returns an embed containing all trackers of all channels of this server.")]
-        [Hide]
+        [HideHelp]
         [RequireUserPermission(ChannelPermission.ManageChannels)]
         [Ratelimit(1, 1, Measure.Minutes, RatelimitFlags.GuildwideLimit)]
         public async Task GetAllTrackers()
@@ -1702,27 +1704,27 @@ namespace MopsBot.Module
             }
         }
 
-        public static async Task ModifyConfig(InteractiveBase<ShardedCommandContext> context, BaseTracker tracker, TrackerType trackerType)
+        public static async Task ModifyConfig(ModuleBase<ShardedCommandContext> context, BaseTracker tracker, TrackerType trackerType, string reply)
         {
             await context.Context.Channel.SendMessageAsync($"Current Config:\n```yaml\n{string.Join("\n", tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[context.Context.Guild.Id]].Select(x => x.Key + ": " + x.Value))}```\nPlease reply with one or more changed lines.");
-            var reply = await context.NextMessageAsync(true, true, TimeSpan.FromMinutes(5));
+            //var reply = await context.NextMessageAsync(true, true, TimeSpan.FromMinutes(5));
             var settings = tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[context.Context.Guild.Id]].ToDictionary(x => x.Key, x => x.Value);
 
             if (reply != null)
             {
-                foreach (var line in reply.Content.Split("\n"))
+                foreach (var line in reply.Split("\n"))
                 {
                     var kv = line.Split(":", 2);
                     if (kv.Length != 2)
                     {
-                        await reply.Channel.SendMessageAsync($"Skipping `{line}` due to no value.");
+                        await context.Context.Channel.SendMessageAsync($"Skipping `{line}` due to no value.");
                         continue;
                     }
 
                     var option = kv[0];
                     if (!settings.Keys.Contains(option))
                     {
-                        await reply.Channel.SendMessageAsync($"Skipping `{line}` due to unkown option.");
+                        await context.Context.Channel.SendMessageAsync($"Skipping `{line}` due to unkown option.");
                         continue;
                     }
 
@@ -1731,7 +1733,7 @@ namespace MopsBot.Module
 
                     if (!worked)
                     {
-                        await reply.Channel.SendMessageAsync($"Skipping `{line}` due to false value type, must be `{settings[option].GetType().ToString()}`");
+                        await context.Context.Channel.SendMessageAsync($"Skipping `{line}` due to false value type, must be `{settings[option].GetType().ToString()}`");
                     }
                     else
                     {
@@ -1741,18 +1743,18 @@ namespace MopsBot.Module
 
                 if (!tracker.IsConfigValid(settings, out string reason))
                 {
-                    await reply.Channel.SendMessageAsync($"Updating failed due to:\n{reason}");
+                    await context.Context.Channel.SendMessageAsync($"Updating failed due to:\n{reason}");
                 }
                 else
                 {
                     tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[context.Context.Guild.Id]] = settings;
                     await StaticBase.Trackers[trackerType].UpdateDBAsync(tracker);
-                    await reply.Channel.SendMessageAsync($"New Config:\n```yaml\n{string.Join("\n", tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[context.Context.Guild.Id]].Select(x => x.Key + ": " + x.Value))}```");
+                    await context.Context.Channel.SendMessageAsync($"New Config:\n```yaml\n{string.Join("\n", tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[context.Context.Guild.Id]].Select(x => x.Key + ": " + x.Value))}```");
                 }
             }
             else
             {
-                await reply.Channel.SendMessageAsync($"No timely reply received.");
+                await context.Context.Channel.SendMessageAsync($"No timely reply received.");
             }
         }
 
