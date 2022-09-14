@@ -68,7 +68,7 @@ namespace MopsBot
             }
             
             await Task.Delay(-1);
-            //await StartTunnelAsync();
+            await StartTunnelAsync();
         }
 
         public static async Task ClientLog(LogMessage msg)
