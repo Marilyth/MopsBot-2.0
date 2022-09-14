@@ -67,8 +67,8 @@ namespace MopsBot
                 } while(StaticBase.GetMopsRAM() > 2200);
             }
             
-            await Task.Delay(-1);
             await StartTunnelAsync();
+            await Task.Delay(-1);
         }
 
         public static async Task ClientLog(LogMessage msg)
