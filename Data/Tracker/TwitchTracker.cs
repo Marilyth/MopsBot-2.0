@@ -528,7 +528,7 @@ namespace MopsBot.Data.Tracker
                         foundSubscriptions.Add(twitchId);
 
                         // Update tracker data if it isn't accurate.
-                        if(tracker is not null && (!tracker.Callback.Equals(callbackUrl) || !tracker.CallbackId.Equals(subscriptionId))){
+                        if(tracker is not null && (!string.Equals(tracker.Callback, callbackUrl) || !string.Equals(tracker.CallbackId, subscriptionId))){
                             tracker.Callback = callbackUrl;
                             tracker.CallbackId = subscriptionId;
                             await tracker.UpdateTracker();
