@@ -105,15 +105,15 @@ namespace MopsBot.Data.Tracker
         //This was a last resort. If you update your endpoint, we will return to our method above (fetchLivestreamId).
         public static async Task<string> scrapeLivestreamId(string channelId)
         {
-            var html = await MopsBot.Module.Information.GetURLAsync($"https://www.youtube.com/channel/{channelId}/videos");
-            var videoSegment = html.Split("viewCountText\":{\"runs", 2).LastOrDefault();
+            var html = await MopsBot.Module.Information.GetURLAsync($"https://www.youtube.com/channel/{channelId}/streams");
+            var videoSegment = html.Split("\"runs\":[{\"text\":\"LIVE\"", 2).LastOrDefault();
             if (videoSegment == null || html.Length == videoSegment.Length)
             {
                 return null;
             }
             else
             {
-                videoSegment = videoSegment.Split("videoId\":\"", 2).LastOrDefault();
+                videoSegment = videoSegment.Split("VideoId\":\"", 2).LastOrDefault();
                 var videoId = videoSegment.Split("\"").FirstOrDefault();
                 return videoId;
             }
