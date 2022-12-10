@@ -528,7 +528,7 @@ namespace MopsBot.Data.Tracker
                         foundSubscriptions.Add(twitchId);
 
                         // Update tracker data if it isn't accurate.
-                        if(tracker is not null && (!tracker.Callback.Equals(callbackUrl) || !tracker.CallbackId.Equals(subscriptionId))){
+                        if(tracker is not null && (!string.Equals(tracker.Callback, callbackUrl) || !string.Equals(tracker.CallbackId, subscriptionId))){
                             tracker.Callback = callbackUrl;
                             tracker.CallbackId = subscriptionId;
                             await tracker.UpdateTracker();
@@ -538,6 +538,7 @@ namespace MopsBot.Data.Tracker
 
                 // Remove subscription information for trackers not found or removed in the Twitch response.
                 foreach(var missingTracker in StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTrackers().Where(x => !foundSubscriptions.Contains((x.Value as TwitchTracker).TwitchId))){
+                    await Program.MopsLog($"Twitch tracker for {missingTracker.Key} needs a new subscription. Resetting callbacks.");
                     TwitchTracker tracker = (TwitchTracker)missingTracker.Value;
                     tracker.Callback = null;
                     tracker.CallbackId = null;
