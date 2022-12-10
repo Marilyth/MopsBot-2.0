@@ -16,6 +16,17 @@ namespace MopsBot.Module.Modals
             return builder.Build();
         }
 
+        /// <summary>
+        /// Generate a model in which the user can specify JSON paths.
+        /// </summary>
+        /// <param name="initialNotification"></param>
+        /// <returns></returns>
+        public static Modal GetJsonModal(){
+            var builder = new ModalBuilder().WithTitle("Change notification").WithCustomId("paths");
+            builder.AddTextInput("Paths", "paths", TextInputStyle.Paragraph, "The json paths to be used, e.g.\nalways:player->name->as:Name\ngraph:player->level->as:Level", required: true);
+            return builder.Build();
+        }
+
         public static Modal GetNotificationModal(string initialNotification){
             var builder = new ModalBuilder().WithTitle("Change notification").WithCustomId("notification");
             builder.AddTextInput("New notification", "new_notification", TextInputStyle.Paragraph, "The new notification to be used", required: true, value: initialNotification);

@@ -25,6 +25,8 @@ namespace MopsBot.Module.TypeReader
             
             if(!CapSensitive.Any(x => x == type))
                 input = input.ToLower();
+            if(type == TrackerType.JSON)
+                input = input.Replace(";", "\n");
 
             var result = StaticBase.Trackers[type].GetTracker(context.Channel.Id, input);
 
@@ -33,7 +35,7 @@ namespace MopsBot.Module.TypeReader
                 return TypeReaderResult.FromSuccess(result);
             }
             
-            result = StaticBase.Trackers[type].GetGuildTrackers(context.Guild.Id).FirstOrDefault(x => x.Name.Equals(input));
+            result = StaticBase.Trackers[type].GetGuildTrackers(context.Guild.Id).FirstOrDefault(x => x.Name.StartsWith(input));
 
             if(result == null){
                 await MopsBot.Data.Interactive.MopsPaginator.CreatePagedMessage(context.Channel.Id, StaticBase.Trackers[type].GetTrackersEmbed(context.Channel.Id, true));
@@ -61,6 +63,8 @@ namespace MopsBot.Module.TypeReader
 
             if(!CapSensitive.Any(x => x == type))
                 streamerName = streamerName.ToLower();
+            if(type == TrackerType.JSON)
+                streamerName = streamerName.Replace(";", "\n");
 
             var result = StaticBase.Trackers[type].GetTracker(context.Channel.Id, streamerName);
 
@@ -69,7 +73,7 @@ namespace MopsBot.Module.TypeReader
                 return TypeConverterResult.FromSuccess(result);
             }
             
-            result = StaticBase.Trackers[type].GetGuildTrackers(context.Guild.Id).FirstOrDefault(x => x.Name.Equals(streamerName));
+            result = StaticBase.Trackers[type].GetGuildTrackers(context.Guild.Id).FirstOrDefault(x => x.Name.StartsWith(streamerName));
 
             if(result == null){
                 return TypeConverterResult.FromError(InteractionCommandError.ParseFailed, $"Could not find a {module}-tracker for {streamerName}.\nPlease use `/{module} gettrackers` to see available trackers.");

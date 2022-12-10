@@ -21,8 +21,14 @@ namespace MopsBot.Module
 
             if(!BaseTracker.CapSensitive.Any(x => x == type))
                 name = name.ToLower();
+            if(type == BaseTracker.TrackerType.JSON)
+                name = name.Replace(";", "\n");
 
-            var results = StaticBase.Trackers[type].GetGuildTrackers(context.Guild.Id).Where(x => x.Name.StartsWith(name)).OrderBy(x => x.Name.Length).Select(x => new AutocompleteResult(x.Name, x.Name));
+            var results = StaticBase.Trackers[type].GetGuildTrackers(context.Guild.Id).Where(x => x.Name.Replace(";", "\n").StartsWith(name)).OrderBy(x => x.Name.Length).Select(x => {
+                string name = x.Name.Replace("\n", ";");
+                name = name.Substring(0, Math.Min(100, name.Length));
+                return new AutocompleteResult(name, name);
+            });
 
             // max - 25 suggestions at a time (API limit)
             return AutocompletionResult.FromSuccess(results.Take(25));

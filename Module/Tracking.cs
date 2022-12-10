@@ -1010,7 +1010,7 @@ namespace MopsBot.Module
             [Command("ShowConfig")]
             [HideHelp]
             [Summary("Shows all the settings for this tracker, and their values")]
-            public async Task ShowConfig(BaseTracker tracker)
+            public async Task ShowConfig([Remainder]BaseTracker tracker)
             {
                 await ReplyAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value))}```");
             }

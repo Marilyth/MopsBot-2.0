@@ -80,7 +80,7 @@ namespace MopsBot.Api.Controllers
             string body = new StreamReader(Request.Body).ReadToEnd();
             var bodyStream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(body));
             var headers = Request.Headers;
-
+            
             await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Received a YT webhook message\n" + body));
             try
             {

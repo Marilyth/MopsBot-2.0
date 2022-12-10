@@ -652,7 +652,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task Check(string Url, string paths)
             {
-                var result = await JSONTracker.GetResults(Url, paths.Split("\n"));
+                var result = await JSONTracker.GetResults(Url, paths.Split(new char[]{'\n', ';'}));
                 var embed = new EmbedBuilder().WithCurrentTimestamp().WithColor(255, 227, 21).WithFooter(x =>
                 {
                     x.Text = "JsonTracker";
@@ -674,7 +674,7 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task CheckExtended(string Url, string body, string paths)
             {
-                var result = await JSONTracker.GetResults(Url, paths.Split("\n"), body);
+                var result = await JSONTracker.GetResults(Url, paths.Split(new char[]{'\n', ';'}), body);
                 var embed = new EmbedBuilder().WithCurrentTimestamp().WithColor(255, 227, 21).WithFooter(x =>
                 {
                     x.Text = "JsonTracker";
@@ -696,6 +696,17 @@ namespace MopsBot.Module
             public async Task ShowConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker tracker)
             {
                 await FollowupAsync($"```yaml\n{string.Join("\n", tracker.ChannelConfig[tracker.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value))}```", ephemeral: true);
+            }
+
+            [SlashCommand("changeconfig", "Edit the Configuration for the tracker. Use showconfig to see your options.")]
+            [Modal]
+            [RequireUserPermission(ChannelPermission.ManageChannels)]
+            public async Task ChangeConfig([Autocomplete(typeof(TrackerAutocompleteHandler))] BaseTracker name)
+            {
+                string currentConfig = string.Join("\n", name.ChannelConfig[name.LastCalledChannelPerGuild[Context.Guild.Id]].Select(x => x.Key + ": " + x.Value));
+                var reply = await CommandHandler.SendAndAwaitModalAsync(Context, MopsBot.Module.Modals.ModalBuilders.GetConfigModal(currentConfig));
+
+                await ModifyConfig(this, name, TrackerType.JSON, reply["new_config"]);
             }
 
             [SlashCommand("changechannel", "Changes the channel of the specified tracker from #FromChannel to the current channel")]

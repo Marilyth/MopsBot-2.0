@@ -30,7 +30,7 @@ namespace MopsBot.Data.Tracker
         {
             //name = name.Replace(" ", string.Empty);
             Name = name;
-            ToTrack = name.Split("|||")[1].Split("\n").ToList();
+            ToTrack = name.Split("|||")[1].Split(new char[]{'\n', ';'}).ToList();
             Content = name.Split("|||")[0].Contains("||") ? name.Split("|||")[0].Split("||")[1] : null;
 
             //Check if name yields proper results.
