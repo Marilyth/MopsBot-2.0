@@ -81,16 +81,6 @@ namespace MopsBot.Data
                         Program.MopsLog(new LogMessage(LogSeverity.Error, "", $"Error on PostInitialisation, {e.Message}", e));
                     }
                 }
-
-                //Start Twitter STREAM after all are initialised
-                if (typeof(T) == typeof(TwitterTracker))
-                {
-                    TwitterTracker.STREAM.StreamStopped += (sender, args) => { Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"TwitterSTREAM stopped. {args.DisconnectMessage?.Reason ?? ""}", args.Exception)); TwitterTracker.RestartStream(); };
-                    TwitterTracker.STREAM.StreamStarted += (sender, args) => Program.MopsLog(new LogMessage(LogSeverity.Info, "", "TwitterSTREAM started."));
-                    TwitterTracker.STREAM.WarningFallingBehindDetected += (sender, args) => Program.MopsLog(new LogMessage(LogSeverity.Warning, "", $"TwitterSTREAM falling behind, {args.WarningMessage.Message} ({args.WarningMessage.PercentFull}%)"));
-                    TwitterTracker.STREAM.FilterLevel = Tweetinvi.Streaming.Parameters.StreamFilterLevel.Low;
-                    TwitterTracker.STREAM.StartStreamMatchingAllConditionsAsync();
-                }
             }
 
             nextTracker = new System.Threading.Timer(LoopTrackers);
