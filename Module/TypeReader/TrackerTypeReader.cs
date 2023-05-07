@@ -27,6 +27,8 @@ namespace MopsBot.Module.TypeReader
                 input = input.ToLower();
             if(type == TrackerType.JSON)
                 input = input.Replace(";", "\n");
+            else if(type == TrackerType.Twitter)
+                input = input.Replace("@", "");
 
             var result = StaticBase.Trackers[type].GetTracker(context.Channel.Id, input);
 
@@ -65,6 +67,8 @@ namespace MopsBot.Module.TypeReader
                 streamerName = streamerName.ToLower();
             if(type == TrackerType.JSON)
                 streamerName = streamerName.Replace(";", "\n");
+            else if(type == TrackerType.Twitter)
+                streamerName = streamerName.Replace("@", "");
 
             var result = StaticBase.Trackers[type].GetTracker(context.Channel.Id, streamerName);
 
