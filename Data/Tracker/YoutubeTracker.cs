@@ -21,6 +21,7 @@ namespace MopsBot.Data.Tracker
     {
         public DateTime WebhookExpire = DateTime.Now;
         private string channelThumbnailUrl, uploadPlaylistId;
+        [MongoDB.Bson.Serialization.Attributes.BsonSerializer(typeof(MopsBot.Utils.MongoDictionarySerializer<string, DateTime>))]
         public Dictionary<string, DateTime> PastVideoIds = new Dictionary<string, DateTime>();
 
         public YoutubeTracker() : base()
