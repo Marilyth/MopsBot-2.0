@@ -18,11 +18,9 @@ namespace MopsBot.Data.Tracker
     [MongoDB.Bson.Serialization.Attributes.BsonIgnoreExtraElements]
     public class TwitterTracker : BaseTracker
     {
-        public static Tweetinvi.Streaming.IFilteredStream STREAM = Tweetinvi.Stream.CreateFilteredStream();
         private static long DBCOUNT = StaticBase.Database.GetCollection<TwitterTracker>("TwitterTracker").CountDocuments(x => true);
         public long UserId, lastMessage;
         public int FailCount = 0;
-        private bool hasChecked = false;
         public static readonly string SHOWREPLIES = "ShowReplies", SHOWRETWEETS = "ShowRetweets", SHOWMAIN = "ShowMain", RETWEETNOTIFICATION = "RetweetNotification", REPLYNOTIFICATION = "ReplyNotification";
 
         public TwitterTracker() : base()
@@ -39,9 +37,11 @@ namespace MopsBot.Data.Tracker
                 var user = Tweetinvi.User.GetUserFromScreenName(Name);
                 UserId = user.UserIdentifier.Id;
                 var tweets = getNewTweets();
-                lastMessage = tweets.LastOrDefault()?.Id ?? 0;
 
-                addUser();
+                if(!tweets.Any())
+                    throw new ArgumentException($"Could not find any tweets for {twitterName}.\nMake sure to have at least 1 tweet before setting up tracking.");
+
+                lastMessage = tweets.Last().Id;
             }
             catch (Exception e)
             {
@@ -57,8 +57,6 @@ namespace MopsBot.Data.Tracker
                 UserId = Tweetinvi.User.GetUserFromScreenName(Name).Id;
                 UpdateTracker();
             }
-
-            addUser();
         }
 
         public async override void PostChannelAdded(ulong channelId)
@@ -76,9 +74,8 @@ namespace MopsBot.Data.Tracker
         {
             try
             {
-                if (!hasChecked && lastMessage != 0)
+                if (lastMessage != 0)
                 {
-                    hasChecked = true;
                     await checkMissedTweets();
                 }
 
@@ -95,12 +92,6 @@ namespace MopsBot.Data.Tracker
             try
             {
                 var tweets = new List<ITweet>() { tweet };
-
-                if (!hasChecked && lastMessage != 0)
-                {
-                    hasChecked = true;
-                    await checkMissedTweets(tweet.Id - 1);
-                }
 
                 if (lastMessage >= tweet.Id) return;
                 if (updateDB) lastMessage = tweet.Id;
@@ -156,23 +147,11 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        private void addUser()
-        {
-            bool restart = STREAM.StreamState == StreamState.Running;
-            if (restart) STREAM.StopStream();
-
-            if (STREAM.ContainsFollow(UserId)) STREAM.FollowingUserIds[UserId] += x => TweetReceived(x);
-            else STREAM.AddFollow(UserId, x => TweetReceived(x));
-
-            if (restart && STREAM.FollowingUserIds.Count == 1) STREAM.StartStreamMatchingAllConditionsAsync();
-        }
-
         private async Task checkMissedTweets(long beforeId = 0)
         {
             //if (!hasChecked)
             //{
             var missedTweets = getNewTweets(lastMessage, beforeId);
-            hasChecked = true;
             int i = 0;
             foreach (var curTweet in missedTweets)
             {
@@ -214,20 +193,6 @@ namespace MopsBot.Data.Tracker
             return e.Build();
         }
 
-        private static bool restarting;
-        public static async Task RestartStream()
-        {
-            if(!restarting){
-                restarting = true;
-                await Task.Delay(5000);
-                if (STREAM.StreamState == StreamState.Stop)
-                {
-                    STREAM.StartStreamMatchingAllConditionsAsync();
-                }
-                restarting = false;
-            }
-        }
-
         public static void QueryBeforeExecute(object sender, Tweetinvi.Events.QueryBeforeExecuteEventArgs args)
         {
             var queryRateLimits = RateLimit.GetQueryRateLimit(args.QueryURL);
@@ -254,9 +219,6 @@ namespace MopsBot.Data.Tracker
         protected override void Dispose(bool disposing)
         {
             base.Dispose(true);
-            STREAM.StopStream();
-            STREAM.RemoveFollow(UserId);
-            if (STREAM.FollowingUserIds.Keys.Count > 0) STREAM.StartStreamMatchingAllConditionsAsync();
         }
 
         public override async Task UpdateTracker(){
