@@ -330,7 +330,7 @@ namespace MopsBot.Data.Tracker
             var tmpResult = await FetchJSONDataAsync<TwitchStreamResult>($"https://api.twitch.tv/helix/streams?user_id={TwitchId}", GetHelixHeaders());
 
             if (tmpResult.data.Count == 0) tmpResult.data.Add(new APIResults.Twitch.TwitchStreamInfo());
-            if (tmpResult.data.FirstOrDefault().game_name == null) tmpResult.data.FirstOrDefault().game_name = "Nothing";
+            if (string.IsNullOrWhiteSpace(tmpResult.data.FirstOrDefault().game_name)) tmpResult.data.FirstOrDefault().game_name = "Nothing";
 
             return tmpResult;
         }
