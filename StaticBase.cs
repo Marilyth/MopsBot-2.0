@@ -111,6 +111,7 @@ namespace MopsBot
 
                 if (Program.TrackerLimits["Twitter"]["TrackersPerServer"] > 0)
                 {
+                    /* Twitter API is now paid, so we can't use it anymore.
                     Auth.SetUserCredentials(Program.Config["TwitterKey"], Program.Config["TwitterSecret"],
                                             Program.Config["TwitterToken"], Program.Config["TwitterAccessSecret"]);
                     TweetinviConfig.CurrentThreadSettings.TweetMode = TweetMode.Extended;
@@ -120,11 +121,16 @@ namespace MopsBot
                     TweetinviEvents.QueryBeforeExecute += Data.Tracker.TwitterTracker.QueryBeforeExecute;
                     Tweetinvi.Logic.JsonConverters.JsonPropertyConverterRepository.JsonConverters.Remove(typeof(Tweetinvi.Models.Language));
                     Tweetinvi.Logic.JsonConverters.JsonPropertyConverterRepository.JsonConverters.Add(typeof(Tweetinvi.Models.Language), new CustomJsonLanguageConverter());
+                    */
                 }
 
                 Trackers = new Dictionary<BaseTracker.TrackerType, Data.TrackerWrapper>();
                 foreach (var tracker in Enum.GetValues(typeof(BaseTracker.TrackerType)).Cast<BaseTracker.TrackerType>())
                 {
+                    // Twitter API is now paid, so we can't use it anymore.
+                    if(tracker == BaseTracker.TrackerType.Twitter)
+                        continue;
+
                     if (!Program.TrackerLimits.ContainsKey(tracker.ToString()))
                     {
                         Program.TrackerLimits[tracker.ToString()] = new Dictionary<string, int>();
@@ -132,6 +138,7 @@ namespace MopsBot
                         Program.TrackerLimits[tracker.ToString()]["UpdateInterval"] = 120000;
                         Program.TrackerLimits[tracker.ToString()]["TrackersPerServer"] = 20;
                     }
+
                     var trackerType = Type.GetType($"MopsBot.Data.Tracker.{tracker}Tracker");
                     var wrapperType = typeof(TrackerHandler<>).MakeGenericType(trackerType);
                     var pollInterval = Program.TrackerLimits[tracker.ToString()]["PollInterval"];

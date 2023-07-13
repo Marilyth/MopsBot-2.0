@@ -21,7 +21,7 @@ namespace MopsBot.Module
     public class Tracking : ModuleBase<ShardedCommandContext>
     {
         public static readonly Dictionary<string, (string, string)> Names = new Dictionary<string, (string, string)>{
-            {"Twitter", ("Twitter username, without the @ in the beginning!", "https://cdn.discordapp.com/attachments/158166244493623296/681834842240974867/unknown.png")},
+            //{"Twitter", ("Twitter username, without the @ in the beginning!", "https://cdn.discordapp.com/attachments/158166244493623296/681834842240974867/unknown.png")},
             {"Osu", ("name of the osu! player", "https://cdn.discordapp.com/attachments/158166244493623296/681835932047114240/unknown.png")},
             {"Youtube", ("YouTube channel-id", "https://cdn.discordapp.com/attachments/158166244493623296/681836381768777744/unknown.png")},
             {"YoutubeLive", ("YouTube channel-id", "https://cdn.discordapp.com/attachments/158166244493623296/681836381768777744/unknown.png")},
@@ -96,6 +96,7 @@ namespace MopsBot.Module
             await ReplyAsync($"And we are all done!");
         } */
 
+        /*
         [Group("Twitter")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public class Twitter : ModuleBase<ShardedCommandContext>
@@ -223,6 +224,7 @@ namespace MopsBot.Module
                 }
             }
         }
+        */
 
         [Group("Osu")]
         [RequireBotPermission(ChannelPermission.SendMessages)]

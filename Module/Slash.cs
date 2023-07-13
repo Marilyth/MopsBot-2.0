@@ -209,6 +209,7 @@ namespace MopsBot.Module
         #endregion TwitchClip
 
         #region Twitter
+        /*
         [Group("twitter", "Commands for twitter tracking")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public class Twitter : InteractionModuleBase<IInteractionContext>
@@ -336,6 +337,7 @@ namespace MopsBot.Module
                 }
             }
         }
+        */
         #endregion Twitter
 
         #region Osu
