@@ -22,7 +22,7 @@ namespace MopsBot.Data
         public abstract Task RemoveFromDBAsync(BaseTracker tracker);
         public abstract Task<bool> TryRemoveTrackerAsync(string name, ulong channelID);
         public abstract Task<bool> TrySetNotificationAsync(string name, ulong channelID, string notificationMessage);
-        public abstract Task AddTrackerAsync(string name, ulong channelID, string notification = "");
+        public abstract Task<BaseTracker> AddTrackerAsync(string name, ulong channelID, string notification = "");
         public abstract Task<Embed> GetEmbed();
         public abstract HashSet<Tracker.BaseTracker> GetTrackerSet();
         public abstract Dictionary<string, Tracker.BaseTracker> GetTrackers();
@@ -227,7 +227,7 @@ namespace MopsBot.Data
             return false;
         }
 
-        public override async Task AddTrackerAsync(string name, ulong channelID, string notification = "")
+        public override async Task<BaseTracker> AddTrackerAsync(string name, ulong channelID, string notification = "")
         {
             if (trackers.ContainsKey(name))
             {
@@ -256,13 +256,15 @@ namespace MopsBot.Data
             }
 
             await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Started a new {typeof(T).Name} for {name}\nChannels: {string.Join(",", trackers[name].ChannelConfig.Keys)}\nMessage: {notification}"));
+
+            return trackers[name];
         }
 
         private async Task updateGraph(int increase = 1)
         {
             double dateValue = OxyPlot.Axes.DateTimeAxis.ToDouble(DateTime.Today);
 
-            if (IncreaseGraph == null)
+            if (IncreaseGraph == null || IncreaseGraph.PlotDataPoints.Count == 0)
             {
                 IncreaseGraph = new DatePlot(typeof(T).Name + "Handler", "Date", "Tracker Increase", "dd-MMM", false);
                 IncreaseGraph.AddValue("Value", 0, DateTime.Today.AddMilliseconds(-1));
