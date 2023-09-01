@@ -234,7 +234,7 @@ namespace MopsBot.Module
                 using (var request = new HttpRequestMessage(method, URL))
                 {
                     //Temporary fix for YouTube cookie consent
-                    if(URL.Contains("youtube.com")) request.Headers.Add("Cookie", $"CONSENT=YES+{StaticBase.ran.Next(1, 1000)}");
+                    if(URL.Contains("youtube.com")) request.Headers.Add("Cookie", $"SOCS=CAESHAgCEhJnd3NfMjAyMzA4MjgtMF9SQzEaAmRlIAEaBgiA08SnBg");
                     
                     foreach (var kvp in headers)
                         request.Headers.TryAddWithoutValidation(kvp.Key, kvp.Value);
