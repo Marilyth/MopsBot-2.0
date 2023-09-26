@@ -440,13 +440,13 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.GuildwideLimit)]
             [TrackerLimit(TrackerType.Youtube)]
-            public async Task trackYoutube(string channelID,  string notificationMessage = "New Video")
+            public async Task trackYoutube(string channelID, string notificationMessage = "New Video")
             {
                 using (Context.Channel.EnterTypingState())
                 {
-                    await Trackers[BaseTracker.TrackerType.Youtube].AddTrackerAsync(channelID, Context.Channel.Id, notificationMessage);
+                    var tracker = await Trackers[BaseTracker.TrackerType.Youtube].AddTrackerAsync(channelID, Context.Channel.Id, notificationMessage);
 
-                    await FollowupAsync("Keeping track of " + channelID + "'s videos, from now on!\nThis tracker **only tracks videos, no livestreams!**\nFor livestreams, start a `YoutubeLive` tracker, not a `Youtube` tracker!", ephemeral: true);
+                    await FollowupAsync($"Keeping track of {tracker.TrackerUrl()} 's videos, from now on!\nThis tracker **only tracks videos, no livestreams!**\nFor livestreams, start a `YoutubeLive` tracker, not a `Youtube` tracker!", ephemeral: true);
                 }
             }
 
@@ -1132,9 +1132,9 @@ namespace MopsBot.Module
             {
                 using (Context.Channel.EnterTypingState())
                 {
-                    await Trackers[BaseTracker.TrackerType.YoutubeLive].AddTrackerAsync(channelID, Context.Channel.Id, notificationMessage);
+                    var tracker = await Trackers[BaseTracker.TrackerType.YoutubeLive].AddTrackerAsync(channelID, Context.Channel.Id, notificationMessage);
 
-                    await FollowupAsync("Keeping track of " + channelID + "'s streams, from now on!", ephemeral: true);
+                    await FollowupAsync($"Keeping track of {tracker.TrackerUrl()} 's streams from now on!", ephemeral: true);
                 }
             }
 

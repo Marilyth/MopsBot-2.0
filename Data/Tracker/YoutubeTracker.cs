@@ -74,11 +74,27 @@ namespace MopsBot.Data.Tracker
             }
         }
 
+        /// <summary>
+        /// Fetches the channel information from the Youtube API.
+        /// If the name start with an @, it will be treated as a handle and the channel id will first be fetched by that.
+        /// </summary>
+        /// <returns></returns>
         private async Task<ChannelItem> fetchChannel()
         {
-            var tmpResult = await FetchJSONDataAsync<Channel>($"https://www.googleapis.com/youtube/v3/channels?part=contentDetails,snippet&id={Name}&key={Program.Config["YoutubeKey"]}");
-            var channel = tmpResult.items.First();
-            return channel;
+            // Convert handle to channel id.
+            if(Name.StartsWith("@")){
+                var handleResponse = await FetchJSONDataAsync<Channel>($"https://yt.lemnoslife.com/channels?handle={Name}");
+
+                if(handleResponse.items.FirstOrDefault()?.id is null){
+                    throw new Exception($"Failed to fetch channel by handle {Name}");
+                }
+
+                Name = handleResponse.items.FirstOrDefault().id;
+            }
+
+            Channel channel = await FetchJSONDataAsync<Channel>($"https://www.googleapis.com/youtube/v3/channels?part=contentDetails,snippet&id={Name}&key={Program.Config["YoutubeKey"]}");
+            
+            return channel.items?.FirstOrDefault();
         }
 
         public async Task CheckInfoAsync(YoutubeNotification push)

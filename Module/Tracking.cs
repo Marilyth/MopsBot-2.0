@@ -329,9 +329,9 @@ namespace MopsBot.Module
             {
                 using (Context.Channel.EnterTypingState())
                 {
-                    await Trackers[BaseTracker.TrackerType.Youtube].AddTrackerAsync(channelID, Context.Channel.Id, notificationMessage);
+                    var tracker = await Trackers[BaseTracker.TrackerType.Youtube].AddTrackerAsync(channelID, Context.Channel.Id, notificationMessage);
 
-                    await ReplyAsync("Keeping track of " + channelID + "'s videos, from now on!\nThis tracker **only tracks videos, no livestreams!**\nFor livestreams, start a `YoutubeLive` tracker, not a `Youtube` tracker!");
+                    await ReplyAsync($"Keeping track of {tracker.TrackerUrl()} 's videos, from now on!\nThis tracker **only tracks videos, no livestreams!**\nFor livestreams, start a `YoutubeLive` tracker, not a `Youtube` tracker!");
                 }
             }
 
@@ -1445,9 +1445,9 @@ namespace MopsBot.Module
             {
                 using (Context.Channel.EnterTypingState())
                 {
-                    await Trackers[BaseTracker.TrackerType.YoutubeLive].AddTrackerAsync(channelID, Context.Channel.Id, notificationMessage);
+                    var tracker = await Trackers[BaseTracker.TrackerType.YoutubeLive].AddTrackerAsync(channelID, Context.Channel.Id, notificationMessage);
 
-                    await ReplyAsync("Keeping track of " + channelID + "'s streams, from now on!");
+                    await ReplyAsync($"Keeping track of {tracker.TrackerUrl()} 's streams, from now on!");
                 }
             }
 
