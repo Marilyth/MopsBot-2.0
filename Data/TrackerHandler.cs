@@ -12,6 +12,7 @@ using Newtonsoft.Json;
 using MopsBot.Data.Tracker;
 using MongoDB.Driver;
 using MopsBot.Data.Entities;
+using Microsoft.Win32;
 
 namespace MopsBot.Data
 {
@@ -242,6 +243,12 @@ namespace MopsBot.Data
             {
                 var tracker = (T)Activator.CreateInstance(typeof(T), new object[] { name });
                 name = tracker.Name;
+
+                // The name might have changed in the constructor. Check if it already exists again.
+                // E.g. YoutubeTracker will convert the name to the channel id.
+                if(trackers.ContainsKey(name))
+                    return await AddTrackerAsync(name, channelID, notification);
+
                 trackers.Add(name, tracker);
                 tracker.PostChannelAdded(channelID);
                 tracker.PostInitialisation();
