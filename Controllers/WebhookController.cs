@@ -86,11 +86,17 @@ namespace MopsBot.Api.Controllers
             {
                 MopsBot.Data.Tracker.APIResults.Youtube.YoutubeNotification data;
 
-                if(body.Contains("at:deleted-entry")) data = ConvertAtomToSyndicationTemporaryFix(body);
-                else data = ConvertAtomToSyndication(bodyStream);
-                
-                MopsBot.Data.Tracker.YoutubeTracker tracker = StaticBase.Trackers[Data.Tracker.BaseTracker.TrackerType.Youtube].GetTrackers()[data.ChannelId] as MopsBot.Data.Tracker.YoutubeTracker;
-                await tracker.CheckInfoAsync(data);
+                if(body.Contains("at:deleted-entry")){
+                    data = ConvertAtomToSyndicationTemporaryFix(body);
+                    await Program.MopsLog(new LogMessage(LogSeverity.Verbose, "", $"Ignoring webhook message, because it is a deleted entry."));
+                }
+
+                else{
+                    data = ConvertAtomToSyndication(bodyStream);
+                    
+                    MopsBot.Data.Tracker.YoutubeTracker tracker = StaticBase.Trackers[Data.Tracker.BaseTracker.TrackerType.Youtube].GetTrackers()[data.ChannelId] as MopsBot.Data.Tracker.YoutubeTracker;
+                    await tracker.CheckInfoAsync(data);
+                }
             }
             catch (Exception e)
             {
