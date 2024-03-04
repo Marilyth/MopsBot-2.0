@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Runtime.CompilerServices;
 using System.Collections.Generic;
 using System.IO;
@@ -50,7 +51,7 @@ namespace MopsBot
                 TrackerLimits = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, int>>>(sr.ReadToEnd());
 
             if(!Config.ContainsKey("Port"))
-                Config.Add("Port", "5000");
+                Config.Add("Port", "443");
 
             Client.Log += ClientLog;
             Client.ShardReady += onShardReady;
