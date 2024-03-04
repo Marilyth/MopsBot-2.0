@@ -83,15 +83,12 @@ namespace MopsBot.Data.Tracker
                 ViewerGraph.InitPlot();
 
             int counter = 0;
-            while((Program.Tunnel is null || !Program.Config.ContainsKey("TwitchToken")) && counter++ < 5){
+            while(!Program.Config.ContainsKey("TwitchToken") && counter++ < 5){
                 await Task.Delay(30000);
             }
 
-            if (Program.Tunnel is not null && (!Callback?.Contains(Program.Tunnel) ?? true))
-            {
-                await SubscribeWebhookAsync(false);
-                await SubscribeWebhookAsync();
-            }
+            await SubscribeWebhookAsync(false);
+            await SubscribeWebhookAsync();
         }
 
         public static KeyValuePair<string, string>[] GetHelixHeaders(){
@@ -137,7 +134,7 @@ namespace MopsBot.Data.Tracker
         public static async Task<string> SubscribeWebhookAsync(ulong twitchId){
             try
             {
-                if (Program.Config.ContainsKey("TwitchToken") && !Program.Config["TwitchToken"].Equals("") && Program.Tunnel is not null)
+                if (Program.Config.ContainsKey("TwitchToken") && !Program.Config["TwitchToken"].Equals(""))
                 {
                     var url = "https://api.twitch.tv/helix/eventsub/subscriptions";
                     Dictionary<string, object> body = new Dictionary<string, object>(){
@@ -148,7 +145,7 @@ namespace MopsBot.Data.Tracker
                         }},
                         {"transport", new Dictionary<string, string>(){
                             {"method", "webhook"},
-                            {"callback", Program.Tunnel + "/api/webhook/twitch"},
+                            {"callback", Program.Config["ServerAddress"] + "/api/webhook/twitch"},
                             {"secret", Program.Config["TwitchSecret"]} //Not recommended
                         }},
                     };
@@ -181,11 +178,8 @@ namespace MopsBot.Data.Tracker
         {
             try
             {
-                if (Program.Tunnel is not null && (!Callback?.Contains(Program.Tunnel) ?? true))
-                {
-                    await SubscribeWebhookAsync(false);
-                    await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Tried subscribing {Name} to Twitch webhooks:\n" + await SubscribeWebhookAsync()));
-                }
+                await SubscribeWebhookAsync(false);
+                await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Tried subscribing {Name} to Twitch webhooks:\n" + await SubscribeWebhookAsync()));
 
                 await CheckStreamerInfoAsync();
             }
@@ -496,12 +490,7 @@ namespace MopsBot.Data.Tracker
         /// <returns></returns>
         public static async Task RemoveBadSubscriptionsAsync(){
             try{
-                // Wait for localtunnel to establish a connection.
-                while(Program.Tunnel is null){
-                   await Task.Delay(10000);
-                }
-
-                var subscriptions = await GetAllSubscriptions();
+	        var subscriptions = await GetAllSubscriptions();
                 var foundSubscriptions = new HashSet<ulong>();
 
                 // https://dev.twitch.tv/docs/api/reference#get-eventsub-subscriptions
@@ -513,7 +502,7 @@ namespace MopsBot.Data.Tracker
 
                     TwitchTracker tracker = (TwitchTracker)StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTrackers().FirstOrDefault(x => (x.Value as TwitchTracker).TwitchId.Equals(twitchId)).Value;
 
-                    if(!callbackUrl.Equals(Program.Tunnel + "/api/webhook/twitch") || !status.Equals("enabled") || tracker is null){
+                    if(!callbackUrl.Equals(Program.Config["ServerAddress"] + "/api/webhook/twitch") || !status.Equals("enabled") || tracker is null){
                         // Bad subscription, remove it.
                         await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Bad Twitch subscription for {twitchId}, removing."));
                         var response = await UnsubscribeWebhookAsync(subscriptionId);
