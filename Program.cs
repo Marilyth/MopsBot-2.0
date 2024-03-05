@@ -135,7 +135,7 @@ namespace MopsBot
 
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
-                .UseUrls($"https://0.0.0.0:{Program.Config["Port"]}/")
+                .UseUrls($"https://0.0.0.0:{Program.Config["Port"]}/", "http://0.0.0.0:5000")
                 .ConfigureServices(x => x.AddCors(options => options.AddPolicy("AllowAll",
                     builder =>
                     {
@@ -145,6 +145,7 @@ namespace MopsBot
                     })))
                 .UseKestrel(options =>
                 {
+                    options.Listen(IPAddress.Any, 5000);
                     options.Listen(IPAddress.Any, int.Parse(Program.Config["Port"]), listenOptions =>
                     {
                         listenOptions.UseHttps("/etc/letsencrypt/live/mopsbot.mayiscoding.com/certificate.pfx");
