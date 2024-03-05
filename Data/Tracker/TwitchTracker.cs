@@ -86,9 +86,6 @@ namespace MopsBot.Data.Tracker
             while(!Program.Config.ContainsKey("TwitchToken") && counter++ < 5){
                 await Task.Delay(30000);
             }
-
-            await SubscribeWebhookAsync(false);
-            await SubscribeWebhookAsync();
         }
 
         public static KeyValuePair<string, string>[] GetHelixHeaders(){
@@ -178,8 +175,11 @@ namespace MopsBot.Data.Tracker
         {
             try
             {
-                await SubscribeWebhookAsync(false);
-                await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Tried subscribing {Name} to Twitch webhooks:\n" + await SubscribeWebhookAsync()));
+                if (!Callback?.Contains($"{Program.Config["ServerAddress"]}:{Program.Config["Port"]}") ?? true)
+                {
+                    await SubscribeWebhookAsync(false);
+                    await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Tried subscribing {Name} to Twitch webhooks:\n" + await SubscribeWebhookAsync()));
+                }
 
                 await CheckStreamerInfoAsync();
             }
@@ -518,6 +518,8 @@ namespace MopsBot.Data.Tracker
 
                         // Update tracker data if it isn't accurate.
                         if(tracker is not null && (!string.Equals(tracker.Callback, callbackUrl) || !string.Equals(tracker.CallbackId, subscriptionId))){
+                            await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Data for {twitchId} was outdated, updating."));
+
                             tracker.Callback = callbackUrl;
                             tracker.CallbackId = subscriptionId;
                             await tracker.UpdateTracker();
@@ -527,8 +529,9 @@ namespace MopsBot.Data.Tracker
 
                 // Remove subscription information for trackers not found or removed in the Twitch response.
                 foreach(var missingTracker in StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTrackers().Where(x => !foundSubscriptions.Contains((x.Value as TwitchTracker).TwitchId))){
-                    await Program.MopsLog($"Twitch tracker for {missingTracker.Key} needs a new subscription. Resetting callbacks.");
                     TwitchTracker tracker = (TwitchTracker)missingTracker.Value;
+                    await Program.MopsLog($"Twitch tracker for {missingTracker.Key} ({tracker.TwitchId}) needs a new subscription. Resetting callbacks.");
+
                     tracker.Callback = null;
                     tracker.CallbackId = null;
                     await tracker.UpdateTracker();
