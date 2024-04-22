@@ -786,8 +786,8 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task Check(int limit, string subreddit, [Remainder] string query = null)
             {
-                var result = await RedditTracker.checkReddit(subreddit, query, limit);
-                await MopsBot.Data.Interactive.MopsPaginator.CreatePagedMessage(Context.Channel.Id, result);
+                var result = await RedditTracker.CheckReddit(subreddit, query, limit);
+                await ReplyAsync(string.Join("\n", result.Select(r => r.ToString())));
             }
 
             [Command("ShowConfig")]

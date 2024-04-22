@@ -12,6 +12,7 @@ using MongoDB.Bson.Serialization.Options;
 using MongoDB.Bson.Serialization.Attributes;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
+using System.ServiceModel.Syndication;
 
 namespace MopsBot.Data.Tracker
 {
@@ -34,8 +35,8 @@ namespace MopsBot.Data.Tracker
 
             try
             {
-                var test = fetchPosts().Result;
-                if (test.data.children.Count == 0)
+                var test = FetchPosts().Result;
+                if (!test.Items.Any())
                     throw new Exception("");
             }
             catch (Exception e)
@@ -78,23 +79,23 @@ namespace MopsBot.Data.Tracker
         {
             try
             {
-                var allThings = await fetchPosts();
+                var allThings = await FetchPosts();
 
                 foreach (var channel in ChannelConfig)
                 {
                     var minPostAge = (int)ChannelConfig[channel.Key][POSTAGE];
-                    var newPosts = allThings.data.children.TakeWhile(x => x.data.created_utc > LastCheck[channel.Key]).ToList();
-                    newPosts.RemoveAll(x => (DateTime.UtcNow - DateTimeOffset.FromUnixTimeSeconds((long)x.data.created_utc)).TotalMinutes < minPostAge);
+                    var newPosts = allThings.Items.TakeWhile(x => x.PublishDate.ToUnixTimeSeconds() > LastCheck[channel.Key]).ToList();
+                    newPosts.RemoveAll(x => (DateTimeOffset.UtcNow - x.PublishDate).TotalMinutes < minPostAge);
 
                     if (newPosts.Count > 0)
                     {
-                        LastCheck[channel.Key] = newPosts.Max(x => x.data.created_utc);
+                        LastCheck[channel.Key] = newPosts.Max(x => x.PublishDate.ToUnixTimeSeconds());
                         await UpdateTracker();
 
                         newPosts.Reverse();
-                        foreach (var post in newPosts)
-                            await OnMajorChangeTracked(channel.Key, await createEmbed(post.data), (string)ChannelConfig[channel.Key]["Notification"]);
-
+                        foreach (var post in newPosts){
+                            await OnMinorChangeTracked(channel.Key, $"{ChannelConfig[channel.Key]["Notification"]}\n{post.Links.First().Uri}");
+                        }
                     }
                 }
             }
@@ -104,24 +105,20 @@ namespace MopsBot.Data.Tracker
             }
         }
 
-        public static async Task<List<Embed>> checkReddit(string subreddit, string query = null, int limit = 1)
+        public static async Task<List<Uri>> CheckReddit(string subreddit, string query = null, int limit = 1)
         {
-            var results = await FetchJSONDataAsync<RedditResult>($"https://www.reddit.com/r/{subreddit}/" +
-                                                                        $"{(query != null ? $"search.json?sort=new&restrict_sr=on&q={query}" : "new.json?restrict_sr=on")}" + $"&limit={limit}");
+            var results = await FetchRSSData($"https://www.reddit.com/r/{subreddit}/" +
+                                                                        $"{(query != null ? $"search.rss?sort=new&restrict_sr=on&q={query}" : "new.rss?restrict_sr=on")}" + $"&limit={limit}");
 
-            List<Embed> embeds = new List<Embed>();
-            foreach (var post in results.data.children)
-            {
-                embeds.Add(await createEmbed(post.data));
-            }
-
-            return embeds;
+            return results.Items.Select(x => x.Links.First().Uri).ToList();
         }
 
-        private async Task<RedditResult> fetchPosts()
+        private async Task<SyndicationFeed> FetchPosts()
         {
-            return await FetchJSONDataAsync<RedditResult>($"https://www.reddit.com/r/{Name.Split(" ")[0]}/" +
-                                                                        $"{(Name.Split(" ").Length > 1 ? $"search.json?sort=new&restrict_sr=on&q={string.Join(" ", Name.Split(" ").Skip(1))}" : "new.json?restrict_sr=on")}");
+            var posts = await FetchRSSData($"https://www.reddit.com/r/{Name.Split(" ")[0]}/" +
+                                                                        $"{(Name.Split(" ").Length > 1 ? $"search.rss?sort=new&restrict_sr=on&q={string.Join(" ", Name.Split(" ").Skip(1))}" : "new.rss?restrict_sr=on")}");
+
+            return posts;
         }
 
         ///<summary>Builds an embed out of the changed stats, and sends it as a Discord message </summary>
