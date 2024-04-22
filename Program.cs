@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Runtime.CompilerServices;
 using System.Collections.Generic;
 using System.IO;
@@ -27,7 +28,6 @@ namespace MopsBot
         public static Dictionary<string, Dictionary<string, int>> TrackerLimits;
         public static CommandHandler Handler { get; private set; }
         public static ReactionHandler ReactionHandler { get; private set; }
-        public static string Tunnel;
         private static ServiceProvider provider;
         private static List<ReliabilityService> failsafe = new List<ReliabilityService>();
 
@@ -51,7 +51,7 @@ namespace MopsBot
                 TrackerLimits = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, int>>>(sr.ReadToEnd());
 
             if(!Config.ContainsKey("Port"))
-                Config.Add("Port", "5000");
+                Config.Add("Port", "443");
 
             Client.Log += ClientLog;
             Client.ShardReady += onShardReady;
@@ -67,7 +67,6 @@ namespace MopsBot
                 } while(StaticBase.GetMopsRAM() > 2200);
             }
             
-            await StartTunnelAsync();
             await Task.Delay(-1);
         }
 
@@ -134,66 +133,9 @@ namespace MopsBot
             return Client.Shards.FirstOrDefault();
         }
 
-        public static async Task StartTunnelAsync(int port=-1){
-            if(port == -1) port = int.Parse(Config["Port"]);
-
-            string id = "";
-            using (HashAlgorithm algorithm = SHA256.Create()){
-                var bytes = algorithm.ComputeHash(System.Text.Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(Config)));
-                foreach(var b in bytes.Take(20)){
-                    id += b.ToString("X2").ToLower();
-                }
-            }
-
-            while(true){
-                using (var prc = new System.Diagnostics.Process())
-                {
-                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                    {
-                        prc.StartInfo.FileName = "cmd.exe";
-                        prc.StartInfo.Arguments = $"/C lt --port {port} --print-requests --subdomain mopsbot-{id}";
-                    } else {
-                        prc.StartInfo.FileName = "/bin/bash";
-                        prc.StartInfo.Arguments = $"-c \"lt --port {port} --print-requests --subdomain mopsbot-{id}\"";
-                    }
-
-                    prc.StartInfo.RedirectStandardError = true;
-                    prc.StartInfo.RedirectStandardOutput = true;
-                    prc.StartInfo.UseShellExecute = false;
-                    prc.StartInfo.CreateNoWindow = true;
-
-                    prc.OutputDataReceived += (s, e) => {
-                        if(e.Data?.Contains("your url is: ") ?? false){
-                            Tunnel = e.Data.Split("your url is: ").Last();
-                            MopsLog($"Mops tunnel available at {Tunnel}").Wait();
-
-                            // Set ServerAddress to localtunnel if set to localhost
-                            if(Config["ServerAddress"].Contains("localhost") || Config["ServerAddress"].Contains("127.0.0.1")){
-                                MopsLog("ServerAddress was localhost, resetting to tunnel").Wait();
-                                Config["ServerAddress"] = Tunnel;
-                                Config["Port"] = "443";
-                            }
-                        }
-                        MopsLog(e.Data).Wait();
-                    };
-                    prc.ErrorDataReceived += (s, e) => MopsLog(e.Data).Wait();
-
-                    prc.Start();
-                    prc.BeginOutputReadLine();
-                    prc.BeginErrorReadLine();
-
-                    prc.WaitForExit();
-                    prc.Kill();
-                }
-
-                await MopsLog(new LogMessage(LogSeverity.Error, "", "Localtunnel exited"));
-                await Task.Delay(30000);
-            }
-        }
-
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
-                .UseUrls($"http://0.0.0.0:{Program.Config["Port"]}/")
+                .UseUrls($"https://0.0.0.0:{Program.Config["Port"]}/", "http://0.0.0.0:5000")
                 .ConfigureServices(x => x.AddCors(options => options.AddPolicy("AllowAll",
                     builder =>
                     {
@@ -201,7 +143,14 @@ namespace MopsBot
                                .AllowAnyHeader()
                                .AllowAnyMethod();
                     })))
-                .UseKestrel()
+                .UseKestrel(options =>
+                {
+                    options.Listen(IPAddress.Any, 5000);
+                    options.Listen(IPAddress.Any, int.Parse(Program.Config["Port"]), listenOptions =>
+                    {
+                        listenOptions.UseHttps("/etc/letsencrypt/live/mopsbot.mayiscoding.com/certificate.pfx");
+                    });
+                })
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseIISIntegration()
                 .UseStartup<Startup>()
