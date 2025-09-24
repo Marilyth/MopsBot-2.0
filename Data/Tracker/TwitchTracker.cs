@@ -142,7 +142,7 @@ namespace MopsBot.Data.Tracker
                         }},
                         {"transport", new Dictionary<string, string>(){
                             {"method", "webhook"},
-                            {"callback", $"{Program.Config["ServerAddress"]}:{Program.Config["Port"]}/api/webhook/twitch"},
+                            {"callback", $"{Program.Config["ServerAddress"]}/api/webhook/twitch"},
                             {"secret", Program.Config["TwitchSecret"]} //Not recommended
                         }},
                     };
@@ -175,7 +175,7 @@ namespace MopsBot.Data.Tracker
         {
             try
             {
-                if (!Callback?.Contains($"{Program.Config["ServerAddress"]}:{Program.Config["Port"]}") ?? true)
+                if (!Callback?.Contains($"{Program.Config["ServerAddress"]}") ?? true)
                 {
                     await SubscribeWebhookAsync(false);
                     await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Tried subscribing {Name} to Twitch webhooks:\n" + await SubscribeWebhookAsync()));
@@ -502,7 +502,7 @@ namespace MopsBot.Data.Tracker
 
                     TwitchTracker tracker = (TwitchTracker)StaticBase.Trackers[BaseTracker.TrackerType.Twitch].GetTrackers().FirstOrDefault(x => (x.Value as TwitchTracker).TwitchId.Equals(twitchId)).Value;
 
-                    if(!callbackUrl.Equals($"{Program.Config["ServerAddress"]}:{Program.Config["Port"]}/api/webhook/twitch") || !status.Equals("enabled") || tracker is null){
+                    if(!callbackUrl.Equals($"{Program.Config["ServerAddress"]}/api/webhook/twitch") || !status.Equals("enabled") || tracker is null){
                         // Bad subscription, remove it.
                         await Program.MopsLog(new LogMessage(LogSeverity.Info, "", $"Bad Twitch subscription for {twitchId}, removing."));
                         var response = await UnsubscribeWebhookAsync(subscriptionId);
