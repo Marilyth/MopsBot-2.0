@@ -51,7 +51,7 @@ namespace MopsBot
                 TrackerLimits = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, int>>>(sr.ReadToEnd());
 
             if(!Config.ContainsKey("Port"))
-                Config.Add("Port", "443");
+                Config.Add("Port", "5000");
 
             Client.Log += ClientLog;
             Client.ShardReady += onShardReady;
@@ -135,7 +135,7 @@ namespace MopsBot
 
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
-                .UseUrls($"https://0.0.0.0:{Program.Config["Port"]}/", "http://0.0.0.0:5000")
+                .UseUrls($"http://0.0.0.0:{Program.Config["Port"]}/")
                 .ConfigureServices(x => x.AddCors(options => options.AddPolicy("AllowAll",
                     builder =>
                     {
@@ -145,11 +145,7 @@ namespace MopsBot
                     })))
                 .UseKestrel(options =>
                 {
-                    options.Listen(IPAddress.Any, 5000);
-                    options.Listen(IPAddress.Any, int.Parse(Program.Config["Port"]), listenOptions =>
-                    {
-                        listenOptions.UseHttps("/etc/letsencrypt/live/mopsbot.mayiscoding.com/certificate.pfx");
-                    });
+                    options.Listen(IPAddress.Any, int.Parse(Program.Config["Port"]));
                 })
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseIISIntegration()
@@ -157,3 +153,4 @@ namespace MopsBot
                 .Build();
     }
 }
+
