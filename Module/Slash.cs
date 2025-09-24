@@ -570,8 +570,8 @@ namespace MopsBot.Module
             [RequireUserPermission(ChannelPermission.ManageChannels)]
             public async Task Check(int limit, string subreddit,  string query = null)
             {
-                var result = await RedditTracker.checkReddit(subreddit, query, limit);
-                await FollowupAsync(embeds: result.ToArray());
+                var result = await RedditTracker.CheckReddit(subreddit, query, limit);
+                await FollowupAsync(string.Join("\n", result.Select(r => r.ToString())));
             }
 
             [SlashCommand("showconfig", "Shows all the settings for this tracker, and their values")]
